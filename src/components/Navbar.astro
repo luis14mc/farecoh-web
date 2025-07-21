@@ -1,0 +1,44 @@
+---
+import { Astro } from "astro";
+---
+
+<div class="navbar bg-base-100 shadow-md px-4 z-10">
+  <div class="navbar-start">
+    <a href="/" class="text-xl font-bold text-primary">
+      FARECOH
+    </a>
+  </div>
+
+  <div class="navbar-center hidden lg:flex">
+    <ul class="menu menu-horizontal px-1">
+      <li><a href="/acerca">Acerca</a></li>
+      <li><a href="/programas">Programas</a></li>
+      <li><a href="/eventos">Eventos</a></li>
+      <li><a href="/galeria">Galería</a></li>
+      <li><a href="/donaciones">Donaciones</a></li>
+      <li><a href="/noticias">Noticias</a></li>
+      <li><a href="/contacto">Contacto</a></li>
+    </ul>
+  </div>
+
+  <div class="navbar-end lg:hidden">
+    <details class="dropdown dropdown-end">
+      <summary class="btn btn-ghost">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none"
+          viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </summary>
+      <ul class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
+        <li><a href="/acerca">Acerca</a></li>
+        <li><a href="/programas">Programas</a></li>
+        <li><a href="/eventos">Eventos</a></li>
+        <li><a href="/galeria">Galería</a></li>
+        <li><a href="/donaciones">Donaciones</a></li>
+        <li><a href="/noticias">Noticias</a></li>
+        <li><a href="/contacto">Contacto</a></li>
+      </ul>
+    </details>
+  </div>
+</div>
