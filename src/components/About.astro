@@ -1,0 +1,37 @@
+---
+interface Props {
+  title?: string;
+  body?: string;
+}
+
+const {
+  title = "Cultura con impacto real",
+  body = "FARECOH transforma eventos en puntos de encuentro: música, arte, comunidad y recaudación transparente. La plataforma nace para operar múltiples experiencias sin perder calidad visual, trazabilidad ni confianza.",
+} = Astro.props;
+---
+
+<section id="impacto" class="py-20 sm:py-28">
+  <div class="section-shell grid gap-10 lg:grid-cols-[0.85fr_1.15fr] lg:items-end">
+    <div>
+      <p class="text-sm font-semibold uppercase tracking-[0.24em] text-prism-cyan">Sobre FARECOH</p>
+      <h2 class="mt-4 text-3xl font-black text-white sm:text-5xl">{title}</h2>
+    </div>
+    <div class="glass-panel rounded-lg p-6 sm:p-8">
+      <p class="text-lg leading-8 text-farecoh-muted">{body}</p>
+      <dl class="mt-8 grid grid-cols-3 gap-3 text-center">
+        <div class="rounded-md bg-white/7 p-4">
+          <dt class="text-2xl font-black text-white">AA</dt>
+          <dd class="mt-1 text-xs uppercase tracking-wider text-white/52">Accesible</dd>
+        </div>
+        <div class="rounded-md bg-white/7 p-4">
+          <dt class="text-2xl font-black text-white">QR</dt>
+          <dd class="mt-1 text-xs uppercase tracking-wider text-white/52">Ingreso</dd>
+        </div>
+        <div class="rounded-md bg-white/7 p-4">
+          <dt class="text-2xl font-black text-white">Multi</dt>
+          <dd class="mt-1 text-xs uppercase tracking-wider text-white/52">Evento</dd>
+        </div>
+      </dl>
+    </div>
+  </div>
+</section>

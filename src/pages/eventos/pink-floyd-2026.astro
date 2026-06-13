@@ -1,0 +1,26 @@
+---
+import PublicLayout from "@/layouts/PublicLayout.astro";
+import EventHero from "@/components/EventHero.astro";
+import About from "@/components/About.astro";
+import Programs from "@/components/Programs.astro";
+import ArtistsGrid from "@/components/ArtistsGrid.astro";
+import DonationCTA from "@/components/DonationCTA.astro";
+import Footer from "@/components/Footer.astro";
+import { getEventBySlug } from "@/data/events";
+
+const event = getEventBySlug("pink-floyd-2026");
+const eventHref = event ? `/eventos/${event.slug}` : "/";
+
+if (!event) {
+  throw new Error("Event not found for slug: pink-floyd-2026");
+}
+---
+
+<PublicLayout title={`${event.name} | FARECOH`} description={event.shortDescription}>
+  <EventHero event={event} />
+  <About title="Una experiencia inmersiva con causa." body={event.description} />
+  <Programs items={event.programs} />
+  <ArtistsGrid artists={event.artists} />
+  <DonationCTA text={event.donationGoal} href={eventHref} />
+  <Footer eventHref={eventHref} />
+</PublicLayout>

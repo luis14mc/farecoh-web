@@ -1,0 +1,30 @@
+---
+import type { Artist } from "@/data/events";
+
+interface Props {
+  artists: Artist[];
+}
+
+const { artists } = Astro.props;
+---
+
+<section class="py-20 sm:py-28">
+  <div class="section-shell">
+    <div class="max-w-2xl">
+      <p class="text-sm font-semibold uppercase tracking-[0.24em] text-prism-cyan">Artistas</p>
+      <h2 class="mt-4 text-3xl font-black text-white sm:text-5xl">Elenco y producción visual.</h2>
+    </div>
+    <div class="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {
+        artists.map((artist) => (
+          <article class="glass-panel rounded-lg p-5">
+            <div class="mb-5 h-28 rounded-md bg-[linear-gradient(135deg,rgba(255,59,95,0.32),rgba(255,209,102,0.2),rgba(53,199,255,0.28))]"></div>
+            <p class="text-xs font-semibold uppercase tracking-[0.22em] text-prism-gold">{artist.role}</p>
+            <h3 class="mt-3 text-xl font-bold text-white">{artist.name}</h3>
+            <p class="mt-3 text-sm leading-6 text-farecoh-muted">{artist.description}</p>
+          </article>
+        ))
+      }
+    </div>
+  </div>
+</section>

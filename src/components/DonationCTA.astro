@@ -1,0 +1,22 @@
+---
+interface Props {
+  text: string;
+  href: string;
+}
+
+const { text, href } = Astro.props;
+---
+
+<section class="py-20 sm:py-28">
+  <div class="section-shell">
+    <div class="relative overflow-hidden rounded-lg border border-white/12 bg-white text-black">
+      <div class="absolute inset-y-0 right-0 hidden w-1/2 bg-[linear-gradient(115deg,transparent,rgba(255,59,95,0.25),rgba(255,209,102,0.35),rgba(53,199,255,0.28))] md:block"></div>
+      <div class="relative max-w-3xl p-6 sm:p-10 lg:p-12">
+        <p class="text-sm font-black uppercase tracking-[0.22em] text-black/56">Donación y propósito</p>
+        <h2 class="mt-4 text-3xl font-black sm:text-5xl">Cada entrada enciende más que el escenario.</h2>
+        <p class="mt-5 text-lg leading-8 text-black/68">{text}</p>
+        <a class="btn btn-lg mt-8 border-0 bg-black text-white hover:bg-farecoh-ink" href={href}>Ver detalles del evento</a>
+      </div>
+    </div>
+  </div>
+</section>

@@ -1,43 +1,23 @@
 ---
-import BaseLayout from "../layouts/BaseLayout.astro";
+import PublicLayout from "@/layouts/PublicLayout.astro";
+import Hero from "@/components/Hero.astro";
+import About from "@/components/About.astro";
+import Programs from "@/components/Programs.astro";
+import DonationCTA from "@/components/DonationCTA.astro";
+import Footer from "@/components/Footer.astro";
+import { events } from "@/data/events";
+
+const featuredEvent = events[0];
+const featuredEventHref = `/eventos/${featuredEvent.slug}`;
 ---
 
-<BaseLayout>
-  <section class="bg-primary text-white py-20">
-    <div class="container mx-auto px-4 text-center max-w-4xl">
-      <h1 class="text-4xl md:text-6xl font-bold leading-tight mb-6">
-        ¡Bienvenidos a FARECOH!
-      </h1>
-      <p class="text-lg md:text-xl font-light">
-        La Fundación Artes Educativas Coros y Orquestas de Honduras – EL SISTEMA FARECOH
-        es un espacio dedicado a la promoción y desarrollo de las artes como herramientas de transformación social.
-        Creemos firmemente que la educación artística es un motor de cambio, inclusión y esperanza para miles de niños,
-        niñas y jóvenes hondureños.
-      </p>
-    </div>
-  </section>
-
-  <section class="py-16 bg-base-100">
-    <div class="container mx-auto px-4 text-center max-w-3xl space-y-6">
-      <p class="text-lg text-gray-600">
-        Nuestro compromiso es acompañar a cada participante en su proceso de crecimiento personal, artístico y comunitario,
-        brindando acceso a programas de música, coros y orquestas que fortalecen valores, disciplina y convivencia pacífica.
-      </p>
-      <p class="text-lg text-gray-600">
-        Te invitamos a ser parte de esta gran familia que trabaja día a día para construir un país más justo, creativo
-        y lleno de oportunidades.
-      </p>
-    </div>
-  </section>
-
-  <section class="py-12 bg-neutral text-neutral-content">
-    <div class="container mx-auto px-4 flex flex-col md:flex-row justify-center items-center gap-6">
-      <a href="/programas" class="btn btn-primary btn-lg">
-        Inscríbete en un Programa
-      </a>
-      <a href="/donaciones" class="btn btn-secondary btn-lg">
-        Apoya FARECOH
-      </a>
-    </div>
-  </section>
-</BaseLayout>
+<PublicLayout
+  title="FARECOH Events Platform"
+  description="Plataforma pública de eventos FARECOH con experiencias culturales premium, boletos y acceso por QR."
+>
+  <Hero eventHref={featuredEventHref} />
+  <About />
+  <Programs items={featuredEvent.programs} />
+  <DonationCTA text={featuredEvent.donationGoal} href={featuredEventHref} />
+  <Footer eventHref={featuredEventHref} />
+</PublicLayout>

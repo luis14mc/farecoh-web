@@ -1,5 +1,21 @@
-<footer class="footer footer-center p-10 bg-neutral text-neutral-content">
-  <aside>
-    <p>© {new Date().getFullYear()} Fundación FARECOH. Todos los derechos reservados.</p>
-  </aside>
+---
+interface Props {
+  eventHref?: string;
+}
+
+const { eventHref = "/" } = Astro.props;
+---
+
+<footer class="border-t border-white/10 px-4 py-10 sm:px-6 lg:px-8">
+  <div class="mx-auto flex w-full max-w-7xl flex-col gap-6 text-sm text-white/60 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <p class="font-black tracking-[0.28em] text-white uppercase">FARECOH</p>
+      <p class="mt-2">Eventos culturales con impacto social.</p>
+    </div>
+    <nav class="flex flex-wrap gap-5" aria-label="Navegación inferior">
+      <a class="hover:text-white" href="/">Inicio</a>
+      <a class="hover:text-white" href={eventHref}>Evento</a>
+      <a class="hover:text-white" href="/#impacto">Impacto</a>
+    </nav>
+  </div>
 </footer>

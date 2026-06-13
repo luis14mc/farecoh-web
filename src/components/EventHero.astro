@@ -1,0 +1,56 @@
+---
+import type { Event } from "@/data/events";
+
+interface Props {
+  event: Event;
+}
+
+const { event } = Astro.props;
+---
+
+<section class="relative isolate overflow-hidden px-4 pb-16 pt-6 sm:px-6 lg:px-8">
+  <div class="mx-auto w-full max-w-7xl">
+    <header class="flex items-center justify-between py-2">
+      <a href="/" class="text-sm font-black tracking-[0.32em] text-white uppercase">FARECOH</a>
+      <a class="btn btn-sm border-white/20 bg-white/8 text-white hover:bg-white/14" href="/">Inicio</a>
+    </header>
+
+    <div class="grid min-h-[calc(100vh-5rem)] items-center gap-10 py-14 lg:grid-cols-[0.95fr_1.05fr]">
+      <div>
+        <p class="text-sm font-semibold uppercase tracking-[0.24em] text-prism-gold">{event.eyebrow}</p>
+        <h1 class="mt-5 text-5xl font-black leading-none text-white sm:text-7xl">
+          {event.name}
+        </h1>
+        <p class="mt-7 max-w-2xl text-lg leading-8 text-farecoh-muted">{event.shortDescription}</p>
+        <div class="mt-8 grid gap-3 sm:grid-cols-3">
+          <div class="rounded-md border border-white/12 bg-white/7 p-4">
+            <p class="text-xs uppercase tracking-[0.2em] text-white/52">Fecha</p>
+            <p class="mt-2 font-bold text-white">{event.dateLabel}</p>
+          </div>
+          <div class="rounded-md border border-white/12 bg-white/7 p-4">
+            <p class="text-xs uppercase tracking-[0.2em] text-white/52">Lugar</p>
+            <p class="mt-2 font-bold text-white">{event.venue}</p>
+          </div>
+          <div class="rounded-md border border-white/12 bg-white/7 p-4">
+            <p class="text-xs uppercase tracking-[0.2em] text-white/52">Ciudad</p>
+            <p class="mt-2 font-bold text-white">{event.city}</p>
+          </div>
+        </div>
+      </div>
+
+      <figure class="relative min-h-[460px] overflow-hidden rounded-lg border border-white/12 bg-black/50" aria-label={event.heroImageAlt}>
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_50%_42%,rgba(255,255,255,0.11),transparent_18rem)]"></div>
+        <div class="absolute left-[8%] top-[48%] h-1 w-[46%] bg-white/80 shadow-[0_0_38px_rgba(255,255,255,0.8)]"></div>
+        <div class="absolute left-[42%] top-[26%] h-56 w-56 rotate-45 border border-white/50 bg-white/6"></div>
+        <div class="absolute left-[57%] top-[39%] h-1 w-[38%] rotate-[-20deg] bg-prism-red"></div>
+        <div class="absolute left-[57%] top-[46%] h-1 w-[42%] rotate-[-7deg] bg-prism-gold"></div>
+        <div class="absolute left-[57%] top-[53%] h-1 w-[40%] rotate-[7deg] bg-prism-green"></div>
+        <div class="absolute left-[57%] top-[60%] h-1 w-[35%] rotate-[21deg] bg-prism-cyan"></div>
+        <div class="absolute inset-x-0 bottom-0 h-56 bg-gradient-to-t from-black via-black/80 to-transparent"></div>
+        <figcaption class="absolute bottom-6 left-6 right-6 text-sm uppercase tracking-[0.24em] text-white/58">
+          Luz blanca, prisma vivo, espectro completo
+        </figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
