@@ -1,0 +1,61 @@
+---
+import "../styles/global.css";
+import type { Lang, RouteKey } from "@/i18n/types";
+import { getDictionary } from "@/i18n";
+import { getAlternateLangPath, getLocalizedPath } from "@/i18n/routes";
+import Navbar from "../components/Navbar.astro";
+import Footer from "../components/Footer.astro";
+
+interface Props {
+  title: string;
+  description: string;
+  lang: Lang;
+  active?: RouteKey;
+  variant?: "default" | "event";
+}
+
+const { title, description, lang, active, variant = "default" } = Astro.props;
+const t = getDictionary(lang).nav;
+const alternateHref = getAlternateLangPath(Astro.url.pathname);
+const alternateLang = lang === "es" ? "en" : "es";
+
+const bodyClass =
+  variant === "event"
+    ? "event-cinematic flex min-h-screen flex-col"
+    : "flex min-h-screen flex-col bg-[var(--prism-bg)]";
+---
+
+<!doctype html>
+<html lang={lang} data-theme="prism">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="description" content={description} />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="generator" content={Astro.generator} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content={variant === "event" ? "/images/bg-musica.webp" : "/images/farecoh-welcome.webp"} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="alternate" hreflang={alternateLang} href={alternateHref} />
+    <link rel="alternate" hreflang={lang} href={Astro.url.pathname} />
+    <link rel="alternate" hreflang="x-default" href={getLocalizedPath("es", active ?? "home")} />
+    <link rel="canonical" href={Astro.url.pathname} />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <title>{title}</title>
+  </head>
+  <body class={bodyClass}>
+    <a class="sr-only" href="#contenido">{t.skipToContent}</a>
+    <Navbar lang={lang} active={active} variant={variant} />
+    <main id="contenido" class="flex-1">
+      <slot />
+    </main>
+    <Footer lang={lang} />
+  </body>
+</html>

@@ -1,0 +1,26 @@
+---
+import type { Lang } from "@/i18n/types";
+import EditorialHero from "./EditorialHero.astro";
+import HomeMission from "./HomeMission.astro";
+import ProgramList from "./ProgramList.astro";
+import ImpactBand from "./ImpactBand.astro";
+import EventFeature from "./EventFeature.astro";
+import CTASection from "./CTASection.astro";
+import HomeAllies from "./HomeAllies.astro";
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+---
+
+<>
+  <EditorialHero lang={lang} />
+  <HomeMission lang={lang} />
+  <ProgramList lang={lang} />
+  <ImpactBand lang={lang} />
+  <EventFeature lang={lang} />
+  <CTASection lang={lang} />
+  <HomeAllies lang={lang} />
+</>

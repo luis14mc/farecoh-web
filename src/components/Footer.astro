@@ -1,21 +1,49 @@
 ---
+import type { Lang } from "@/i18n/types";
+import { getDictionary } from "@/i18n";
+import { getLocalizedPath } from "@/i18n/routes";
+import { site } from "@/data/site";
+import LanguageSwitcher from "./LanguageSwitcher.astro";
+
 interface Props {
-  eventHref?: string;
+  lang: Lang;
 }
 
-const { eventHref = "/" } = Astro.props;
+const { lang } = Astro.props;
+const t = getDictionary(lang).footer;
+const nav = getDictionary(lang).nav;
+const event = getDictionary(lang).event;
+const currentPath = Astro.url.pathname;
 ---
 
-<footer class="border-t border-white/10 px-4 py-10 sm:px-6 lg:px-8">
-  <div class="mx-auto flex w-full max-w-7xl flex-col gap-6 text-sm text-white/60 sm:flex-row sm:items-center sm:justify-between">
+<footer class="border-t border-[var(--prism-divider)] bg-[var(--prism-surface-lowest)]">
+  <div class="prism-container grid gap-12 py-16 md:grid-cols-[1.5fr_1fr_1fr] md:py-20">
     <div>
-      <p class="font-black tracking-[0.28em] text-white uppercase">FARECOH</p>
-      <p class="mt-2">Eventos culturales con impacto social.</p>
+      <img class="h-14 w-auto" src="/images/Logo Farecoh VARIANTE.png" alt="FARECOH" width="128" height="128" />
+      <p class="body-md mt-6 max-w-sm text-[var(--prism-text-secondary)]">{t.text}</p>
     </div>
-    <nav class="flex flex-wrap gap-5" aria-label="Navegación inferior">
-      <a class="hover:text-white" href="/">Inicio</a>
-      <a class="hover:text-white" href={eventHref}>Evento</a>
-      <a class="hover:text-white" href="/#impacto">Impacto</a>
-    </nav>
+
+    <div>
+      <h2 class="label-caps text-[var(--prism-outline)]">{t.explore}</h2>
+      <nav class="mt-6 flex flex-col gap-3" aria-label={t.explore}>
+        <a class="body-md text-[var(--prism-text-secondary)] transition-colors hover:text-[var(--prism-gold)]" href={getLocalizedPath(lang, "about")}>{nav.about}</a>
+        <a class="body-md text-[var(--prism-text-secondary)] transition-colors hover:text-[var(--prism-gold)]" href={getLocalizedPath(lang, "programs")}>{nav.programs}</a>
+        <a class="body-md text-[var(--prism-text-secondary)] transition-colors hover:text-[var(--prism-gold)]" href={getLocalizedPath(lang, "events")}>{nav.events}</a>
+        <a class="body-md text-[var(--prism-text-secondary)] transition-colors hover:text-[var(--prism-gold)]" href={getLocalizedPath(lang, "pinkFloyd")}>{event.name}</a>
+        <a class="body-md text-[var(--prism-text-secondary)] transition-colors hover:text-[var(--prism-gold)]" href={getLocalizedPath(lang, "donate")}>{nav.donate}</a>
+      </nav>
+    </div>
+
+    <div>
+      <h2 class="label-caps text-[var(--prism-outline)]">{t.contact}</h2>
+      <div class="mt-6 flex flex-col gap-3">
+        <a class="body-md text-[var(--prism-text-secondary)] transition-colors hover:text-[var(--prism-gold)]" href={`mailto:${site.email}`}>{site.email}</a>
+        <LanguageSwitcher lang={lang} currentPath={currentPath} />
+      </div>
+    </div>
+  </div>
+
+  <div class="prism-container border-t border-[var(--prism-divider)] py-6">
+    <p class="label-caps text-[var(--prism-outline)]">{t.rights}</p>
   </div>
 </footer>

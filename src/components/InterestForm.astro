@@ -1,0 +1,32 @@
+---
+import type { Lang } from "@/i18n/types";
+import { getDictionary } from "@/i18n";
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const f = getDictionary(lang).donatePage.form;
+const id = `interest-form-${lang}`;
+---
+
+<form class="border-t border-[var(--prism-divider)] pt-8 lg:border-l lg:border-t-0 lg:pl-12 lg:pt-0" aria-labelledby={`${id}-title`}>
+  <p id={`${id}-title`} class="sr-only">{f.title}</p>
+
+  <label class="label-caps text-[var(--prism-outline)]" for={`${id}-name`}>{f.name}</label>
+  <input class="prism-input mt-3" id={`${id}-name`} name="name" type="text" autocomplete="name" required />
+
+  <label class="label-caps mt-6 block text-[var(--prism-outline)]" for={`${id}-email`}>{f.email}</label>
+  <input class="prism-input mt-3" id={`${id}-email`} name="email" type="email" autocomplete="email" required />
+
+  <label class="label-caps mt-6 block text-[var(--prism-outline)]" for={`${id}-message`}>{f.message}</label>
+  <textarea
+    class="mt-3 min-h-[100px] w-full resize-y border border-[var(--prism-outline-variant)] bg-transparent px-0 py-3 text-[var(--prism-text)] focus:border-[var(--prism-gold)] focus:outline-none"
+    id={`${id}-message`}
+    name="message"
+  ></textarea>
+
+  <button class="btn-prism-primary mt-8 w-full" type="button">{f.submit}</button>
+  <p class="body-md mt-4 text-[var(--prism-outline)]">{f.note}</p>
+</form>

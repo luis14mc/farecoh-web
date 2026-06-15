@@ -1,0 +1,43 @@
+---
+import type { Lang } from "@/i18n/types";
+import { getDictionary } from "@/i18n";
+import { getLocalizedPath } from "@/i18n/routes";
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const f = getDictionary(lang).home.featuredEvent;
+const e = getDictionary(lang).event;
+const eventHref = getLocalizedPath(lang, "pinkFloyd");
+---
+
+<section class="prism-section bg-[var(--prism-surface-lowest)]">
+  <div class="prism-container grid gap-12 lg:grid-cols-[1fr_1.1fr] lg:items-center">
+    <div>
+      <p class="subheader text-[var(--prism-gold)]">{f.label}</p>
+      <h2 class="headline-lg mt-6 text-[var(--prism-text)]">{e.name}</h2>
+      <p class="body-lg mt-6 text-[var(--prism-text-secondary)]">{e.description}</p>
+      <dl class="mt-8 space-y-3">
+        <div class="flex gap-4">
+          <dt class="label-caps w-20 shrink-0 text-[var(--prism-outline)]">{getDictionary(lang).labels.date}</dt>
+          <dd class="body-md text-[var(--prism-text)]">{e.date}</dd>
+        </div>
+        <div class="flex gap-4">
+          <dt class="label-caps w-20 shrink-0 text-[var(--prism-outline)]">{getDictionary(lang).labels.venue}</dt>
+          <dd class="body-md text-[var(--prism-text)]">{e.venue}, {e.city}</dd>
+        </div>
+      </dl>
+      <a class="btn-prism-primary mt-10" href={eventHref}>{f.cta}</a>
+    </div>
+    <div class="relative overflow-hidden bg-[var(--prism-surface)]">
+      <img class="aspect-[4/3] w-full object-cover opacity-90" src="/images/bg-musica.webp" alt={e.heroImageAlt} width="1920" height="1080" loading="lazy" />
+      <div class="absolute inset-0 bg-gradient-to-t from-[var(--prism-surface-lowest)] via-transparent to-transparent"></div>
+      <div class="absolute bottom-0 left-0 right-0 p-8 md:p-10">
+        <p class="label-caps text-[var(--prism-gold)]">Pink Floyd</p>
+        <p class="body-lg mt-3 max-w-md text-[var(--prism-text)]">{e.tagline}</p>
+      </div>
+    </div>
+  </div>
+</section>

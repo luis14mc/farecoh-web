@@ -1,0 +1,43 @@
+---
+import type { Lang } from "@/i18n/types";
+import { getDictionary } from "@/i18n";
+import { getLocalizedPath } from "@/i18n/routes";
+import type { EventRecord } from "@/data/events";
+
+interface Props {
+  lang: Lang;
+  event: EventRecord;
+}
+
+const { lang, event } = Astro.props;
+const ep = getDictionary(lang).eventsPage;
+const e = getDictionary(lang).event;
+const href = getLocalizedPath(lang, "pinkFloyd");
+---
+
+<article class="grid gap-8 bg-[var(--prism-bg)] lg:grid-cols-[1.2fr_0.8fr]">
+  <div class="p-8 md:p-12">
+    <p class="subheader text-[var(--prism-gold)]">{e.eyebrow}</p>
+    <h2 class="headline-lg mt-6 text-[var(--prism-text)]">{e.name}</h2>
+    <p class="body-lg mt-5 max-w-2xl text-[var(--prism-text-secondary)]">{e.description}</p>
+    <dl class="mt-8 space-y-3">
+      <div class="flex flex-wrap gap-x-6 gap-y-2">
+        <dt class="label-caps text-[var(--prism-outline)]">{getDictionary(lang).labels.date}</dt>
+        <dd class="body-md text-[var(--prism-text)]">{e.date} · {e.time}</dd>
+      </div>
+      <div class="flex flex-wrap gap-x-6 gap-y-2">
+        <dt class="label-caps text-[var(--prism-outline)]">{getDictionary(lang).labels.venue}</dt>
+        <dd class="body-md text-[var(--prism-text)]">{e.venue}, {e.city}</dd>
+      </div>
+      <div class="flex flex-wrap gap-x-6 gap-y-2">
+        <dt class="label-caps text-[var(--prism-outline)]">{ep.solidarity}</dt>
+        <dd class="body-md text-[var(--prism-gold)]">{e.ticketPrice}</dd>
+      </div>
+    </dl>
+    <a class="btn-prism-primary mt-10" href={href}>{ep.viewEvent}</a>
+  </div>
+  <div class="relative min-h-[280px] bg-[var(--prism-surface-low)] lg:min-h-full">
+    <img class="h-full w-full object-cover opacity-85" src={event.cardImage} alt={e.heroImageAlt} width="1920" height="1080" loading="lazy" />
+    <div class="absolute inset-0 bg-gradient-to-r from-[var(--prism-bg)] via-transparent to-transparent lg:bg-gradient-to-l"></div>
+  </div>
+</article>

@@ -1,0 +1,16 @@
+---
+interface Props {
+  label: string;
+  title: string;
+  align?: "left" | "center";
+}
+
+const { label, title, align = "left" } = Astro.props;
+const alignClass = align === "center" ? "text-center mx-auto" : "";
+---
+
+<div class={`max-w-3xl ${alignClass}`}>
+  <p class="subheader text-[var(--prism-outline)]">{label}</p>
+  <h2 class="headline-lg mt-6 text-[var(--prism-text)]">{title}</h2>
+  <hr class="prism-divider mt-8" />
+</div>

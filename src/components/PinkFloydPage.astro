@@ -1,0 +1,103 @@
+---
+import type { Lang } from "@/i18n/types";
+import { getDictionary } from "@/i18n";
+import { getLocalizedPath } from "@/i18n/routes";
+import { site } from "@/data/site";
+import ArtistList from "./ArtistList.astro";
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const e = getDictionary(lang).event;
+const l = getDictionary(lang).labels;
+const mailSubject =
+  lang === "es" ? "Interés: Tributo a Pink Floyd 2026" : "Interest: Pink Floyd Tribute 2026";
+const mailHref = `mailto:${site.email}?subject=${encodeURIComponent(mailSubject)}`;
+
+const ids = {
+  experience: lang === "es" ? "experiencia" : "experience",
+  cast: lang === "es" ? "elenco" : "cast",
+  cta: lang === "es" ? "apoyo" : "support",
+};
+---
+
+<section class="event-cinematic relative flex min-h-[70vh] items-end overflow-hidden">
+  <div class="absolute inset-0">
+    <img class="h-full w-full object-cover opacity-40" src="/images/bg-musica.webp" alt={e.heroImageAlt} width="1920" height="1080" />
+    <div class="event-vignette absolute inset-0"></div>
+    <div class="absolute inset-0 bg-[radial-gradient(circle_at_70%_35%,rgba(0,163,221,0.15),transparent_40%),radial-gradient(circle_at_30%_60%,rgba(255,184,0,0.08),transparent_35%)]"></div>
+  </div>
+
+  <div class="relative z-10 w-full prism-section pb-16 pt-32 md:pb-20">
+    <div class="prism-container max-w-4xl">
+      <p class="subheader text-[var(--prism-light-blue)]">{e.eyebrow}</p>
+      <h1 class="display mt-8 text-[var(--prism-text)]">{e.name}</h1>
+      <p class="headline-md mt-6 text-[var(--prism-soft-gold)]">{e.tagline}</p>
+
+      <dl class="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div>
+          <dt class="label-caps text-[var(--prism-outline)]">{l.date}</dt>
+          <dd class="body-md mt-2 text-[var(--prism-text)]">{e.date}</dd>
+        </div>
+        <div>
+          <dt class="label-caps text-[var(--prism-outline)]">{l.time}</dt>
+          <dd class="body-md mt-2 text-[var(--prism-text)]">{e.time}</dd>
+        </div>
+        <div>
+          <dt class="label-caps text-[var(--prism-outline)]">{l.venue}</dt>
+          <dd class="body-md mt-2 text-[var(--prism-text)]">{e.venue}, {e.city}</dd>
+        </div>
+        <div>
+          <dt class="label-caps text-[var(--prism-outline)]">{e.ticketLabel}</dt>
+          <dd class="body-md mt-2 text-[var(--prism-gold)]">{e.ticketPrice}</dd>
+        </div>
+      </dl>
+
+      <p class="body-lg mt-8 max-w-2xl text-[var(--prism-text-secondary)]">{e.purpose}</p>
+
+      <div class="mt-12 flex flex-col gap-4 sm:flex-row">
+        <a class="btn-prism-primary" href={`#${ids.experience}`}>{e.cta.viewExperience}</a>
+        <a class="btn-prism-secondary" href={`#${ids.cast}`}>{e.cta.viewCast}</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id={ids.experience} class="prism-section bg-[var(--prism-surface-low)]">
+  <div class="prism-container">
+    <p class="subheader text-[var(--prism-gold)]">{e.experience.label}</p>
+    <h2 class="headline-lg mt-6 text-[var(--prism-text)]">{e.experience.title}</h2>
+    <p class="body-lg mt-6 max-w-3xl text-[var(--prism-text-secondary)]">{e.experience.body}</p>
+    <ul class="mt-12 grid gap-px bg-[var(--prism-divider)] md:grid-cols-2">
+      {
+        e.experience.points.map((point) => (
+          <li class="flex items-start gap-4 bg-[var(--prism-surface-low)] p-6 md:p-8">
+            <span class="mt-1 h-px w-8 shrink-0 bg-[var(--prism-gold)]" aria-hidden="true"></span>
+            <p class="body-md text-[var(--prism-text)]">{point}</p>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</section>
+
+<div id={ids.cast}>
+  <ArtistList lang={lang} />
+</div>
+
+<section id={ids.cta} class="prism-section bg-[var(--prism-surface-lowest)]">
+  <div class="prism-container">
+    <div class="border border-[var(--prism-outline-variant)] p-8 md:p-12 lg:p-16">
+      <p class="subheader text-[var(--prism-gold)]">{e.cta.participate}</p>
+      <h2 class="headline-lg mt-6 text-[var(--prism-text)]">{e.cta.title}</h2>
+      <p class="body-lg mt-6 max-w-2xl text-[var(--prism-text-secondary)]">{e.cta.body}</p>
+      <p class="label-caps mt-8 text-[var(--prism-outline)]">{e.cta.note}</p>
+      <div class="mt-10 flex flex-col gap-4 sm:flex-row">
+        <a class="btn-prism-primary" href={mailHref}>{e.cta.button}</a>
+        <a class="btn-prism-secondary" href={getLocalizedPath(lang, "donate")}>{e.cta.secondary}</a>
+      </div>
+    </div>
+  </div>
+</section>

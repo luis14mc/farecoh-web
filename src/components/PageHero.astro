@@ -1,0 +1,18 @@
+---
+interface Props {
+  label: string;
+  title: string;
+  intro?: string;
+}
+
+const { label, title, intro } = Astro.props;
+---
+
+<section class="prism-section border-b border-[var(--prism-divider)] pt-12 md:pt-16">
+  <div class="prism-container max-w-4xl">
+    <p class="subheader text-[var(--prism-outline)]">{label}</p>
+    <h1 class="display mt-8 text-[var(--prism-text)]">{title}</h1>
+    {intro && <p class="body-lg mt-8 max-w-3xl text-[var(--prism-text-secondary)]">{intro}</p>}
+    <hr class="prism-divider mt-10" />
+  </div>
+</section>

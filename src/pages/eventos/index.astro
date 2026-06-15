@@ -1,0 +1,12 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import EventsPage from "@/components/EventsPage.astro";
+import { getDictionary } from "@/i18n";
+
+const lang = "es";
+const t = getDictionary(lang);
+---
+
+<Layout title={t.meta.eventsTitle} description={t.meta.eventsDescription} lang={lang} active="events">
+  <EventsPage lang={lang} />
+</Layout>

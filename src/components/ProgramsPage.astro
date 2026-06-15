@@ -1,0 +1,38 @@
+---
+import type { Lang } from "@/i18n/types";
+import { getDictionary } from "@/i18n";
+import { programs as programRecords } from "@/data/programs";
+import PageHero from "./PageHero.astro";
+import ProgramRow from "./ProgramRow.astro";
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const p = getDictionary(lang).programsPage;
+const items = p.items;
+---
+
+<PageHero label={p.label} title={p.title} intro={p.intro} />
+
+<section class="prism-section">
+  <div class="prism-container">
+    <ol class="grid gap-px bg-[var(--prism-divider)]">
+      {
+        programRecords.map((program, index) => {
+          const copy = items[program.slug];
+          return <ProgramRow index={index + 1} title={copy.title} body={copy.body} />;
+        })
+      }
+    </ol>
+  </div>
+</section>
+
+<section class="prism-section bg-[var(--prism-surface-low)]">
+  <div class="prism-container">
+    <figure class="editorial-image max-w-4xl">
+      <img src="/images/bg-musica.webp" alt={getDictionary(lang).home.heroImageAlt} width="1920" height="1080" loading="lazy" />
+    </figure>
+  </div>
+</section>
