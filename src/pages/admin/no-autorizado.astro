@@ -1,5 +1,9 @@
 ---
 import "../../styles/global.css";
+import { getPublicSupabaseConfig, isAuthConfigured } from "@/lib/auth";
+
+const { supabaseUrl, supabaseAnonKey } = getPublicSupabaseConfig();
+const authConfigured = isAuthConfigured({ supabaseUrl, supabaseAnonKey });
 ---
 
 <!doctype html>
@@ -23,11 +27,12 @@ import "../../styles/global.css";
       </section>
     </main>
 
-    <script>
-      import { createSupabaseBrowserClient } from "@/lib/auth";
-      const supabase = createSupabaseBrowserClient();
+    <script define:vars={{ supabaseUrl, supabaseAnonKey, authConfigured }}>
+      import { createBrowserClient } from "@supabase/ssr";
+
+      const supabase = authConfigured ? createBrowserClient(supabaseUrl, supabaseAnonKey) : null;
       document.getElementById("logout-button")?.addEventListener("click", async () => {
-        await supabase.auth.signOut();
+        if (supabase) await supabase.auth.signOut();
         window.location.href = "/admin/login";
       });
     </script>

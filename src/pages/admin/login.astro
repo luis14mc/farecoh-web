@@ -1,8 +1,9 @@
 ---
 import "../../styles/global.css";
-import { isAuthConfigured } from "@/lib/auth";
+import { getPublicSupabaseConfig, isAuthConfigured } from "@/lib/auth";
 
-const authConfigured = isAuthConfigured();
+const { supabaseUrl, supabaseAnonKey } = getPublicSupabaseConfig();
+const authConfigured = isAuthConfigured({ supabaseUrl, supabaseAnonKey });
 const authError = Astro.url.searchParams.get("error");
 ---
 
@@ -26,7 +27,7 @@ const authError = Astro.url.searchParams.get("error");
 
         {!authConfigured && (
           <p class="mt-4 rounded bg-yellow-100 p-3 text-body-md text-yellow-800">
-            Supabase Auth no está configurado. Defina PUBLIC_SUPABASE_URL y PUBLIC_SUPABASE_ANON_KEY.
+            Supabase Auth no está configurado. Defina PUBLIC_SUPABASE_URL y PUBLIC_SUPABASE_ANON_KEY en Vercel y vuelva a desplegar.
           </p>
         )}
 
@@ -37,13 +38,13 @@ const authError = Astro.url.searchParams.get("error");
         <form id="login-form" class="mt-6 space-y-4">
           <label class="block">
             <span class="text-caption font-caption font-bold uppercase text-on-surface-variant">Correo</span>
-            <input id="email" name="email" type="email" required autocomplete="email" class="mt-2 w-full rounded border border-outline-variant bg-surface px-3 py-3 text-body-md outline-none focus:border-primary" />
+            <input id="email" name="email" type="email" required autocomplete="email" disabled={!authConfigured} class="mt-2 w-full rounded border border-outline-variant bg-surface px-3 py-3 text-body-md outline-none focus:border-primary disabled:cursor-not-allowed disabled:opacity-60" />
           </label>
           <label class="block">
             <span class="text-caption font-caption font-bold uppercase text-on-surface-variant">Contraseña</span>
-            <input id="password" name="password" type="password" required autocomplete="current-password" class="mt-2 w-full rounded border border-outline-variant bg-surface px-3 py-3 text-body-md outline-none focus:border-primary" />
+            <input id="password" name="password" type="password" required autocomplete="current-password" disabled={!authConfigured} class="mt-2 w-full rounded border border-outline-variant bg-surface px-3 py-3 text-body-md outline-none focus:border-primary disabled:cursor-not-allowed disabled:opacity-60" />
           </label>
-          <button id="login-button" class="w-full rounded bg-primary px-4 py-3 text-label-md font-label-md font-bold text-on-primary transition-colors hover:bg-secondary" type="submit">
+          <button id="login-button" disabled={!authConfigured} class="w-full rounded bg-primary px-4 py-3 text-label-md font-label-md font-bold text-on-primary transition-colors hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-60" type="submit">
             Entrar
           </button>
         </form>
@@ -52,15 +53,15 @@ const authError = Astro.url.searchParams.get("error");
       </section>
     </main>
 
-    <script>
-      import { createSupabaseBrowserClient } from "@/lib/auth";
+    <script define:vars={{ supabaseUrl, supabaseAnonKey, authConfigured }}>
+      import { createBrowserClient } from "@supabase/ssr";
 
-      const form = document.getElementById("login-form") as HTMLFormElement | null;
-      const button = document.getElementById("login-button") as HTMLButtonElement | null;
+      const form = document.getElementById("login-form");
+      const button = document.getElementById("login-button");
       const message = document.getElementById("login-message");
-      const supabase = createSupabaseBrowserClient();
+      const supabase = authConfigured ? createBrowserClient(supabaseUrl, supabaseAnonKey) : null;
 
-      function showMessage(text: string, type: "error" | "success" = "error") {
+      function showMessage(text, type = "error") {
         if (!message) return;
         message.textContent = text;
         message.className = `mt-4 rounded p-3 text-body-md font-body-md ${type === "error" ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`;
@@ -68,7 +69,11 @@ const authError = Astro.url.searchParams.get("error");
 
       form?.addEventListener("submit", async (event) => {
         event.preventDefault();
-        if (!button || !form) return;
+        if (!button || !form || !supabase) {
+          showMessage("Autenticación no disponible. Configure Supabase en el entorno de despliegue.");
+          return;
+        }
+
         const data = new FormData(form);
         const email = String(data.get("email") || "").trim();
         const password = String(data.get("password") || "");

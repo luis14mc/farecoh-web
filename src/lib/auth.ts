@@ -13,13 +13,24 @@ export interface StaffProfile {
   created_at: string;
 }
 
-export function isAuthConfigured(): boolean {
-  return Boolean(import.meta.env.PUBLIC_SUPABASE_URL && import.meta.env.PUBLIC_SUPABASE_ANON_KEY);
+export interface PublicSupabaseConfig {
+  supabaseUrl: string;
+  supabaseAnonKey: string;
 }
 
-export function getSupabaseEnv() {
-  const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
+export function getPublicSupabaseConfig(): PublicSupabaseConfig {
+  return {
+    supabaseUrl: import.meta.env.PUBLIC_SUPABASE_URL ?? "",
+    supabaseAnonKey: import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "",
+  };
+}
+
+export function isAuthConfigured(config: PublicSupabaseConfig = getPublicSupabaseConfig()): boolean {
+  return Boolean(config.supabaseUrl && config.supabaseAnonKey);
+}
+
+export function getSupabaseEnv(config: PublicSupabaseConfig = getPublicSupabaseConfig()) {
+  const { supabaseUrl, supabaseAnonKey } = config;
 
   if (!supabaseUrl || !supabaseAnonKey) {
     throw new Error("PUBLIC_SUPABASE_URL and PUBLIC_SUPABASE_ANON_KEY are required for admin auth.");
@@ -47,8 +58,9 @@ export function createDevStaffProfile(): StaffProfile {
   };
 }
 
-export function createSupabaseBrowserClient() {
-  const { supabaseUrl, supabaseAnonKey } = getSupabaseEnv();
+export function createSupabaseBrowserClient(config?: PublicSupabaseConfig) {
+  const { supabaseUrl, supabaseAnonKey } = config ?? getPublicSupabaseConfig();
+  if (!supabaseUrl || !supabaseAnonKey) return null;
   return createBrowserClient(supabaseUrl, supabaseAnonKey);
 }
 

@@ -1,6 +1,6 @@
 ---
 import FarecohLogo from "@/components/layout/FarecohLogo.astro";
-import { STAFF_ROLE_LABELS, type StaffProfile } from "@/lib/auth";
+import { getPublicSupabaseConfig, isAuthConfigured, STAFF_ROLE_LABELS, type StaffProfile } from "@/lib/auth";
 import { canAccessRoute } from "@/lib/rbac";
 
 interface Props {
@@ -9,6 +9,8 @@ interface Props {
 
 const { active = "dashboard" } = Astro.props;
 const staffProfile = Astro.locals.staffProfile as StaffProfile | undefined;
+const { supabaseUrl, supabaseAnonKey } = getPublicSupabaseConfig();
+const authConfigured = isAuthConfigured({ supabaseUrl, supabaseAnonKey });
 
 const navItems = [
   { label: "Dashboard", href: "/admin", icon: "dashboard", key: "dashboard" },
@@ -61,12 +63,12 @@ const linkClass = (key: string) => {
   </button>
 </aside>
 
-<script>
-  import { createSupabaseBrowserClient } from "@/lib/auth";
+<script define:vars={{ supabaseUrl, supabaseAnonKey, authConfigured }}>
+  import { createBrowserClient } from "@supabase/ssr";
 
-  const supabase = createSupabaseBrowserClient();
+  const supabase = authConfigured ? createBrowserClient(supabaseUrl, supabaseAnonKey) : null;
   document.getElementById("admin-logout")?.addEventListener("click", async () => {
-    await supabase.auth.signOut();
+    if (supabase) await supabase.auth.signOut();
     window.location.href = "/admin/login";
   });
 </script>

@@ -4,7 +4,11 @@ interface Props {
   section: string;
 }
 
+import { getPublicSupabaseConfig, isAuthConfigured } from "@/lib/auth";
+
 const { title, section } = Astro.props;
+const { supabaseUrl, supabaseAnonKey } = getPublicSupabaseConfig();
+const authConfigured = isAuthConfigured({ supabaseUrl, supabaseAnonKey });
 const currentDate = new Date().toLocaleDateString("es-HN", {
   month: "short",
   day: "numeric",
@@ -31,12 +35,12 @@ const currentDate = new Date().toLocaleDateString("es-HN", {
   </div>
 </header>
 
-<script>
-  import { createSupabaseBrowserClient } from "@/lib/auth";
+<script define:vars={{ supabaseUrl, supabaseAnonKey, authConfigured }}>
+  import { createBrowserClient } from "@supabase/ssr";
 
-  const supabase = createSupabaseBrowserClient();
+  const supabase = authConfigured ? createBrowserClient(supabaseUrl, supabaseAnonKey) : null;
   document.getElementById("admin-header-logout")?.addEventListener("click", async () => {
-    await supabase.auth.signOut();
+    if (supabase) await supabase.auth.signOut();
     window.location.href = "/admin/login";
   });
 </script>
