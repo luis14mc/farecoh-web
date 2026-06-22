@@ -1,0 +1,20 @@
+﻿---
+import { homeFinalCta } from "@/data/home";
+import LandingButton from "@/components/landing/LandingButton.astro";
+---
+
+<section class="reveal-section landing-final-cta landing-section relative overflow-hidden">
+  <div class="hero-parallax__media absolute inset-0 overflow-hidden">
+    <div class="parallax-layer opacity-45" data-parallax data-parallax-speed="0.28" data-parallax-scale="1.1">
+      <img class="h-full w-full object-cover" src={homeFinalCta.image} alt="" loading="lazy" />
+    </div>
+  </div>
+  <div class="absolute inset-0 bg-[linear-gradient(90deg,rgba(16,20,21,.92),rgba(16,20,21,.58))]"></div>
+  <div class="landing-shell relative z-10 max-w-3xl text-white">
+    <h2 class="landing-headline mb-stack-md text-white">{homeFinalCta.title}</h2>
+    <p class="landing-body mb-stack-lg text-white/90">{homeFinalCta.body}</p>
+    <LandingButton href={homeFinalCta.href} variant="inverse">
+      {homeFinalCta.cta}
+    </LandingButton>
+  </div>
+</section>

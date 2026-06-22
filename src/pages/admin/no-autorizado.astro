@@ -1,0 +1,35 @@
+---
+import "../../styles/global.css";
+---
+
+<!doctype html>
+<html lang="es" class="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>Acceso no autorizado | FARECOH</title>
+  </head>
+  <body class="min-h-screen bg-surface text-on-surface font-body-md text-body-md">
+    <main class="flex min-h-screen items-center justify-center px-margin py-12">
+      <section class="max-w-md rounded-lg border border-outline-variant bg-surface-container-lowest p-6 text-center shadow-sm">
+        <p class="text-label-md font-label-md font-bold uppercase tracking-wider text-red-700">Acceso no autorizado</p>
+        <h1 class="mt-2 text-headline-md font-headline-md text-on-surface">No tiene permisos para esta seccion</h1>
+        <p class="mt-2 text-body-md font-body-md text-on-surface-variant">Solicite a un super admin que revise su rol o estado de acceso.</p>
+        <div class="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
+          <a href="/admin" class="rounded bg-primary px-4 py-3 text-label-md font-label-md font-bold text-on-primary hover:bg-secondary">Volver al panel</a>
+          <button id="logout-button" class="rounded border border-outline-variant px-4 py-3 text-label-md font-label-md font-bold text-on-surface hover:bg-surface-container-high" type="button">Cerrar sesion</button>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      import { createSupabaseBrowserClient } from "@/lib/auth";
+      const supabase = createSupabaseBrowserClient();
+      document.getElementById("logout-button")?.addEventListener("click", async () => {
+        await supabase.auth.signOut();
+        window.location.href = "/admin/login";
+      });
+    </script>
+  </body>
+</html>

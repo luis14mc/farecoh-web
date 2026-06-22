@@ -1,0 +1,117 @@
+---
+import AdminLayout from "@/layouts/AdminLayout.astro";
+import AdminHeader from "@/components/admin/AdminHeader.astro";
+---
+
+<AdminLayout title="Check-in | FARECOH" description="Validación de ingreso de boletos físicos" active="checkin">
+  <AdminHeader title="Check-in" section="Control de acceso" />
+
+  <div class="px-margin py-8 max-w-2xl mx-auto pb-24 md:pb-8">
+    <section class="rounded-lg border border-outline-variant bg-surface-container-lowest p-6 text-on-surface shadow-sm">
+      <h2 class="text-headline-sm font-headline-sm text-on-surface">Validar ingreso</h2>
+      <p class="mt-1 text-body-md font-body-md text-on-surface-variant">Busque el código impreso del boleto físico.</p>
+
+      <div class="mt-6 flex flex-col gap-3 sm:flex-row">
+        <input id="checkin-code" placeholder="PF-000001" class="min-w-0 flex-1 rounded border border-outline-variant bg-surface px-4 py-3 font-mono text-body-lg outline-none focus:border-primary" />
+        <button id="search-ticket" class="rounded bg-primary px-5 py-3 text-label-md font-label-md font-bold text-on-primary hover:bg-secondary">Buscar</button>
+      </div>
+
+      <div id="checkin-message" class="mt-5 hidden rounded p-4 text-body-md font-body-md"></div>
+      <div id="ticket-result" class="mt-5 hidden rounded border border-outline-variant bg-surface p-5"></div>
+      <button id="validate-ticket" class="mt-5 hidden w-full rounded bg-secondary px-5 py-3 text-label-md font-label-md font-bold text-on-secondary hover:opacity-90">Validar ingreso</button>
+    </section>
+  </div>
+</AdminLayout>
+
+<script>
+  import {
+    formatPhysicalDate,
+    getTickets,
+    isTicketCode,
+    normalizeTicketCode,
+    PHYSICAL_STATUS_LABELS,
+    seedPhysicalTicketing,
+    setTickets,
+  } from "@/services/physical-store";
+
+  let activeCode: string | null = null;
+
+  function showMessage(text: string, type: "error" | "warning" | "success" | "info") {
+    const node = document.getElementById("checkin-message");
+    if (!node) return;
+    const classes = {
+      error: "bg-red-100 text-red-700",
+      warning: "bg-yellow-100 text-yellow-800",
+      success: "bg-green-100 text-green-700",
+      info: "bg-blue-100 text-blue-700",
+    };
+    node.textContent = text;
+    node.className = `mt-5 rounded p-4 text-body-md font-body-md ${classes[type] || classes.info}`;
+  }
+
+  function renderTicket(ticket) {
+    const result = document.getElementById("ticket-result");
+    const button = document.getElementById("validate-ticket");
+    if (!result || !button) return;
+
+    if (!ticket) {
+      result.classList.add("hidden");
+      button.classList.add("hidden");
+      return;
+    }
+
+    result.classList.remove("hidden");
+    result.innerHTML = `<div class="space-y-3"><div class="flex items-start justify-between gap-4"><div><p class="text-caption font-caption font-bold uppercase text-primary">Boleto</p><h3 class="font-mono text-headline-sm font-headline-sm text-on-surface">${ticket.code}</h3></div><span class="rounded-full bg-surface-container-high px-3 py-1 text-caption font-caption font-bold">${PHYSICAL_STATUS_LABELS[ticket.status]}</span></div><dl class="grid gap-3 sm:grid-cols-2"><div><dt class="text-caption font-caption font-bold uppercase text-on-surface-variant">Comprador</dt><dd class="font-semibold">${ticket.buyer_name || "-"}</dd></div><div><dt class="text-caption font-caption font-bold uppercase text-on-surface-variant">Teléfono</dt><dd>${ticket.buyer_phone || "-"}</dd></div><div><dt class="text-caption font-caption font-bold uppercase text-on-surface-variant">Vendedor</dt><dd>${ticket.seller_name || "-"}</dd></div><div><dt class="text-caption font-caption font-bold uppercase text-on-surface-variant">Punto</dt><dd>${ticket.sale_location || "-"}</dd></div><div><dt class="text-caption font-caption font-bold uppercase text-on-surface-variant">Venta</dt><dd>${formatPhysicalDate(ticket.sold_at)}</dd></div><div><dt class="text-caption font-caption font-bold uppercase text-on-surface-variant">Validación</dt><dd>${formatPhysicalDate(ticket.validated_at)}</dd></div></dl></div>`;
+
+    if (ticket.status === "paid") button.classList.remove("hidden");
+    else button.classList.add("hidden");
+  }
+
+  function searchTicket() {
+    const ticketCode = normalizeTicketCode((document.getElementById("checkin-code") as HTMLInputElement)?.value || "");
+    activeCode = null;
+    if (!isTicketCode(ticketCode)) {
+      showMessage("Formato inválido. Use PF-000001.", "error");
+      renderTicket(null);
+      return;
+    }
+
+    const ticket = getTickets().find((item) => item.code === ticketCode);
+    if (!ticket) {
+      showMessage("Boleto inexistente.", "error");
+      renderTicket(null);
+      return;
+    }
+
+    activeCode = ticket.code;
+    renderTicket(ticket);
+
+    if (ticket.status === "paid") showMessage("Boleto pagado. Puede validar ingreso.", "success");
+    else if (ticket.status === "validated") showMessage("Boleto ya utilizado.", "error");
+    else if (["available", "assigned", "reserved"].includes(ticket.status)) showMessage("Boleto no pagado.", "warning");
+    else if (ticket.status === "cancelled") showMessage("Boleto anulado.", "error");
+  }
+
+  function validateTicket() {
+    if (!activeCode) return;
+    const tickets = getTickets();
+    const index = tickets.findIndex((ticket) => ticket.code === activeCode);
+    if (index === -1) return showMessage("Boleto inexistente.", "error");
+    const ticket = tickets[index];
+    if (ticket.status === "validated") return showMessage("Boleto ya utilizado.", "error");
+    if (ticket.status === "cancelled") return showMessage("Boleto anulado.", "error");
+    if (ticket.status !== "paid") return showMessage("Boleto no pagado.", "warning");
+
+    tickets[index] = { ...ticket, status: "validated", validated_at: new Date().toISOString() };
+    setTickets(tickets);
+    showMessage("Ingreso validado correctamente.", "success");
+    renderTicket(tickets[index]);
+  }
+
+  seedPhysicalTicketing();
+  document.getElementById("search-ticket")?.addEventListener("click", searchTicket);
+  document.getElementById("validate-ticket")?.addEventListener("click", validateTicket);
+  document.getElementById("checkin-code")?.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") searchTicket();
+  });
+</script>

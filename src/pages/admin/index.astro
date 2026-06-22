@@ -1,0 +1,34 @@
+---
+import AdminLayout from "@/layouts/AdminLayout.astro";
+import AdminHeader from "@/components/admin/AdminHeader.astro";
+import StatsCard from "@/components/admin/StatsCard.astro";
+import TicketSearch from "@/components/admin/TicketSearch.astro";
+import SalesTable from "@/components/admin/SalesTable.astro";
+---
+
+<AdminLayout 
+  title="Admin Dashboard | FARECOH" 
+  description="Panel de administración de boletería de FARECOH" 
+  active="dashboard"
+>
+  <AdminHeader title="Panel de Control" section="Dashboard" />
+
+  <!-- Dashboard Main Grid -->
+  <div class="px-margin py-8 space-y-stack-lg max-w-container-max pb-24 md:pb-8">
+    <!-- Live KPIs Cards -->
+    <StatsCard />
+
+    <!-- Check-in & Recent Sales Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-gutter items-start">
+      <!-- Check-in section (1 Column) -->
+      <section class="lg:col-span-1">
+        <TicketSearch />
+      </section>
+
+      <!-- Recent Sales Table (2 Columns) -->
+      <section class="lg:col-span-2">
+        <SalesTable />
+      </section>
+    </div>
+  </div>
+</AdminLayout>

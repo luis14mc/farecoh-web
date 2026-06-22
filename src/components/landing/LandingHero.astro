@@ -1,0 +1,39 @@
+﻿---
+import { homeHero } from "@/data/home";
+import LandingButton from "@/components/landing/LandingButton.astro";
+import FarecohLogo from "@/components/layout/FarecohLogo.astro";
+---
+
+<section class="hero-parallax relative flex min-h-[92vh] w-full items-end overflow-hidden bg-brand-neutral md:min-h-[92vh] md:items-center">
+  <div class="hero-parallax__media absolute inset-0 z-0 overflow-hidden">
+    <div class="parallax-layer" data-parallax data-parallax-speed="0.42" data-parallax-scale="1.14">
+      <img
+        class="h-full w-full object-cover object-center"
+        src={homeHero.image}
+        alt={homeHero.imageAlt}
+        fetchpriority="high"
+      />
+    </div>
+    <div class="hero-editorial absolute inset-0"></div>
+  </div>
+
+  <div class="landing-section relative z-10 w-full pb-8 pt-28 md:pb-0 md:pt-0">
+    <div class="landing-shell hero-content max-w-3xl text-white">
+      <div class="mb-4 flex items-center gap-3">
+        <span class="inline-block h-8 w-1 bg-brand-400" aria-hidden="true"></span>
+        <FarecohLogo variant="stacked" theme="white" size="hero" loading="eager" />
+      </div>
+      <h1 class="display mb-4 text-white">{homeHero.title}</h1>
+      <p class="subtitle-lg mb-4 font-semibold text-white/95">{homeHero.subtitle}</p>
+      <p class="landing-body mb-stack-lg text-white/88">{homeHero.body}</p>
+      <div class="flex flex-col gap-4 sm:flex-row sm:flex-wrap">
+        <LandingButton href="/eventos/pink-floyd" variant="primary">
+          {homeHero.ctaEvent}
+        </LandingButton>
+        <LandingButton href="#historia" variant="secondary">
+          {homeHero.ctaStory}
+        </LandingButton>
+      </div>
+    </div>
+  </div>
+</section>

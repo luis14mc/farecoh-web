@@ -1,0 +1,76 @@
+---
+import { pinkFloydEvent } from "@/data/event";
+import { homeFeaturedEvent } from "@/data/home";
+import LandingButton from "@/components/landing/LandingButton.astro";
+---
+
+<section class="concert-bridge concert-bridge--full reveal-section">
+  <div class="concert-bridge__glow" aria-hidden="true"></div>
+  <div class="landing-shell relative z-10 mb-4">
+    <p class="landing-eyebrow text-brand-700">Del impacto social a la experiencia en vivo</p>
+  </div>
+  <div class="concert-bridge__card relative z-10">
+    <div class="grid grid-cols-1 lg:grid-cols-2">
+      <div class="concert-bridge__content space-y-stack-md">
+        <div class="flex flex-wrap items-center gap-3">
+          <span class="concert-accent-bar" aria-hidden="true"></span>
+          <span class="concert-badge">{homeFeaturedEvent.badge}</span>
+        </div>
+        <h2 class="display text-white">{pinkFloydEvent.name}</h2>
+        <p class="subtitle-lg font-semibold text-concert-amber">{homeFeaturedEvent.subtitle}</p>
+        <p class="landing-body max-w-2xl text-white/85">{homeFeaturedEvent.body}</p>
+
+        <dl class="grid max-w-2xl grid-cols-1 gap-3 sm:grid-cols-2" aria-label="Detalles del evento">
+          <div class="concert-detail-chip">
+            <span class="material-symbols-outlined">calendar_today</span>
+            <div>
+              <dt class="text-caption font-caption uppercase tracking-wider text-white/55">Fecha</dt>
+              <dd class="body-md text-white">29 de agosto de 2026</dd>
+            </div>
+          </div>
+          <div class="concert-detail-chip">
+            <span class="material-symbols-outlined">schedule</span>
+            <div>
+              <dt class="text-caption font-caption uppercase tracking-wider text-white/55">Hora</dt>
+              <dd class="body-md text-white">{pinkFloydEvent.time}</dd>
+            </div>
+          </div>
+          <div class="concert-detail-chip sm:col-span-2">
+            <span class="material-symbols-outlined">location_on</span>
+            <div>
+              <dt class="text-caption font-caption uppercase tracking-wider text-white/55">Lugar</dt>
+              <dd class="body-md text-white">{pinkFloydEvent.venue}, {pinkFloydEvent.city}</dd>
+            </div>
+          </div>
+          <div class="concert-detail-chip sm:col-span-2">
+            <span class="material-symbols-outlined">volunteer_activism</span>
+            <div>
+              <dt class="text-caption font-caption uppercase tracking-wider text-white/55">Aporte</dt>
+              <dd class="body-md text-white">Aporte solidario L.{pinkFloydEvent.ticket_price.toFixed(2)}</dd>
+            </div>
+          </div>
+        </dl>
+
+        <div class="flex flex-col gap-4 pt-2 sm:flex-row sm:flex-wrap">
+          <LandingButton href="/eventos/pink-floyd" variant="concert-primary">
+            {homeFeaturedEvent.ctaEvent}
+          </LandingButton>
+          <LandingButton href="/eventos/pink-floyd/boletos" variant="concert-secondary">
+            {homeFeaturedEvent.ctaTickets}
+          </LandingButton>
+        </div>
+      </div>
+
+      <div class="concert-bridge__image-wrap editorial-image editorial-image--parallax min-h-[280px] lg:min-h-[520px]">
+        <div class="parallax-layer" data-parallax data-parallax-speed="0.22" data-parallax-scale="1.1">
+          <img
+            class="h-full w-full object-cover"
+            src={homeFeaturedEvent.image}
+            alt={homeFeaturedEvent.imageAlt}
+            loading="lazy"
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

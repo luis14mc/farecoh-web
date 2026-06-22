@@ -1,0 +1,66 @@
+---
+import { site } from "@/data/site";
+import FarecohLogo from "@/components/layout/FarecohLogo.astro";
+
+interface Props {
+  variant?: "light" | "dark" | "concert";
+}
+
+const { variant = "light" } = Astro.props;
+
+const footerClass =
+  variant === "concert"
+    ? "landing-section border-t border-concert-orange/20 bg-concert-deep text-white"
+    : variant === "dark"
+      ? "landing-section border-t border-outline/10 bg-on-background text-white"
+      : "landing-section border-t border-outline-variant bg-surface-container-highest";
+
+const mutedClass =
+  variant === "concert"
+    ? "body-md text-white/60"
+    : variant === "dark"
+      ? "body-md text-outline-variant/70"
+      : "body-md text-on-surface-variant";
+
+const linkClass =
+  variant === "concert"
+    ? "body-md text-white/65 transition-colors hover:text-concert-amber"
+    : variant === "dark"
+      ? "body-md text-outline-variant transition-colors hover:text-brand-400"
+      : "body-md text-on-surface-variant transition-colors hover:text-brand-700";
+
+const titleClass =
+  variant === "concert"
+    ? "landing-eyebrow text-concert-amber"
+    : variant === "dark"
+      ? "landing-eyebrow text-surface-bright"
+      : "landing-eyebrow text-on-surface";
+
+const taglineClass =
+  variant === "concert" ? "landing-eyebrow text-concert-blue" : "landing-eyebrow text-brand-500";
+
+const logoTheme = variant === "light" ? "color" : "white";
+---
+
+<footer class={footerClass}>
+  <div class="landing-shell flex flex-col justify-between gap-stack-lg lg:flex-row">
+    <div class="max-w-md space-y-4">
+      <FarecohLogo variant="horizontal" theme={logoTheme} size="footer" />
+      <p class={taglineClass}>{site.tagline.es}</p>
+      <p class={`${mutedClass} leading-relaxed`}>{site.footerNote}</p>
+      <p class="label-caps text-outline-variant">© {site.year} {site.name}. Todos los derechos reservados.</p>
+    </div>
+
+    <div class="grid grid-cols-2 gap-stack-lg sm:flex sm:gap-stack-lg">
+      <div class="flex flex-col space-y-2">
+        <h4 class={titleClass}>Evento</h4>
+        <a class={linkClass} href="/eventos/pink-floyd">Tributo a Pink Floyd</a>
+        <a class={linkClass} href="/eventos/pink-floyd/boletos">Reservar boletos</a>
+      </div>
+      <div class="flex flex-col space-y-2">
+        <h4 class={titleClass}>Contacto</h4>
+        <a class={linkClass} href={`mailto:${site.email}`}>{site.email}</a>
+      </div>
+    </div>
+  </div>
+</footer>

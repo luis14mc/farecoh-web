@@ -1,0 +1,243 @@
+﻿---
+import InputField from "@/components/Forms/InputField.astro";
+import TicketSummary from "@/components/tickets/TicketSummary.astro";
+import { getEvent } from "@/lib/supabase";
+
+const event = await getEvent();
+const ticketPrice = event.ticket_price;
+---
+
+<div class="concert-form-panel">
+  <div id="form-container">
+    <div class="mb-8 text-center">
+      <span class="concert-badge mb-3">ReservaciÃ³n</span>
+      <h2 class="text-headline-lg font-headline-lg text-white">Tributo a Pink Floyd</h2>
+      <p class="text-body-md font-body-md mt-2 text-white/70">
+        Complete sus datos para reservar su lugar en la experiencia en vivo.
+      </p>
+    </div>
+
+    <form id="ticket-form" class="space-y-6">
+      <InputField
+        label="Nombre Completo"
+        id="name"
+        name="name"
+        placeholder="Ej. Juan PÃ©rez"
+        required={true}
+      />
+
+      <InputField
+        label="Correo ElectrÃ³nico"
+        id="email"
+        name="email"
+        type="email"
+        placeholder="Ej. juan.perez@correo.com"
+        required={true}
+      />
+
+      <InputField
+        label="TelÃ©fono"
+        id="phone"
+        name="phone"
+        type="tel"
+        placeholder="Ej. +504 9999-9999"
+        required={true}
+      />
+
+      <InputField
+        label="Cantidad de Boletos"
+        id="ticket_count"
+        name="ticket_count"
+        type="number"
+        placeholder="1"
+        required={true}
+        value={1}
+        min={1}
+        max={10}
+      />
+
+      <TicketSummary price={ticketPrice} />
+
+      <button type="submit" id="submit-btn" class="concert-form-submit">
+        <span>Reservar boletos</span>
+        <span class="material-symbols-outlined">confirmation_number</span>
+      </button>
+    </form>
+  </div>
+
+  <div id="success-container" class="hidden space-y-6 text-center">
+    <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-concert-orange/15 text-concert-amber">
+      <span class="material-symbols-outlined text-4xl font-bold">check_circle</span>
+    </div>
+
+    <div>
+      <p class="text-caption font-caption font-bold uppercase tracking-widest text-concert-amber">ReservaciÃ³n exitosa</p>
+      <h2 class="text-headline-lg font-headline-lg mt-1 text-white">Â¡Lugar asegurado!</h2>
+      <p class="text-body-md font-body-md mt-2 text-white/70">
+        Hemos registrado su solicitud. Su reservaciÃ³n estÃ¡ en estado <strong class="text-white">Pendiente de Pago</strong>.
+      </p>
+    </div>
+
+    <div class="concert-summary-box space-y-4 text-left">
+      <div class="flex justify-between border-b border-concert-orange/20 pb-3">
+        <div>
+          <p class="text-caption font-caption font-bold uppercase text-white/55">Evento</p>
+          <p class="text-body-md font-body-md font-bold text-white">Tributo a Pink Floyd</p>
+        </div>
+        <div class="text-right">
+          <p class="text-caption font-caption font-bold uppercase text-white/55">Fecha / Hora</p>
+          <p class="text-body-md font-body-md text-white">08 Ago 2026 - 8:00 PM</p>
+        </div>
+      </div>
+
+      <div class="flex justify-between border-b border-concert-orange/20 pb-3">
+        <div>
+          <p class="text-caption font-caption font-bold uppercase text-white/55">Reservado a nombre de</p>
+          <p class="text-body-md font-body-md font-bold text-white" id="summary-name">Juan PÃ©rez</p>
+        </div>
+        <div class="text-right">
+          <p class="text-caption font-caption font-bold uppercase text-white/55">Cantidad</p>
+          <p class="text-body-md font-body-md text-white" id="summary-qty">1 boleto(s)</p>
+        </div>
+      </div>
+
+      <div>
+        <p class="text-caption font-caption mb-2 font-bold uppercase text-white/55">Sus cÃ³digos de boleto</p>
+        <div class="grid grid-cols-2 gap-2" id="summary-codes"></div>
+      </div>
+    </div>
+
+    <div class="space-y-3 pt-4">
+      <p class="text-caption font-caption text-white/55">
+        Presente estos cÃ³digos en taquilla o realice su transferencia para validaciÃ³n.
+      </p>
+      <div class="flex gap-4">
+        <a href="/" class="landing-btn landing-btn-concert-secondary flex-1">Ir al inicio</a>
+        <a href="/eventos/pink-floyd" class="landing-btn landing-btn-concert-primary flex-1">Volver al evento</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  import { supabase } from "@/lib/supabase";
+
+  const form = document.getElementById("ticket-form") as HTMLFormElement | null;
+  const qtyInput = document.getElementById("ticket_count") as HTMLInputElement | null;
+  const totalPriceSpan = document.getElementById("total-price") as HTMLSpanElement | null;
+  const submitBtn = document.getElementById("submit-btn") as HTMLButtonElement | null;
+  
+  const formContainer = document.getElementById("form-container");
+  const successContainer = document.getElementById("success-container");
+  const summaryName = document.getElementById("summary-name");
+  const summaryQty = document.getElementById("summary-qty");
+  const summaryCodes = document.getElementById("summary-codes");
+
+  const ticketPrice = 500.00;
+
+  if (qtyInput && totalPriceSpan) {
+    qtyInput.addEventListener("input", () => {
+      const qty = parseInt(qtyInput.value) || 1;
+      const total = qty * ticketPrice;
+      totalPriceSpan.innerText = total.toFixed(2);
+    });
+  }
+
+  if (form && submitBtn) {
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      
+      const formData = new FormData(form);
+      const name = formData.get("name") as string;
+      const email = formData.get("email") as string;
+      const phone = formData.get("phone") as string;
+      const qty = parseInt(formData.get("ticket_count") as string) || 1;
+      
+      // 1. Loading state
+      submitBtn.disabled = true;
+      const originalText = submitBtn.innerHTML;
+      submitBtn.innerHTML = `<span class="material-symbols-outlined animate-spin">sync</span> Procesando...`;
+
+      try {
+        // 2. Manage Customer (Check if exists first or insert new)
+        const customerId = "cust-" + Math.random().toString(36).substr(2, 9);
+        const customerData = {
+          id: customerId,
+          name,
+          email,
+          phone,
+          created_at: new Date().toISOString()
+        };
+
+        // Call client insertion helper (it handles local storage or real Supabase client)
+        await supabase.insert("customers", customerData);
+
+        // 3. Create Order
+        const orderId = "order-" + Math.random().toString(36).substr(2, 9);
+        const orderData = {
+          id: orderId,
+          customer_id: customerId,
+          event_id: "pink-floyd",
+          ticket_count: qty,
+          total_amount: qty * ticketPrice,
+          status: "pending",
+          created_at: new Date().toISOString()
+        };
+        await supabase.insert("orders", orderData);
+
+        // 4. Create Tickets with sequential codes PF-XXXXXX
+        // Query ticket count for code sequencing
+        let startCodeIndex = 20; // Default offset
+        const { data: currentTickets } = await supabase.from("tickets").select("ticket_code");
+        if (currentTickets && Array.isArray(currentTickets)) {
+          startCodeIndex = currentTickets.length + 1;
+        }
+
+        const ticketsToInsert = [];
+        const ticketCodes = [];
+
+        for (let i = 0; i < qty; i++) {
+          const currentIndex = startCodeIndex + i;
+          const paddedCode = "PF-" + String(currentIndex).padStart(6, '0');
+          ticketCodes.push(paddedCode);
+
+          ticketsToInsert.push({
+            id: "ticket-" + Math.random().toString(36).substr(2, 9),
+            order_id: orderId,
+            event_id: "pink-floyd",
+            ticket_code: paddedCode,
+            status: "pending",
+            checked_in_at: null,
+            created_at: new Date().toISOString()
+          });
+        }
+
+        await supabase.insert("tickets", ticketsToInsert);
+
+        // 5. Render Success Screen
+        if (summaryName) summaryName.innerText = name;
+        if (summaryQty) summaryQty.innerText = `${qty} boleto(s)`;
+        if (summaryCodes) {
+          summaryCodes.innerHTML = ticketCodes
+            .map(code => `
+              <div class="rounded border border-concert-orange/25 bg-concert-orange/10 p-2 text-center font-mono text-body-md font-bold text-concert-amber">
+                ${code}
+              </div>
+            `)
+            .join("");
+        }
+
+        if (formContainer && successContainer) {
+          formContainer.classList.add("hidden");
+          successContainer.classList.remove("hidden");
+        }
+      } catch (err) {
+        console.error("Booking error:", err);
+        alert("OcurriÃ³ un error al procesar su reservaciÃ³n. Por favor intente de nuevo.");
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+      }
+    });
+  }
+</script>
+

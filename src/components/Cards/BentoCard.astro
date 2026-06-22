@@ -1,0 +1,37 @@
+---
+interface Props {
+  title: string;
+  description: string;
+  icon: string;
+  iconFill?: boolean;
+  variant?: "gray-to-primary" | "white-to-border";
+}
+
+const { title, description, icon, iconFill = false, variant = "gray-to-primary" } = Astro.props;
+
+const cardClass = variant === "gray-to-primary"
+  ? "bg-surface-container-low p-stack-lg flex flex-col justify-between group hover:bg-primary-container transition-colors duration-500 min-h-[250px]"
+  : "bg-white border border-outline-variant p-stack-lg flex flex-col justify-between group hover:border-primary transition-all duration-500 min-h-[250px]";
+
+const iconClass = variant === "gray-to-primary"
+  ? "material-symbols-outlined text-primary group-hover:text-white text-4xl mb-4"
+  : "material-symbols-outlined text-primary text-4xl mb-4";
+
+const titleClass = variant === "gray-to-primary"
+  ? "text-headline-md font-headline-md mb-4 group-hover:text-white"
+  : "text-headline-md font-headline-md mb-4 text-on-surface";
+
+const descClass = variant === "gray-to-primary"
+  ? "text-body-md font-body-md text-on-surface-variant group-hover:text-on-primary-container/90"
+  : "text-body-md font-body-md text-on-surface-variant";
+---
+
+<div class={cardClass}>
+  <div>
+    <span class={iconClass} style={iconFill ? "font-variation-settings: 'FILL' 1;" : ""}>
+      {icon}
+    </span>
+    <h3 class={titleClass}>{title}</h3>
+    <p class={descClass}>{description}</p>
+  </div>
+</div>

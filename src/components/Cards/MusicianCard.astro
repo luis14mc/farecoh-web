@@ -1,0 +1,72 @@
+---
+interface Props {
+  type: "featured" | "standard" | "placeholder";
+  name?: string;
+  role?: string;
+  image?: string;
+  imageAlt?: string;
+  colSpan?: string;
+  rowSpan?: string;
+}
+
+const {
+  type,
+  name = "",
+  role = "",
+  image,
+  imageAlt = "",
+  colSpan = "col-span-1",
+  rowSpan = "",
+} = Astro.props;
+
+const classes = [
+  colSpan,
+  rowSpan,
+  "group relative overflow-hidden border border-concert-orange/20 bg-concert-elevated",
+].filter(Boolean).join(" ");
+---
+
+{type === "featured" && (
+  <div class={classes}>
+    <div class="aspect-square w-full">
+      {image && (
+        <img
+          class="h-full w-full object-cover grayscale transition-all duration-500 group-hover:grayscale-0 group-hover:scale-105"
+          src={image}
+          alt={imageAlt}
+          loading="lazy"
+        />
+      )}
+    </div>
+    <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-4">
+      <p class="body-md font-bold text-white">{name}</p>
+      <p class="landing-eyebrow mt-1 text-concert-amber">{role}</p>
+    </div>
+  </div>
+)}
+
+{type === "standard" && (
+  <div class={classes}>
+    <div class="aspect-square w-full">
+      {image && (
+        <img
+          class="h-full w-full object-cover grayscale transition-all duration-500 group-hover:grayscale-0 group-hover:scale-105"
+          src={image}
+          alt={imageAlt}
+          loading="lazy"
+        />
+      )}
+    </div>
+    <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 to-transparent p-2">
+      <p class="text-xs font-bold uppercase tracking-wide text-white">{name}</p>
+    </div>
+  </div>
+)}
+
+{type === "placeholder" && (
+  <div class={`${colSpan} min-h-[120px] overflow-hidden border border-concert-orange/15 bg-concert-elevated/80 md:min-h-0`}>
+    <div class="flex h-full min-h-[120px] items-center justify-center p-4 text-center transition-colors group-hover:bg-concert-orange/10 md:min-h-0">
+      <span class="text-xs font-bold uppercase tracking-wide text-white/45">{name}</span>
+    </div>
+  </div>
+)}

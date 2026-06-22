@@ -1,0 +1,132 @@
+---
+import AdminLayout from "@/layouts/AdminLayout.astro";
+import AdminHeader from "@/components/admin/AdminHeader.astro";
+import { getEvent } from "@/lib/supabase";
+
+const event = await getEvent();
+const ticketPrice = event.ticket_price;
+---
+
+<AdminLayout
+  title="Reportes | FARECOH"
+  description="Reportes administrativos de ventas, boletos y check-in"
+  active="reportes"
+>
+  <AdminHeader title="Reportes" section="Administración" />
+
+  <div class="px-margin py-8 max-w-container-max pb-24 md:pb-8 space-y-stack-lg">
+    <section class="rounded-lg border border-outline-variant bg-surface-container-lowest p-6 shadow-sm">
+      <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div>
+          <p class="text-label-md font-label-md font-bold uppercase tracking-wider text-primary">Evento activo</p>
+          <h2 class="mt-1 text-headline-md font-headline-md text-on-surface">{event.name}</h2>
+          <p class="mt-2 text-body-md font-body-md text-on-surface-variant">
+            Reportes de ventas físicas por vendedor y estado general del lote.
+          </p>
+        </div>
+        <a
+          href="/admin/vendedores"
+          class="inline-flex items-center justify-center gap-2 rounded border border-outline-variant px-4 py-3 text-label-md font-label-md font-bold text-on-surface transition-colors hover:bg-surface-container-high"
+        >
+          <span class="material-symbols-outlined">group</span>
+          Gestionar vendedores
+        </a>
+      </div>
+    </section>
+
+    <section class="grid gap-gutter sm:grid-cols-2 xl:grid-cols-3" id="summary-cards">
+      <article class="rounded-lg border border-outline-variant bg-surface-container-lowest p-5 shadow-sm">
+        <div class="mb-4 flex h-11 w-11 items-center justify-center rounded bg-primary-container text-primary">
+          <span class="material-symbols-outlined">confirmation_number</span>
+        </div>
+        <p class="text-label-md font-label-md font-bold uppercase tracking-wider text-on-surface-variant">Boletos vendidos</p>
+        <p id="metric-tickets-sold" class="mt-2 text-display-sm font-display-sm text-on-surface">—</p>
+      </article>
+      <article class="rounded-lg border border-outline-variant bg-surface-container-lowest p-5 shadow-sm">
+        <div class="mb-4 flex h-11 w-11 items-center justify-center rounded bg-primary-container text-primary">
+          <span class="material-symbols-outlined">how_to_reg</span>
+        </div>
+        <p class="text-label-md font-label-md font-bold uppercase tracking-wider text-on-surface-variant">Boletos validados</p>
+        <p id="metric-tickets-validated" class="mt-2 text-display-sm font-display-sm text-on-surface">—</p>
+      </article>
+      <article class="rounded-lg border border-outline-variant bg-surface-container-lowest p-5 shadow-sm">
+        <div class="mb-4 flex h-11 w-11 items-center justify-center rounded bg-primary-container text-primary">
+          <span class="material-symbols-outlined">payments</span>
+        </div>
+        <p class="text-label-md font-label-md font-bold uppercase tracking-wider text-on-surface-variant">Recaudación bruta</p>
+        <p id="metric-gross-revenue" class="mt-2 text-display-sm font-display-sm text-on-surface">—</p>
+      </article>
+    </section>
+
+    <section class="rounded-lg border border-outline-variant bg-surface-container-lowest shadow-sm">
+      <div class="border-b border-outline-variant p-6">
+        <h3 class="text-headline-sm font-headline-sm text-on-surface">Ventas por vendedor</h3>
+        <p class="mt-1 text-body-md font-body-md text-on-surface-variant">
+          Transacciones registradas por cada vendedor o punto físico activo.
+        </p>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full min-w-[760px] text-left">
+          <thead class="bg-surface-container-low">
+            <tr>
+              <th class="px-4 py-3 text-label-md font-label-md font-bold uppercase text-on-surface-variant">Vendedor</th>
+              <th class="px-4 py-3 text-label-md font-label-md font-bold uppercase text-on-surface-variant">Tipo</th>
+              <th class="px-4 py-3 text-label-md font-label-md font-bold uppercase text-on-surface-variant">Ventas</th>
+              <th class="px-4 py-3 text-label-md font-label-md font-bold uppercase text-on-surface-variant">Boletos vendidos</th>
+              <th class="px-4 py-3 text-label-md font-label-md font-bold uppercase text-on-surface-variant">Ingresos</th>
+            </tr>
+          </thead>
+          <tbody id="seller-reports" class="divide-y divide-outline-variant"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</AdminLayout>
+
+<script define:vars={{ ticketPrice }}>
+  import { getSellers, getTickets, seedPhysicalTicketing } from "@/services/physical-store";
+  import { calculateSellerReports } from "@/services/seller-stats";
+  import { SELLER_TYPE_LABELS } from "@/types/sellers";
+
+  const currency = new Intl.NumberFormat("es-HN", {
+    style: "currency",
+    currency: "HNL",
+    maximumFractionDigits: 0,
+  });
+
+  function renderReports() {
+    const tickets = getTickets();
+    const sellers = getSellers();
+    const soldTickets = tickets.filter((ticket) => ticket.status === "paid" || ticket.status === "validated");
+    const validatedTickets = tickets.filter((ticket) => ticket.status === "validated");
+    const grossRevenue = soldTickets.length * Number(ticketPrice);
+
+    const soldNode = document.getElementById("metric-tickets-sold");
+    const validatedNode = document.getElementById("metric-tickets-validated");
+    const revenueNode = document.getElementById("metric-gross-revenue");
+
+    if (soldNode) soldNode.textContent = String(soldTickets.length);
+    if (validatedNode) validatedNode.textContent = String(validatedTickets.length);
+    if (revenueNode) revenueNode.textContent = currency.format(grossRevenue);
+
+    const rows = calculateSellerReports({ tickets, sellers, ticketPrice: Number(ticketPrice) });
+    const body = document.getElementById("seller-reports");
+
+    if (!body) return;
+
+    body.innerHTML = rows.length
+      ? rows.map((row) => `
+          <tr>
+            <td class="px-4 py-3 font-semibold text-on-surface">${row.sellerName}</td>
+            <td class="px-4 py-3 text-on-surface-variant">${SELLER_TYPE_LABELS[row.sellerType]}</td>
+            <td class="px-4 py-3 text-on-surface">${row.salesCount}</td>
+            <td class="px-4 py-3 text-on-surface">${row.ticketsSold}</td>
+            <td class="px-4 py-3 font-bold text-primary">${currency.format(row.revenue)}</td>
+          </tr>
+        `).join("")
+      : `<tr><td colspan="5" class="px-4 py-8 text-center text-on-surface-variant">Aún no hay ventas registradas por vendedor.</td></tr>`;
+  }
+
+  seedPhysicalTicketing();
+  renderReports();
+</script>

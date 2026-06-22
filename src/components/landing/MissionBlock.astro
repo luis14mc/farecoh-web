@@ -1,0 +1,40 @@
+---
+import BentoCard from "@/components/Cards/BentoCard.astro";
+---
+
+<section class="reveal-section mx-auto max-w-container-max bg-surface-container-lowest px-margin py-section-gap">
+  <div class="grid grid-cols-1 items-center gap-gutter md:grid-cols-12">
+    <div class="md:col-span-7">
+      <h2 class="mb-stack-md text-headline-lg font-headline-lg text-primary">Nuestra Esencia</h2>
+      <p class="text-body-lg font-body-lg leading-relaxed text-on-surface-variant">
+        FARECOH educa por medio de programas de prevención artística a la niñez y juventud, fortaleciendo habilidades para la vida, valores y sensibilidad social.
+      </p>
+    </div>
+    <div class="relative aspect-[4/3] md:col-span-5">
+      <img
+        class="h-full w-full border border-outline-variant/30 object-cover shadow-lg"
+        src="https://lh3.googleusercontent.com/aida-public/AB6AXuBer9H_VsqwglsfPukJnhJFEjoXucPm83rVyMlX05yQrDTXddJNcVDaVoB-MggGrwNw-VP3lb2TKn8E0p-wxF72wyIyT5KHM2_KPQlI0dzsHznyr2dtLxv2eGqAvrZ08zaNS9PmkEiFphKwKtQ5znqvv1O8ZdMY2eIWk4Nhpdu6Qav3VEr2UZNO6kPuIilY52YlHXTFbL8pvBAP61DPlK1cpy0SmQ5nUY8FkJxfDIxhH0V6meWez717wBJlb2m4KIPfXjVZ77lw95aA"
+        alt="Retrato de una niña tocando la flauta en un estudio luminoso"
+      />
+    </div>
+  </div>
+</section>
+
+<section class="reveal-section mx-auto max-w-container-max px-margin py-section-gap">
+  <div class="grid grid-cols-1 gap-stack-lg md:grid-cols-2">
+    <BentoCard title="Misión" description="Proveer acceso a educación artística de alta calidad, utilizando la música y las artes visuales como catalizadores para el desarrollo integral de la juventud hondureña." icon="rocket_launch" iconFill={true} variant="gray-to-primary" />
+    <BentoCard title="Visión" description="Ser la institución referente en Centroamérica para la transformación social a través del arte, consolidando un sistema de coros y orquestas." icon="visibility" variant="white-to-border" />
+  </div>
+</section>
+
+<section class="reveal-section mx-auto max-w-container-max px-margin py-section-gap">
+  <div class="mb-stack-lg text-center">
+    <h2 class="text-headline-lg font-headline-lg text-on-surface">MVP del concierto</h2>
+    <div class="mx-auto mt-2 h-1 w-24 bg-primary"></div>
+  </div>
+  <div class="grid grid-cols-1 gap-gutter md:grid-cols-3">
+    <BentoCard title="Landing" description="Presenta FARECOH y dirige el tráfico hacia el concierto benéfico." icon="home" variant="white-to-border" />
+    <BentoCard title="Boletos" description="Reservas simples con datos del comprador, cantidad y códigos de boleto." icon="confirmation_number" />
+    <BentoCard title="Check-in" description="Panel administrativo para ventas, boletos y validación de asistentes." icon="qr_code_scanner" variant="white-to-border" />
+  </div>
+</section>

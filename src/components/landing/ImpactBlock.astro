@@ -1,0 +1,131 @@
+﻿---
+import { homeImpact } from "@/data/home";
+
+type ImpactStat =
+  | { kind: "number"; prefix: string; target: number; display: string }
+  | { kind: "text"; text: string };
+
+function parseImpactValue(value: string): ImpactStat {
+  const match = value.match(/^(\+?)(\d+)$/);
+  if (!match) return { kind: "text", text: value };
+  const prefix = match[1];
+  const target = Number(match[2]);
+  return { kind: "number", prefix, target, display: `${prefix}0` };
+}
+
+const stats = homeImpact.items.map(([value, label]) => ({
+  label,
+  parsed: parseImpactValue(value),
+}));
+---
+
+<section class="reveal-section landing-impact-panel landing-section">
+  <div class="landing-shell">
+    <header class="mb-stack-lg max-w-4xl border-l-4 border-brand-400 pl-stack-md">
+      <p class="landing-eyebrow mb-3 text-white/65">{homeImpact.label}</p>
+      <h2 class="landing-headline mb-stack-md text-white">{homeImpact.title}</h2>
+      <p class="landing-body text-white/85">{homeImpact.body}</p>
+    </header>
+    <div class="landing-impact-stats grid grid-cols-1 gap-gutter sm:grid-cols-2 lg:grid-cols-4">
+      {stats.map(({ label, parsed }, index) => (
+        <article class="landing-impact-stat-item border-t border-white/25 pt-stack-md" style={`--impact-delay: ${index * 120}ms`}>
+          <p
+            class="impact-stat-value text-[clamp(3.5rem,7vw,6rem)] font-black leading-none tracking-[-0.05em] text-white"
+            data-impact-stat
+            data-impact-index={index}
+            {...parsed.kind === "number"
+              ? { "data-target": parsed.target, "data-prefix": parsed.prefix }
+              : { "data-text": parsed.text }}
+          >
+            {parsed.kind === "number" ? parsed.display : parsed.text}
+          </p>
+          <p class="impact-stat-label mt-4 max-w-48 text-label-md font-label-md uppercase tracking-[0.12em] text-white/72">{label}</p>
+        </article>
+      ))}
+    </div>
+  </div>
+</section>
+
+<script is:inline>
+  (function animateImpactStats() {
+    const section = document.querySelector(".landing-impact-panel");
+    if (!section) return;
+
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let played = false;
+
+    if (prefersReducedMotion) {
+      section.querySelectorAll("[data-impact-stat]").forEach((el) => {
+        if (el.dataset.text) {
+          el.classList.add("is-counted");
+          return;
+        }
+        el.textContent = `${el.dataset.prefix || ""}${el.dataset.target}`;
+        el.classList.add("is-counted");
+      });
+    }
+
+    function easeOutCubic(t) {
+      return 1 - Math.pow(1 - t, 3);
+    }
+
+    function runCountUp(el) {
+      const target = Number(el.dataset.target);
+      const prefix = el.dataset.prefix || "";
+      const delay = Number(el.dataset.impactIndex || 0) * 120;
+
+      if (prefersReducedMotion || Number.isNaN(target)) {
+        el.textContent = `${prefix}${target}`;
+        el.classList.add("is-counted");
+        return;
+      }
+
+      window.setTimeout(() => {
+        const duration = 1800;
+        const start = performance.now();
+
+        function tick(now) {
+          const progress = Math.min((now - start) / duration, 1);
+          const value = Math.round(easeOutCubic(progress) * target);
+          el.textContent = `${prefix}${value}`;
+          if (progress < 1) {
+            requestAnimationFrame(tick);
+          } else {
+            el.classList.add("is-counted");
+          }
+        }
+
+        requestAnimationFrame(tick);
+      }, delay);
+    }
+
+    function play() {
+      if (played) return;
+      played = true;
+
+      if (prefersReducedMotion) return;
+
+      section.querySelectorAll("[data-impact-stat]").forEach((el) => {
+        if (el.dataset.text) {
+          window.setTimeout(() => el.classList.add("is-counted"), Number(el.dataset.impactIndex || 0) * 120);
+          return;
+        }
+        runCountUp(el);
+      });
+    }
+
+    function onVisible() {
+      if (!section.classList.contains("is-visible")) return;
+      play();
+    }
+
+    if (section.classList.contains("is-visible")) {
+      play();
+      return;
+    }
+
+    const observer = new MutationObserver(onVisible);
+    observer.observe(section, { attributes: true, attributeFilter: ["class"] });
+    onVisible();
+  })();
+</script>

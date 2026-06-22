@@ -1,0 +1,53 @@
+---
+interface Props {
+  label: string;
+  id: string;
+  name: string;
+  type?: "text" | "email" | "tel" | "number" | "date" | "search";
+  placeholder?: string;
+  required?: boolean;
+  value?: string | number;
+  min?: string | number;
+  max?: string | number;
+  icon?: string;
+  containerClass?: string;
+}
+
+const {
+  label,
+  id,
+  name,
+  type = "text",
+  placeholder = "",
+  required = false,
+  value = "",
+  min,
+  max,
+  icon,
+  containerClass = "w-full",
+} = Astro.props;
+---
+
+<div class={containerClass}>
+  <label for={id} class="text-label-md font-label-md text-on-surface-variant block mb-2 font-bold uppercase tracking-wider">
+    {label} {required && <span class="text-error">*</span>}
+  </label>
+  <div class="relative">
+    {icon && (
+      <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">
+        {icon}
+      </span>
+    )}
+    <input
+      type={type}
+      id={id}
+      name={name}
+      placeholder={placeholder}
+      required={required}
+      value={value}
+      min={min}
+      max={max}
+      class={`w-full px-4 py-3 bg-surface border border-[rgba(69,65,66,0.2)] focus:border-primary focus:border-2 focus:ring-0 outline-none transition-all text-on-surface ${icon ? 'pl-10' : ''}`}
+    />
+  </div>
+</div>

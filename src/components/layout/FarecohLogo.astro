@@ -1,0 +1,48 @@
+---
+import { logos, logoAlt } from "@/data/logos";
+
+interface Props {
+  variant?: "horizontal" | "stacked";
+  theme?: "color" | "white";
+  size?: "nav" | "footer" | "hero" | "admin";
+  class?: string;
+  loading?: "lazy" | "eager";
+}
+
+const { variant = "stacked", theme = "color", size = "nav", class: className = "", loading = "lazy" } = Astro.props;
+
+const src =
+  variant === "horizontal"
+    ? theme === "white"
+      ? logos.horizontalWhite
+      : logos.horizontalColor
+    : theme === "white"
+      ? logos.stackedWhite
+      : logos.stackedColor;
+
+const sizeClass = {
+  nav: "farecoh-logo--nav",
+  footer: "farecoh-logo--footer",
+  hero: "farecoh-logo--hero",
+  admin: "farecoh-logo--admin",
+}[size];
+
+const themeClass = theme === "white" ? "farecoh-logo--theme-white" : "farecoh-logo--theme-color";
+const variantClass =
+  variant === "horizontal" ? "farecoh-logo--variant-horizontal" : "farecoh-logo--variant-stacked";
+
+/* White horizontal PNGs are square (500×500) with extra padding vs wide color exports */
+const useSlot = theme === "white" && variant === "horizontal";
+const slotClass = useSlot ? `farecoh-logo-slot farecoh-logo-slot--${size}` : "";
+const imgClass = `farecoh-logo ${sizeClass} ${themeClass} ${variantClass} ${className}`.trim();
+---
+
+{
+  useSlot ? (
+    <span class={slotClass}>
+      <img src={src} alt={logoAlt} class={imgClass} loading={loading} decoding="async" />
+    </span>
+  ) : (
+    <img src={src} alt={logoAlt} class={imgClass} loading={loading} decoding="async" />
+  )
+}

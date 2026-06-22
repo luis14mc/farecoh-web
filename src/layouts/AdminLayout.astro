@@ -1,0 +1,41 @@
+---
+import "../styles/global.css";
+import AdminSidebar from "@/components/admin/AdminSidebar.astro";
+import AdminMobileNav from "@/components/admin/AdminMobileNav.astro";
+
+interface Props {
+  title: string;
+  description: string;
+  active?: "dashboard" | "boletos" | "lotes" | "ventas" | "checkin" | "reportes" | "vendedores" | "usuarios";
+}
+
+const { title, description, active = "dashboard" } = Astro.props;
+---
+
+<!doctype html>
+<html class="light" lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="description" content={description} />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="generator" content={Astro.generator} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,0&display=swap" rel="stylesheet" />
+    <title>{title}</title>
+  </head>
+  <body class="min-h-screen bg-surface text-on-surface font-body-md text-body-md selection:bg-primary-container selection:text-on-primary-container overflow-hidden">
+    <div class="flex h-screen w-screen overflow-hidden">
+      <AdminSidebar active={active} />
+      <div class="flex min-w-0 flex-1 flex-col overflow-y-auto bg-surface custom-scrollbar">
+        <main class="flex-1">
+          <slot />
+        </main>
+      </div>
+      <AdminMobileNav active={active} />
+    </div>
+  </body>
+</html>
+

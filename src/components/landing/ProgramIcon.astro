@@ -1,0 +1,31 @@
+---
+import Music from "@lucide/astro/icons/music";
+import School from "@lucide/astro/icons/school";
+import Palette from "@lucide/astro/icons/palette";
+import HeartHandshake from "@lucide/astro/icons/heart-handshake";
+import Globe from "@lucide/astro/icons/globe";
+import Users from "@lucide/astro/icons/users";
+import type { ProgramIconName } from "@/data/home";
+
+interface Props {
+  name: ProgramIconName;
+  class?: string;
+}
+
+const { name, class: className = "" } = Astro.props;
+
+const icons = {
+  music: Music,
+  school: School,
+  palette: Palette,
+  "heart-handshake": HeartHandshake,
+  globe: Globe,
+  users: Users,
+} as const;
+
+const Icon = icons[name];
+---
+
+<span class={`landing-program-icon ${className}`} aria-hidden="true">
+  <Icon size={28} stroke-width={1.75} color="currentColor" />
+</span>

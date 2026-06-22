@@ -1,0 +1,31 @@
+---
+import { homeSupport } from "@/data/home";
+import LandingButton from "@/components/landing/LandingButton.astro";
+import Check from "@lucide/astro/icons/circle-check";
+---
+
+<section class="reveal-section landing-section bg-surface">
+  <div class="landing-shell grid grid-cols-1 gap-gutter lg:grid-cols-12 lg:items-start">
+    <div class="landing-accent lg:col-span-5">
+      <p class="landing-eyebrow mb-3 text-brand-700">{homeSupport.label}</p>
+      <h2 class="landing-headline mb-stack-md text-on-surface">{homeSupport.title}</h2>
+      <p class="landing-body text-on-surface-variant">{homeSupport.body}</p>
+    </div>
+    <div class="lg:col-span-7">
+      <ul class="mb-stack-lg space-y-3" role="list">
+        {homeSupport.items.map((item) => (
+          <li class="flex items-start gap-3 border-b border-outline-variant/30 pb-3">
+            <Check size={20} stroke-width={1.75} class="mt-0.5 shrink-0 text-brand-500" />
+            <span class="body-md text-on-surface">{item}</span>
+          </li>
+        ))}
+      </ul>
+      <blockquote class="landing-support-highlight mb-stack-lg">
+        {homeSupport.highlight}
+      </blockquote>
+      <LandingButton href="/eventos/pink-floyd/boletos" variant="primary">
+        {homeSupport.cta}
+      </LandingButton>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,78 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import { getPrintableTicketTokenMap } from "@/lib/ticket-qr";
+
+const token = Astro.params.token ?? "";
+const ticket = getPrintableTicketTokenMap().find((item) => item.qr_token === token) ?? {
+  code: "Boleto no encontrado",
+  qr_token: token,
+  qr_url: "",
+};
+---
+
+<Layout title={`Boleto ${ticket.code} | FARECOH`} description="Consulta publica de estado de boleto FARECOH">
+  <main class="min-h-screen bg-surface px-margin py-28 text-on-surface">
+    <section class="mx-auto max-w-2xl rounded-lg border border-outline-variant bg-surface-container-lowest p-6 shadow-sm">
+      <p class="text-label-md font-label-md font-bold uppercase tracking-wider text-primary">Consulta de boleto</p>
+      <h1 class="mt-2 text-headline-lg font-headline-lg text-on-surface">{ticket.code}</h1>
+      <p class="mt-2 text-body-md font-body-md text-on-surface-variant">Esta consulta no valida el ingreso. La validacion solo se realiza desde el modulo de check-in administrativo.</p>
+
+      <div id="ticket-status" class="mt-6 rounded border border-outline-variant bg-surface p-5 text-body-md text-on-surface-variant">
+        Consultando estado del boleto...
+      </div>
+
+      <div class="mt-6 flex flex-col gap-3 sm:flex-row">
+        <a href="/admin/checkin" class="inline-flex items-center justify-center rounded bg-primary px-4 py-3 text-label-md font-label-md font-bold text-on-primary hover:bg-secondary">
+          Ir a check-in admin
+        </a>
+        <a href="/" class="inline-flex items-center justify-center rounded border border-outline-variant px-4 py-3 text-label-md font-label-md font-bold text-on-surface hover:bg-surface-container-high">
+          Volver al inicio
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <script define:vars={{ token, code: ticket.code }}>
+    import { supabase } from "@/lib/supabase";
+
+    const statusNode = document.getElementById("ticket-status");
+    const statusCopy = {
+      available: { label: "valido", detail: "Boleto emitido, todavia no vendido.", className: "bg-blue-100 text-blue-800" },
+      assigned: { label: "valido", detail: "Boleto asignado a punto fisico, todavia no pagado.", className: "bg-blue-100 text-blue-800" },
+      reserved: { label: "valido", detail: "Boleto reservado, pendiente de pago.", className: "bg-yellow-100 text-yellow-800" },
+      paid: { label: "pagado", detail: "Boleto vendido/pagado. Debe validarse en acceso.", className: "bg-green-100 text-green-800" },
+      validated: { label: "validado", detail: "Este boleto ya fue utilizado para ingresar.", className: "bg-red-100 text-red-800" },
+      cancelled: { label: "anulado", detail: "Este boleto fue anulado.", className: "bg-red-100 text-red-800" },
+    };
+
+    function renderStatus(ticket) {
+      if (!statusNode) return;
+      const status = ticket?.status || "available";
+      const copy = statusCopy[status] || statusCopy.available;
+      statusNode.className = `mt-6 rounded p-5 text-body-md font-body-md ${copy.className}`;
+      statusNode.innerHTML = `<p class="text-label-md font-label-md font-bold uppercase tracking-wider">Estado: ${copy.label}</p><p class="mt-2">${copy.detail}</p><p class="mt-3 font-mono text-sm">${ticket?.code || code}</p>`;
+    }
+
+    async function loadStatus() {
+      const localTickets = JSON.parse(localStorage.getItem("farecoh_physical_tickets_v1") || "[]");
+      const localTicket = localTickets.find((item) => item.qr_token === token || item.code === code);
+      if (localTicket) {
+        renderStatus(localTicket);
+        return;
+      }
+
+      if (typeof supabase.rpc === "function") {
+        const { data, error } = await supabase.rpc("get_public_ticket_status", { p_qr_token: token });
+        const remoteTicket = Array.isArray(data) ? data[0] : data;
+        if (!error && remoteTicket) {
+          renderStatus(remoteTicket);
+          return;
+        }
+      }
+
+      renderStatus({ code, status: "available" });
+    }
+
+    loadStatus();
+  </script>
+</Layout>

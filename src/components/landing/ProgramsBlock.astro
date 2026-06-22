@@ -1,0 +1,23 @@
+---
+import { homePrograms } from "@/data/home";
+import SectionHeader from "@/components/landing/SectionHeader.astro";
+import ProgramIcon from "@/components/landing/ProgramIcon.astro";
+---
+
+<section class="reveal-section landing-section bg-surface-container-lowest">
+  <div class="landing-shell">
+    <SectionHeader label={homePrograms.label} title={homePrograms.title} />
+    <div class="grid grid-cols-1 gap-gutter md:grid-cols-2">
+      {homePrograms.items.map((program, index) => (
+        <article class="landing-program-card bg-surface-container-lowest p-stack-lg">
+          <div class="mb-stack-md flex items-center gap-4">
+            <ProgramIcon name={program.icon} />
+            <span class="landing-program-index">{String(index + 1).padStart(2, "0")}</span>
+          </div>
+          <h3 class="headline-md mb-3 text-on-surface">{program.title}</h3>
+          <p class="body-md text-on-surface-variant">{program.description}</p>
+        </article>
+      ))}
+    </div>
+  </div>
+</section>

@@ -1,0 +1,16 @@
+---
+import { homeMissionVision } from "@/data/home";
+---
+
+<section class="reveal-section landing-section bg-surface-container-low">
+  <div class="landing-shell grid grid-cols-1 gap-gutter md:grid-cols-2">
+    <article class="border-l-4 border-brand-400 bg-surface-container-lowest p-stack-lg">
+      <p class="landing-eyebrow mb-3 text-brand-700">{homeMissionVision.mission.label}</p>
+      <p class="body-lg leading-relaxed text-on-surface-variant">{homeMissionVision.mission.text}</p>
+    </article>
+    <article class="border-l-4 border-brand-500 bg-surface-container-lowest p-stack-lg">
+      <p class="landing-eyebrow mb-3 text-brand-700">{homeMissionVision.vision.label}</p>
+      <p class="body-lg leading-relaxed text-on-surface-variant">{homeMissionVision.vision.text}</p>
+    </article>
+  </div>
+</section>

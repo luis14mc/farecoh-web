@@ -1,0 +1,13 @@
+---
+interface Props {
+  price: number;
+}
+
+const { price } = Astro.props;
+---
+
+<div class="concert-summary-box">
+  <p class="text-caption font-caption font-bold uppercase text-white/55">Total a aportar</p>
+  <p class="text-body-lg font-body-lg text-white/70">L. <span id="price-per-ticket">{price.toFixed(2)}</span> c/u</p>
+  <p class="event-cta-price mt-2">L. <span id="total-price">{price.toFixed(2)}</span></p>
+</div>

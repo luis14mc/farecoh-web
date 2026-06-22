@@ -1,0 +1,215 @@
+---
+import { supabase } from "@/lib/supabase";
+
+// Fetch orders with customers joined
+const { data: orders } = await supabase
+  .from("orders")
+  .select("*, customer:customers(*)")
+  .order("created_at", { ascending: false });
+
+const formatDate = (isoString: string) => {
+  const date = new Date(isoString);
+  return date.toLocaleDateString("es-HN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric"
+  });
+};
+---
+
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden flex flex-col text-on-surface">
+  <div class="p-6 border-b border-outline-variant flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <div>
+      <h3 class="text-headline-md font-headline-md text-on-surface">Registro de Ventas</h3>
+      <p class="text-caption font-caption text-on-surface-variant">Vea y filtre todas las reservaciones realizadas</p>
+    </div>
+  </div>
+
+  <!-- Dynamic Filters Section -->
+  <div class="p-6 bg-surface-container-low border-b border-outline-variant grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <!-- Name / Code Filter -->
+    <div>
+      <label class="text-caption font-caption text-on-surface-variant uppercase font-bold block mb-2">Buscar</label>
+      <div class="relative">
+        <input 
+          id="search-input" 
+          type="text" 
+          placeholder="Nombre, correo o código..." 
+          class="w-full pl-10 pr-4 py-2 border border-[rgba(69,65,66,0.2)] focus:border-primary focus:ring-0 outline-none bg-surface text-body-md text-on-surface"
+        />
+        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
+      </div>
+    </div>
+
+    <!-- Status Filter -->
+    <div>
+      <label class="text-caption font-caption text-on-surface-variant uppercase font-bold block mb-2">Estado</label>
+      <select 
+        id="status-filter" 
+        class="w-full px-3 py-2 border border-[rgba(69,65,66,0.2)] focus:border-primary focus:ring-0 outline-none bg-surface text-body-md text-on-surface"
+      >
+        <option value="all">Todos los estados</option>
+        <option value="pending">Pendiente</option>
+        <option value="paid">Pagado</option>
+        <option value="validated">Validado</option>
+        <option value="cancelled">Cancelado</option>
+      </select>
+    </div>
+
+    <!-- Date Filter -->
+    <div>
+      <label class="text-caption font-caption text-on-surface-variant uppercase font-bold block mb-2">Fecha</label>
+      <div class="relative">
+        <input 
+          id="date-filter" 
+          type="date" 
+          class="w-full pl-10 pr-4 py-2 border border-[rgba(69,65,66,0.2)] focus:border-primary focus:ring-0 outline-none bg-surface text-body-md text-on-surface"
+        />
+        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">calendar_today</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Table Section -->
+  <div class="overflow-x-auto">
+    <table class="w-full text-left border-collapse" id="sales-table">
+      <thead class="bg-surface-container-low">
+        <tr>
+          <th class="px-6 py-4 text-label-md font-label-md text-on-surface-variant uppercase font-semibold">Código Orden</th>
+          <th class="px-6 py-4 text-label-md font-label-md text-on-surface-variant uppercase font-semibold">Comprador</th>
+          <th class="px-6 py-4 text-label-md font-label-md text-on-surface-variant uppercase font-semibold">Cant. Boletos</th>
+          <th class="px-6 py-4 text-label-md font-label-md text-on-surface-variant uppercase font-semibold">Monto Total</th>
+          <th class="px-6 py-4 text-label-md font-label-md text-on-surface-variant uppercase font-semibold">Fecha</th>
+          <th class="px-6 py-4 text-label-md font-label-md text-on-surface-variant uppercase font-semibold">Estado</th>
+          <th class="px-6 py-4 text-label-md font-label-md text-on-surface-variant uppercase font-semibold">Acción</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-outline-variant" id="table-body">
+        {orders && orders.map((order: any) => {
+          const cust = order.customer || { name: "Invitado", email: "", phone: "" };
+          
+          let badgeClass = "px-3 py-1 rounded-full text-caption font-caption font-bold inline-block";
+          let statusText = "";
+          if (order.status === "paid") {
+            badgeClass += " bg-green-100 text-green-700";
+            statusText = "Pagado";
+          } else if (order.status === "pending") {
+            badgeClass += " bg-yellow-100 text-yellow-700";
+            statusText = "Pendiente";
+          } else if (order.status === "validated") {
+            badgeClass += " bg-blue-100 text-blue-700";
+            statusText = "Validado";
+          } else {
+            badgeClass += " bg-red-100 text-red-700";
+            statusText = "Cancelado";
+          }
+
+          // Data-attrs for client-side filtering
+          const dateStr = new Date(order.created_at).toISOString().split("T")[0];
+
+          return (
+            <tr 
+              class="hover:bg-surface-container-low transition-colors group sales-row" 
+              data-name={cust.name.toLowerCase()} 
+              data-email={cust.email.toLowerCase()}
+              data-code={order.id.toLowerCase()} 
+              data-status={order.status}
+              data-date={dateStr}
+            >
+              <td class="px-6 py-4 text-body-md font-body-md font-semibold text-primary">
+                {order.id.substr(0, 8).toUpperCase()}
+              </td>
+              <td class="px-6 py-4">
+                <div class="flex flex-col">
+                  <span class="text-body-md font-body-md text-on-surface font-bold">{cust.name}</span>
+                  <span class="text-caption font-caption text-on-surface-variant">{cust.phone || cust.email}</span>
+                </div>
+              </td>
+              <td class="px-6 py-4 text-body-md font-body-md">
+                {order.ticket_count}
+              </td>
+              <td class="px-6 py-4 text-body-md font-body-md font-bold">
+                L. {Number(order.total_amount).toFixed(2)}
+              </td>
+              <td class="px-6 py-4 text-body-md font-body-md text-on-surface-variant">
+                {formatDate(order.created_at)}
+              </td>
+              <td class="px-6 py-4">
+                <span class={badgeClass}>{statusText}</span>
+              </td>
+              <td class="px-6 py-4">
+                <button class="p-2 text-on-surface-variant hover:text-primary transition-colors flex items-center justify-center rounded-full hover:bg-surface-container-high">
+                  <span class="material-symbols-outlined">more_vert</span>
+                </button>
+              </td>
+            </tr>
+          );
+        })}
+      </tbody>
+    </table>
+  </div>
+  
+  <!-- Empty State -->
+  <div id="empty-state" class="hidden py-10 text-center text-on-surface-variant">
+    <span class="material-symbols-outlined text-4xl mb-2">find_in_page</span>
+    <p class="text-body-lg font-body-lg">No se encontraron reservaciones que coincidan con los filtros.</p>
+  </div>
+
+  <div class="p-6 bg-surface-container-low border-t border-outline-variant flex items-center justify-between">
+    <span class="text-caption font-caption text-on-surface-variant" id="results-count">
+      Mostrando {orders?.length || 0} reservaciones
+    </span>
+  </div>
+</div>
+
+<script>
+  const searchInput = document.getElementById("search-input") as HTMLInputElement | null;
+  const statusFilter = document.getElementById("status-filter") as HTMLSelectElement | null;
+  const dateFilter = document.getElementById("date-filter") as HTMLInputElement | null;
+  const tableRows = document.querySelectorAll(".sales-row") as NodeListOf<HTMLTableRowElement>;
+  const emptyState = document.getElementById("empty-state");
+  const resultsCount = document.getElementById("results-count");
+
+  const filterTable = () => {
+    const searchVal = searchInput?.value.toLowerCase() || "";
+    const statusVal = statusFilter?.value || "all";
+    const dateVal = dateFilter?.value || "";
+
+    let visibleCount = 0;
+
+    tableRows.forEach(row => {
+      const name = row.getAttribute("data-name") || "";
+      const email = row.getAttribute("data-email") || "";
+      const code = row.getAttribute("data-code") || "";
+      const status = row.getAttribute("data-status") || "";
+      const date = row.getAttribute("data-date") || "";
+
+      const matchesSearch = name.includes(searchVal) || email.includes(searchVal) || code.includes(searchVal);
+      const matchesStatus = statusVal === "all" || status === statusVal;
+      const matchesDate = !dateVal || date === dateVal;
+
+      if (matchesSearch && matchesStatus && matchesDate) {
+        row.classList.remove("hidden");
+        visibleCount++;
+      } else {
+        row.classList.add("hidden");
+      }
+    });
+
+    if (resultsCount) {
+      resultsCount.innerText = `Mostrando ${visibleCount} de ${tableRows.length} resultados`;
+    }
+
+    if (emptyState) {
+      if (visibleCount === 0) {
+        emptyState.classList.remove("hidden");
+      } else {
+        emptyState.classList.add("hidden");
+      }
+    }
+  };
+
+  searchInput?.addEventListener("input", filterTable);
+  statusFilter?.addEventListener("change", filterTable);
+  dateFilter?.addEventListener("change", filterTable);
+</script>

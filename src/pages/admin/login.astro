@@ -1,0 +1,79 @@
+---
+import "../../styles/global.css";
+---
+
+<!doctype html>
+<html lang="es" class="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex,nofollow" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <title>Acceso Administrativo | FARECOH</title>
+  </head>
+  <body class="min-h-screen bg-surface text-on-surface font-body-md text-body-md">
+    <main class="flex min-h-screen items-center justify-center px-margin py-12">
+      <section class="w-full max-w-md rounded-lg border border-outline-variant bg-surface-container-lowest p-6 shadow-sm">
+        <p class="text-label-md font-label-md font-bold uppercase tracking-wider text-primary">Panel administrativo</p>
+        <h1 class="mt-2 text-headline-md font-headline-md text-on-surface">Iniciar sesión</h1>
+        <p class="mt-2 text-body-md font-body-md text-on-surface-variant">Use su cuenta autorizada de FARECOH.</p>
+
+        <form id="login-form" class="mt-6 space-y-4">
+          <label class="block">
+            <span class="text-caption font-caption font-bold uppercase text-on-surface-variant">Correo</span>
+            <input id="email" name="email" type="email" required autocomplete="email" class="mt-2 w-full rounded border border-outline-variant bg-surface px-3 py-3 text-body-md outline-none focus:border-primary" />
+          </label>
+          <label class="block">
+            <span class="text-caption font-caption font-bold uppercase text-on-surface-variant">Contraseña</span>
+            <input id="password" name="password" type="password" required autocomplete="current-password" class="mt-2 w-full rounded border border-outline-variant bg-surface px-3 py-3 text-body-md outline-none focus:border-primary" />
+          </label>
+          <button id="login-button" class="w-full rounded bg-primary px-4 py-3 text-label-md font-label-md font-bold text-on-primary transition-colors hover:bg-secondary" type="submit">
+            Entrar
+          </button>
+        </form>
+
+        <p id="login-message" class="mt-4 hidden rounded p-3 text-body-md font-body-md"></p>
+      </section>
+    </main>
+
+    <script>
+      import { createSupabaseBrowserClient } from "@/lib/auth";
+
+      const form = document.getElementById("login-form") as HTMLFormElement | null;
+      const button = document.getElementById("login-button") as HTMLButtonElement | null;
+      const message = document.getElementById("login-message");
+      const supabase = createSupabaseBrowserClient();
+
+      function showMessage(text: string, type: "error" | "success" = "error") {
+        if (!message) return;
+        message.textContent = text;
+        message.className = `mt-4 rounded p-3 text-body-md font-body-md ${type === "error" ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`;
+      }
+
+      form?.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        if (!button || !form) return;
+        const data = new FormData(form);
+        const email = String(data.get("email") || "").trim();
+        const password = String(data.get("password") || "");
+        const redirect = new URLSearchParams(window.location.search).get("redirect") || "/admin";
+
+        button.disabled = true;
+        button.textContent = "Validando...";
+
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) {
+          showMessage("Credenciales inválidas o usuario no autorizado.");
+          button.disabled = false;
+          button.textContent = "Entrar";
+          return;
+        }
+
+        showMessage("Sesión iniciada. Redirigiendo...", "success");
+        window.location.href = redirect;
+      });
+    </script>
+  </body>
+</html>

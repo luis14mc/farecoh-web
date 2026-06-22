@@ -1,0 +1,21 @@
+---
+import { homeAbout } from "@/data/home";
+---
+
+<section id="historia" class="reveal-section landing-section bg-surface">
+  <div class="landing-shell grid grid-cols-1 items-center gap-gutter lg:grid-cols-12">
+    <div class="landing-accent lg:col-span-6 lg:pr-stack-lg">
+      <p class="landing-eyebrow mb-3 text-brand-700">{homeAbout.label}</p>
+      <h2 class="landing-headline mb-stack-md text-on-surface">{homeAbout.title}</h2>
+      <p class="landing-body mb-stack-md text-on-surface-variant">{homeAbout.body}</p>
+      <p class="body-md text-on-surface-variant">{homeAbout.bodySecondary}</p>
+    </div>
+    <div class="relative lg:col-span-6 lg:-mr-6 lg:translate-y-4 xl:-mr-10">
+      <div class="editorial-image editorial-image--parallax aspect-[4/3] shadow-xl">
+        <div class="parallax-layer" data-parallax data-parallax-speed="0.2" data-parallax-scale="1.1">
+          <img src={homeAbout.image} alt={homeAbout.imageAlt} loading="lazy" />
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,78 @@
+---
+interface Props {
+  name: string;
+  tagline: string;
+  venue: string;
+  city: string;
+  date: string;
+  time: string;
+  price: number;
+}
+
+import Calendar from "@lucide/astro/icons/calendar";
+import Clock from "@lucide/astro/icons/clock";
+import MapPin from "@lucide/astro/icons/map-pin";
+import HeartHandshake from "@lucide/astro/icons/heart-handshake";
+import ArrowRight from "@lucide/astro/icons/arrow-right";
+import LandingButton from "@/components/landing/LandingButton.astro";
+import { eventPage } from "@/data/event-page";
+
+const { name, tagline, venue, city, date, time, price } = Astro.props;
+---
+
+<section class="event-hero hero-parallax relative flex min-h-[85vh] w-full items-end overflow-hidden bg-concert-deep md:min-h-[920px] md:items-center">
+  <div class="hero-parallax__media absolute inset-0 z-0 overflow-hidden">
+    <div class="parallax-layer" data-parallax data-parallax-speed="0.4" data-parallax-scale="1.14">
+      <img
+        class="h-full w-full object-cover object-center"
+        src={eventPage.hero.image}
+        alt={eventPage.hero.imageAlt}
+        fetchpriority="high"
+      />
+    </div>
+    <div class="event-hero-overlay absolute inset-0"></div>
+  </div>
+
+  <div class="landing-section relative z-10 w-full pb-8 pt-28 md:pb-20 md:pt-32">
+    <div class="landing-shell hero-content max-w-3xl text-white">
+      <div class="mb-4 flex flex-wrap items-center gap-3">
+        <span class="concert-accent-bar" aria-hidden="true"></span>
+        <span class="concert-badge">{eventPage.hero.badge}</span>
+        <span class="landing-eyebrow text-white/70">{venue}, {city}</span>
+      </div>
+
+      <h1 class="display mb-4 text-white">{name}</h1>
+      <p class="subtitle-lg mb-3 font-semibold text-concert-amber">{tagline}</p>
+      <p class="landing-body mb-stack-lg text-white/85">{eventPage.hero.body}</p>
+
+      <ul class="mb-stack-lg flex flex-wrap gap-x-6 gap-y-3" role="list">
+        <li class="flex items-center gap-2 text-white/90">
+          <Calendar size={18} stroke-width={1.75} class="text-concert-amber" />
+          <span class="body-md">{date}</span>
+        </li>
+        <li class="flex items-center gap-2 text-white/90">
+          <Clock size={18} stroke-width={1.75} class="text-concert-amber" />
+          <span class="body-md">{time}</span>
+        </li>
+        <li class="flex items-center gap-2 text-white/90">
+          <HeartHandshake size={18} stroke-width={1.75} class="text-concert-blue" />
+          <span class="body-md">Aporte solidario L.{price.toFixed(2)}</span>
+        </li>
+        <li class="flex items-center gap-2 text-white/90">
+          <MapPin size={18} stroke-width={1.75} class="text-concert-amber" />
+          <span class="body-md">{venue}</span>
+        </li>
+      </ul>
+
+      <div class="flex flex-col gap-4 sm:flex-row sm:flex-wrap">
+        <LandingButton href="/eventos/pink-floyd/boletos" variant="concert-primary">
+          {eventPage.hero.ctaPrimary}
+        </LandingButton>
+        <a href="#proposito" class="landing-btn landing-btn-concert-secondary inline-flex items-center gap-2">
+          {eventPage.hero.ctaSecondary}
+          <ArrowRight size={16} stroke-width={1.75} />
+        </a>
+      </div>
+    </div>
+  </div>
+</section>

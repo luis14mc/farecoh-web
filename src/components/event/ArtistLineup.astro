@@ -1,0 +1,125 @@
+---
+import { musicalDirector, ensembleMembers, lineupPhotoFallback } from "@/data/artists";
+import { eventPage } from "@/data/event-page";
+---
+
+<section class="reveal-section event-section event-section--lineup" id="lineup-stage">
+  <div class="landing-shell">
+    <header class="lineup-header mb-stack-lg max-w-3xl border-l-4 border-concert-orange pl-stack-md">
+      <p class="concert-eyebrow landing-eyebrow mb-3">{eventPage.lineup.label}</p>
+      <h2 class="landing-headline uppercase tracking-tight text-white">{eventPage.lineup.title}</h2>
+      <p class="body-md mt-2 text-white/65">{eventPage.lineup.subtitle}</p>
+    </header>
+
+    <div class="lineup-stage">
+      <article class="lineup-director-hub" aria-label="Director musical">
+        <div class="lineup-director-hub__glow" aria-hidden="true"></div>
+        <div class="lineup-director-hub__photo editorial-image">
+          <img
+            src={musicalDirector.image}
+            alt={musicalDirector.imageAlt}
+            loading="eager"
+            data-lineup-photo
+            data-fallback={lineupPhotoFallback}
+          />
+        </div>
+        <div class="lineup-director-hub__inner">
+          <p class="concert-badge">Dirección musical</p>
+          <h3 class="lineup-director-hub__name">{musicalDirector.name}</h3>
+          <p class="lineup-director-hub__role">{musicalDirector.role}</p>
+          <p class="lineup-director-hub__note">{musicalDirector.note}</p>
+          <p class="lineup-director-hub__count">{ensembleMembers.length} músicos en escena</p>
+        </div>
+      </article>
+
+      <div class="lineup-ensemble">
+        <div class="lineup-ensemble__header">
+          <p class="concert-eyebrow landing-eyebrow">Elenco</p>
+          <p class="body-md text-white/55">Cada integrante aporta su talento al tributo</p>
+        </div>
+
+        <ul class="lineup-ensemble__grid" role="list">
+          {ensembleMembers.map((member, index) => (
+            <li class="lineup-musician-card" style={`--stagger: ${index}`}>
+              <div class="lineup-musician-card__photo editorial-image">
+                <img
+                  src={member.image}
+                  alt={member.imageAlt}
+                  loading="lazy"
+                  data-lineup-photo
+                  data-fallback={lineupPhotoFallback}
+                />
+                <span class="lineup-musician-card__index" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
+              </div>
+              <div class="lineup-musician-card__body">
+                <h4 class="lineup-musician-card__name">{member.name}</h4>
+                <p class="lineup-musician-card__role">{member.role}</p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  import { animate, stagger } from "@motionone/dom";
+
+  function initLineupPhotos() {
+    document.querySelectorAll<HTMLImageElement>("[data-lineup-photo]").forEach((img) => {
+      img.addEventListener("error", () => {
+        const fallback = img.dataset.fallback;
+        if (!fallback || img.src.endsWith(fallback)) return;
+        img.src = fallback;
+      }, { once: true });
+    });
+  }
+
+  function initLineupStage() {
+    const section = document.getElementById("lineup-stage");
+    if (!section) return;
+
+    initLineupPhotos();
+
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (prefersReducedMotion) return;
+
+    const playEntrance = () => {
+      if (!section.classList.contains("is-visible")) return;
+
+      const director = section.querySelector(".lineup-director-hub");
+      const cards = section.querySelectorAll(".lineup-musician-card");
+
+      if (director) {
+        animate(
+          director,
+          { opacity: [0, 1], transform: ["translateY(24px)", "translateY(0)"] },
+          { duration: 0.65, easing: [0.22, 1, 0.36, 1] }
+        );
+      }
+
+      if (cards.length) {
+        animate(
+          Array.from(cards),
+          { opacity: [0, 1], transform: ["translateY(16px)", "translateY(0)"] },
+          { duration: 0.5, delay: stagger(0.05, { start: 0.2 }), easing: "ease-out" }
+        );
+      }
+    };
+
+    if (section.classList.contains("is-visible")) {
+      playEntrance();
+      return;
+    }
+
+    const observer = new MutationObserver(playEntrance);
+    observer.observe(section, { attributes: true, attributeFilter: ["class"] });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initLineupStage);
+  } else {
+    initLineupStage();
+  }
+</script>

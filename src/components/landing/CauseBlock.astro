@@ -1,0 +1,20 @@
+﻿---
+import { homeCause } from "@/data/home";
+---
+
+<section class="reveal-section landing-section bg-surface">
+  <div class="landing-shell text-center">
+    <div class="mx-auto max-w-4xl">
+      <p class="landing-eyebrow mb-3 text-brand-700">El desafío</p>
+      <h2 class="landing-headline mb-stack-md text-on-surface">{homeCause.title}</h2>
+      <p class="landing-body mx-auto max-w-3xl text-on-surface-variant">{homeCause.body}</p>
+    </div>
+    <div class="mt-stack-lg grid grid-cols-1 gap-gutter md:grid-cols-3">
+      {homeCause.items.map((item) => (
+        <div class="border-y border-outline-variant/50 py-stack-lg">
+          <p class="headline-md text-brand-neutral">{item}</p>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>

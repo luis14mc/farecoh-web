@@ -1,0 +1,28 @@
+﻿---
+import { homeWhatWeDo } from "@/data/home";
+import SectionHeader from "@/components/landing/SectionHeader.astro";
+---
+
+<section id="programas" class="reveal-section landing-section bg-surface-container-lowest">
+  <div class="landing-shell">
+    <SectionHeader label={homeWhatWeDo.label} title={homeWhatWeDo.title} />
+    <p class="landing-body mb-stack-lg max-w-3xl text-on-surface-variant">{homeWhatWeDo.intro}</p>
+    <div class="grid grid-cols-1 gap-gutter md:grid-cols-2 lg:grid-cols-3">
+      {homeWhatWeDo.items.map((program, index) => (
+        <article class="overflow-hidden bg-surface-container-low shadow-sm">
+          <div class="editorial-image aspect-[4/3]">
+            <img src={program.image} alt="" loading="lazy" />
+          </div>
+          <div class="p-stack-md">
+            <div class="mb-3 flex items-center justify-between gap-4">
+              <span class="landing-program-index">{String(index + 1).padStart(2, "0")}</span>
+              <span class="h-1 w-12 bg-brand-400" aria-hidden="true"></span>
+            </div>
+            <h3 class="headline-md mb-3 text-on-surface">{program.title}</h3>
+            <p class="body-md text-on-surface-variant">{program.description}</p>
+          </div>
+        </article>
+      ))}
+    </div>
+  </div>
+</section>

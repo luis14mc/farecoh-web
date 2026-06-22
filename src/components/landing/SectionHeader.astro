@@ -1,0 +1,22 @@
+---
+interface Props {
+  label: string;
+  title: string;
+  align?: "left" | "center";
+  tone?: "light" | "dark";
+}
+
+const { label, title, align = "left", tone = "light" } = Astro.props;
+
+const wrapClass = align === "center" ? "mx-auto max-w-2xl text-center" : "max-w-2xl";
+const labelClass =
+  tone === "dark"
+    ? "text-brand-400"
+    : "text-brand-700";
+const titleClass = tone === "dark" ? "text-white" : "text-on-surface";
+---
+
+<header class={`mb-stack-lg ${wrapClass}`}>
+  <p class={`landing-eyebrow mb-3 ${labelClass}`}>{label}</p>
+  <h2 class={`landing-headline ${titleClass}`}>{title}</h2>
+</header>

@@ -1,0 +1,35 @@
+---
+import HeartHandshake from "@lucide/astro/icons/heart-handshake";
+import { eventPage } from "@/data/event-page";
+---
+
+<section class="reveal-section event-section">
+  <div class="landing-shell grid grid-cols-1 items-center gap-gutter lg:grid-cols-12">
+    <div class="border-l-4 border-concert-orange pl-stack-md lg:col-span-6 lg:pr-stack-lg">
+      <p class="concert-eyebrow landing-eyebrow mb-3">{eventPage.experience.label}</p>
+      <h2 class="landing-headline mb-stack-md italic text-white">{eventPage.experience.title}</h2>
+      <p class="landing-body mb-stack-md text-white/88">{eventPage.experience.body}</p>
+      <p class="body-md text-white/65">{eventPage.experience.bodySecondary}</p>
+    </div>
+    <div class="relative lg:col-span-6 lg:-mr-6 lg:translate-y-2">
+      <div class="editorial-image aspect-video border border-concert-orange/30 shadow-[0_24px_48px_rgba(255,77,0,0.12)]">
+        <img src={eventPage.experience.image} alt={eventPage.experience.imageAlt} loading="lazy" />
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="proposito" class="reveal-section event-section event-section--muted">
+  <div class="landing-shell">
+    <div class="event-purpose-panel mx-auto max-w-4xl text-center md:text-left">
+      <div class="md:border-l-4 md:border-concert-orange md:pl-stack-lg">
+        <HeartHandshake size={40} stroke-width={1.5} class="mx-auto mb-4 text-concert-amber md:mx-0" />
+        <p class="concert-eyebrow landing-eyebrow mb-3">{eventPage.purpose.label}</p>
+        <h2 class="landing-headline mb-stack-md text-white">{eventPage.purpose.title}</h2>
+        <p class="landing-body mb-stack-md text-white/85">{eventPage.purpose.body}</p>
+        <p class="body-lg font-semibold italic text-concert-amber">{eventPage.purpose.highlight}</p>
+        <div class="mx-auto mt-stack-md h-1 w-24 bg-gradient-to-r from-concert-orange to-concert-amber md:mx-0"></div>
+      </div>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,67 @@
+---
+import AdminLayout from "@/layouts/AdminLayout.astro";
+import AdminHeader from "@/components/admin/AdminHeader.astro";
+import { createSupabaseServerClient } from "@/lib/auth";
+
+const supabase = createSupabaseServerClient(Astro);
+const { data: staffProfiles = [] } = await supabase
+  .from("staff_profiles")
+  .select("id, user_id, email, full_name, role, active, created_at")
+  .order("created_at", { ascending: false });
+
+const roleLabels = {
+  super_admin: "Super admin",
+  event_manager: "Event manager",
+  seller: "Seller",
+  checkin_operator: "Check-in operator",
+};
+---
+
+<AdminLayout title="Usuarios | FARECOH" description="Administracion de usuarios del panel" active="usuarios">
+  <AdminHeader title="Usuarios" section="Administracion" />
+
+  <div class="px-margin py-8 max-w-container-max pb-24 md:pb-8 space-y-stack-lg">
+    <section class="rounded-lg border border-outline-variant bg-surface-container-lowest p-6 shadow-sm">
+      <p class="text-label-md font-label-md font-bold uppercase tracking-wider text-primary">Solo super_admin</p>
+      <h2 class="mt-1 text-headline-md font-headline-md text-on-surface">Gestion de usuarios administrativos</h2>
+      <p class="mt-2 text-body-md font-body-md text-on-surface-variant">Cree usuarios en Supabase Auth y asigne permisos desde la tabla staff_profiles.</p>
+    </section>
+
+    <section class="rounded-lg border border-outline-variant bg-surface-container-lowest shadow-sm">
+      <div class="overflow-x-auto">
+        <table class="w-full min-w-[880px] text-left">
+          <thead class="bg-surface-container-low">
+            <tr>
+              <th class="px-4 py-3 text-label-md font-label-md font-bold uppercase text-on-surface-variant">Nombre</th>
+              <th class="px-4 py-3 text-label-md font-label-md font-bold uppercase text-on-surface-variant">Email</th>
+              <th class="px-4 py-3 text-label-md font-label-md font-bold uppercase text-on-surface-variant">Rol</th>
+              <th class="px-4 py-3 text-label-md font-label-md font-bold uppercase text-on-surface-variant">Estado</th>
+              <th class="px-4 py-3 text-label-md font-label-md font-bold uppercase text-on-surface-variant">Creado</th>
+              <th class="px-4 py-3 text-label-md font-label-md font-bold uppercase text-on-surface-variant">Acciones</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-outline-variant">
+            {staffProfiles.length ? staffProfiles.map((profile) => (
+              <tr>
+                <td class="px-4 py-3 font-semibold text-on-surface">{profile.full_name}</td>
+                <td class="px-4 py-3 text-on-surface-variant">{profile.email}</td>
+                <td class="px-4 py-3 text-on-surface-variant">{roleLabels[profile.role] ?? profile.role}</td>
+                <td class="px-4 py-3">
+                  <span class={`inline-block rounded-full px-3 py-1 text-caption font-caption font-bold ${profile.active ? "bg-green-100 text-green-700" : "bg-slate-100 text-slate-700"}`}>
+                    {profile.active ? "Activo" : "Inactivo"}
+                  </span>
+                </td>
+                <td class="px-4 py-3 text-on-surface-variant">{new Date(profile.created_at).toLocaleDateString("es-HN")}</td>
+                <td class="px-4 py-3 text-on-surface-variant">
+                  <span class="text-caption font-caption">Editar roles y desactivar usuarios debe ejecutarse via Supabase o endpoint server-side super_admin.</span>
+                </td>
+              </tr>
+            )) : (
+              <tr><td colspan="6" class="px-4 py-8 text-center text-on-surface-variant">No hay usuarios administrativos registrados.</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</AdminLayout>

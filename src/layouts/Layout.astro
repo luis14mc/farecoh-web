@@ -1,32 +1,30 @@
 ---
 import "../styles/global.css";
-import type { Lang, RouteKey } from "@/i18n/types";
-import { getDictionary } from "@/i18n";
-import { getAlternateLangPath, getLocalizedPath } from "@/i18n/routes";
-import Navbar from "../components/Navbar.astro";
-import Footer from "../components/Footer.astro";
+import Navbar from "@/components/layout/Navbar.astro";
+import Footer from "@/components/layout/Footer.astro";
 
 interface Props {
   title: string;
   description: string;
-  lang: Lang;
-  active?: RouteKey;
-  variant?: "default" | "event";
+  active?: "home" | "events" | "tickets";
+  variant?: "light" | "dark" | "concert";
 }
 
-const { title, description, lang, active, variant = "default" } = Astro.props;
-const t = getDictionary(lang).nav;
-const alternateHref = getAlternateLangPath(Astro.url.pathname);
-const alternateLang = lang === "es" ? "en" : "es";
+const { title, description, active, variant = "light" } = Astro.props;
 
 const bodyClass =
-  variant === "event"
-    ? "event-cinematic flex min-h-screen flex-col"
-    : "flex min-h-screen flex-col bg-[var(--prism-bg)]";
+  variant === "concert"
+    ? "universe-concert min-h-screen selection:bg-concert-orange selection:text-white"
+    : variant === "dark"
+      ? "min-h-screen bg-brand-neutral text-surface-bright selection:bg-primary-container selection:text-on-primary-container"
+      : "min-h-screen bg-surface text-on-surface selection:bg-primary-container selection:text-on-primary-container";
+
+const mainClass =
+  variant === "light" ? "pt-20" : variant === "concert" ? "pt-20" : "";
 ---
 
 <!doctype html>
-<html lang={lang} data-theme="prism">
+<html class={variant} lang="es">
   <head>
     <meta charset="UTF-8" />
     <meta name="description" content={description} />
@@ -35,27 +33,26 @@ const bodyClass =
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content={variant === "event" ? "/images/bg-musica.webp" : "/images/farecoh-welcome.webp"} />
     <meta name="twitter:card" content="summary_large_image" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="alternate" hreflang={alternateLang} href={alternateHref} />
-    <link rel="alternate" hreflang={lang} href={Astro.url.pathname} />
-    <link rel="alternate" hreflang="x-default" href={getLocalizedPath("es", active ?? "home")} />
-    <link rel="canonical" href={Astro.url.pathname} />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700;800&display=swap"
-      rel="stylesheet"
-    />
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,0&display=swap" rel="stylesheet" />
     <title>{title}</title>
   </head>
   <body class={bodyClass}>
-    <a class="sr-only" href="#contenido">{t.skipToContent}</a>
-    <Navbar lang={lang} active={active} variant={variant} />
-    <main id="contenido" class="flex-1">
+    <a class="sr-only" href="#main-content">Saltar al contenido</a>
+    <Navbar active={active} variant={variant} />
+    <main id="main-content" class={mainClass}>
       <slot />
     </main>
-    <Footer lang={lang} />
+    <Footer variant={variant} />
   </body>
 </html>
+
+<style is:global>
+  .reveal-section {
+    transition: all 0.7s ease;
+  }
+</style>

@@ -1,0 +1,24 @@
+﻿---
+import { homeGallery } from "@/data/home";
+---
+
+<section class="reveal-section landing-section bg-surface-container-lowest">
+  <div class="landing-shell">
+    <div class="mb-stack-lg max-w-3xl">
+      <p class="landing-eyebrow mb-3 text-brand-700">{homeGallery.label}</p>
+      <h2 class="landing-headline text-on-surface">{homeGallery.title}</h2>
+    </div>
+    <div class="grid grid-cols-1 gap-gutter md:grid-cols-[1.15fr_0.85fr]">
+      <figure class="editorial-image min-h-[420px]">
+        <img src={homeGallery.images[0].src} alt={homeGallery.images[0].alt} loading="lazy" />
+      </figure>
+      <div class="grid gap-gutter">
+        {homeGallery.images.slice(1).map((image) => (
+          <figure class="editorial-image min-h-[198px]">
+            <img src={image.src} alt={image.alt} loading="lazy" />
+          </figure>
+        ))}
+      </div>
+    </div>
+  </div>
+</section>

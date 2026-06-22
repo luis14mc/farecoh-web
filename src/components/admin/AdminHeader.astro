@@ -1,0 +1,42 @@
+---
+interface Props {
+  title: string;
+  section: string;
+}
+
+const { title, section } = Astro.props;
+const currentDate = new Date().toLocaleDateString("es-HN", {
+  month: "short",
+  day: "numeric",
+  year: "numeric",
+});
+---
+
+<header class="sticky top-0 z-10 flex flex-col justify-between gap-4 border-b border-outline-variant bg-surface/80 px-margin py-6 text-on-surface backdrop-blur-md md:flex-row md:items-center">
+  <div>
+    <nav aria-label="Breadcrumb" class="mb-1 flex text-caption font-caption uppercase tracking-wider text-on-surface-variant">
+      <ol class="inline-flex items-center space-x-1 md:space-x-2">
+        <li><a class="hover:text-primary" href="/admin">Admin</a></li>
+        <li class="flex items-center">
+          <span class="material-symbols-outlined text-sm">chevron_right</span>
+          <span class="ml-1 font-semibold text-primary md:ml-2">{section}</span>
+        </li>
+      </ol>
+    </nav>
+    <h2 class="text-headline-md font-headline-md text-on-surface">{title}</h2>
+  </div>
+  <div class="flex items-center gap-3 text-on-surface">
+    <span class="text-label-md font-label-md font-bold">{currentDate}</span>
+    <span class="material-symbols-outlined text-primary">calendar_today</span><button id="admin-header-logout" class="rounded border border-outline-variant px-3 py-2 text-caption font-caption font-bold text-on-surface hover:bg-surface-container-high" type="button">Cerrar sesión</button>
+  </div>
+</header>
+
+<script>
+  import { createSupabaseBrowserClient } from "@/lib/auth";
+
+  const supabase = createSupabaseBrowserClient();
+  document.getElementById("admin-header-logout")?.addEventListener("click", async () => {
+    await supabase.auth.signOut();
+    window.location.href = "/admin/login";
+  });
+</script>

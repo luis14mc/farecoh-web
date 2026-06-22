@@ -1,18 +1,26 @@
 {
-  "name": "farecoh-web",
-  "type": "module",
-  "version": "0.0.1",
-  "scripts": {
-    "dev": "astro dev",
-    "build": "astro build",
-    "preview": "astro preview",
-    "astro": "astro"
-  },
-  "dependencies": {
-    "@tailwindcss/vite": "^4.1.11",
-    "astro": "^5.12.1",
-    "daisyui": "^5.0.46",
-    "tailwindcss": "^4.1.11"
-  },
-  "packageManager": "pnpm@11.1.2+sha512.415a1cc25974731e75455c1468371be74c5aa5fb7621b50d4056d222451609f11412f23fd602e6169f1e060466641f798597e1be961a10688836a67b16569499"
+    "name": "farecoh-web",
+    "type": "module",
+    "version": "0.0.1",
+    "scripts": {
+        "dev": "astro dev",
+        "build": "astro build",
+        "preview": "astro preview",
+        "astro": "astro",
+        "generate:ticket-assets": "node --experimental-strip-types scripts/generate-ticket-assets.ts",
+        "export:canva-tickets": "node --experimental-strip-types scripts/export-canva-tickets.ts"
+    },
+    "dependencies": {
+        "@astrojs/vercel": "^9.0.5",
+        "@lucide/astro": "^1.21.0",
+        "@motionone/dom": "^10.18.0",
+        "@supabase/ssr": "^0.12.0",
+        "@supabase/supabase-js": "^2.108.2",
+        "@tailwindcss/vite": "^4.1.11",
+        "astro": "^5.12.1",
+        "qrcode": "^1.5.4",
+        "tailwindcss": "^4.1.11",
+        "zod": "^3.25.76"
+    },
+    "packageManager": "pnpm@11.1.2+sha512.415a1cc25974731e75455c1468371be74c5aa5fb7621b50d4056d222451609f11412f23fd602e6169f1e060466641f798597e1be961a10688836a67b16569499"
 }

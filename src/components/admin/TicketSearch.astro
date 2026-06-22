@@ -1,0 +1,254 @@
+---
+---
+
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-6 h-full text-on-surface">
+  <h3 class="text-headline-md font-headline-md text-on-surface mb-6 flex items-center gap-2">
+    <span class="material-symbols-outlined text-primary">qr_code_scanner</span>
+    <span>Check-in de Asistentes</span>
+  </h3>
+  
+  <div class="space-y-4">
+    <div>
+      <label class="text-label-md font-label-md text-on-surface-variant block mb-2 font-bold uppercase tracking-wider">
+        Buscar por código de boleto
+      </label>
+      <div class="relative">
+        <input 
+          id="checkin-search" 
+          class="w-full pl-10 pr-24 py-3 rounded border border-[rgba(69,65,66,0.2)] focus:border-primary focus:ring-0 outline-none transition-all bg-surface text-body-md text-on-surface" 
+          placeholder="PF-000000" 
+          type="text"
+          value=""
+        />
+        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
+        <button 
+          id="search-btn" 
+          class="absolute right-2 top-1/2 -translate-y-1/2 bg-primary text-on-primary px-4 py-1.5 text-caption font-caption font-bold rounded hover:bg-secondary transition-all"
+        >
+          BUSCAR
+        </button>
+      </div>
+    </div>
+    
+    <!-- State Messaging -->
+    <div id="checkin-status-msg" class="hidden text-caption font-caption p-3 text-center rounded">
+      <!-- Dynamic msg -->
+    </div>
+
+    <!-- Result Card (Hidden by default, shown when ticket is found) -->
+    <div id="result-card" class="hidden border border-primary-container bg-primary-container/5 rounded-xl p-5 border-dashed transition-all">
+      <div class="flex justify-between items-start mb-4">
+        <div>
+          <p class="text-caption font-caption text-primary uppercase tracking-wider font-bold">Ticket Encontrado</p>
+          <h4 class="text-headline-sm font-headline-sm text-on-surface" id="res-code">PF-000001</h4>
+        </div>
+        <span id="res-badge" class="px-3 py-1 rounded-full text-caption font-caption font-bold">
+          Válido
+        </span>
+      </div>
+      
+      <div class="space-y-2 mb-6 text-body-md">
+        <div class="flex justify-between border-b border-outline-variant/20 pb-2">
+          <span class="text-on-surface-variant">Comprador:</span>
+          <span class="font-semibold text-right" id="res-name">Carlos Mendoza</span>
+        </div>
+        <div class="flex justify-between border-b border-outline-variant/20 pb-2">
+          <span class="text-on-surface-variant">Teléfono:</span>
+          <span class="font-semibold text-right" id="res-phone">+504 9999-8888</span>
+        </div>
+        <div class="flex justify-between border-b border-outline-variant/20 pb-2">
+          <span class="text-on-surface-variant">Estado Pago:</span>
+          <span class="font-semibold text-right" id="res-status">Pagado</span>
+        </div>
+        <div id="checked-in-time-row" class="hidden flex justify-between">
+          <span class="text-on-surface-variant">Ingreso:</span>
+          <span class="font-semibold text-right text-green-600" id="res-time">Hace un momento</span>
+        </div>
+      </div>
+      
+      <button 
+        id="validate-btn" 
+        class="w-full py-3 bg-secondary text-on-secondary rounded font-bold hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
+      >
+        <span class="material-symbols-outlined">how_to_reg</span>
+        <span>Validar ingreso</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  import { supabase } from "@/lib/supabase";
+
+  const searchInput = document.getElementById("checkin-search") as HTMLInputElement | null;
+  const searchBtn = document.getElementById("search-btn") as HTMLButtonElement | null;
+  const msgBox = document.getElementById("checkin-status-msg");
+  const resultCard = document.getElementById("result-card");
+  const validateBtn = document.getElementById("validate-btn") as HTMLButtonElement | null;
+
+  // Result card DOM nodes
+  const resCode = document.getElementById("res-code");
+  const resBadge = document.getElementById("res-badge");
+  const resName = document.getElementById("res-name");
+  const resPhone = document.getElementById("res-phone");
+  const resStatus = document.getElementById("res-status");
+  const checkedInTimeRow = document.getElementById("checked-in-time-row");
+  const resTime = document.getElementById("res-time");
+
+  let activeTicket: any = null;
+
+  const showMsg = (text: string, type: "error" | "info" | "success") => {
+    if (!msgBox) return;
+    msgBox.innerText = text;
+    msgBox.classList.remove("hidden", "bg-red-100", "text-red-700", "bg-blue-100", "text-blue-700", "bg-green-100", "text-green-700");
+    
+    if (type === "error") {
+      msgBox.classList.add("bg-red-100", "text-red-700");
+    } else if (type === "success") {
+      msgBox.classList.add("bg-green-100", "text-green-700");
+    } else {
+      msgBox.classList.add("bg-blue-100", "text-blue-700");
+    }
+  };
+
+  const handleSearch = async () => {
+    if (!searchInput || !resultCard) return;
+    const query = searchInput.value.trim().toUpperCase();
+
+    if (!query) {
+      showMsg("Por favor ingrese un código de boleto.", "error");
+      resultCard.classList.add("hidden");
+      return;
+    }
+
+    showMsg("Buscando boleto...", "info");
+    resultCard.classList.add("hidden");
+    activeTicket = null;
+
+    try {
+      // Query ticket by code
+      const { data, error } = await supabase
+        .from("tickets")
+        .select("*, customer:customers(*)")
+        .eq("ticket_code", query)
+        .single();
+
+      if (error || !data) {
+        showMsg("Boleto no encontrado. Verifique el código.", "error");
+        return;
+      }
+
+      // Found
+      activeTicket = data;
+      showMsg("Boleto encontrado", "success");
+      
+      // Update result card content
+      if (resCode) resCode.innerText = data.ticket_code;
+      if (resName) resName.innerText = data.customer?.name || "Invitado";
+      if (resPhone) resPhone.innerText = data.customer?.phone || "Sin teléfono";
+      
+      let statusStr = "Pendiente";
+      if (data.status === "paid") statusStr = "Pagado";
+      else if (data.status === "validated") statusStr = "Validado";
+      else if (data.status === "cancelled") statusStr = "Cancelado";
+      if (resStatus) resStatus.innerText = statusStr;
+
+      // Badges
+      if (resBadge) {
+        resBadge.className = "px-3 py-1 rounded-full text-caption font-caption font-bold";
+        if (data.status === "validated") {
+          resBadge.innerText = "Ingresado";
+          resBadge.classList.add("bg-blue-100", "text-blue-700");
+        } else if (data.status === "paid") {
+          resBadge.innerText = "Listo";
+          resBadge.classList.add("bg-green-100", "text-green-700");
+        } else if (data.status === "pending") {
+          resBadge.innerText = "Pendiente Pago";
+          resBadge.classList.add("bg-yellow-100", "text-yellow-700");
+        } else {
+          resBadge.innerText = "Cancelado";
+          resBadge.classList.add("bg-red-100", "text-red-700");
+        }
+      }
+
+      // Check-in details
+      if (data.status === "validated" && data.checked_in_at) {
+        if (checkedInTimeRow) checkedInTimeRow.classList.remove("hidden");
+        if (resTime) {
+          const time = new Date(data.checked_in_at).toLocaleTimeString("es-HN", { hour: "numeric", minute: "2-digit" });
+          resTime.innerText = `Ingresó a las ${time}`;
+        }
+      } else {
+        if (checkedInTimeRow) checkedInTimeRow.classList.add("hidden");
+      }
+
+      // Enable/Disable validation button
+      if (validateBtn) {
+        if (data.status === "validated") {
+          validateBtn.disabled = true;
+          validateBtn.innerText = "Ingreso ya Validado";
+          validateBtn.className = "w-full py-3 bg-gray-400 text-white rounded font-bold cursor-not-allowed flex items-center justify-center gap-2";
+        } else if (data.status === "cancelled") {
+          validateBtn.disabled = true;
+          validateBtn.innerText = "Boleto Cancelado";
+          validateBtn.className = "w-full py-3 bg-red-400 text-white rounded font-bold cursor-not-allowed flex items-center justify-center gap-2";
+        } else {
+          validateBtn.disabled = false;
+          validateBtn.innerHTML = `<span class="material-symbols-outlined">how_to_reg</span> Validar ingreso`;
+          validateBtn.className = "w-full py-3 bg-secondary text-on-secondary rounded font-bold hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer";
+        }
+      }
+
+      resultCard.classList.remove("hidden");
+    } catch (err) {
+      console.error(err);
+      showMsg("Error al conectar con la base de datos.", "error");
+    }
+  };
+
+  searchBtn?.addEventListener("click", handleSearch);
+  searchInput?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      handleSearch();
+    }
+  });
+
+  validateBtn?.addEventListener("click", async () => {
+    if (!activeTicket || !validateBtn) return;
+    
+    // Disable button & show spinner
+    validateBtn.disabled = true;
+    validateBtn.innerHTML = `<span class="material-symbols-outlined animate-spin">sync</span> Validando...`;
+
+    try {
+      const now = new Date().toISOString();
+      await supabase.update("tickets", activeTicket.id, {
+        status: "validated",
+        checked_in_at: now
+      });
+
+      // Show success animation
+      validateBtn.innerHTML = `<span class="material-symbols-outlined">check_circle</span> Acceso Concedido`;
+      validateBtn.className = "w-full py-3 bg-green-600 text-white rounded font-bold flex items-center justify-center gap-2";
+
+      // Refresh data details in card
+      if (resBadge) {
+        resBadge.innerText = "Ingresado";
+        resBadge.className = "px-3 py-1 rounded-full text-caption font-caption font-bold bg-blue-100 text-blue-700";
+      }
+      if (checkedInTimeRow) checkedInTimeRow.classList.remove("hidden");
+      if (resTime) {
+        const time = new Date(now).toLocaleTimeString("es-HN", { hour: "numeric", minute: "2-digit" });
+        resTime.innerText = `Ingresó a las ${time}`;
+      }
+
+      showMsg("Entrada validada correctamente.", "success");
+    } catch (err) {
+      console.error("Check-in error:", err);
+      validateBtn.disabled = false;
+      validateBtn.innerHTML = `<span class="material-symbols-outlined">how_to_reg</span> Validar ingreso`;
+      validateBtn.className = "w-full py-3 bg-secondary text-on-secondary rounded font-bold hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer";
+      showMsg("Error al validar el ingreso. Intente de nuevo.", "error");
+    }
+  });
+</script>
