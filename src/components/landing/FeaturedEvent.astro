@@ -2,54 +2,68 @@
 import { pinkFloydEvent } from "@/data/event";
 import { homeFeaturedEvent } from "@/data/home";
 import LandingButton from "@/components/landing/LandingButton.astro";
+import { formatSiteCurrency } from "@/lib/locale";
 ---
 
-<section class="concert-bridge concert-bridge--full reveal-section">
+<section class="concert-bridge concert-bridge--full reveal-section" aria-labelledby="featured-event-title">
   <div class="concert-bridge__glow" aria-hidden="true"></div>
+  <div class="concert-grain" aria-hidden="true"></div>
+
   <div class="landing-shell relative z-10 mb-4">
-    <p class="landing-eyebrow text-brand-700">Del impacto social a la experiencia en vivo</p>
+    <div class="concert-bridge__intro">
+      <span class="concert-bridge__index" aria-hidden="true">02</span>
+      <p class="landing-eyebrow text-brand-700">Del impacto social a la experiencia en vivo</p>
+    </div>
   </div>
+
   <div class="concert-bridge__card relative z-10">
-    <div class="grid grid-cols-1 lg:grid-cols-2">
-      <div class="concert-bridge__content space-y-stack-md">
+    <span class="concert-bridge__year" aria-hidden="true">2026</span>
+
+    <div class="concert-bridge__grid grid grid-cols-1 lg:grid-cols-2">
+      <div class="concert-bridge__content order-2 space-y-stack-md lg:order-1">
         <div class="flex flex-wrap items-center gap-3">
           <span class="concert-accent-bar" aria-hidden="true"></span>
           <span class="concert-badge">{homeFeaturedEvent.badge}</span>
         </div>
-        <h2 class="display text-white">{pinkFloydEvent.name}</h2>
+
+        <h2 id="featured-event-title" class="display text-white">
+          <span class="concert-bridge__title-line">{pinkFloydEvent.name}</span>
+        </h2>
         <p class="subtitle-lg font-semibold text-concert-amber">{homeFeaturedEvent.subtitle}</p>
         <p class="landing-body max-w-2xl text-white/85">{homeFeaturedEvent.body}</p>
 
         <dl class="grid max-w-2xl grid-cols-1 gap-3 sm:grid-cols-2" aria-label="Detalles del evento">
           <div class="concert-detail-chip">
-            <span class="material-symbols-outlined">calendar_today</span>
+            <span class="material-symbols-outlined" aria-hidden="true">calendar_today</span>
             <div>
               <dt class="text-caption font-caption uppercase tracking-wider text-white/55">Fecha</dt>
-              <dd class="body-md text-white">29 de agosto de 2026</dd>
+              <dd class="body-md text-white">{pinkFloydEvent.date}</dd>
             </div>
           </div>
           <div class="concert-detail-chip">
-            <span class="material-symbols-outlined">schedule</span>
+            <span class="material-symbols-outlined" aria-hidden="true">schedule</span>
             <div>
               <dt class="text-caption font-caption uppercase tracking-wider text-white/55">Hora</dt>
               <dd class="body-md text-white">{pinkFloydEvent.time}</dd>
             </div>
           </div>
           <div class="concert-detail-chip sm:col-span-2">
-            <span class="material-symbols-outlined">location_on</span>
+            <span class="material-symbols-outlined" aria-hidden="true">location_on</span>
             <div>
               <dt class="text-caption font-caption uppercase tracking-wider text-white/55">Lugar</dt>
               <dd class="body-md text-white">{pinkFloydEvent.venue}, {pinkFloydEvent.city}</dd>
             </div>
           </div>
-          <div class="concert-detail-chip sm:col-span-2">
-            <span class="material-symbols-outlined">volunteer_activism</span>
-            <div>
-              <dt class="text-caption font-caption uppercase tracking-wider text-white/55">Aporte</dt>
-              <dd class="body-md text-white">Aporte solidario L.{pinkFloydEvent.ticket_price.toFixed(2)}</dd>
-            </div>
-          </div>
         </dl>
+
+        <div class="concert-ticket-stub" aria-label={`Aporte solidario ${formatSiteCurrency(pinkFloydEvent.ticket_price)}`}>
+          <span class="concert-ticket-stub__perforation" aria-hidden="true"></span>
+          <div class="concert-ticket-stub__body">
+            <p class="concert-ticket-stub__label">Aporte solidario</p>
+            <p class="concert-ticket-stub__price">{formatSiteCurrency(pinkFloydEvent.ticket_price)}</p>
+          </div>
+          <span class="concert-ticket-stub__code" aria-hidden="true">PF-2026</span>
+        </div>
 
         <div class="flex flex-col gap-4 pt-2 sm:flex-row sm:flex-wrap">
           <LandingButton href="/eventos/pink-floyd" variant="concert-primary">
@@ -61,15 +75,24 @@ import LandingButton from "@/components/landing/LandingButton.astro";
         </div>
       </div>
 
-      <div class="concert-bridge__image-wrap editorial-image editorial-image--parallax min-h-[280px] lg:min-h-[520px]">
+      <div class="concert-bridge__image-wrap editorial-image editorial-image--parallax order-1 lg:order-2">
+        <div class="concert-frame" aria-hidden="true">
+          <span class="concert-frame__corner concert-frame__corner--tl"></span>
+          <span class="concert-frame__corner concert-frame__corner--tr"></span>
+          <span class="concert-frame__corner concert-frame__corner--bl"></span>
+          <span class="concert-frame__corner concert-frame__corner--br"></span>
+        </div>
         <div class="parallax-layer" data-parallax data-parallax-speed="0.22" data-parallax-scale="1.1">
           <img
-            class="h-full w-full object-cover"
+            class="h-full w-full object-cover object-center"
             src={homeFeaturedEvent.image}
             alt={homeFeaturedEvent.imageAlt}
             loading="lazy"
+            width="1600"
+            height="1067"
           />
         </div>
+        <div class="concert-bridge__image-beam" aria-hidden="true"></div>
       </div>
     </div>
   </div>

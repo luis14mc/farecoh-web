@@ -9,13 +9,15 @@ import ImpactBlock from "@/components/landing/ImpactBlock.astro";
 import FeaturedEvent from "@/components/landing/FeaturedEvent.astro";
 import EmotionalQuote from "@/components/landing/EmotionalQuote.astro";
 import FinalCTA from "@/components/landing/FinalCTA.astro";
-import { site } from "@/data/site";
-import { homeHero } from "@/data/home";
+import { seoPages, organizationJsonLd, webSiteJsonLd } from "@/data/seo";
 ---
 
 <Layout
-  title={`${site.name} | ${homeHero.title}`}
-  description={homeHero.subtitle}
+  title={seoPages.home.title}
+  description={seoPages.home.description}
+  image={seoPages.home.image}
+  canonicalPath={seoPages.home.path}
+  jsonLd={[organizationJsonLd(), webSiteJsonLd()]}
   active="home"
 >
   <LandingHero />

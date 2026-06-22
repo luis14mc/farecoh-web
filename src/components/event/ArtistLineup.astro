@@ -1,65 +1,82 @@
 ---
-import { musicalDirector, ensembleMembers, lineupPhotoFallback } from "@/data/artists";
+import {
+  musicalDirector,
+  ensembleMembers,
+  ensembleOnStageCount,
+  lineupPhotoFallback,
+} from "@/data/artists";
 import { eventPage } from "@/data/event-page";
 ---
 
-<section class="reveal-section event-section event-section--lineup" id="lineup-stage">
-  <div class="landing-shell">
-    <header class="lineup-header mb-stack-lg max-w-3xl border-l-4 border-concert-orange pl-stack-md">
-      <p class="concert-eyebrow landing-eyebrow mb-3">{eventPage.lineup.label}</p>
-      <h2 class="landing-headline uppercase tracking-tight text-white">{eventPage.lineup.title}</h2>
-      <p class="body-md mt-2 text-white/65">{eventPage.lineup.subtitle}</p>
-    </header>
-
-    <div class="lineup-stage">
-      <article class="lineup-director-hub" aria-label="Director musical">
-        <div class="lineup-director-hub__glow" aria-hidden="true"></div>
-        <div class="lineup-director-hub__photo editorial-image">
-          <img
-            src={musicalDirector.image}
-            alt={musicalDirector.imageAlt}
-            loading="eager"
-            data-lineup-photo
-            data-fallback={lineupPhotoFallback}
-          />
-        </div>
-        <div class="lineup-director-hub__inner">
-          <p class="concert-badge">Dirección musical</p>
-          <h3 class="lineup-director-hub__name">{musicalDirector.name}</h3>
-          <p class="lineup-director-hub__role">{musicalDirector.role}</p>
-          <p class="lineup-director-hub__note">{musicalDirector.note}</p>
-          <p class="lineup-director-hub__count">{ensembleMembers.length} músicos en escena</p>
-        </div>
-      </article>
-
-      <div class="lineup-ensemble">
-        <div class="lineup-ensemble__header">
-          <p class="concert-eyebrow landing-eyebrow">Elenco</p>
-          <p class="body-md text-white/55">Cada integrante aporta su talento al tributo</p>
-        </div>
-
-        <ul class="lineup-ensemble__grid" role="list">
-          {ensembleMembers.map((member, index) => (
-            <li class="lineup-musician-card" style={`--stagger: ${index}`}>
-              <div class="lineup-musician-card__photo editorial-image">
-                <img
-                  src={member.image}
-                  alt={member.imageAlt}
-                  loading="lazy"
-                  data-lineup-photo
-                  data-fallback={lineupPhotoFallback}
-                />
-                <span class="lineup-musician-card__index" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
-              </div>
-              <div class="lineup-musician-card__body">
-                <h4 class="lineup-musician-card__name">{member.name}</h4>
-                <p class="lineup-musician-card__role">{member.role}</p>
-              </div>
-            </li>
-          ))}
-        </ul>
+<section class="reveal-section lineup-section" id="lineup-stage" aria-labelledby="lineup-heading">
+  <div class="landing-shell lineup-section__shell">
+    <article class="lineup-director" aria-label="Dirección musical">
+      <div class="lineup-director__photo">
+        <img
+          src={musicalDirector.image}
+          alt={musicalDirector.imageAlt}
+          loading="eager"
+          width="640"
+          height="800"
+          data-lineup-photo
+          data-fallback={lineupPhotoFallback}
+        />
       </div>
+
+      <div class="lineup-director__panel">
+        <div class="lineup-director__prism" aria-hidden="true">
+          <span class="lineup-director__prism-triangle"></span>
+          <span class="lineup-director__prism-beam"></span>
+        </div>
+
+        <p class="lineup-director__badge">{eventPage.lineup.directorBadge}</p>
+        <h2 class="lineup-director__name">{musicalDirector.name}</h2>
+        <p class="lineup-director__role">{musicalDirector.role}</p>
+        {musicalDirector.description && (
+          <p class="lineup-director__note">{musicalDirector.description}</p>
+        )}
+        <p class="lineup-director__count">
+          {ensembleOnStageCount} {eventPage.lineup.onStageLabel}
+        </p>
+      </div>
+    </article>
+
+    <div class="lineup-ensemble">
+      <header class="lineup-ensemble__header">
+        <h2 id="lineup-heading" class="lineup-ensemble__title">{eventPage.lineup.label}</h2>
+        <p class="lineup-ensemble__subtitle">{eventPage.lineup.subtitle}</p>
+      </header>
+
+      <ul class="lineup-ensemble__grid" role="list">
+        {ensembleMembers.map((member) => (
+          <li class="lineup-card">
+            <div class="lineup-card__photo">
+              <img
+                src={member.image}
+                alt={member.imageAlt}
+                loading="lazy"
+                width="480"
+                height="600"
+                data-lineup-photo
+                data-fallback={lineupPhotoFallback}
+              />
+              <span class="lineup-card__index" aria-hidden="true">
+                {String(member.order).padStart(2, "0")}
+              </span>
+            </div>
+            <div class="lineup-card__body">
+              <h3 class="lineup-card__name">{member.name}</h3>
+              <p class="lineup-card__role">{member.role}</p>
+            </div>
+          </li>
+        ))}
+      </ul>
     </div>
+
+    <footer class="lineup-footer" aria-label="Marca del tributo">
+      <span class="material-symbols-outlined lineup-footer__icon" aria-hidden="true">graphic_eq</span>
+      <p class="lineup-footer__label">{eventPage.lineup.footer}</p>
+    </footer>
   </div>
 </section>
 
@@ -68,11 +85,15 @@ import { eventPage } from "@/data/event-page";
 
   function initLineupPhotos() {
     document.querySelectorAll<HTMLImageElement>("[data-lineup-photo]").forEach((img) => {
-      img.addEventListener("error", () => {
-        const fallback = img.dataset.fallback;
-        if (!fallback || img.src.endsWith(fallback)) return;
-        img.src = fallback;
-      }, { once: true });
+      img.addEventListener(
+        "error",
+        () => {
+          const fallback = img.dataset.fallback;
+          if (!fallback || img.src.endsWith(fallback)) return;
+          img.src = fallback;
+        },
+        { once: true },
+      );
     });
   }
 
@@ -88,22 +109,22 @@ import { eventPage } from "@/data/event-page";
     const playEntrance = () => {
       if (!section.classList.contains("is-visible")) return;
 
-      const director = section.querySelector(".lineup-director-hub");
-      const cards = section.querySelectorAll(".lineup-musician-card");
+      const director = section.querySelector(".lineup-director");
+      const cards = section.querySelectorAll(".lineup-card");
 
       if (director) {
         animate(
           director,
-          { opacity: [0, 1], transform: ["translateY(24px)", "translateY(0)"] },
-          { duration: 0.65, easing: [0.22, 1, 0.36, 1] }
+          { opacity: [0, 1], transform: ["translateY(20px)", "translateY(0)"] },
+          { duration: 0.6, easing: [0.22, 1, 0.36, 1] },
         );
       }
 
       if (cards.length) {
         animate(
           Array.from(cards),
-          { opacity: [0, 1], transform: ["translateY(16px)", "translateY(0)"] },
-          { duration: 0.5, delay: stagger(0.05, { start: 0.2 }), easing: "ease-out" }
+          { opacity: [0, 1], transform: ["translateY(12px)", "translateY(0)"] },
+          { duration: 0.45, delay: stagger(0.04, { start: 0.15 }), easing: "ease-out" },
         );
       }
     };

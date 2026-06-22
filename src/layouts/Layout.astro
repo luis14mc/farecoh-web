@@ -2,15 +2,32 @@
 import "../styles/global.css";
 import Navbar from "@/components/layout/Navbar.astro";
 import Footer from "@/components/layout/Footer.astro";
+import SeoHead from "@/components/seo/SeoHead.astro";
+import { SITE_LANG } from "@/lib/locale";
 
 interface Props {
   title: string;
   description: string;
   active?: "home" | "events" | "tickets";
   variant?: "light" | "dark" | "concert";
+  canonicalPath?: string;
+  image?: string;
+  ogType?: string;
+  noindex?: boolean;
+  jsonLd?: Record<string, unknown> | Record<string, unknown>[];
 }
 
-const { title, description, active, variant = "light" } = Astro.props;
+const {
+  title,
+  description,
+  active,
+  variant = "light",
+  canonicalPath,
+  image,
+  ogType,
+  noindex,
+  jsonLd,
+} = Astro.props;
 
 const bodyClass =
   variant === "concert"
@@ -24,21 +41,25 @@ const mainClass =
 ---
 
 <!doctype html>
-<html class={variant} lang="es">
+<html class={variant} lang={SITE_LANG}>
   <head>
     <meta charset="UTF-8" />
-    <meta name="description" content={description} />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="generator" content={Astro.generator} />
-    <meta property="og:title" content={title} />
-    <meta property="og:description" content={description} />
-    <meta property="og:type" content="website" />
-    <meta name="twitter:card" content="summary_large_image" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,0&display=swap" rel="stylesheet" />
+    <SeoHead
+      title={title}
+      description={description}
+      canonicalPath={canonicalPath}
+      image={image}
+      ogType={ogType}
+      noindex={noindex}
+      jsonLd={jsonLd}
+    />
     <title>{title}</title>
   </head>
   <body class={bodyClass}>

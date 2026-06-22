@@ -2,6 +2,7 @@
 import AdminLayout from "@/layouts/AdminLayout.astro";
 import AdminHeader from "@/components/admin/AdminHeader.astro";
 import { getEvent } from "@/lib/supabase";
+import { SITE_LOCALE } from "@/lib/locale";
 
 const event = await getEvent();
 const ticketPrice = event.ticket_price;
@@ -83,12 +84,12 @@ const ticketPrice = event.ticket_price;
   </div>
 </AdminLayout>
 
-<script define:vars={{ ticketPrice }}>
+<script define:vars={{ ticketPrice, siteLocale: SITE_LOCALE }}>
   import { getSellers, getTickets, seedPhysicalTicketing } from "@/services/physical-store";
   import { calculateSellerReports } from "@/services/seller-stats";
   import { SELLER_TYPE_LABELS } from "@/types/sellers";
 
-  const currency = new Intl.NumberFormat("es-HN", {
+  const currency = new Intl.NumberFormat(siteLocale, {
     style: "currency",
     currency: "HNL",
     maximumFractionDigits: 0,

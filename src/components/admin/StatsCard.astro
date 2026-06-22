@@ -1,5 +1,6 @@
 ---
 import { supabase } from "@/lib/supabase";
+import { formatSiteCurrency, formatSiteNumber } from "@/lib/locale";
 
 // Query all tickets and orders for live calculation
 const { data: tickets } = await supabase.from("tickets").select("status");
@@ -37,10 +38,10 @@ const completionRate = totalTickets > 0 ? Math.round((paidTickets / totalTickets
       <div class="p-2 bg-primary-container/10 rounded-lg">
         <span class="material-symbols-outlined text-primary">confirmation_number</span>
       </div>
-      <span class="text-caption font-caption text-secondary font-bold">+12% vs last week</span>
+      <span class="text-caption font-caption text-secondary font-bold">+12% vs semana anterior</span>
     </div>
     <p class="text-label-md font-label-md text-on-surface-variant uppercase font-semibold">Total Boletos</p>
-    <p class="text-headline-lg font-headline-lg text-on-surface mt-1">{totalTickets.toLocaleString()}</p>
+    <p class="text-headline-lg font-headline-lg text-on-surface mt-1">{formatSiteNumber(totalTickets)}</p>
   </div>
   
   <!-- Boletos Pagados -->
@@ -49,10 +50,10 @@ const completionRate = totalTickets > 0 ? Math.round((paidTickets / totalTickets
       <div class="p-2 bg-green-100 rounded-lg">
         <span class="material-symbols-outlined text-green-600">check_circle</span>
       </div>
-      <span class="text-caption font-caption text-green-600 font-bold">{completionRate}% Completion</span>
+      <span class="text-caption font-caption text-green-600 font-bold">{completionRate}% completado</span>
     </div>
     <p class="text-label-md font-label-md text-on-surface-variant uppercase font-semibold">Boletos Pagados</p>
-    <p class="text-headline-lg font-headline-lg text-on-surface mt-1">{paidTickets.toLocaleString()}</p>
+    <p class="text-headline-lg font-headline-lg text-on-surface mt-1">{formatSiteNumber(paidTickets)}</p>
   </div>
   
   <!-- Boletos Pendientes -->
@@ -61,10 +62,10 @@ const completionRate = totalTickets > 0 ? Math.round((paidTickets / totalTickets
       <div class="p-2 bg-yellow-100 rounded-lg">
         <span class="material-symbols-outlined text-yellow-600">pending</span>
       </div>
-      <span class="text-caption font-caption text-yellow-600 font-bold">Action Required</span>
+      <span class="text-caption font-caption text-yellow-600 font-bold">Requiere acción</span>
     </div>
     <p class="text-label-md font-label-md text-on-surface-variant uppercase font-semibold">Boletos Pendientes</p>
-    <p class="text-headline-lg font-headline-lg text-on-surface mt-1">{pendingTickets.toLocaleString()}</p>
+    <p class="text-headline-lg font-headline-lg text-on-surface mt-1">{formatSiteNumber(pendingTickets)}</p>
   </div>
   
   <!-- Total Recaudado -->
@@ -75,6 +76,6 @@ const completionRate = totalTickets > 0 ? Math.round((paidTickets / totalTickets
       </div>
     </div>
     <p class="text-label-md font-label-md text-white/80 uppercase font-semibold">Total Recaudado</p>
-    <p class="text-headline-lg font-headline-lg text-white mt-1">L. {totalRevenue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
+    <p class="text-headline-lg font-headline-lg text-white mt-1">{formatSiteCurrency(totalRevenue)}</p>
   </div>
 </section>

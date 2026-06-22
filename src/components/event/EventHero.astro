@@ -6,18 +6,16 @@ interface Props {
   city: string;
   date: string;
   time: string;
-  price: number;
 }
 
 import Calendar from "@lucide/astro/icons/calendar";
 import Clock from "@lucide/astro/icons/clock";
 import MapPin from "@lucide/astro/icons/map-pin";
-import HeartHandshake from "@lucide/astro/icons/heart-handshake";
 import ArrowRight from "@lucide/astro/icons/arrow-right";
 import LandingButton from "@/components/landing/LandingButton.astro";
 import { eventPage } from "@/data/event-page";
 
-const { name, tagline, venue, city, date, time, price } = Astro.props;
+const { name, tagline, venue, city, date, time } = Astro.props;
 ---
 
 <section class="event-hero hero-parallax relative flex min-h-[85vh] w-full items-end overflow-hidden bg-concert-deep md:min-h-[920px] md:items-center">
@@ -28,9 +26,13 @@ const { name, tagline, venue, city, date, time, price } = Astro.props;
         src={eventPage.hero.image}
         alt={eventPage.hero.imageAlt}
         fetchpriority="high"
+        width="1600"
+        height="1067"
       />
     </div>
     <div class="event-hero-overlay absolute inset-0"></div>
+    <div class="event-hero-beam" aria-hidden="true"></div>
+    <div class="concert-grain" aria-hidden="true"></div>
   </div>
 
   <div class="landing-section relative z-10 w-full pb-8 pt-28 md:pb-20 md:pt-32">
@@ -41,25 +43,23 @@ const { name, tagline, venue, city, date, time, price } = Astro.props;
         <span class="landing-eyebrow text-white/70">{venue}, {city}</span>
       </div>
 
-      <h1 class="display mb-4 text-white">{name}</h1>
+      <h1 class="display mb-4 text-white">
+        <span class="event-hero__title-accent">{name}</span>
+      </h1>
       <p class="subtitle-lg mb-3 font-semibold text-concert-amber">{tagline}</p>
-      <p class="landing-body mb-stack-lg text-white/85">{eventPage.hero.body}</p>
+      <p class="landing-body mb-stack-lg max-w-2xl text-white/85">{eventPage.hero.body}</p>
 
       <ul class="mb-stack-lg flex flex-wrap gap-x-6 gap-y-3" role="list">
         <li class="flex items-center gap-2 text-white/90">
-          <Calendar size={18} stroke-width={1.75} class="text-concert-amber" />
+          <Calendar size={18} stroke-width={1.75} class="text-concert-amber" aria-hidden="true" />
           <span class="body-md">{date}</span>
         </li>
         <li class="flex items-center gap-2 text-white/90">
-          <Clock size={18} stroke-width={1.75} class="text-concert-amber" />
+          <Clock size={18} stroke-width={1.75} class="text-concert-amber" aria-hidden="true" />
           <span class="body-md">{time}</span>
         </li>
         <li class="flex items-center gap-2 text-white/90">
-          <HeartHandshake size={18} stroke-width={1.75} class="text-concert-blue" />
-          <span class="body-md">Aporte solidario L.{price.toFixed(2)}</span>
-        </li>
-        <li class="flex items-center gap-2 text-white/90">
-          <MapPin size={18} stroke-width={1.75} class="text-concert-amber" />
+          <MapPin size={18} stroke-width={1.75} class="text-concert-amber" aria-hidden="true" />
           <span class="body-md">{venue}</span>
         </li>
       </ul>
@@ -70,7 +70,7 @@ const { name, tagline, venue, city, date, time, price } = Astro.props;
         </LandingButton>
         <a href="#proposito" class="landing-btn landing-btn-concert-secondary inline-flex items-center gap-2">
           {eventPage.hero.ctaSecondary}
-          <ArrowRight size={16} stroke-width={1.75} />
+          <ArrowRight size={16} stroke-width={1.75} aria-hidden="true" />
         </a>
       </div>
     </div>

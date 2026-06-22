@@ -18,7 +18,7 @@ const SEED_EVENT: Event = pinkFloydEvent;
 // Seed initial mock data for the admin dashboard overview
 const INITIAL_CUSTOMERS: Customer[] = [
   { id: "c1", name: "Carlos Mendoza", email: "carlos@gmail.com", phone: "+504 9999-8888", created_at: new Date().toISOString() },
-  { id: "c2", name: "LucÃ­a Torres", email: "lucia.torres@yahoo.com", phone: "+504 9876-5432", created_at: new Date().toISOString() },
+  { id: "c2", name: "Lucía Torres", email: "lucia.torres@yahoo.com", phone: "+504 9876-5432", created_at: new Date().toISOString() },
   { id: "c3", name: "Marco Polo", email: "marco@polo.com", phone: "+504 9900-1111", created_at: new Date().toISOString() },
   { id: "c4", name: "Elena Gil", email: "elena@gil.com", phone: "+504 9123-4567", created_at: new Date().toISOString() },
   { id: "c5", name: "Raul Perez", email: "raul@perez.com", phone: "+504 9555-4433", created_at: new Date().toISOString() }

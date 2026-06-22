@@ -18,10 +18,10 @@ const ticketsHref = "/eventos/pink-floyd/boletos";
 
 const headerClass =
   variant === "concert"
-    ? "fixed top-0 left-0 z-50 w-full border-b border-concert-orange/20 bg-concert-deep/90 py-4 backdrop-blur-md transition-all duration-300"
+    ? "fixed top-0 left-0 z-[100] w-full border-b border-concert-orange/20 bg-concert-deep/90 py-4 backdrop-blur-md transition-all duration-300"
     : variant === "dark"
-      ? "fixed top-0 left-0 z-50 w-full border-b border-outline/10 bg-on-background/90 py-4 backdrop-blur-md transition-all duration-300"
-      : "fixed top-0 left-0 z-50 w-full border-b border-outline-variant bg-surface/90 py-4 backdrop-blur-md transition-all duration-300";
+      ? "fixed top-0 left-0 z-[100] w-full border-b border-outline/10 bg-on-background/90 py-4 backdrop-blur-md transition-all duration-300"
+      : "fixed top-0 left-0 z-[100] w-full border-b border-outline-variant bg-surface/90 py-4 backdrop-blur-md transition-all duration-300";
 
 const inactiveClass =
   variant === "concert"
@@ -41,8 +41,8 @@ const logoTheme = variant === "light" ? "color" : "white";
 
 const ctaClass =
   variant === "concert"
-    ? "bg-gradient-to-r from-concert-orange to-concert-orange-mid px-6 py-2 text-label-md font-label-md text-white transition-all hover:from-concert-orange-mid hover:to-concert-amber hover:text-concert-deep active:scale-95 whitespace-nowrap shadow-[0_0_20px_rgba(255,77,0,0.35)]"
-    : "bg-primary-container px-6 py-2 text-label-md font-label-md text-on-primary-container transition-all hover:bg-primary active:scale-95 whitespace-nowrap";
+    ? "hidden lg:inline-flex bg-gradient-to-r from-concert-orange to-concert-orange-mid px-6 py-2 text-label-md font-label-md text-white transition-all hover:from-concert-orange-mid hover:to-concert-amber hover:text-concert-deep active:scale-95 whitespace-nowrap shadow-[0_0_20px_rgba(255,77,0,0.35)]"
+    : "hidden lg:inline-flex bg-primary-container px-6 py-2 text-label-md font-label-md text-on-primary-container transition-all hover:bg-primary active:scale-95 whitespace-nowrap";
 
 const mobileMenuClass =
   variant === "concert"
@@ -59,36 +59,47 @@ const menuIconClass =
 ---
 
 <header class={headerClass} id="main-header">
-  <div class="mx-auto flex w-full max-w-container-max items-center justify-between px-margin">
-    <a href="/" class="transition-opacity hover:opacity-90" aria-label="FARECOH inicio">
+  <div class="mx-auto grid w-full max-w-container-max grid-cols-[auto_1fr_auto] items-center gap-3 px-margin md:gap-4">
+    <a href="/" class="relative z-10 shrink-0 transition-opacity hover:opacity-90" aria-label="FARECOH inicio">
       <FarecohLogo variant="horizontal" theme={logoTheme} size="nav" loading="eager" />
     </a>
 
-    <nav class="hidden items-center space-x-stack-lg md:flex" aria-label="Navegación principal">
+    <nav class="relative z-20 hidden min-w-0 items-center justify-center gap-6 md:flex lg:gap-8" aria-label="Navegación principal">
       {navItems.map((item) => (
-        <a class={`text-label-md font-label-md transition-colors ${active === item.key ? activeClass : inactiveClass}`} href={item.href}>
+        <a
+          class={`relative z-10 shrink-0 text-label-md font-label-md transition-colors ${active === item.key ? activeClass : inactiveClass}`}
+          href={item.href}
+        >
           {item.label}
         </a>
       ))}
     </nav>
 
-    <div class="flex items-center gap-4">
+    <div class="relative z-10 flex shrink-0 items-center justify-end gap-3">
       <a href={ticketsHref} class={ctaClass}>
         Reservar boletos
       </a>
 
-      <details class="group relative md:hidden">
+      <details class="group relative md:hidden" id="mobile-nav">
         <summary class={`list-none cursor-pointer focus:outline-none ${menuIconClass}`} aria-label="Abrir menú">
           <span class="material-symbols-outlined align-middle text-[28px]">menu</span>
         </summary>
-        <div class={`absolute right-0 top-full z-[60] mt-4 min-w-[240px] border p-6 shadow-2xl ${mobileMenuClass}`}>
+        <div class={`absolute right-0 top-full z-[110] mt-4 min-w-[240px] border p-6 shadow-2xl ${mobileMenuClass}`}>
           <nav class="flex flex-col gap-4" aria-label="Navegación móvil">
             {navItems.map((item) => (
-              <a class={`text-label-md font-label-md ${active === item.key ? mobileActiveClass : "opacity-80"}`} href={item.href}>
+              <a
+                class={`text-label-md font-label-md ${active === item.key ? mobileActiveClass : "opacity-80"}`}
+                href={item.href}
+                data-mobile-nav-link
+              >
                 {item.label}
               </a>
             ))}
-            <a class={`mt-2 px-4 py-3 text-center text-label-md font-label-md ${variant === "concert" ? "bg-gradient-to-r from-concert-orange to-concert-orange-mid text-white" : "bg-primary-container text-on-primary-container"}`} href={ticketsHref}>
+            <a
+              class={`mt-2 px-4 py-3 text-center text-label-md font-label-md ${variant === "concert" ? "bg-gradient-to-r from-concert-orange to-concert-orange-mid text-white" : "bg-primary-container text-on-primary-container"}`}
+              href={ticketsHref}
+              data-mobile-nav-link
+            >
               Reservar boletos
             </a>
           </nav>
@@ -105,5 +116,12 @@ const menuIconClass =
     nav.classList.toggle("shadow-lg", window.scrollY > 50);
     nav.classList.toggle("py-2", window.scrollY > 50);
     nav.classList.toggle("py-4", window.scrollY <= 50);
+  });
+
+  document.querySelectorAll("[data-mobile-nav-link]").forEach((link) => {
+    link.addEventListener("click", () => {
+      const menu = document.getElementById("mobile-nav");
+      if (menu instanceof HTMLDetailsElement) menu.open = false;
+    });
   });
 </script>

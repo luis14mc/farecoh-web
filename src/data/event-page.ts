@@ -1,12 +1,13 @@
 import { homeFeaturedEvent } from "@/data/home";
+import { foundationPhotos } from "@/data/foundation-photos";
 
 export const eventPage = {
   hero: {
     badge: "Evento con propósito",
     tagline: homeFeaturedEvent.subtitle,
     body: homeFeaturedEvent.body,
-    image: homeFeaturedEvent.image,
-    imageAlt: homeFeaturedEvent.imageAlt,
+    image: foundationPhotos.eventHero.src,
+    imageAlt: foundationPhotos.eventHero.alt,
     ctaPrimary: "Reservar boletos",
     ctaSecondary: "Conocer la causa",
   },
@@ -16,9 +17,8 @@ export const eventPage = {
     body: "Una experiencia audiovisual inspirada en la música de Pink Floyd, creada para apoyar la educación artística y musical a través de FARECOH.",
     bodySecondary:
       "Reviva los clásicos con una puesta en escena que fusiona la rigurosidad académica con la psicodelia británica, en un entorno diseñado para la apreciación sonora pura.",
-    image:
-      "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=1200&q=80",
-    imageAlt: "Guitarra eléctrica bajo focos de escenario con atmósfera azul",
+    image: "/images/evento/106.webp",
+    imageAlt: foundationPhotos.eventExperience.alt,
   },
   purpose: {
     label: "Arte con propósito",
@@ -27,9 +27,11 @@ export const eventPage = {
     highlight: "Un concierto puede durar unas horas. Su impacto puede transformar una vida para siempre.",
   },
   lineup: {
-    label: "Lineup",
-    title: "Excelencia musical institucional",
-    subtitle: "Músicos y artistas que dan vida al tributo",
+    label: "Elenco",
+    subtitle: "Cada integrante aporta su talento al tributo",
+    footer: "Pink Floyd sinfónico — tributo",
+    directorBadge: "Dirección musical",
+    onStageLabel: "músicos en escena",
   },
   cta: {
     title: "Asegura tu lugar en el viaje",

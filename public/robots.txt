@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+Disallow: /admin/
+Disallow: /auth/
+Disallow: /t/
+
+Sitemap: https://farecoh.org/sitemap.xml

@@ -2,6 +2,8 @@
 import "../styles/global.css";
 import AdminSidebar from "@/components/admin/AdminSidebar.astro";
 import AdminMobileNav from "@/components/admin/AdminMobileNav.astro";
+import { SITE_LANG } from "@/lib/locale";
+import { ROBOTS_NOINDEX } from "@/lib/seo";
 
 interface Props {
   title: string;
@@ -13,11 +15,12 @@ const { title, description, active = "dashboard" } = Astro.props;
 ---
 
 <!doctype html>
-<html class="light" lang="es">
+<html class="light" lang={SITE_LANG}>
   <head>
     <meta charset="UTF-8" />
     <meta name="description" content={description} />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content={ROBOTS_NOINDEX} />
     <meta name="generator" content={Astro.generator} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -38,4 +41,3 @@ const { title, description, active = "dashboard" } = Astro.props;
     </div>
   </body>
 </html>
-

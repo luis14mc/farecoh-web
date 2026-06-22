@@ -1,13 +1,21 @@
 ---
 import Layout from "../../../layouts/Layout.astro";
 import TicketForm from "@/components/tickets/TicketForm.astro";
+import { seoPages, breadcrumbJsonLd } from "@/data/seo";
 ---
 
 <Layout
-  title="Reservar Boletos | Tributo a Pink Floyd"
-  description="Reserve sus boletos para el Concierto Tributo a Pink Floyd en Tegucigalpa."
+  title={seoPages.tickets.title}
+  description={seoPages.tickets.description}
+  image={seoPages.tickets.image}
+  canonicalPath={seoPages.tickets.path}
   active="tickets"
   variant="concert"
+  jsonLd={breadcrumbJsonLd([
+    { name: "Inicio", path: "/" },
+    { name: "Tributo a Pink Floyd", path: "/eventos/pink-floyd" },
+    { name: "Reservar boletos", path: seoPages.tickets.path },
+  ])}
 >
   <div class="concert-page-bg">
     <div class="concert-ticket-shell flex items-start justify-center">

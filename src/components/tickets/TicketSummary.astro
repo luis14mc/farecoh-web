@@ -3,11 +3,31 @@ interface Props {
   price: number;
 }
 
+import { formatSiteCurrency } from "@/lib/locale";
+
 const { price } = Astro.props;
+const formattedPrice = formatSiteCurrency(price);
 ---
 
 <div class="concert-summary-box">
   <p class="text-caption font-caption font-bold uppercase text-white/55">Total a aportar</p>
-  <p class="text-body-lg font-body-lg text-white/70">L. <span id="price-per-ticket">{price.toFixed(2)}</span> c/u</p>
-  <p class="event-cta-price mt-2">L. <span id="total-price">{price.toFixed(2)}</span></p>
+  <p class="text-body-lg font-body-lg text-white/70">{formattedPrice} c/u</p>
+  <p class="event-cta-price mt-2" id="total-price">{formattedPrice}</p>
 </div>
+
+<script define:vars={{ ticketPrice: price }}>
+  const qtyInput = document.getElementById("ticket_count");
+  const totalPriceNode = document.getElementById("total-price");
+
+  const formatTotal = (qty) =>
+    new Intl.NumberFormat("es-HN", {
+      style: "currency",
+      currency: "HNL",
+      maximumFractionDigits: 0,
+    }).format(qty * Number(ticketPrice));
+
+  qtyInput?.addEventListener("input", () => {
+    const qty = parseInt(qtyInput.value, 10) || 1;
+    if (totalPriceNode) totalPriceNode.textContent = formatTotal(qty);
+  });
+</script>

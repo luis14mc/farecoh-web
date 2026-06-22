@@ -117,8 +117,8 @@ export const homeFeaturedEvent = {
   body: "Una experiencia audiovisual creada para celebrar la música de Pink Floyd y apoyar los programas educativos y artísticos de FARECOH.",
   ctaEvent: "Ver evento",
   ctaTickets: "Reservar boletos",
-  image: foundationPhotos.featuredBackdrop.src,
-  imageAlt: foundationPhotos.featuredBackdrop.alt,
+  image: foundationPhotos.featuredEvent.src,
+  imageAlt: foundationPhotos.featuredEvent.alt,
 } as const;
 
 export const homeQuote = {
@@ -131,5 +131,4 @@ export const homeFinalCta = {
   body: "Cada programa, cada encuentro artístico y cada comunidad que acompañamos es una apuesta por el talento hondureño y un futuro con más oportunidades.",
   cta: "Descubre nuestros programas",
   href: "#programas",
-  image: foundationPhotos.cta.src,
 } as const;

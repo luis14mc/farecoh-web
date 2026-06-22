@@ -40,10 +40,10 @@ export function getSupabaseEnv(config: PublicSupabaseConfig = getPublicSupabaseC
 }
 
 export const STAFF_ROLE_LABELS: Record<StaffRole, string> = {
-  super_admin: "Super admin",
-  event_manager: "Gestor de evento",
+  super_admin: "Super administrador",
+  event_manager: "Gestor de eventos",
   seller: "Vendedor",
-  checkin_operator: "Operador check-in",
+  checkin_operator: "Operador de acceso",
 };
 
 export function createDevStaffProfile(): StaffProfile {
@@ -51,7 +51,7 @@ export function createDevStaffProfile(): StaffProfile {
     id: "dev-profile",
     user_id: "dev-user",
     email: "dev@farecoh.local",
-    full_name: "Dev Admin",
+    full_name: "Administrador de desarrollo",
     role: "super_admin",
     active: true,
     created_at: new Date().toISOString(),

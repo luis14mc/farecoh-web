@@ -5,6 +5,7 @@ interface Props {
 
 import LandingButton from "@/components/landing/LandingButton.astro";
 import { eventPage } from "@/data/event-page";
+import { formatSiteCurrency } from "@/lib/locale";
 
 const { price } = Astro.props;
 ---
@@ -18,7 +19,7 @@ const { price } = Astro.props;
         <p class="landing-body text-white/75">{eventPage.cta.body}</p>
       </div>
       <div class="flex w-full flex-col items-center gap-4 md:w-auto md:items-end">
-        <p class="event-cta-price">L.{price.toFixed(2)}</p>
+        <p class="event-cta-price">{formatSiteCurrency(price)}</p>
         <LandingButton href="/eventos/pink-floyd/boletos" variant="concert-primary" class="w-full md:w-auto">
           {eventPage.cta.button}
         </LandingButton>

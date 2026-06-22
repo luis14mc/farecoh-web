@@ -6,15 +6,26 @@ import ArtistLineup from "@/components/event/ArtistLineup.astro";
 import EventCTA from "@/components/event/EventCTA.astro";
 import { getEvent } from "../../lib/supabase";
 import { eventPage } from "@/data/event-page";
+import { seoPages, musicEventJsonLd, breadcrumbJsonLd } from "@/data/seo";
 
 const event = await getEvent();
 ---
 
 <Layout
-  title={`${event.name} | FARECOH`}
-  description={eventPage.hero.body}
+  title={seoPages.event.title}
+  description={seoPages.event.description}
+  image={seoPages.event.image}
+  canonicalPath={seoPages.event.path}
+  ogType="website"
   active="events"
   variant="concert"
+  jsonLd={[
+    musicEventJsonLd(),
+    breadcrumbJsonLd([
+      { name: "Inicio", path: "/" },
+      { name: event.name, path: seoPages.event.path },
+    ]),
+  ]}
 >
   <EventHero
     name={event.name}
@@ -23,7 +34,6 @@ const event = await getEvent();
     city={event.city}
     date="29 de agosto de 2026"
     time={event.time}
-    price={event.ticket_price}
   />
 
   <EventInfo />

@@ -1,5 +1,6 @@
 import type { PhysicalTicket, TicketBatch } from "@/types/ticketing";
 import type { Seller, SellerInput } from "@/types/sellers";
+import { formatSiteDateTime } from "@/lib/locale";
 
 export const TICKETS_KEY = "farecoh_physical_tickets_v1";
 export const BATCHES_KEY = "farecoh_ticket_batches_v1";
@@ -247,5 +248,5 @@ export const PHYSICAL_STATUS_LABELS: Record<PhysicalTicket["status"], string> = 
 
 export function formatPhysicalDate(value: string | null): string {
   if (!value) return "-";
-  return new Date(value).toLocaleString("es-HN", { dateStyle: "medium", timeStyle: "short" });
+  return formatSiteDateTime(value, { dateStyle: "medium", timeStyle: "short" });
 }

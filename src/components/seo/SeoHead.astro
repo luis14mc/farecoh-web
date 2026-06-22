@@ -1,0 +1,59 @@
+---
+import { SITE_LOCALE } from "@/lib/locale";
+import {
+  absoluteUrl,
+  canonicalFromPath,
+  DEFAULT_OG_IMAGE,
+  ROBOTS_INDEX,
+  ROBOTS_NOINDEX,
+} from "@/lib/seo";
+
+interface Props {
+  title: string;
+  description: string;
+  canonicalPath?: string;
+  image?: string;
+  ogType?: string;
+  noindex?: boolean;
+  jsonLd?: Record<string, unknown> | Record<string, unknown>[];
+}
+
+const {
+  title,
+  description,
+  canonicalPath,
+  image = DEFAULT_OG_IMAGE,
+  ogType = "website",
+  noindex = false,
+  jsonLd,
+} = Astro.props;
+
+const canonical = canonicalPath ? canonicalFromPath(canonicalPath) : canonicalFromPath(Astro.url.pathname);
+const ogImage = image.startsWith("http") ? image : absoluteUrl(image);
+const robots = noindex ? ROBOTS_NOINDEX : ROBOTS_INDEX;
+const jsonLdBlocks = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
+---
+
+<meta name="description" content={description} />
+<meta name="robots" content={robots} />
+<link rel="canonical" href={canonical} />
+
+<meta property="og:locale" content={SITE_LOCALE.replace("-", "_")} />
+<meta property="og:site_name" content="FARECOH" />
+<meta property="og:title" content={title} />
+<meta property="og:description" content={description} />
+<meta property="og:type" content={ogType} />
+<meta property="og:url" content={canonical} />
+<meta property="og:image" content={ogImage} />
+<meta property="og:image:alt" content={title} />
+
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content={title} />
+<meta name="twitter:description" content={description} />
+<meta name="twitter:image" content={ogImage} />
+
+{
+  jsonLdBlocks.map((block) => (
+    <script type="application/ld+json" set:html={JSON.stringify(block)} />
+  ))
+}

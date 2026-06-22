@@ -5,11 +5,12 @@ interface Props {
 }
 
 import { getPublicSupabaseConfig, isAuthConfigured } from "@/lib/auth";
+import { formatSiteDate } from "@/lib/locale";
 
 const { title, section } = Astro.props;
 const { supabaseUrl, supabaseAnonKey } = getPublicSupabaseConfig();
 const authConfigured = isAuthConfigured({ supabaseUrl, supabaseAnonKey });
-const currentDate = new Date().toLocaleDateString("es-HN", {
+const currentDate = formatSiteDate(new Date(), {
   month: "short",
   day: "numeric",
   year: "numeric",
@@ -20,7 +21,7 @@ const currentDate = new Date().toLocaleDateString("es-HN", {
   <div>
     <nav aria-label="Breadcrumb" class="mb-1 flex text-caption font-caption uppercase tracking-wider text-on-surface-variant">
       <ol class="inline-flex items-center space-x-1 md:space-x-2">
-        <li><a class="hover:text-primary" href="/admin">Admin</a></li>
+        <li><a class="hover:text-primary" href="/admin">Administración</a></li>
         <li class="flex items-center">
           <span class="material-symbols-outlined text-sm">chevron_right</span>
           <span class="ml-1 font-semibold text-primary md:ml-2">{section}</span>

@@ -1,6 +1,7 @@
 ---
 import Layout from "@/layouts/Layout.astro";
 import { getPrintableTicketTokenMap } from "@/lib/ticket-qr";
+import { seoPages } from "@/data/seo";
 
 const token = Astro.params.token ?? "";
 const ticket = getPrintableTicketTokenMap().find((item) => item.qr_token === token) ?? {
@@ -10,12 +11,16 @@ const ticket = getPrintableTicketTokenMap().find((item) => item.qr_token === tok
 };
 ---
 
-<Layout title={`Boleto ${ticket.code} | FARECOH`} description="Consulta publica de estado de boleto FARECOH">
+<Layout
+  title={seoPages.ticketLookup.title}
+  description={seoPages.ticketLookup.description}
+  noindex={true}
+>
   <main class="min-h-screen bg-surface px-margin py-28 text-on-surface">
     <section class="mx-auto max-w-2xl rounded-lg border border-outline-variant bg-surface-container-lowest p-6 shadow-sm">
       <p class="text-label-md font-label-md font-bold uppercase tracking-wider text-primary">Consulta de boleto</p>
       <h1 class="mt-2 text-headline-lg font-headline-lg text-on-surface">{ticket.code}</h1>
-      <p class="mt-2 text-body-md font-body-md text-on-surface-variant">Esta consulta no valida el ingreso. La validacion solo se realiza desde el modulo de check-in administrativo.</p>
+      <p class="mt-2 text-body-md font-body-md text-on-surface-variant">Esta consulta no valida el ingreso. La validación solo se realiza desde el módulo de control de acceso administrativo.</p>
 
       <div id="ticket-status" class="mt-6 rounded border border-outline-variant bg-surface p-5 text-body-md text-on-surface-variant">
         Consultando estado del boleto...
@@ -23,7 +28,7 @@ const ticket = getPrintableTicketTokenMap().find((item) => item.qr_token === tok
 
       <div class="mt-6 flex flex-col gap-3 sm:flex-row">
         <a href="/admin/checkin" class="inline-flex items-center justify-center rounded bg-primary px-4 py-3 text-label-md font-label-md font-bold text-on-primary hover:bg-secondary">
-          Ir a check-in admin
+          Ir al control de acceso
         </a>
         <a href="/" class="inline-flex items-center justify-center rounded border border-outline-variant px-4 py-3 text-label-md font-label-md font-bold text-on-surface hover:bg-surface-container-high">
           Volver al inicio
@@ -37,9 +42,9 @@ const ticket = getPrintableTicketTokenMap().find((item) => item.qr_token === tok
 
     const statusNode = document.getElementById("ticket-status");
     const statusCopy = {
-      available: { label: "valido", detail: "Boleto emitido, todavia no vendido.", className: "bg-blue-100 text-blue-800" },
-      assigned: { label: "valido", detail: "Boleto asignado a punto fisico, todavia no pagado.", className: "bg-blue-100 text-blue-800" },
-      reserved: { label: "valido", detail: "Boleto reservado, pendiente de pago.", className: "bg-yellow-100 text-yellow-800" },
+      available: { label: "válido", detail: "Boleto emitido, todavía no vendido.", className: "bg-blue-100 text-blue-800" },
+      assigned: { label: "válido", detail: "Boleto asignado a punto físico, todavía no pagado.", className: "bg-blue-100 text-blue-800" },
+      reserved: { label: "válido", detail: "Boleto reservado, pendiente de pago.", className: "bg-yellow-100 text-yellow-800" },
       paid: { label: "pagado", detail: "Boleto vendido/pagado. Debe validarse en acceso.", className: "bg-green-100 text-green-800" },
       validated: { label: "validado", detail: "Este boleto ya fue utilizado para ingresar.", className: "bg-red-100 text-red-800" },
       cancelled: { label: "anulado", detail: "Este boleto fue anulado.", className: "bg-red-100 text-red-800" },

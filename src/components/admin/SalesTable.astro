@@ -1,5 +1,6 @@
 ---
 import { supabase } from "@/lib/supabase";
+import { formatSiteDate } from "@/lib/locale";
 
 // Fetch orders with customers joined
 const { data: orders } = await supabase
@@ -7,14 +8,12 @@ const { data: orders } = await supabase
   .select("*, customer:customers(*)")
   .order("created_at", { ascending: false });
 
-const formatDate = (isoString: string) => {
-  const date = new Date(isoString);
-  return date.toLocaleDateString("es-HN", {
+const formatDate = (isoString: string) =>
+  formatSiteDate(isoString, {
     day: "2-digit",
     month: "short",
-    year: "numeric"
+    year: "numeric",
   });
-};
 ---
 
 <div class="bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden flex flex-col text-on-surface">

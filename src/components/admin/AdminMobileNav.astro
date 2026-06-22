@@ -10,12 +10,12 @@ const { active = "dashboard" } = Astro.props;
 const staffProfile = Astro.locals.staffProfile as StaffProfile | undefined;
 
 const navItems = [
-  { label: "Dash", href: "/admin", icon: "dashboard", key: "dashboard" },
+  { label: "Panel", href: "/admin", icon: "dashboard", key: "dashboard" },
   { label: "Usuarios", href: "/admin/usuarios", icon: "admin_panel_settings", key: "usuarios" },
   { label: "Ventas", href: "/admin/ventas", icon: "payments", key: "ventas" },
   { label: "Boletos", href: "/admin/boletos", icon: "confirmation_number", key: "boletos" },
   { label: "Lotes", href: "/admin/lotes", icon: "inventory_2", key: "lotes" },
-  { label: "Check-in", href: "/admin/checkin", icon: "qr_code_scanner", key: "checkin" },
+  { label: "Acceso", href: "/admin/checkin", icon: "qr_code_scanner", key: "checkin" },
   { label: "Vendedores", href: "/admin/vendedores", icon: "group", key: "vendedores" },
   { label: "Reportes", href: "/admin/reportes", icon: "monitoring", key: "reportes" },
 ].filter((item) => staffProfile && canAccessRoute(staffProfile.role, item.href));

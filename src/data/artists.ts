@@ -1,49 +1,106 @@
-export type EnsembleMember = {
+export type Artist = {
+  order: number;
   name: string;
   role: string;
-  initials: string;
   image: string;
   imageAlt: string;
+  featured?: boolean;
+  description?: string;
 };
 
-function slugify(name: string) {
-  return name
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/\s+/g, "-");
+const ARTISTS_BASE = "/images/artists";
+
+function artistImage(slug: string) {
+  return `${ARTISTS_BASE}/${slug}.webp`;
 }
 
-function lineupPhoto(name: string, role: string) {
-  return {
-    image: `/images/lineup/${slugify(name)}.jpg`,
-    imageAlt: `${name}, ${role} — Tributo a Pink Floyd`,
-  };
+function artistAlt(name: string, role: string) {
+  return `${name}, ${role} — Tributo a Pink Floyd FARECOH`;
 }
 
-export const musicalDirector = {
+export const lineupPhotoFallback = `${ARTISTS_BASE}/placeholder.webp`;
+
+export const musicalDirector: Artist = {
+  order: 0,
   name: "Cristóbal Pineda",
   role: "Director Musical",
-  initials: "CP",
-  note: "Guía la interpretación, el ensamble y la puesta en escena del tributo.",
-  ...lineupPhoto("Cristóbal Pineda", "Director Musical"),
-} as const;
+  image: artistImage("cristobal-pineda"),
+  imageAlt: artistAlt("Cristóbal Pineda", "Director Musical"),
+  featured: true,
+  description: "Guía la interpretación, el ensamble y la puesta en escena del tributo.",
+};
 
-function member(name: string, role: string, initials: string): EnsembleMember {
-  return { name, role, initials, ...lineupPhoto(name, role) };
-}
-
-export const ensembleMembers: EnsembleMember[] = [
-  member("Gustavo Madrid", "Guitarra principal", "GM"),
-  member("Sergio Molina", "Guitarra", "SM"),
-  member("Luis Martínez", "Guitarra acústica", "LM"),
-  member("Miguel Enríquez", "Bajo", "ME"),
-  member("Mauricio Rodríguez", "Voz principal", "MR"),
-  member("Óscar Olivera", "Percusión", "OO"),
-  member("Iris Rodríguez", "Saxofón", "IR"),
-  member("Gabriela Moncada", "Coros", "GaM"),
-  member("Gabriela Zelaya", "Coros", "GZ"),
-  member("Valery Pineda", "Coros", "VP"),
+export const ensembleMembers: Artist[] = [
+  {
+    order: 1,
+    name: "Gustavo Madrid",
+    role: "Guitarra Principal",
+    image: artistImage("gustavo-madrid"),
+    imageAlt: artistAlt("Gustavo Madrid", "Guitarra Principal"),
+  },
+  {
+    order: 2,
+    name: "Sergio Molina",
+    role: "Guitarra",
+    image: artistImage("sergio-molina"),
+    imageAlt: artistAlt("Sergio Molina", "Guitarra"),
+  },
+  {
+    order: 3,
+    name: "Luis Martínez",
+    role: "Guitarra Acústica",
+    image: artistImage("luis-martinez"),
+    imageAlt: artistAlt("Luis Martínez", "Guitarra Acústica"),
+  },
+  {
+    order: 4,
+    name: "Miguel Enríquez",
+    role: "Bajo",
+    image: artistImage("miguel-enriquez"),
+    imageAlt: artistAlt("Miguel Enríquez", "Bajo"),
+  },
+  {
+    order: 5,
+    name: "Mauricio Rodríguez",
+    role: "Voz Principal",
+    image: artistImage("mauricio-rodriguez"),
+    imageAlt: artistAlt("Mauricio Rodríguez", "Voz Principal"),
+  },
+  {
+    order: 6,
+    name: "Óscar Olivera",
+    role: "Percusión",
+    image: artistImage("oscar-olivera"),
+    imageAlt: artistAlt("Óscar Olivera", "Percusión"),
+  },
+  {
+    order: 7,
+    name: "Iris Rodríguez",
+    role: "Saxofón",
+    image: artistImage("iris-rodriguez"),
+    imageAlt: artistAlt("Iris Rodríguez", "Saxofón"),
+  },
+  {
+    order: 8,
+    name: "Gabriela Moncada",
+    role: "Coros",
+    image: artistImage("gabriela-moncada"),
+    imageAlt: artistAlt("Gabriela Moncada", "Coros"),
+  },
+  {
+    order: 9,
+    name: "Gabriela Zelaya",
+    role: "Coros",
+    image: artistImage("gabriela-zelaya"),
+    imageAlt: artistAlt("Gabriela Zelaya", "Coros"),
+  },
+  {
+    order: 10,
+    name: "Valery Pineda",
+    role: "Coros",
+    image: artistImage("valery-pineda"),
+    imageAlt: artistAlt("Valery Pineda", "Coros"),
+  },
 ];
 
-export const lineupPhotoFallback = "/images/lineup/placeholder.jpg";
+export const ensembleOnStageCount = ensembleMembers.length;

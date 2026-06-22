@@ -7,7 +7,14 @@ export function initParallax() {
   let ticking = false;
 
   const update = () => {
+    const isMobile = window.innerWidth < 1024;
+
     layers.forEach((layer) => {
+      if (isMobile) {
+        layer.style.transform = "";
+        return;
+      }
+
       const section = layer.closest("section");
       if (!section) return;
 

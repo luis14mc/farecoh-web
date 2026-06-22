@@ -2,15 +2,17 @@
 import InputField from "@/components/Forms/InputField.astro";
 import TicketSummary from "@/components/tickets/TicketSummary.astro";
 import { getEvent } from "@/lib/supabase";
+import { pinkFloydEvent } from "@/data/event";
 
 const event = await getEvent();
 const ticketPrice = event.ticket_price;
+const eventSchedule = `${pinkFloydEvent.date} · ${pinkFloydEvent.time}`;
 ---
 
 <div class="concert-form-panel">
   <div id="form-container">
     <div class="mb-8 text-center">
-      <span class="concert-badge mb-3">ReservaciÃ³n</span>
+      <span class="concert-badge mb-3">Reservación</span>
       <h2 class="text-headline-lg font-headline-lg text-white">Tributo a Pink Floyd</h2>
       <p class="text-body-md font-body-md mt-2 text-white/70">
         Complete sus datos para reservar su lugar en la experiencia en vivo.
@@ -22,12 +24,12 @@ const ticketPrice = event.ticket_price;
         label="Nombre Completo"
         id="name"
         name="name"
-        placeholder="Ej. Juan PÃ©rez"
+        placeholder="Ej. Juan Pérez"
         required={true}
       />
 
       <InputField
-        label="Correo ElectrÃ³nico"
+        label="Correo electrónico"
         id="email"
         name="email"
         type="email"
@@ -36,7 +38,7 @@ const ticketPrice = event.ticket_price;
       />
 
       <InputField
-        label="TelÃ©fono"
+        label="Teléfono"
         id="phone"
         name="phone"
         type="tel"
@@ -71,10 +73,10 @@ const ticketPrice = event.ticket_price;
     </div>
 
     <div>
-      <p class="text-caption font-caption font-bold uppercase tracking-widest text-concert-amber">ReservaciÃ³n exitosa</p>
-      <h2 class="text-headline-lg font-headline-lg mt-1 text-white">Â¡Lugar asegurado!</h2>
+      <p class="text-caption font-caption font-bold uppercase tracking-widest text-concert-amber">Reservación exitosa</p>
+      <h2 class="text-headline-lg font-headline-lg mt-1 text-white">¡Lugar asegurado!</h2>
       <p class="text-body-md font-body-md mt-2 text-white/70">
-        Hemos registrado su solicitud. Su reservaciÃ³n estÃ¡ en estado <strong class="text-white">Pendiente de Pago</strong>.
+        Hemos registrado su solicitud. Su reservación está en estado <strong class="text-white">Pendiente de pago</strong>.
       </p>
     </div>
 
@@ -86,14 +88,14 @@ const ticketPrice = event.ticket_price;
         </div>
         <div class="text-right">
           <p class="text-caption font-caption font-bold uppercase text-white/55">Fecha / Hora</p>
-          <p class="text-body-md font-body-md text-white">08 Ago 2026 - 8:00 PM</p>
+          <p class="text-body-md font-body-md text-white">{eventSchedule}</p>
         </div>
       </div>
 
       <div class="flex justify-between border-b border-concert-orange/20 pb-3">
         <div>
           <p class="text-caption font-caption font-bold uppercase text-white/55">Reservado a nombre de</p>
-          <p class="text-body-md font-body-md font-bold text-white" id="summary-name">Juan PÃ©rez</p>
+          <p class="text-body-md font-body-md font-bold text-white" id="summary-name">Juan Pérez</p>
         </div>
         <div class="text-right">
           <p class="text-caption font-caption font-bold uppercase text-white/55">Cantidad</p>
@@ -102,14 +104,14 @@ const ticketPrice = event.ticket_price;
       </div>
 
       <div>
-        <p class="text-caption font-caption mb-2 font-bold uppercase text-white/55">Sus cÃ³digos de boleto</p>
+        <p class="text-caption font-caption mb-2 font-bold uppercase text-white/55">Sus códigos de boleto</p>
         <div class="grid grid-cols-2 gap-2" id="summary-codes"></div>
       </div>
     </div>
 
     <div class="space-y-3 pt-4">
       <p class="text-caption font-caption text-white/55">
-        Presente estos cÃ³digos en taquilla o realice su transferencia para validaciÃ³n.
+        Presente estos códigos en taquilla o realice su transferencia para validación.
       </p>
       <div class="flex gap-4">
         <a href="/" class="landing-btn landing-btn-concert-secondary flex-1">Ir al inicio</a>
@@ -119,12 +121,10 @@ const ticketPrice = event.ticket_price;
   </div>
 </div>
 
-<script>
+<script define:vars={{ ticketPrice }}>
   import { supabase } from "@/lib/supabase";
 
   const form = document.getElementById("ticket-form") as HTMLFormElement | null;
-  const qtyInput = document.getElementById("ticket_count") as HTMLInputElement | null;
-  const totalPriceSpan = document.getElementById("total-price") as HTMLSpanElement | null;
   const submitBtn = document.getElementById("submit-btn") as HTMLButtonElement | null;
   
   const formContainer = document.getElementById("form-container");
@@ -132,16 +132,6 @@ const ticketPrice = event.ticket_price;
   const summaryName = document.getElementById("summary-name");
   const summaryQty = document.getElementById("summary-qty");
   const summaryCodes = document.getElementById("summary-codes");
-
-  const ticketPrice = 500.00;
-
-  if (qtyInput && totalPriceSpan) {
-    qtyInput.addEventListener("input", () => {
-      const qty = parseInt(qtyInput.value) || 1;
-      const total = qty * ticketPrice;
-      totalPriceSpan.innerText = total.toFixed(2);
-    });
-  }
 
   if (form && submitBtn) {
     form.addEventListener("submit", async (e) => {
@@ -233,7 +223,7 @@ const ticketPrice = event.ticket_price;
         }
       } catch (err) {
         console.error("Booking error:", err);
-        alert("OcurriÃ³ un error al procesar su reservaciÃ³n. Por favor intente de nuevo.");
+        alert("Ocurrió un error al procesar su reservación. Por favor intente de nuevo.");
         submitBtn.disabled = false;
         submitBtn.innerHTML = originalText;
       }

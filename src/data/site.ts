@@ -10,5 +10,6 @@ export const site = {
   },
   footerNote: "Construyendo oportunidades para la niñez y juventud de Honduras.",
   email: "info@farecoh.org",
+  url: "https://farecoh.org",
   year: 2026,
 } as const;

@@ -1,5 +1,6 @@
 import type { PhysicalTicket } from "@/types/ticketing";
 import type { Seller, SellerReportRow } from "@/types/sellers";
+import { compareSiteText } from "@/lib/locale";
 
 export function calculateSellerReports(params: {
   tickets: PhysicalTicket[];
@@ -42,5 +43,5 @@ export function calculateSellerReports(params: {
 
   return Array.from(rows.values())
     .filter((row) => row.ticketsSold > 0 || sellers.some((seller) => seller.id === row.sellerId))
-    .sort((a, b) => b.revenue - a.revenue || a.sellerName.localeCompare(b.sellerName, "es"));
+    .sort((a, b) => b.revenue - a.revenue || compareSiteText(a.sellerName, b.sellerName));
 }

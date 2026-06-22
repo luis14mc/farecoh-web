@@ -1,6 +1,7 @@
 ---
 import "../../styles/global.css";
 import { getPublicSupabaseConfig, isAuthConfigured } from "@/lib/auth";
+import { SITE_LANG } from "@/lib/locale";
 
 const { supabaseUrl, supabaseAnonKey } = getPublicSupabaseConfig();
 const authConfigured = isAuthConfigured({ supabaseUrl, supabaseAnonKey });
@@ -8,7 +9,7 @@ const authError = Astro.url.searchParams.get("error");
 ---
 
 <!doctype html>
-<html lang="es" class="light">
+<html lang={SITE_LANG} class="light">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
