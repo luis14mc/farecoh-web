@@ -1,11 +1,13 @@
-﻿export const homeHero = {
+﻿import { foundationPhotos } from "./foundation-photos";
+
+export const homeHero = {
   eyebrow: "FARECOH",
   title: "Transformando vidas a través del arte, la educación y la esperanza",
   subtitle:
     "Utilizamos la música, las artes y la educación como herramientas para construir oportunidades, fortalecer comunidades y transformar vidas en Honduras.",
   body: "Fundación Artes Educativas, Coros y Orquestas de Honduras.",
-  image: "/images/farecoh-hero-orchestra.png",
-  imageAlt: "Orquesta juvenil profesional en un escenario moderno con iluminación azul institucional",
+  image: foundationPhotos.hero.src,
+  imageAlt: foundationPhotos.hero.alt,
   ctaEvent: "Conocer el evento",
   ctaStory: "Nuestra historia",
 } as const;
@@ -16,8 +18,8 @@ export const homeAbout = {
   body: "FARECOH nació con un propósito claro: demostrar que el arte puede convertirse en una poderosa herramienta de transformación social.",
   bodySecondary:
     "Desde entonces trabajamos para que niños, niñas y jóvenes descubran sus talentos, fortalezcan sus valores y construyan un futuro lleno de oportunidades.",
-  image: "/images/farecoh-welcome.webp",
-  imageAlt: "Niñas presentándose en una actividad artística de FARECOH",
+  image: foundationPhotos.about.src,
+  imageAlt: foundationPhotos.about.alt,
 } as const;
 
 export const homeCause = {
@@ -55,37 +57,37 @@ export const homeWhatWeDo = {
       title: "Coros y Orquestas",
       description: "Formación musical colectiva que promueve disciplina, liderazgo y trabajo en equipo.",
       icon: "music" as ProgramIconName,
-      image: "/images/farecoh-hero-orchestra.png",
+      image: foundationPhotos.programs.coros.src,
     },
     {
       title: "Escuelas de Música Comunitarias",
       description: "Acceso a educación musical para niños y jóvenes de escasos recursos.",
       icon: "school" as ProgramIconName,
-      image: "/images/bg-musica.webp",
+      image: foundationPhotos.programs.escuelas.src,
     },
     {
       title: "Artes para la Transformación Social",
       description: "Pintura, teatro, danza, literatura y expresión artística al servicio de la comunidad.",
       icon: "palette" as ProgramIconName,
-      image: "/images/farecoh-welcome.webp",
+      image: foundationPhotos.programs.artes.src,
     },
     {
       title: "Cultura de Paz",
       description: "Espacios seguros que fortalecen convivencia, valores y resolución positiva de conflictos.",
       icon: "heart-handshake" as ProgramIconName,
-      image: "/images/farecoh-welcome.webp",
+      image: foundationPhotos.programs.paz.src,
     },
     {
       title: "Intercambios Culturales",
       description: "Oportunidades de crecimiento, aprendizaje y proyección nacional e internacional.",
       icon: "globe" as ProgramIconName,
-      image: "/images/farecoh-hero-orchestra.png",
+      image: foundationPhotos.programs.intercambios.src,
     },
     {
       title: "Fortalecimiento Comunitario",
       description: "Actividades que promueven integración familiar y participación ciudadana.",
       icon: "users" as ProgramIconName,
-      image: "/images/bg-musica.webp",
+      image: foundationPhotos.programs.comunidad.src,
     },
   ],
 } as const;
@@ -105,20 +107,7 @@ export const homeImpact = {
 export const homeGallery = {
   label: "Galería de impacto",
   title: "Historias que inspiran",
-  images: [
-    {
-      src: "/images/farecoh-welcome.webp",
-      alt: "Presentación artística infantil de FARECOH",
-    },
-    {
-      src: "/images/bg-musica.webp",
-      alt: "Instrumento de cuerda como símbolo de formación musical",
-    },
-    {
-      src: "/images/farecoh-hero-orchestra.png",
-      alt: "Orquesta juvenil en escenario moderno",
-    },
-  ],
+  images: foundationPhotos.gallery.map(({ src, alt }) => ({ src, alt })),
 } as const;
 
 export const homeFeaturedEvent = {
@@ -128,8 +117,8 @@ export const homeFeaturedEvent = {
   body: "Una experiencia audiovisual creada para celebrar la música de Pink Floyd y apoyar los programas educativos y artísticos de FARECOH.",
   ctaEvent: "Ver evento",
   ctaTickets: "Reservar boletos",
-  image: "/images/bg-musica.webp",
-  imageAlt: "Escenario oscuro con luces y ambiente musical",
+  image: foundationPhotos.featuredBackdrop.src,
+  imageAlt: foundationPhotos.featuredBackdrop.alt,
 } as const;
 
 export const homeQuote = {
@@ -142,5 +131,5 @@ export const homeFinalCta = {
   body: "Cada programa, cada encuentro artístico y cada comunidad que acompañamos es una apuesta por el talento hondureño y un futuro con más oportunidades.",
   cta: "Descubre nuestros programas",
   href: "#programas",
-  image: "/images/farecoh-hero-orchestra.png",
+  image: foundationPhotos.cta.src,
 } as const;
