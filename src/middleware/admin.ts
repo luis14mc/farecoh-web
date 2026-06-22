@@ -1,17 +1,26 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { APIContext } from "astro";
+import { createSupabaseServerClient, type StaffProfile } from "@/lib/auth";
 import type { Database } from "@/types/database";
 
-export async function isAdminSession(supabase: SupabaseClient<Database>): Promise<boolean> {
-  const { data: authData, error: authError } = await supabase.auth.getUser();
-  if (authError || !authData.user) return false;
+export async function getStaffProfile(context: APIContext): Promise<StaffProfile | null> {
+  const supabase = createSupabaseServerClient(context);
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+  if (userError || !userData.user) return null;
 
   const { data, error } = await supabase
-    .from("admins")
-    .select("id")
-    .eq("id", authData.user.id)
+    .from("staff_profiles")
+    .select("id, user_id, email, full_name, role, active, created_at")
+    .eq("user_id", userData.user.id)
+    .eq("active", true)
     .single();
 
-  return !error && Boolean(data);
+  if (error || !data) return null;
+  return data as StaffProfile;
+}
+
+export async function isAdminSession(context: APIContext): Promise<boolean> {
+  const profile = await getStaffProfile(context);
+  return profile !== null;
 }
 
 export function requireAdminResponse(): Response {
@@ -20,3 +29,6 @@ export function requireAdminResponse(): Response {
     headers: { "content-type": "text/plain; charset=utf-8" },
   });
 }
+
+export type SupabaseClient = ReturnType<typeof createSupabaseServerClient>;
+export type { Database };

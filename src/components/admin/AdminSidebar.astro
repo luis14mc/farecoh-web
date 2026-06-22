@@ -1,6 +1,6 @@
 ---
 import FarecohLogo from "@/components/layout/FarecohLogo.astro";
-import type { StaffProfile } from "@/lib/auth";
+import { STAFF_ROLE_LABELS, type StaffProfile } from "@/lib/auth";
 import { canAccessRoute } from "@/lib/rbac";
 
 interface Props {
@@ -42,7 +42,7 @@ const linkClass = (key: string) => {
     </div>
     <div class="min-w-0">
       <p class="truncate text-label-md font-label-md text-on-surface font-bold">{staffProfile?.full_name ?? "Admin"}</p>
-      <p class="truncate text-caption font-caption text-on-surface-variant">{staffProfile?.role ?? "staff"}</p>
+      <p class="truncate text-caption font-caption text-on-surface-variant">{staffProfile ? STAFF_ROLE_LABELS[staffProfile.role] : "staff"}</p>
     </div>
   </div>
   

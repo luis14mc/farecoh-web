@@ -13,6 +13,10 @@ export interface StaffProfile {
   created_at: string;
 }
 
+export function isAuthConfigured(): boolean {
+  return Boolean(import.meta.env.PUBLIC_SUPABASE_URL && import.meta.env.PUBLIC_SUPABASE_ANON_KEY);
+}
+
 export function getSupabaseEnv() {
   const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
@@ -22,6 +26,25 @@ export function getSupabaseEnv() {
   }
 
   return { supabaseUrl, supabaseAnonKey };
+}
+
+export const STAFF_ROLE_LABELS: Record<StaffRole, string> = {
+  super_admin: "Super admin",
+  event_manager: "Gestor de evento",
+  seller: "Vendedor",
+  checkin_operator: "Operador check-in",
+};
+
+export function createDevStaffProfile(): StaffProfile {
+  return {
+    id: "dev-profile",
+    user_id: "dev-user",
+    email: "dev@farecoh.local",
+    full_name: "Dev Admin",
+    role: "super_admin",
+    active: true,
+    created_at: new Date().toISOString(),
+  };
 }
 
 export function createSupabaseBrowserClient() {

@@ -3,7 +3,8 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 export type EventStatus = "draft" | "active" | "sold_out" | "completed" | "cancelled";
 export type OrderStatus = "pending" | "paid" | "cancelled" | "refunded";
 export type TicketStatus = "pending" | "paid" | "validated" | "cancelled";
-export type AdminRole = "super_admin" | "event_manager" | "checkin_operator";
+export type AdminRole = "super_admin" | "event_manager" | "seller" | "checkin_operator";
+export type StaffRole = AdminRole;
 
 export interface Database {
   public: {
@@ -134,6 +135,25 @@ export interface Database {
         };
         Insert: { id: string; email: string; name: string; role?: AdminRole };
         Update: Partial<Database["public"]["Tables"]["admins"]["Row"]>;
+      };
+      staff_profiles: {
+        Row: {
+          id: string;
+          user_id: string;
+          email: string;
+          full_name: string;
+          role: StaffRole;
+          active: boolean;
+          created_at: string;
+        };
+        Insert: {
+          user_id: string;
+          email: string;
+          full_name: string;
+          role: StaffRole;
+          active?: boolean;
+        };
+        Update: Partial<Database["public"]["Tables"]["staff_profiles"]["Row"]>;
       };
     };
     Functions: {

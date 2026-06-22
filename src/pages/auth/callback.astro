@@ -1,0 +1,16 @@
+---
+import { createSupabaseServerClient } from "@/lib/auth";
+
+const code = Astro.url.searchParams.get("code");
+const redirectTo = Astro.url.searchParams.get("redirect") ?? "/admin";
+
+if (code) {
+  const supabase = createSupabaseServerClient(Astro);
+  const { error } = await supabase.auth.exchangeCodeForSession(code);
+  if (error) {
+    return Astro.redirect(`/admin/login?error=${encodeURIComponent(error.message)}`);
+  }
+}
+
+return Astro.redirect(redirectTo);
+---

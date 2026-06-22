@@ -1,5 +1,9 @@
 ---
 import "../../styles/global.css";
+import { isAuthConfigured } from "@/lib/auth";
+
+const authConfigured = isAuthConfigured();
+const authError = Astro.url.searchParams.get("error");
 ---
 
 <!doctype html>
@@ -19,6 +23,16 @@ import "../../styles/global.css";
         <p class="text-label-md font-label-md font-bold uppercase tracking-wider text-primary">Panel administrativo</p>
         <h1 class="mt-2 text-headline-md font-headline-md text-on-surface">Iniciar sesión</h1>
         <p class="mt-2 text-body-md font-body-md text-on-surface-variant">Use su cuenta autorizada de FARECOH.</p>
+
+        {!authConfigured && (
+          <p class="mt-4 rounded bg-yellow-100 p-3 text-body-md text-yellow-800">
+            Supabase Auth no está configurado. Defina PUBLIC_SUPABASE_URL y PUBLIC_SUPABASE_ANON_KEY.
+          </p>
+        )}
+
+        {authError && (
+          <p class="mt-4 rounded bg-red-100 p-3 text-body-md text-red-700">{authError}</p>
+        )}
 
         <form id="login-form" class="mt-6 space-y-4">
           <label class="block">
@@ -63,9 +77,24 @@ import "../../styles/global.css";
         button.disabled = true;
         button.textContent = "Validando...";
 
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) {
-          showMessage("Credenciales inválidas o usuario no autorizado.");
+        const { data: authData, error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error || !authData.user) {
+          showMessage("Credenciales inválidas.");
+          button.disabled = false;
+          button.textContent = "Entrar";
+          return;
+        }
+
+        const { data: profile, error: profileError } = await supabase
+          .from("staff_profiles")
+          .select("id, role, active")
+          .eq("user_id", authData.user.id)
+          .eq("active", true)
+          .single();
+
+        if (profileError || !profile) {
+          await supabase.auth.signOut();
+          showMessage("Usuario autenticado pero sin perfil administrativo activo.");
           button.disabled = false;
           button.textContent = "Entrar";
           return;

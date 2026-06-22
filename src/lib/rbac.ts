@@ -1,31 +1,13 @@
 import type { APIContext } from "astro";
 import { createSupabaseServerClient, type StaffProfile, type StaffRole } from "@/lib/auth";
+import {
+  canAccessRoute,
+  normalizeAdminPath,
+  roleHomePath,
+  routePermissions,
+} from "@/lib/rbac-policy";
 
-export const routePermissions: Record<string, StaffRole[]> = {
-  "/admin": ["super_admin", "event_manager"],
-  "/admin/usuarios": ["super_admin"],
-  "/admin/boletos": ["super_admin", "event_manager", "seller"],
-  "/admin/lotes": ["super_admin", "event_manager"],
-  "/admin/ventas": ["super_admin", "event_manager", "seller"],
-  "/admin/checkin": ["super_admin", "event_manager", "checkin_operator"],
-  "/admin/reportes": ["super_admin", "event_manager"],
-  "/admin/vendedores": ["super_admin", "event_manager"],
-};
-
-export const roleHomePath: Record<StaffRole, string> = {
-  super_admin: "/admin",
-  event_manager: "/admin",
-  seller: "/admin/ventas",
-  checkin_operator: "/admin/checkin",
-};
-
-export function normalizeAdminPath(pathname: string): string {
-  const clean = pathname.replace(/\/$/, "") || "/admin";
-  if (clean === "/admin") return clean;
-  const segments = clean.split("/").filter(Boolean);
-  if (segments[0] !== "admin") return clean;
-  return `/${segments.slice(0, 2).join("/")}`;
-}
+export { canAccessRoute, normalizeAdminPath, roleHomePath, routePermissions };
 
 export async function getCurrentUserProfile(context: APIContext): Promise<StaffProfile | null> {
   const supabase = createSupabaseServerClient(context);
@@ -46,11 +28,6 @@ export async function getCurrentUserProfile(context: APIContext): Promise<StaffP
 
 export function hasRole(profile: StaffProfile | null | undefined, role: StaffRole): boolean {
   return profile?.role === role;
-}
-
-export function canAccessRoute(role: StaffRole, pathname: string): boolean {
-  const route = normalizeAdminPath(pathname);
-  return routePermissions[route]?.includes(role) ?? false;
 }
 
 export async function requireAdminAccess(context: APIContext, pathname: string): Promise<{
