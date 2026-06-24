@@ -6,6 +6,13 @@ import { SITE_LANG } from "@/lib/locale";
 const { supabaseUrl, supabaseAnonKey } = getPublicSupabaseConfig();
 const authConfigured = isAuthConfigured({ supabaseUrl, supabaseAnonKey });
 const authError = Astro.url.searchParams.get("error");
+
+// Guard: immediately redirect to /admin/login without preserving query params if URL contains password or email query params
+const emailParam = Astro.url.searchParams.get("email");
+const passwordParam = Astro.url.searchParams.get("password");
+if (emailParam || passwordParam) {
+  return Astro.redirect("/admin/login");
+}
 ---
 
 <!doctype html>
@@ -37,7 +44,7 @@ const authError = Astro.url.searchParams.get("error");
           <p class="mt-4 rounded bg-red-100 p-3 text-body-md text-red-700">{authError}</p>
         )}
 
-        <form id="login-form" class="mt-6 space-y-4">
+        <form id="login-form" method="post" class="mt-6 space-y-4">
           <label class="block">
             <span class="text-caption font-caption font-bold uppercase text-on-surface-variant">Correo</span>
             <input id="email" name="email" type="email" required autocomplete="email" disabled={!authConfigured} class="mt-2 w-full rounded border border-outline-variant bg-surface px-3 py-3 text-body-md outline-none focus:border-primary disabled:cursor-not-allowed disabled:opacity-60" />
@@ -54,7 +61,7 @@ const authError = Astro.url.searchParams.get("error");
           </div>
         </form>
 
-        <form id="recovery-form" class="mt-6 space-y-4 hidden">
+        <form id="recovery-form" method="post" class="mt-6 space-y-4 hidden">
           <label class="block">
             <span class="text-caption font-caption font-bold uppercase text-on-surface-variant">Correo electrónico</span>
             <input id="recovery-email" name="email" type="email" required autocomplete="email" disabled={!authConfigured} class="mt-2 w-full rounded border border-outline-variant bg-surface px-3 py-3 text-body-md outline-none focus:border-primary disabled:cursor-not-allowed disabled:opacity-60" />
@@ -72,6 +79,14 @@ const authError = Astro.url.searchParams.get("error");
     </main>
 
     <script define:vars={{ supabaseUrl, supabaseAnonKey, authConfigured }}>
+      // Guard: immediately redirect to /admin/login without preserving query params if URL contains password or email query params
+      if (window.location.search) {
+        const params = new URLSearchParams(window.location.search);
+        if (params.has("email") || params.has("password")) {
+          window.location.href = "/admin/login";
+        }
+      }
+
       import { createBrowserClient } from "@supabase/ssr";
 
       const loginForm = document.getElementById("login-form");
@@ -81,6 +96,9 @@ const authError = Astro.url.searchParams.get("error");
       const toggleRecovery = document.getElementById("toggle-recovery");
       const toggleLogin = document.getElementById("toggle-login");
       const message = document.getElementById("login-message");
+      const emailInput = document.getElementById("email");
+      const passwordInput = document.getElementById("password");
+      const recoveryEmailInput = document.getElementById("recovery-email");
       const supabase = authConfigured ? createBrowserClient(supabaseUrl, supabaseAnonKey) : null;
 
       function showMessage(text, type = "error") {
@@ -108,21 +126,21 @@ const authError = Astro.url.searchParams.get("error");
 
       loginForm?.addEventListener("submit", async (event) => {
         event.preventDefault();
-        if (!loginButton || !loginForm || !supabase) {
+        if (!loginButton || !loginForm || !supabase || !emailInput || !passwordInput) {
           showMessage("Autenticación no disponible. Configure Supabase en el entorno de despliegue.");
           return;
         }
 
-        const data = new FormData(loginForm);
-        const email = String(data.get("email") || "").trim();
-        const password = String(data.get("password") || "");
-        const redirect = new URLSearchParams(window.location.search).get("redirect") || "/admin";
+        let email = emailInput.value.trim();
+        let password = passwordInput.value;
 
         loginButton.disabled = true;
         loginButton.textContent = "Validando...";
 
         const { data: authData, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error || !authData.user) {
+          password = "";
+          passwordInput.value = "";
           showMessage("Credenciales inválidas.");
           loginButton.disabled = false;
           loginButton.textContent = "Entrar";
@@ -137,6 +155,8 @@ const authError = Astro.url.searchParams.get("error");
           .single();
 
         if (profileError || !profile) {
+          password = "";
+          passwordInput.value = "";
           await supabase.auth.signOut();
           showMessage("Usuario autenticado pero sin perfil administrativo activo.");
           loginButton.disabled = false;
@@ -144,19 +164,20 @@ const authError = Astro.url.searchParams.get("error");
           return;
         }
 
+        password = "";
+        passwordInput.value = "";
         showMessage("Sesión iniciada. Redirigiendo...", "success");
-        window.location.href = redirect;
+        window.location.href = "/admin";
       });
 
       recoveryForm?.addEventListener("submit", async (event) => {
         event.preventDefault();
-        if (!recoveryButton || !recoveryForm || !supabase) {
+        if (!recoveryButton || !recoveryForm || !supabase || !recoveryEmailInput) {
           showMessage("Autenticación no disponible.");
           return;
         }
 
-        const data = new FormData(recoveryForm);
-        const email = String(data.get("email") || "").trim();
+        const email = recoveryEmailInput.value.trim();
 
         recoveryButton.disabled = true;
         recoveryButton.textContent = "Enviando...";
