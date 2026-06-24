@@ -1,0 +1,340 @@
+---
+import AdminLayout from "@/layouts/AdminLayout.astro";
+import AdminHeader from "@/components/admin/AdminHeader.astro";
+import { createSupabaseServerClient, STAFF_ROLE_LABELS } from "@/lib/auth";
+import { supabaseAdmin } from "@/lib/supabase";
+import { formatSiteDate } from "@/lib/locale";
+
+const supabase = createSupabaseServerClient(Astro);
+let formMessage = "";
+let formError = false;
+
+// Ensure only super_admins can process these actions
+const currentProfile = Astro.locals.staffProfile;
+const isSuperAdmin = currentProfile?.role === "super_admin";
+
+if (Astro.request.method === "POST") {
+  try {
+    if (!isSuperAdmin) {
+      throw new Error("No tiene permisos para realizar esta acción.");
+    }
+
+    const data = await Astro.request.formData();
+    const action = String(data.get("action") || "");
+    const id = String(data.get("profile_id") || ""); // staff_profile ID
+
+    if (action === "create") {
+      const email = String(data.get("email") || "").trim().toLowerCase();
+      const password = String(data.get("password") || "");
+      const fullName = String(data.get("full_name") || "").trim();
+      const role = String(data.get("role") || "") as any;
+
+      if (!email || !password || !fullName || !role) {
+        throw new Error("Complete todos los campos obligatorios.");
+      }
+
+      if (!supabaseAdmin) {
+        throw new Error("SUPABASE_SERVICE_ROLE_KEY no está configurada. No se pueden crear usuarios de autenticación.");
+      }
+
+      // 1. Create auth user in Supabase Auth
+      const { data: authData, error: authErr } = await supabaseAdmin.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+        user_metadata: { full_name: fullName }
+      });
+
+      if (authErr || !authData.user) {
+        throw new Error("Error en Supabase Auth: " + (authErr?.message || "Usuario no creado."));
+      }
+
+      // 2. Create staff profile in staff_profiles table
+      const { error: profileErr } = await supabase
+        .from("staff_profiles")
+        .insert({
+          user_id: authData.user.id,
+          email,
+          full_name: fullName,
+          role,
+          active: true
+        });
+
+      if (profileErr) {
+        // Rollback auth user creation if profile insert fails
+        await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
+        throw profileErr;
+      }
+
+      formMessage = `Usuario ${fullName} creado correctamente.`;
+    } else if (action === "update") {
+      const fullName = String(data.get("full_name") || "").trim();
+      const role = String(data.get("role") || "") as any;
+
+      if (!fullName || !role) {
+        throw new Error("Complete todos los campos obligatorios.");
+      }
+
+      const { error: profileErr } = await supabase
+        .from("staff_profiles")
+        .update({
+          full_name: fullName,
+          role
+        })
+        .eq("id", id);
+
+      if (profileErr) throw profileErr;
+      formMessage = "Usuario actualizado correctamente.";
+    } else if (action === "toggle_active") {
+      if (!supabaseAdmin) {
+        throw new Error("SUPABASE_SERVICE_ROLE_KEY no está configurada. No se puede alternar el estado del usuario.");
+      }
+
+      // Find staff profile to get user_id and active state
+      const { data: profile, error: fetchErr } = await supabase
+        .from("staff_profiles")
+        .select("user_id, active, full_name")
+        .eq("id", id)
+        .single();
+
+      if (fetchErr || !profile) {
+        throw new Error("Usuario no encontrado.");
+      }
+
+      const nextActiveState = !profile.active;
+
+      // Update staff profiles table
+      const { error: profileErr } = await supabase
+        .from("staff_profiles")
+        .update({ active: nextActiveState })
+        .eq("id", id);
+
+      if (profileErr) throw profileErr;
+
+      // Update Supabase Auth user (ban/unban)
+      const { error: authUpdateErr } = await supabaseAdmin.auth.admin.updateUserById(profile.user_id, {
+        ban_duration: nextActiveState ? "none" : "876600h" // 100 years ban to block sign-in
+      });
+
+      if (authUpdateErr) throw authUpdateErr;
+
+      formMessage = `Usuario ${profile.full_name} ${nextActiveState ? "reactivado" : "desactivado"} correctamente.`;
+    }
+  } catch (err: any) {
+    formError = true;
+    formMessage = err.message || "Error al procesar la solicitud.";
+  }
+}
+
+// Fetch all staff profiles from DB
+const { data: staffProfiles = [] } = await supabase
+  .from("staff_profiles")
+  .select("*")
+  .order("created_at", { ascending: false });
+---
+
+<AdminLayout title="Usuarios | FARECOH" description="Administración de usuarios del panel" active="users">
+  <AdminHeader title="Usuarios" section="Administración" />
+
+  <div class="px-margin py-8 max-w-container-max pb-24 md:pb-8 space-y-stack-lg">
+    <section class="rounded-lg border border-outline-variant bg-surface-container-lowest p-6 shadow-sm">
+      <p class="text-label-md font-label-md font-bold uppercase tracking-wider text-primary">Solo super administrador</p>
+      <h2 class="mt-1 text-headline-md font-headline-md text-on-surface">Gestión de usuarios administrativos</h2>
+      <p class="mt-2 text-body-md font-body-md text-on-surface-variant">Cree usuarios en Supabase Auth y asigne permisos desde la tabla de perfiles administrativos.</p>
+    </section>
+
+    <section class="grid gap-gutter lg:grid-cols-3">
+      {isSuperAdmin ? (
+        <form id="user-form" method="POST" class="rounded-lg border border-outline-variant bg-surface-container-lowest p-6 shadow-sm lg:col-span-1">
+          <h2 id="user-form-title" class="text-headline-sm font-headline-sm text-on-surface">Nuevo usuario staff</h2>
+          <p class="mt-1 text-body-md font-body-md text-on-surface-variant">Registre usuarios administrativos y de control.</p>
+
+          <input type="hidden" name="profile_id" id="user-profile-id" />
+          <input type="hidden" name="action" id="user-action" value="create" />
+
+          <div class="mt-6 space-y-4">
+            <label class="block">
+              <span class="text-caption font-caption font-bold uppercase text-on-surface-variant">Nombre completo</span>
+              <input id="user-name-input" name="full_name" required class="mt-2 w-full rounded border border-outline-variant bg-surface px-3 py-3 text-body-md outline-none focus:border-primary" />
+            </label>
+            
+            <label class="block" id="email-field">
+              <span class="text-caption font-caption font-bold uppercase text-on-surface-variant">Correo electrónico</span>
+              <input id="user-email-input" name="email" type="email" required class="mt-2 w-full rounded border border-outline-variant bg-surface px-3 py-3 text-body-md outline-none focus:border-primary" />
+            </label>
+
+            <label class="block" id="password-field">
+              <span class="text-caption font-caption font-bold uppercase text-on-surface-variant">Contraseña de acceso</span>
+              <input id="user-password-input" name="password" type="password" required minlength="6" class="mt-2 w-full rounded border border-outline-variant bg-surface px-3 py-3 text-body-md outline-none focus:border-primary" />
+            </label>
+
+            <label class="block">
+              <span class="text-caption font-caption font-bold uppercase text-on-surface-variant">Rol administrativo</span>
+              <select id="user-role-select" name="role" required class="mt-2 w-full rounded border border-outline-variant bg-surface px-3 py-3 text-body-md outline-none focus:border-primary">
+                <option value="">Seleccione un rol</option>
+                <option value="super_admin">Super Administrador</option>
+                <option value="event_manager">Gestor de Eventos</option>
+                <option value="seller">Vendedor físico</option>
+                <option value="checkin_operator">Operador de Acceso</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="mt-6 flex gap-3">
+            <button id="user-submit" class="flex-1 rounded bg-primary px-4 py-3 text-label-md font-label-md font-bold text-on-primary transition-colors hover:bg-secondary" type="submit">
+              Guardar usuario
+            </button>
+            <button id="user-cancel" type="button" class="hidden rounded border border-outline-variant px-4 py-3 text-label-md font-label-md font-bold text-on-surface transition-colors hover:bg-surface-container-high">
+              Cancelar
+            </button>
+          </div>
+          
+          {formMessage && (
+            <p id="user-message" class={`mt-4 rounded p-3 text-body-md font-body-md ${formError ? "bg-red-100 text-red-700 font-bold" : "bg-green-100 text-green-700"}`}>
+              {formMessage}
+            </p>
+          )}
+        </form>
+      ) : (
+        <div class="rounded-lg border border-outline-variant bg-surface-container-low p-6 lg:col-span-1 text-on-surface-variant">
+          <p class="font-bold">Acción restringida</p>
+          <p class="mt-2 text-body-md">Solo los usuarios con el rol de Super Administrador pueden crear y modificar usuarios staff.</p>
+        </div>
+      )}
+
+      <section class="rounded-lg border border-outline-variant bg-surface-container-lowest shadow-sm lg:col-span-2">
+        <div class="border-b border-outline-variant p-6">
+          <h3 class="text-headline-sm font-headline-sm text-on-surface">Usuarios de staff activos</h3>
+          <p class="mt-1 text-body-md font-body-md text-on-surface-variant">Perfiles con acceso al panel administrativo.</p>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full min-w-[880px] text-left">
+            <thead class="bg-surface-container-low">
+              <tr>
+                <th class="px-4 py-3 text-label-md font-label-md font-bold uppercase text-on-surface-variant">Nombre</th>
+                <th class="px-4 py-3 text-label-md font-label-md font-bold uppercase text-on-surface-variant">Email</th>
+                <th class="px-4 py-3 text-label-md font-label-md font-bold uppercase text-on-surface-variant">Rol</th>
+                <th class="px-4 py-3 text-label-md font-label-md font-bold uppercase text-on-surface-variant">Estado</th>
+                <th class="px-4 py-3 text-label-md font-label-md font-bold uppercase text-on-surface-variant">Creado</th>
+                {isSuperAdmin && (
+                  <th class="px-4 py-3 text-label-md font-label-md font-bold uppercase text-on-surface-variant">Acciones</th>
+                )}
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-outline-variant">
+              {staffProfiles && staffProfiles.length ? staffProfiles.map((profile) => (
+                <tr class="user-row">
+                  <td class="px-4 py-3 font-semibold text-on-surface">{profile.full_name}</td>
+                  <td class="px-4 py-3 text-on-surface-variant">{profile.email}</td>
+                  <td class="px-4 py-3 text-on-surface-variant">{STAFF_ROLE_LABELS[profile.role as keyof typeof STAFF_ROLE_LABELS] ?? profile.role}</td>
+                  <td class="px-4 py-3">
+                    <span class={`inline-block rounded-full px-3 py-1 text-caption font-caption font-bold ${profile.active ? "bg-green-100 text-green-700" : "bg-slate-100 text-slate-700"}`}>
+                      {profile.active ? "Activo" : "Inactivo"}
+                    </span>
+                  </td>
+                  <td class="px-4 py-3 text-on-surface-variant">{formatSiteDate(profile.created_at)}</td>
+                  {isSuperAdmin && (
+                    <td class="px-4 py-3">
+                      <div class="flex flex-wrap gap-2">
+                        <button 
+                          type="button" 
+                          class="edit-user-btn rounded border border-outline-variant px-3 py-1 text-caption font-caption font-bold text-on-surface hover:bg-surface-container-high"
+                          data-id={profile.id}
+                          data-name={profile.full_name}
+                          data-email={profile.email}
+                          data-role={profile.role}
+                        >
+                          Editar
+                        </button>
+                        <form method="POST" class="inline-block m-0">
+                          <input type="hidden" name="profile_id" value={profile.id} />
+                          <input type="hidden" name="action" value="toggle_active" />
+                          <button 
+                            type="submit" 
+                            class={`rounded border px-3 py-1 text-caption font-caption font-bold ${profile.active ? "border-red-200 text-red-700 hover:bg-red-50" : "border-green-200 text-green-700 hover:bg-green-50"}`}
+                            disabled={profile.id === currentProfile?.id}
+                            title={profile.id === currentProfile?.id ? "No puede desactivarse a sí mismo" : ""}
+                          >
+                            {profile.active ? "Desactivar" : "Reactivar"}
+                          </button>
+                        </form>
+                      </div>
+                    </td>
+                  )}
+                </tr>
+              )) : (
+                <tr><td colspan="6" class="px-4 py-8 text-center text-on-surface-variant">No hay usuarios administrativos registrados.</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </section>
+  </div>
+</AdminLayout>
+
+<script>
+  const form = document.getElementById("user-form") as HTMLFormElement | null;
+  const formTitle = document.getElementById("user-form-title");
+  const profileIdInput = document.getElementById("user-profile-id") as HTMLInputElement | null;
+  const userActionInput = document.getElementById("user-action") as HTMLInputElement | null;
+  const submitButton = document.getElementById("user-submit");
+  const cancelButton = document.getElementById("user-cancel");
+  
+  const emailField = document.getElementById("email-field");
+  const passwordField = document.getElementById("password-field");
+
+  function resetForm() {
+    form?.reset();
+    if (profileIdInput) profileIdInput.value = "";
+    if (userActionInput) userActionInput.value = "create";
+    if (formTitle) formTitle.textContent = "Nuevo usuario staff";
+    if (submitButton) submitButton.textContent = "Guardar usuario";
+    
+    // Show password/email fields when creating
+    emailField?.classList.remove("hidden");
+    const emailInput = document.getElementById("user-email-input") as HTMLInputElement | null;
+    if (emailInput) emailInput.required = true;
+
+    passwordField?.classList.remove("hidden");
+    const passwordInput = document.getElementById("user-password-input") as HTMLInputElement | null;
+    if (passwordInput) passwordInput.required = true;
+
+    cancelButton?.classList.add("hidden");
+  }
+
+  document.querySelectorAll(".edit-user-btn").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      const target = e.currentTarget as HTMLButtonElement;
+      const { id, name, email, role } = target.dataset;
+
+      if (profileIdInput) profileIdInput.value = id || "";
+      if (userActionInput) userActionInput.value = "update";
+
+      const nameInput = document.getElementById("user-name-input") as HTMLInputElement | null;
+      const roleSelect = document.getElementById("user-role-select") as HTMLSelectElement | null;
+
+      if (nameInput) nameInput.value = name || "";
+      if (roleSelect) roleSelect.value = role || "";
+
+      // Hide email & password fields when updating
+      emailField?.classList.add("hidden");
+      const emailInput = document.getElementById("user-email-input") as HTMLInputElement | null;
+      if (emailInput) emailInput.required = false;
+
+      passwordField?.classList.add("hidden");
+      const passwordInput = document.getElementById("user-password-input") as HTMLInputElement | null;
+      if (passwordInput) passwordInput.required = false;
+
+      if (formTitle) formTitle.textContent = "Editar usuario staff";
+      if (submitButton) submitButton.textContent = "Actualizar usuario";
+      cancelButton?.classList.remove("hidden");
+
+      form?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  });
+
+  cancelButton?.addEventListener("click", () => {
+    resetForm();
+  });
+</script>

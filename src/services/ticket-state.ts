@@ -1,4 +1,4 @@
-import type { TicketStatus } from "@/types/database";
+import type { TicketStatus } from "../types/database";
 
 export function canValidateTicket(status: TicketStatus): boolean {
   return status === "paid";

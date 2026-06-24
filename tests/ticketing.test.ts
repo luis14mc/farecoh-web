@@ -1,11 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { checkRateLimit, clearRateLimitBuckets } from "../src/lib/rate-limit";
-import { sanitizeText } from "../src/lib/security";
-import { calculateAdminReportMetrics } from "../src/services/admin-stats";
-import { calculateSellerReports } from "../src/services/seller-stats";
-import { formatTicketCode, isTicketCode, normalizeTicketCode, parseTicketSequence } from "../src/services/ticket-code";
-import { getValidationDenialReason, transitionTicketToValidated } from "../src/services/ticket-state";
+import { checkRateLimit, clearRateLimitBuckets } from "../src/lib/rate-limit.ts";
+import { sanitizeText } from "../src/lib/security.ts";
+import { calculateAdminReportMetrics } from "../src/services/admin-stats.ts";
+import { calculateSellerReports } from "../src/services/seller-stats.ts";
+import { formatTicketCode, isTicketCode, normalizeTicketCode, parseTicketSequence } from "../src/services/ticket-code.ts";
+import { getValidationDenialReason, transitionTicketToValidated } from "../src/services/ticket-state.ts";
 
 test("formatTicketCode creates PF codes with six digits", () => {
   assert.equal(formatTicketCode(1), "PF-000001");

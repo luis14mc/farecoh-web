@@ -2,20 +2,21 @@ export type StaffRole = "super_admin" | "event_manager" | "seller" | "checkin_op
 
 export const routePermissions: Record<string, StaffRole[]> = {
   "/admin": ["super_admin", "event_manager"],
-  "/admin/usuarios": ["super_admin"],
-  "/admin/boletos": ["super_admin", "event_manager", "seller"],
-  "/admin/lotes": ["super_admin", "event_manager"],
-  "/admin/ventas": ["super_admin", "event_manager", "seller"],
+  "/admin/dashboard": ["super_admin", "event_manager"],
+  "/admin/users": ["super_admin"],
+  "/admin/tickets": ["super_admin", "event_manager", "seller"],
+  "/admin/batches": ["super_admin", "event_manager"],
+  "/admin/sales": ["super_admin", "event_manager", "seller"],
   "/admin/checkin": ["super_admin", "event_manager", "checkin_operator"],
-  "/admin/reportes": ["super_admin", "event_manager"],
-  "/admin/vendedores": ["super_admin", "event_manager"],
+  "/admin/reports": ["super_admin", "event_manager"],
+  "/admin/vendors": ["super_admin", "event_manager"],
   "/admin/no-autorizado": ["super_admin", "event_manager", "seller", "checkin_operator"],
 };
 
 export const roleHomePath: Record<StaffRole, string> = {
   super_admin: "/admin",
   event_manager: "/admin",
-  seller: "/admin/ventas",
+  seller: "/admin/sales",
   checkin_operator: "/admin/checkin",
 };
 

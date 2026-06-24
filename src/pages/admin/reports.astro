@@ -1,17 +1,73 @@
 ---
 import AdminLayout from "@/layouts/AdminLayout.astro";
 import AdminHeader from "@/components/admin/AdminHeader.astro";
+import { createSupabaseServerClient } from "@/lib/auth";
 import { getEvent } from "@/lib/supabase";
-import { SITE_LOCALE } from "@/lib/locale";
+import { formatSiteCurrency } from "@/lib/locale";
+import { SELLER_TYPE_LABELS } from "@/types/sellers";
 
+const supabase = createSupabaseServerClient(Astro);
+
+// Fetch event details
 const event = await getEvent();
 const ticketPrice = event.ticket_price;
+
+// Fetch tickets from database
+const { data: tickets = [] } = await supabase
+  .from("tickets")
+  .select("*");
+
+// Fetch sellers from database
+const { data: sellers = [] } = await supabase
+  .from("sellers")
+  .select("*");
+
+// Calculate summaries
+const soldTickets = tickets ? tickets.filter((t: any) => t.status === "sold" || t.status === "validated") : [];
+const validatedTickets = tickets ? tickets.filter((t: any) => t.status === "validated") : [];
+const grossRevenue = soldTickets.length * Number(ticketPrice);
+
+// Group statistics by seller name
+const sellerStatsMap = new Map<string, { sellerName: string, type: string, salesCount: number, ticketsSold: number, revenue: number }>();
+
+// Initialize active sellers in the map so they appear in reports even with 0 sales
+sellers?.forEach((s: any) => {
+  sellerStatsMap.set(s.name, {
+    sellerName: s.name,
+    type: s.type,
+    salesCount: 0,
+    ticketsSold: 0,
+    revenue: 0
+  });
+});
+
+// Aggregate data from tickets table
+tickets?.forEach((t: any) => {
+  if (t.status === "sold" || t.status === "validated") {
+    const sName = t.seller_name || "Desconocido";
+    const current = sellerStatsMap.get(sName) || {
+      sellerName: sName,
+      type: "vendor",
+      salesCount: 0,
+      ticketsSold: 0,
+      revenue: 0
+    };
+    current.ticketsSold += 1;
+    current.salesCount += 1;
+    current.revenue += Number(ticketPrice);
+    sellerStatsMap.set(sName, current);
+  }
+});
+
+const reportRows = Array.from(sellerStatsMap.values())
+  .filter(r => r.ticketsSold > 0 || sellers?.some((s: any) => s.name === r.sellerName))
+  .sort((a, b) => b.revenue - a.revenue);
 ---
 
 <AdminLayout
   title="Reportes | FARECOH"
   description="Reportes administrativos de ventas, boletos y check-in"
-  active="reportes"
+  active="reports"
 >
   <AdminHeader title="Reportes" section="Administración" />
 
@@ -26,7 +82,7 @@ const ticketPrice = event.ticket_price;
           </p>
         </div>
         <a
-          href="/admin/vendedores"
+          href="/admin/vendors"
           class="inline-flex items-center justify-center gap-2 rounded border border-outline-variant px-4 py-3 text-label-md font-label-md font-bold text-on-surface transition-colors hover:bg-surface-container-high"
         >
           <span class="material-symbols-outlined">group</span>
@@ -36,26 +92,32 @@ const ticketPrice = event.ticket_price;
     </section>
 
     <section class="grid gap-gutter sm:grid-cols-2 xl:grid-cols-3" id="summary-cards">
-      <article class="rounded-lg border border-outline-variant bg-surface-container-lowest p-5 shadow-sm">
+      <article class="rounded-lg border border-outline-variant bg-surface-container-lowest p-5 shadow-sm animate-fade-in">
         <div class="mb-4 flex h-11 w-11 items-center justify-center rounded bg-primary-container text-primary">
           <span class="material-symbols-outlined">confirmation_number</span>
         </div>
         <p class="text-label-md font-label-md font-bold uppercase tracking-wider text-on-surface-variant">Boletos vendidos</p>
-        <p id="metric-tickets-sold" class="mt-2 text-display-sm font-display-sm text-on-surface">—</p>
+        <p id="metric-tickets-sold" class="mt-2 text-display-sm font-display-sm text-on-surface font-bold">
+          {soldTickets.length}
+        </p>
       </article>
-      <article class="rounded-lg border border-outline-variant bg-surface-container-lowest p-5 shadow-sm">
+      <article class="rounded-lg border border-outline-variant bg-surface-container-lowest p-5 shadow-sm animate-fade-in">
         <div class="mb-4 flex h-11 w-11 items-center justify-center rounded bg-primary-container text-primary">
           <span class="material-symbols-outlined">how_to_reg</span>
         </div>
         <p class="text-label-md font-label-md font-bold uppercase tracking-wider text-on-surface-variant">Boletos validados</p>
-        <p id="metric-tickets-validated" class="mt-2 text-display-sm font-display-sm text-on-surface">—</p>
+        <p id="metric-tickets-validated" class="mt-2 text-display-sm font-display-sm text-on-surface font-bold">
+          {validatedTickets.length}
+        </p>
       </article>
-      <article class="rounded-lg border border-outline-variant bg-surface-container-lowest p-5 shadow-sm">
+      <article class="rounded-lg border border-outline-variant bg-surface-container-lowest p-5 shadow-sm animate-fade-in">
         <div class="mb-4 flex h-11 w-11 items-center justify-center rounded bg-primary-container text-primary">
           <span class="material-symbols-outlined">payments</span>
         </div>
         <p class="text-label-md font-label-md font-bold uppercase tracking-wider text-on-surface-variant">Recaudación bruta</p>
-        <p id="metric-gross-revenue" class="mt-2 text-display-sm font-display-sm text-on-surface">—</p>
+        <p id="metric-gross-revenue" class="mt-2 text-display-sm font-display-sm text-on-surface font-bold text-primary">
+          {formatSiteCurrency(grossRevenue)}
+        </p>
       </article>
     </section>
 
@@ -77,57 +139,25 @@ const ticketPrice = event.ticket_price;
               <th class="px-4 py-3 text-label-md font-label-md font-bold uppercase text-on-surface-variant">Ingresos</th>
             </tr>
           </thead>
-          <tbody id="seller-reports" class="divide-y divide-outline-variant"></tbody>
+          <tbody id="seller-reports" class="divide-y divide-outline-variant">
+            {reportRows && reportRows.length ? reportRows.map((row) => (
+              <tr>
+                <td class="px-4 py-3 font-semibold text-on-surface">{row.sellerName}</td>
+                <td class="px-4 py-3 text-on-surface-variant">
+                  {SELLER_TYPE_LABELS[row.type as keyof typeof SELLER_TYPE_LABELS] || row.type}
+                </td>
+                <td class="px-4 py-3 text-on-surface">{row.salesCount}</td>
+                <td class="px-4 py-3 text-on-surface">{row.ticketsSold}</td>
+                <td class="px-4 py-3 font-bold text-primary">{formatSiteCurrency(row.revenue)}</td>
+              </tr>
+            )) : (
+              <tr>
+                <td colspan="5" class="px-4 py-8 text-center text-on-surface-variant">Aún no hay ventas registradas por vendedor.</td>
+              </tr>
+            )}
+          </tbody>
         </table>
       </div>
     </section>
   </div>
 </AdminLayout>
-
-<script define:vars={{ ticketPrice, siteLocale: SITE_LOCALE }}>
-  import { getSellers, getTickets, seedPhysicalTicketing } from "@/services/physical-store";
-  import { calculateSellerReports } from "@/services/seller-stats";
-  import { SELLER_TYPE_LABELS } from "@/types/sellers";
-
-  const currency = new Intl.NumberFormat(siteLocale, {
-    style: "currency",
-    currency: "HNL",
-    maximumFractionDigits: 0,
-  });
-
-  function renderReports() {
-    const tickets = getTickets();
-    const sellers = getSellers();
-    const soldTickets = tickets.filter((ticket) => ticket.status === "paid" || ticket.status === "validated");
-    const validatedTickets = tickets.filter((ticket) => ticket.status === "validated");
-    const grossRevenue = soldTickets.length * Number(ticketPrice);
-
-    const soldNode = document.getElementById("metric-tickets-sold");
-    const validatedNode = document.getElementById("metric-tickets-validated");
-    const revenueNode = document.getElementById("metric-gross-revenue");
-
-    if (soldNode) soldNode.textContent = String(soldTickets.length);
-    if (validatedNode) validatedNode.textContent = String(validatedTickets.length);
-    if (revenueNode) revenueNode.textContent = currency.format(grossRevenue);
-
-    const rows = calculateSellerReports({ tickets, sellers, ticketPrice: Number(ticketPrice) });
-    const body = document.getElementById("seller-reports");
-
-    if (!body) return;
-
-    body.innerHTML = rows.length
-      ? rows.map((row) => `
-          <tr>
-            <td class="px-4 py-3 font-semibold text-on-surface">${row.sellerName}</td>
-            <td class="px-4 py-3 text-on-surface-variant">${SELLER_TYPE_LABELS[row.sellerType]}</td>
-            <td class="px-4 py-3 text-on-surface">${row.salesCount}</td>
-            <td class="px-4 py-3 text-on-surface">${row.ticketsSold}</td>
-            <td class="px-4 py-3 font-bold text-primary">${currency.format(row.revenue)}</td>
-          </tr>
-        `).join("")
-      : `<tr><td colspan="5" class="px-4 py-8 text-center text-on-surface-variant">Aún no hay ventas registradas por vendedor.</td></tr>`;
-  }
-
-  seedPhysicalTicketing();
-  renderReports();
-</script>

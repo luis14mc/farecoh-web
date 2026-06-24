@@ -46,18 +46,6 @@ export const STAFF_ROLE_LABELS: Record<StaffRole, string> = {
   checkin_operator: "Operador de acceso",
 };
 
-export function createDevStaffProfile(): StaffProfile {
-  return {
-    id: "dev-profile",
-    user_id: "dev-user",
-    email: "dev@farecoh.local",
-    full_name: "Administrador de desarrollo",
-    role: "super_admin",
-    active: true,
-    created_at: new Date().toISOString(),
-  };
-}
-
 export function createSupabaseBrowserClient(config?: PublicSupabaseConfig) {
   const { supabaseUrl, supabaseAnonKey } = config ?? getPublicSupabaseConfig();
   if (!supabaseUrl || !supabaseAnonKey) return null;

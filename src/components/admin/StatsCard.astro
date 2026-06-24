@@ -2,80 +2,77 @@
 import { supabase } from "@/lib/supabase";
 import { formatSiteCurrency, formatSiteNumber } from "@/lib/locale";
 
-// Query all tickets and orders for live calculation
-const { data: tickets } = await supabase.from("tickets").select("status");
-const { data: orders } = await supabase.from("orders").select("total_amount, status");
+// Query all tickets for live aggregation
+const { data: tickets = [] } = await supabase
+  .from("tickets")
+  .select("status");
 
-// Base numbers to represent the Stitch mock values, plus any new registrations
-const baseTotal = 1274;
-const basePaid = 1171;
-const basePending = 98;
-const baseRevenue = 585500.00; // 1171 * L. 500
+const availableTickets = tickets.filter((t: any) => t.status === "available").length;
+const soldTickets = tickets.filter((t: any) => t.status === "sold").length;
+const validatedTickets = tickets.filter((t: any) => t.status === "validated").length;
+const pendingTickets = tickets.filter((t: any) => t.status === "assigned").length;
 
-const dbTotal = tickets?.length || 0;
-const dbPaid = tickets?.filter((t: any) => t.status === "paid" || t.status === "validated").length || 0;
-const dbPending = tickets?.filter((t: any) => t.status === "pending").length || 0;
+// Query total revenue from sales table
+const { data: sales = [] } = await supabase
+  .from("sales")
+  .select("amount");
 
-// Calculate total revenue from paid orders
-const dbRevenue = orders
-  ?.filter((o: any) => o.status === "paid" || o.status === "validated")
-  .reduce((sum: number, o: any) => sum + Number(o.total_amount), 0) || 0;
-
-// Dynamic combined totals
-const totalTickets = baseTotal + dbTotal;
-const paidTickets = basePaid + dbPaid;
-const pendingTickets = basePending + dbPending;
-const totalRevenue = baseRevenue + dbRevenue;
-
-// Completion rate
-const completionRate = totalTickets > 0 ? Math.round((paidTickets / totalTickets) * 100) : 0;
+const totalRevenue = sales.reduce((sum: number, s: any) => sum + Number(s.amount), 0);
 ---
 
-<section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter text-on-surface">
-  <!-- Total Boletos -->
+<section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-gutter text-on-surface">
+  <!-- Available Tickets -->
   <div class="bg-surface-container-lowest border border-outline-variant p-6 rounded-lg hover:shadow-lg transition-shadow duration-300">
     <div class="flex justify-between items-start mb-4">
-      <div class="p-2 bg-primary-container/10 rounded-lg">
-        <span class="material-symbols-outlined text-primary">confirmation_number</span>
+      <div class="p-2 bg-blue-100 rounded-lg">
+        <span class="material-symbols-outlined text-blue-600">event_seat</span>
       </div>
-      <span class="text-caption font-caption text-secondary font-bold">+12% vs semana anterior</span>
     </div>
-    <p class="text-label-md font-label-md text-on-surface-variant uppercase font-semibold">Total Boletos</p>
-    <p class="text-headline-lg font-headline-lg text-on-surface mt-1">{formatSiteNumber(totalTickets)}</p>
+    <p class="text-label-md font-label-md text-on-surface-variant uppercase font-semibold">Disponibles</p>
+    <p class="text-headline-lg font-headline-lg text-on-surface mt-1">{formatSiteNumber(availableTickets)}</p>
   </div>
-  
-  <!-- Boletos Pagados -->
+
+  <!-- Sold Tickets -->
   <div class="bg-surface-container-lowest border border-outline-variant p-6 rounded-lg hover:shadow-lg transition-shadow duration-300">
     <div class="flex justify-between items-start mb-4">
       <div class="p-2 bg-green-100 rounded-lg">
         <span class="material-symbols-outlined text-green-600">check_circle</span>
       </div>
-      <span class="text-caption font-caption text-green-600 font-bold">{completionRate}% completado</span>
     </div>
-    <p class="text-label-md font-label-md text-on-surface-variant uppercase font-semibold">Boletos Pagados</p>
-    <p class="text-headline-lg font-headline-lg text-on-surface mt-1">{formatSiteNumber(paidTickets)}</p>
+    <p class="text-label-md font-label-md text-on-surface-variant uppercase font-semibold">Vendidos</p>
+    <p class="text-headline-lg font-headline-lg text-on-surface mt-1">{formatSiteNumber(soldTickets)}</p>
   </div>
-  
-  <!-- Boletos Pendientes -->
+
+  <!-- Validated Tickets -->
+  <div class="bg-surface-container-lowest border border-outline-variant p-6 rounded-lg hover:shadow-lg transition-shadow duration-300">
+    <div class="flex justify-between items-start mb-4">
+      <div class="p-2 bg-purple-100 rounded-lg">
+        <span class="material-symbols-outlined text-purple-600">qr_code_scanner</span>
+      </div>
+    </div>
+    <p class="text-label-md font-label-md text-on-surface-variant uppercase font-semibold">Validados</p>
+    <p class="text-headline-lg font-headline-lg text-on-surface mt-1">{formatSiteNumber(validatedTickets)}</p>
+  </div>
+
+  <!-- Pending (Assigned) Tickets -->
   <div class="bg-surface-container-lowest border border-outline-variant p-6 rounded-lg hover:shadow-lg transition-shadow duration-300">
     <div class="flex justify-between items-start mb-4">
       <div class="p-2 bg-yellow-100 rounded-lg">
-        <span class="material-symbols-outlined text-yellow-600">pending</span>
+        <span class="material-symbols-outlined text-yellow-600">local_shipping</span>
       </div>
-      <span class="text-caption font-caption text-yellow-600 font-bold">Requiere acción</span>
     </div>
-    <p class="text-label-md font-label-md text-on-surface-variant uppercase font-semibold">Boletos Pendientes</p>
+    <p class="text-label-md font-label-md text-on-surface-variant uppercase font-semibold">Asignados (Pendientes)</p>
     <p class="text-headline-lg font-headline-lg text-on-surface mt-1">{formatSiteNumber(pendingTickets)}</p>
   </div>
-  
-  <!-- Total Recaudado -->
+
+  <!-- Revenue -->
   <div class="bg-primary text-white p-6 rounded-lg hover:shadow-lg transition-shadow duration-300">
     <div class="flex justify-between items-start mb-4">
       <div class="p-2 bg-white/20 rounded-lg text-white">
         <span class="material-symbols-outlined text-white">payments</span>
       </div>
     </div>
-    <p class="text-label-md font-label-md text-white/80 uppercase font-semibold">Total Recaudado</p>
+    <p class="text-label-md font-label-md text-white/80 uppercase font-semibold">Recaudación</p>
     <p class="text-headline-lg font-headline-lg text-white mt-1">{formatSiteCurrency(totalRevenue)}</p>
   </div>
 </section>

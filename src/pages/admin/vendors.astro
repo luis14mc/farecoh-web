@@ -1,0 +1,269 @@
+---
+import AdminLayout from "@/layouts/AdminLayout.astro";
+import AdminHeader from "@/components/admin/AdminHeader.astro";
+import { createSupabaseServerClient } from "@/lib/auth";
+import { SELLER_TYPE_LABELS } from "@/types/sellers";
+
+const supabase = createSupabaseServerClient(Astro);
+let formMessage = "";
+let formError = false;
+
+if (Astro.request.method === "POST") {
+  try {
+    const data = await Astro.request.formData();
+    const action = String(data.get("action") || "");
+    const id = String(data.get("seller_id") || "");
+
+    if (action === "create" || action === "update") {
+      const name = String(data.get("name") || "").trim();
+      const phone = String(data.get("phone") || "").trim();
+      const email = String(data.get("email") || "").trim().toLowerCase();
+      const type = String(data.get("type") || "") as "vendor" | "physical_point";
+
+      if (!name || !phone || !email || !type) {
+        throw new Error("Complete todos los campos obligatorios.");
+      }
+
+      if (action === "create") {
+        const { error } = await supabase
+          .from("sellers")
+          .insert({ name, phone, email, type, active: true });
+        if (error) throw error;
+        formMessage = `${name} registrado correctamente.`;
+      } else {
+        const { error } = await supabase
+          .from("sellers")
+          .update({ name, phone, email, type })
+          .eq("id", id);
+        if (error) throw error;
+        formMessage = `${name} actualizado correctamente.`;
+      }
+    } else if (action === "deactivate") {
+      const { error } = await supabase
+        .from("sellers")
+        .update({ active: false })
+        .eq("id", id);
+      if (error) throw error;
+      formMessage = "Vendedor desactivado.";
+    } else if (action === "activate") {
+      const { error } = await supabase
+        .from("sellers")
+        .update({ active: true })
+        .eq("id", id);
+      if (error) throw error;
+      formMessage = "Vendedor reactivado.";
+    }
+  } catch (err: any) {
+    formError = true;
+    formMessage = err.message || "Error al procesar la solicitud.";
+  }
+}
+
+// Fetch all sellers from DB
+const { data: sellers = [] } = await supabase
+  .from("sellers")
+  .select("*")
+  .order("name", { ascending: true });
+---
+
+<AdminLayout title="Vendedores | FARECOH" description="Administración de vendedores y puntos físicos" active="vendors">
+  <AdminHeader title="Vendedores" section="Administración" />
+
+  <div class="px-margin py-8 max-w-container-max pb-24 md:pb-8 space-y-stack-lg">
+    <section class="grid gap-gutter lg:grid-cols-3">
+      <form id="seller-form" method="POST" class="rounded-lg border border-outline-variant bg-surface-container-lowest p-6 shadow-sm lg:col-span-1">
+        <h2 id="seller-form-title" class="text-headline-sm font-headline-sm text-on-surface">Nuevo vendedor</h2>
+        <p class="mt-1 text-body-md font-body-md text-on-surface-variant">Registre vendedores individuales o puntos físicos autorizados.</p>
+
+        <input type="hidden" name="seller_id" id="seller-id" />
+        <input type="hidden" name="action" id="seller-action" value="create" />
+
+        <div class="mt-6 space-y-4">
+          <label class="block">
+            <span class="text-caption font-caption font-bold uppercase text-on-surface-variant">Nombre</span>
+            <input id="seller-name-input" name="name" required class="mt-2 w-full rounded border border-outline-variant bg-surface px-3 py-3 text-body-md outline-none focus:border-primary" />
+          </label>
+          <label class="block">
+            <span class="text-caption font-caption font-bold uppercase text-on-surface-variant">Teléfono</span>
+            <input id="seller-phone-input" name="phone" required class="mt-2 w-full rounded border border-outline-variant bg-surface px-3 py-3 text-body-md outline-none focus:border-primary" />
+          </label>
+          <label class="block">
+            <span class="text-caption font-caption font-bold uppercase text-on-surface-variant">Correo</span>
+            <input id="seller-email-input" name="email" type="email" required class="mt-2 w-full rounded border border-outline-variant bg-surface px-3 py-3 text-body-md outline-none focus:border-primary" />
+          </label>
+          <label class="block">
+            <span class="text-caption font-caption font-bold uppercase text-on-surface-variant">Tipo</span>
+            <select id="seller-type-select" name="type" required class="mt-2 w-full rounded border border-outline-variant bg-surface px-3 py-3 text-body-md outline-none focus:border-primary">
+              <option value="">Seleccione</option>
+              <option value="vendor">Vendedor</option>
+              <option value="physical_point">Punto físico</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="mt-6 flex gap-3">
+          <button id="seller-submit" class="flex-1 rounded bg-primary px-4 py-3 text-label-md font-label-md font-bold text-on-primary transition-colors hover:bg-secondary" type="submit">
+            Guardar vendedor
+          </button>
+          <button id="seller-cancel" type="button" class="hidden rounded border border-outline-variant px-4 py-3 text-label-md font-label-md font-bold text-on-surface transition-colors hover:bg-surface-container-high">
+            Cancelar
+          </button>
+        </div>
+        
+        {formMessage && (
+          <p id="seller-message" class={`mt-4 rounded p-3 text-body-md font-body-md ${formError ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
+            {formMessage}
+          </p>
+        )}
+      </form>
+
+      <section class="rounded-lg border border-outline-variant bg-surface-container-lowest shadow-sm lg:col-span-2">
+        <div class="flex flex-col gap-4 border-b border-outline-variant p-6 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h3 class="text-headline-sm font-headline-sm text-on-surface">Vendedores registrados</h3>
+            <p class="mt-1 text-body-md font-body-md text-on-surface-variant">Solo vendedores activos aparecen en ventas y asignación de lotes.</p>
+          </div>
+          <label class="block w-full md:w-56">
+            <span class="text-caption font-caption font-bold uppercase text-on-surface-variant">Estado</span>
+            <select id="status-filter" class="mt-2 w-full rounded border border-outline-variant bg-surface px-3 py-2 text-body-md outline-none focus:border-primary">
+              <option value="all">Todos</option>
+              <option value="active">Activos</option>
+              <option value="inactive">Inactivos</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full min-w-[760px] text-left">
+            <thead class="bg-surface-container-low">
+              <tr>
+                <th class="px-4 py-3 text-label-md font-label-md font-bold uppercase text-on-surface-variant">Nombre</th>
+                <th class="px-4 py-3 text-label-md font-label-md font-bold uppercase text-on-surface-variant">Contacto</th>
+                <th class="px-4 py-3 text-label-md font-label-md font-bold uppercase text-on-surface-variant">Tipo</th>
+                <th class="px-4 py-3 text-label-md font-label-md font-bold uppercase text-on-surface-variant">Estado</th>
+                <th class="px-4 py-3 text-label-md font-label-md font-bold uppercase text-on-surface-variant">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="sellers-body" class="divide-y divide-outline-variant">
+              {sellers && sellers.length ? (
+                sellers.map((seller) => (
+                  <tr class="seller-row" data-active={seller.active ? "true" : "false"}>
+                    <td class="px-4 py-3 font-semibold text-on-surface">{seller.name}</td>
+                    <td class="px-4 py-3 text-on-surface-variant">
+                      <p>{seller.phone}</p>
+                      <p class="text-caption">{seller.email}</p>
+                    </td>
+                    <td class="px-4 py-3 text-on-surface-variant">{SELLER_TYPE_LABELS[seller.type] || seller.type}</td>
+                    <td class="px-4 py-3">
+                      <span class={`inline-block rounded-full px-3 py-1 text-caption font-caption font-bold ${seller.active ? "bg-green-100 text-green-700" : "bg-slate-100 text-slate-700"}`}>
+                        {seller.active ? "Activo" : "Inactivo"}
+                      </span>
+                    </td>
+                    <td class="px-4 py-3">
+                      <div class="flex flex-wrap gap-2">
+                        <button 
+                          type="button" 
+                          class="edit-btn rounded border border-outline-variant px-3 py-1 text-caption font-caption font-bold text-on-surface hover:bg-surface-container-high"
+                          data-id={seller.id}
+                          data-name={seller.name}
+                          data-phone={seller.phone}
+                          data-email={seller.email}
+                          data-type={seller.type}
+                        >
+                          Editar
+                        </button>
+                        <form method="POST" class="inline-block m-0">
+                          <input type="hidden" name="seller_id" value={seller.id} />
+                          <input type="hidden" name="action" value={seller.active ? "deactivate" : "activate"} />
+                          <button 
+                            type="submit" 
+                            class={`rounded border px-3 py-1 text-caption font-caption font-bold ${seller.active ? "border-red-200 text-red-700 hover:bg-red-50" : "border-green-200 text-green-700 hover:bg-green-50"}`}
+                          >
+                            {seller.active ? "Desactivar" : "Reactivar"}
+                          </button>
+                        </form>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colspan="5" class="px-4 py-8 text-center text-on-surface-variant">No hay vendedores registrados.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </section>
+  </div>
+</AdminLayout>
+
+<script>
+  const form = document.getElementById("seller-form") as HTMLFormElement | null;
+  const formTitle = document.getElementById("seller-form-title");
+  const sellerIdInput = document.getElementById("seller-id") as HTMLInputElement | null;
+  const sellerActionInput = document.getElementById("seller-action") as HTMLInputElement | null;
+  const submitButton = document.getElementById("seller-submit");
+  const cancelButton = document.getElementById("seller-cancel");
+  const statusFilter = document.getElementById("status-filter") as HTMLSelectElement | null;
+
+  function resetForm() {
+    form?.reset();
+    if (sellerIdInput) sellerIdInput.value = "";
+    if (sellerActionInput) sellerActionInput.value = "create";
+    if (formTitle) formTitle.textContent = "Nuevo vendedor";
+    if (submitButton) submitButton.textContent = "Guardar vendedor";
+    cancelButton?.classList.add("hidden");
+  }
+
+  function filterSellers() {
+    const filter = statusFilter?.value || "all";
+    const rows = document.querySelectorAll(".seller-row");
+    rows.forEach(row => {
+      const active = row.getAttribute("data-active") === "true";
+      if (filter === "all") {
+        row.classList.remove("hidden");
+      } else if (filter === "active") {
+        if (active) row.classList.remove("hidden");
+        else row.classList.add("hidden");
+      } else {
+        if (!active) row.classList.remove("hidden");
+        else row.classList.add("hidden");
+      }
+    });
+  }
+
+  statusFilter?.addEventListener("change", filterSellers);
+
+  // Bind click handlers for edit buttons
+  document.querySelectorAll(".edit-btn").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      const target = e.currentTarget as HTMLButtonElement;
+      const { id, name, phone, email, type } = target.dataset;
+
+      if (sellerIdInput) sellerIdInput.value = id || "";
+      if (sellerActionInput) sellerActionInput.value = "update";
+      
+      const nameInput = document.getElementById("seller-name-input") as HTMLInputElement | null;
+      const phoneInput = document.getElementById("seller-phone-input") as HTMLInputElement | null;
+      const emailInput = document.getElementById("seller-email-input") as HTMLInputElement | null;
+      const typeSelect = document.getElementById("seller-type-select") as HTMLSelectElement | null;
+
+      if (nameInput) nameInput.value = name || "";
+      if (phoneInput) phoneInput.value = phone || "";
+      if (emailInput) emailInput.value = email || "";
+      if (typeSelect) typeSelect.value = type || "";
+
+      if (formTitle) formTitle.textContent = "Editar vendedor";
+      if (submitButton) submitButton.textContent = "Actualizar vendedor";
+      cancelButton?.classList.remove("hidden");
+
+      form?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  });
+
+  cancelButton?.addEventListener("click", () => {
+    resetForm();
+  });
+</script>

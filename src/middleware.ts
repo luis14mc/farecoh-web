@@ -1,5 +1,5 @@
 import { defineMiddleware } from "astro:middleware";
-import { createDevStaffProfile, isAuthConfigured } from "@/lib/auth";
+import { isAuthConfigured } from "@/lib/auth";
 import { requireAdminAccess, roleHomePath } from "@/lib/rbac";
 
 const PUBLIC_ADMIN_PATHS = new Set(["/admin/login", "/admin/no-autorizado"]);
@@ -11,11 +11,6 @@ export const onRequest = defineMiddleware(async (context, next) => {
   if (PUBLIC_ADMIN_PATHS.has(pathname)) return next();
 
   if (!isAuthConfigured()) {
-    if (import.meta.env.DEV) {
-      context.locals.staffProfile = createDevStaffProfile();
-      return next();
-    }
-
     return new Response("Admin auth is not configured. Set PUBLIC_SUPABASE_URL and PUBLIC_SUPABASE_ANON_KEY.", {
       status: 503,
       headers: { "content-type": "text/plain; charset=utf-8" },

@@ -4,6 +4,37 @@ import AdminHeader from "@/components/admin/AdminHeader.astro";
 import StatsCard from "@/components/admin/StatsCard.astro";
 import TicketSearch from "@/components/admin/TicketSearch.astro";
 import SalesTable from "@/components/admin/SalesTable.astro";
+import { supabase } from "@/lib/supabase";
+import { formatSiteCurrency } from "@/lib/locale";
+
+// Fetch sales for dashboard groupings
+const { data: sales = [] } = await supabase
+  .from("sales")
+  .select("amount, seller_name, created_at")
+  .order("created_at", { ascending: true });
+
+// Group Sales by Day
+const salesByDayMap: Record<string, number> = {};
+sales?.forEach((sale: any) => {
+  const dayStr = new Date(sale.created_at).toLocaleDateString("es-HN", {
+    day: "numeric",
+    month: "short",
+  });
+  salesByDayMap[dayStr] = (salesByDayMap[dayStr] || 0) + Number(sale.amount);
+});
+const salesByDay = Object.entries(salesByDayMap).slice(-7); // Last 7 active days
+const maxDaySales = Math.max(...salesByDay.map(([_, amt]) => amt), 1);
+
+// Group Sales by Seller
+const salesBySellerMap: Record<string, number> = {};
+sales?.forEach((sale: any) => {
+  const seller = sale.seller_name || "Desconocido";
+  salesBySellerMap[seller] = (salesBySellerMap[seller] || 0) + Number(sale.amount);
+});
+const salesBySeller = Object.entries(salesBySellerMap)
+  .sort((a, b) => b[1] - a[1])
+  .slice(0, 5); // Top 5 sellers
+const maxSellerSales = Math.max(...salesBySeller.map(([_, amt]) => amt), 1);
 ---
 
 <AdminLayout 
@@ -17,6 +48,63 @@ import SalesTable from "@/components/admin/SalesTable.astro";
   <div class="px-margin py-8 space-y-stack-lg max-w-container-max pb-24 md:pb-8">
     <!-- Live KPIs Cards -->
     <StatsCard />
+
+    <!-- Sales Trends (Sales by Day / Sales by Seller) -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-gutter">
+      <!-- Sales by Day -->
+      <div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-6 text-on-surface">
+        <h3 class="text-label-md font-label-md uppercase font-bold text-on-surface-variant tracking-wider">Ventas por día</h3>
+        <p class="text-caption font-caption text-on-surface-variant mb-6">Tendencia de recaudación diaria</p>
+        
+        {salesByDay.length > 0 ? (
+          <div class="space-y-4">
+            {salesByDay.map(([day, amount]) => {
+              const pct = (amount / maxDaySales) * 100;
+              return (
+                <div class="space-y-1">
+                  <div class="flex justify-between text-body-md">
+                    <span class="font-medium">{day}</span>
+                    <span class="font-bold text-primary">{formatSiteCurrency(amount)}</span>
+                  </div>
+                  <div class="w-full bg-surface-container-low h-3 rounded-full overflow-hidden">
+                    <div class="bg-primary h-full rounded-full transition-all duration-500" style={`width: ${pct}%`}></div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <p class="text-body-md text-on-surface-variant italic py-6">No hay registros de ventas recientes.</p>
+        )}
+      </div>
+
+      <!-- Sales by Seller -->
+      <div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-6 text-on-surface">
+        <h3 class="text-label-md font-label-md uppercase font-bold text-on-surface-variant tracking-wider">Ventas por vendedor</h3>
+        <p class="text-caption font-caption text-on-surface-variant mb-6 font-medium">Top vendedores de boletería física</p>
+        
+        {salesBySeller.length > 0 ? (
+          <div class="space-y-4">
+            {salesBySeller.map(([seller, amount]) => {
+              const pct = (amount / maxSellerSales) * 100;
+              return (
+                <div class="space-y-1">
+                  <div class="flex justify-between text-body-md">
+                    <span class="font-medium">{seller}</span>
+                    <span class="font-bold text-secondary">{formatSiteCurrency(amount)}</span>
+                  </div>
+                  <div class="w-full bg-surface-container-low h-3 rounded-full overflow-hidden">
+                    <div class="bg-secondary-container h-full rounded-full transition-all duration-500" style={`width: ${pct}%`}></div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <p class="text-body-md text-on-surface-variant italic py-6">No hay registros de vendedores activos.</p>
+        )}
+      </div>
+    </div>
 
     <!-- Check-in & Recent Sales Grid -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-gutter items-start">

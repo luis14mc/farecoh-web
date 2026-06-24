@@ -1,5 +1,5 @@
-import type { AdminReportMetrics } from "@/types/admin";
-import type { TicketStatus } from "@/types/database";
+import type { AdminReportMetrics } from "../types/admin";
+import type { TicketStatus } from "../types/database";
 
 export interface TicketLikeForReports {
   status: TicketStatus;

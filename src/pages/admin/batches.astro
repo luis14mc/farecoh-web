@@ -1,0 +1,264 @@
+---
+import AdminLayout from "@/layouts/AdminLayout.astro";
+import AdminHeader from "@/components/admin/AdminHeader.astro";
+import { createSupabaseServerClient } from "@/lib/auth";
+
+const supabase = createSupabaseServerClient(Astro);
+let formMessage = "";
+let formError = false;
+
+// Helper helpers
+function parseTicketSequence(ticketCode: string): number | null {
+  const match = ticketCode.trim().toUpperCase().match(/^PF-(\d{6})$/);
+  return match ? Number(match[1]) : null;
+}
+
+function normalizeTicketCode(ticketCode: string): string {
+  return ticketCode.trim().toUpperCase();
+}
+
+if (Astro.request.method === "POST") {
+  try {
+    const data = await Astro.request.formData();
+    const startCode = normalizeTicketCode(String(data.get("start_code") || ""));
+    const endCode = normalizeTicketCode(String(data.get("end_code") || ""));
+    const sellerId = String(data.get("seller_id") || "");
+    const location = String(data.get("location") || "").trim();
+
+    const startSeq = parseTicketSequence(startCode);
+    const endSeq = parseTicketSequence(endCode);
+
+    if (startSeq === null || endSeq === null || startSeq > endSeq) {
+      throw new Error("Rango de boletos inválido. Use el formato PF-000001 a PF-000500.");
+    }
+
+    if (!sellerId) {
+      throw new Error("Seleccione un vendedor registrado.");
+    }
+
+    if (!location) {
+      throw new Error("Especifique un punto físico o ubicación.");
+    }
+
+    // 1. Get seller details
+    const { data: seller, error: sellerErr } = await supabase
+      .from("sellers")
+      .select("*")
+      .eq("id", sellerId)
+      .single();
+
+    if (sellerErr || !seller) {
+      throw new Error("El vendedor seleccionado no existe.");
+    }
+
+    if (!seller.active) {
+      throw new Error("El vendedor seleccionado está inactivo.");
+    }
+
+    // 2. Fetch tickets in range to see if they are available
+    const { data: ticketsInRange = [], error: ticketsErr } = await supabase
+      .from("tickets")
+      .select("id, ticket_code, status");
+
+    if (ticketsErr) throw ticketsErr;
+
+    const matchedTickets = ticketsInRange.filter(t => {
+      const seq = parseTicketSequence(t.ticket_code);
+      return seq !== null && seq >= startSeq && seq <= endSeq;
+    });
+
+    if (matchedTickets.length === 0) {
+      throw new Error("No se encontraron boletos en el rango especificado.");
+    }
+
+    const unavailableTickets = matchedTickets.filter(t => t.status !== "available" && t.status !== "assigned");
+    if (unavailableTickets.length > 0) {
+      throw new Error(`Hay boletos vendidos, validados o anulados en este rango (ej. ${unavailableTickets[0].ticket_code}).`);
+    }
+
+    // 3. Create ticket batch row
+    const batchName = `Lote ${startCode} - ${endCode}`;
+    const { data: newBatch, error: batchErr } = await supabase
+      .from("ticket_batches")
+      .insert({
+        name: batchName,
+        start_code: startCode,
+        end_code: endCode,
+        assigned_to: `${seller.name} @ ${location}`
+      })
+      .select()
+      .single();
+
+    if (batchErr || !newBatch) throw batchErr || new Error("Error al crear el lote en la base de datos.");
+
+    // 4. Update tickets in range
+    const ticketIds = matchedTickets.map(t => t.id);
+    const { error: updateErr } = await supabase
+      .from("tickets")
+      .update({
+        status: "assigned",
+        batch_id: newBatch.id,
+        seller_name: seller.name,
+        sales_point: location
+      })
+      .in("id", ticketIds);
+
+    if (updateErr) throw updateErr;
+
+    // 5. Write audit log
+    const userEmail = Astro.locals.staffProfile?.email || "Admin";
+    const { error: auditErr } = await supabase
+      .from("audit_logs")
+      .insert({
+        action: "batch.assigned",
+        entity: "ticket_batches",
+        entity_id: newBatch.id,
+        performed_by: userEmail
+      });
+
+    formMessage = `${matchedTickets.length} boletos asignados correctamente a ${seller.name} en ${location}.`;
+  } catch (err: any) {
+    formError = true;
+    formMessage = err.message || "Error al procesar la asignación.";
+  }
+}
+
+// Fetch all tickets from Supabase
+const { data: tickets = [] } = await supabase
+  .from("tickets")
+  .select("*")
+  .order("ticket_code", { ascending: true });
+
+// Fetch all active sellers from DB
+const { data: sellers = [] } = await supabase
+  .from("sellers")
+  .select("*")
+  .eq("active", true)
+  .order("name", { ascending: true });
+
+// Fetch all batches from DB
+const { data: batches = [] } = await supabase
+  .from("ticket_batches")
+  .select("*")
+  .order("created_at", { ascending: false });
+
+const stats = {
+  available: tickets.filter((t: any) => t.status === "available").length,
+  assigned: tickets.filter((t: any) => t.status === "assigned").length,
+  sold: tickets.filter((t: any) => t.status === "sold").length,
+  validated: tickets.filter((t: any) => t.status === "validated").length,
+  cancelled: tickets.filter((t: any) => t.status === "cancelled").length,
+  total: tickets.length,
+};
+---
+
+<AdminLayout title="Lotes de Boletos | FARECOH" description="Administración de lotes físicos" active="batches">
+  <AdminHeader title="Lotes de Boletos" section="Boletos físicos" />
+
+  <div class="px-margin py-8 max-w-container-max pb-24 md:pb-8 space-y-stack-lg">
+    <section class="rounded-lg border border-outline-variant bg-surface-container-lowest p-6 shadow-sm">
+      <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <p class="text-label-md font-label-md font-bold uppercase tracking-wider text-primary">Lote inicial</p>
+          <h2 class="mt-1 text-headline-md font-headline-md text-on-surface">LOTE GENERAL 001</h2>
+          <p class="mt-2 text-body-md font-body-md text-on-surface-variant">Rango operativo: PF-000001 - PF-000500</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="grid gap-gutter lg:grid-cols-3">
+      <form id="assignment-form" method="POST" class="rounded-lg border border-outline-variant bg-surface-container-lowest p-6 shadow-sm lg:col-span-1">
+        <input type="hidden" name="action" value="assign" />
+        <h3 class="text-headline-sm font-headline-sm text-on-surface">Asignar rango</h3>
+        <p class="mt-1 text-body-md font-body-md text-on-surface-variant">Entrega boletos a un vendedor registrado.</p>
+
+        <div class="mt-6 space-y-4">
+          <label class="block">
+            <span class="text-caption font-caption font-bold uppercase text-on-surface-variant">Desde</span>
+            <input name="start_code" required placeholder="PF-000001" class="mt-2 w-full rounded border border-outline-variant bg-surface px-3 py-3 font-mono text-body-md outline-none focus:border-primary" />
+          </label>
+          <label class="block">
+            <span class="text-caption font-caption font-bold uppercase text-on-surface-variant">Hasta</span>
+            <input name="end_code" required placeholder="PF-000050" class="mt-2 w-full rounded border border-outline-variant bg-surface px-3 py-3 font-mono text-body-md outline-none focus:border-primary" />
+          </label>
+          <label class="block">
+            <span class="text-caption font-caption font-bold uppercase text-on-surface-variant">Vendedor</span>
+            <select id="seller-select" name="seller_id" required class="mt-2 w-full rounded border border-outline-variant bg-surface px-3 py-3 text-body-md outline-none focus:border-primary">
+              <option value="">Seleccione un vendedor</option>
+              {sellers && sellers.map((seller) => (
+                <option value={seller.id}>{seller.name} ({seller.type === "vendor" ? "Vendedor" : "Punto físico"})</option>
+              ))}
+            </select>
+            <p class="mt-2 text-caption text-on-surface-variant">
+              <a href="/admin/vendors" class="font-bold text-primary hover:underline">Registrar vendedor</a>
+            </p>
+          </label>
+          <label class="block">
+            <span class="text-caption font-caption font-bold uppercase text-on-surface-variant">Punto físico</span>
+            <input name="location" required placeholder="Escuela Nacional de Música" class="mt-2 w-full rounded border border-outline-variant bg-surface px-3 py-3 text-body-md outline-none focus:border-primary" />
+          </label>
+        </div>
+
+        <button class="mt-6 w-full rounded bg-primary px-4 py-3 text-label-md font-label-md font-bold text-on-primary transition-colors hover:bg-secondary" type="submit">
+          Asignar rango
+        </button>
+
+        {formMessage && (
+          <p id="assignment-message" class={`mt-4 rounded p-3 text-body-md font-body-md ${formError ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
+            {formMessage}
+          </p>
+        )}
+      </form>
+
+      <div class="rounded-lg border border-outline-variant bg-surface-container-lowest shadow-sm lg:col-span-2">
+        <div class="border-b border-outline-variant p-6">
+          <h3 class="text-headline-sm font-headline-sm text-on-surface">Resumen de lote</h3>
+          <p class="mt-1 text-body-md font-body-md text-on-surface-variant">Estado actual de los boletos físicos.</p>
+        </div>
+        
+        <div class="grid gap-4 p-6 sm:grid-cols-3" id="batch-stats">
+          <article class="rounded border border-outline-variant bg-surface p-4">
+            <p class="text-caption font-caption font-bold uppercase text-on-surface-variant">Disponibles</p>
+            <p class="mt-1 text-headline-md font-headline-md text-on-surface">{stats.available}</p>
+          </article>
+          <article class="rounded border border-outline-variant bg-surface p-4">
+            <p class="text-caption font-caption font-bold uppercase text-on-surface-variant">Asignados</p>
+            <p class="mt-1 text-headline-md font-headline-md text-on-surface">{stats.assigned}</p>
+          </article>
+          <article class="rounded border border-outline-variant bg-surface p-4">
+            <p class="text-caption font-caption font-bold uppercase text-on-surface-variant">Vendidos</p>
+            <p class="mt-1 text-headline-md font-headline-md text-on-surface">{stats.sold}</p>
+          </article>
+          <article class="rounded border border-outline-variant bg-surface p-4">
+            <p class="text-caption font-caption font-bold uppercase text-on-surface-variant">Validados</p>
+            <p class="mt-1 text-headline-md font-headline-md text-on-surface">{stats.validated}</p>
+          </article>
+          <article class="rounded border border-outline-variant bg-surface p-4">
+            <p class="text-caption font-caption font-bold uppercase text-on-surface-variant">Anulados</p>
+            <p class="mt-1 text-headline-md font-headline-md text-on-surface">{stats.cancelled}</p>
+          </article>
+          <article class="rounded border border-outline-variant bg-surface p-4">
+            <p class="text-caption font-caption font-bold uppercase text-on-surface-variant">Total</p>
+            <p class="mt-1 text-headline-md font-headline-md text-on-surface">{stats.total}</p>
+          </article>
+        </div>
+
+        <div class="border-t border-outline-variant p-6">
+          <h4 class="text-label-md font-label-md font-bold uppercase tracking-wider text-on-surface-variant">Asignaciones</h4>
+          <div id="assignments-list" class="mt-4 space-y-3">
+            {batches && batches.length ? batches.map((batch: any) => (
+              <div class="rounded border border-outline-variant bg-surface p-4">
+                <p class="font-bold text-on-surface">{batch.assigned_to}</p>
+                <p class="text-body-md text-on-surface-variant">
+                  Rango: <span class="font-mono text-primary font-bold">{batch.start_code} - {batch.end_code}</span> &middot; Creado el {new Date(batch.created_at).toLocaleDateString("es-HN", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
+                </p>
+              </div>
+            )) : (
+              <p class="text-body-md text-on-surface-variant">No hay rangos asignados todavía.</p>
+            )}
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</AdminLayout>

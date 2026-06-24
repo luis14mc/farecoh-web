@@ -1,6 +1,6 @@
-import type { PhysicalTicket } from "@/types/ticketing";
-import type { Seller, SellerReportRow } from "@/types/sellers";
-import { compareSiteText } from "@/lib/locale";
+import type { PhysicalTicket } from "../types/ticketing";
+import type { Seller, SellerReportRow } from "../types/sellers";
+import { compareSiteText } from "../lib/locale.ts";
 
 export function calculateSellerReports(params: {
   tickets: PhysicalTicket[];

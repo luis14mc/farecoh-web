@@ -1,0 +1,181 @@
+---
+import AdminLayout from "@/layouts/AdminLayout.astro";
+import AdminHeader from "@/components/admin/AdminHeader.astro";
+import { supabase } from "@/lib/supabase";
+import { formatSiteDate } from "@/lib/locale";
+
+// Fetch all 500 tickets from Supabase for real-time client-side search/filter
+const { data: tickets = [] } = await supabase
+  .from("tickets")
+  .select("*")
+  .order("ticket_code", { ascending: true });
+
+// Extract unique sellers/sales points for the filters
+const sellers = Array.from(new Set(tickets.map((t: any) => t.seller_name).filter(Boolean)));
+const locations = Array.from(new Set(tickets.map((t: any) => t.sales_point).filter(Boolean)));
+---
+
+<AdminLayout title="Boletos | FARECOH" description="Administración de boletos físicos" active="tickets">
+  <AdminHeader title="Boletos Físicos" section="Boletos" />
+
+  <div class="px-margin py-8 space-y-stack-lg max-w-container-max pb-24 md:pb-8">
+    <div class="rounded-lg border border-outline-variant bg-surface-container-lowest text-on-surface shadow-sm">
+      
+      <!-- Filters grid -->
+      <div class="grid grid-cols-1 gap-4 border-b border-outline-variant bg-surface-container-low p-6 md:grid-cols-4">
+        <label class="block">
+          <span class="text-caption font-caption font-bold uppercase text-on-surface-variant">Código</span>
+          <input id="code-filter" placeholder="PF-000001" class="mt-2 w-full rounded border border-[rgba(69,65,66,0.2)] bg-surface px-3 py-2 font-mono text-body-md outline-none focus:border-primary" />
+        </label>
+        <label class="block">
+          <span class="text-caption font-caption font-bold uppercase text-on-surface-variant">Estado</span>
+          <select id="status-filter" class="mt-2 w-full rounded border border-[rgba(69,65,66,0.2)] bg-surface px-3 py-2 text-body-md outline-none focus:border-primary">
+            <option value="all">Todos</option>
+            <option value="available">Disponible</option>
+            <option value="assigned">Asignado</option>
+            <option value="sold">Vendido</option>
+            <option value="validated">Validado</option>
+            <option value="cancelled">Anulado</option>
+          </select>
+        </label>
+        <label class="block">
+          <span class="text-caption font-caption font-bold uppercase text-on-surface-variant">Vendedor</span>
+          <select id="seller-filter" class="mt-2 w-full rounded border border-[rgba(69,65,66,0.2)] bg-surface px-3 py-2 text-body-md outline-none focus:border-primary">
+            <option value="all">Todos</option>
+            {sellers.map((seller: any) => (
+              <option value={seller}>{seller}</option>
+            ))}
+          </select>
+        </label>
+        <label class="block">
+          <span class="text-caption font-caption font-bold uppercase text-on-surface-variant">Punto de venta</span>
+          <select id="location-filter" class="mt-2 w-full rounded border border-[rgba(69,65,66,0.2)] bg-surface px-3 py-2 text-body-md outline-none focus:border-primary">
+            <option value="all">Todos</option>
+            {locations.map((loc: any) => (
+              <option value={loc}>{loc}</option>
+            ))}
+          </select>
+        </label>
+      </div>
+
+      <!-- Tickets data source (serialized safely) -->
+      <div id="tickets-data" data-tickets={JSON.stringify(tickets)} class="hidden"></div>
+
+      <!-- Table Section -->
+      <div class="overflow-x-auto">
+        <table class="w-full min-w-[980px] text-left" id="tickets-table">
+          <thead class="bg-surface-container-low">
+            <tr>
+              <th class="px-4 py-4 text-label-md font-label-md font-bold uppercase text-on-surface-variant">Código</th>
+              <th class="px-4 py-4 text-label-md font-label-md font-bold uppercase text-on-surface-variant">Estado</th>
+              <th class="px-4 py-4 text-label-md font-label-md font-bold uppercase text-on-surface-variant">Comprador</th>
+              <th class="px-4 py-4 text-label-md font-label-md font-bold uppercase text-on-surface-variant">Teléfono</th>
+              <th class="px-4 py-4 text-label-md font-label-md font-bold uppercase text-on-surface-variant">Vendedor</th>
+              <th class="px-4 py-4 text-label-md font-label-md font-bold uppercase text-on-surface-variant">Punto</th>
+              <th class="px-4 py-4 text-label-md font-label-md font-bold uppercase text-on-surface-variant">Fecha venta</th>
+              <th class="px-4 py-4 text-label-md font-label-md font-bold uppercase text-on-surface-variant">Acción</th>
+            </tr>
+          </thead>
+          <tbody id="tickets-body" class="divide-y divide-outline-variant">
+            <!-- Rendered by client script -->
+          </tbody>
+        </table>
+      </div>
+
+      <div class="flex items-center justify-between border-t border-outline-variant bg-surface-container-low p-6">
+        <span id="results-count" class="text-caption font-caption text-on-surface-variant">Cargando boletos...</span>
+        <a href="/admin/sales" class="rounded bg-primary px-4 py-2 text-label-md font-label-md font-bold text-on-primary hover:bg-secondary">Registrar venta</a>
+      </div>
+    </div>
+  </div>
+</AdminLayout>
+
+<script>
+  import { formatSiteDate } from "@/lib/locale";
+
+  const statusLabel: Record<string, string> = {
+    available: "Disponible",
+    assigned: "Asignado",
+    sold: "Vendido",
+    validated: "Validado",
+    cancelled: "Anulado",
+  };
+
+  const statusClass: Record<string, string> = {
+    available: "bg-slate-100 text-slate-700",
+    assigned: "bg-blue-100 text-blue-700",
+    sold: "bg-green-100 text-green-700",
+    validated: "bg-purple-100 text-purple-700",
+    cancelled: "bg-red-100 text-red-700",
+  };
+
+  // Parse tickets data from server render
+  const dataEl = document.getElementById("tickets-data");
+  const allTickets = dataEl ? JSON.parse(dataEl.getAttribute("data-tickets") || "[]") : [];
+
+  const codeInput = document.getElementById("code-filter") as HTMLInputElement | null;
+  const statusSelect = document.getElementById("status-filter") as HTMLSelectElement | null;
+  const sellerSelect = document.getElementById("seller-filter") as HTMLSelectElement | null;
+  const locationSelect = document.getElementById("location-filter") as HTMLSelectElement | null;
+  const body = document.getElementById("tickets-body");
+  const countLabel = document.getElementById("results-count");
+
+  function render() {
+    const codeFilter = codeInput?.value.trim().toLowerCase() || "";
+    const statusFilter = statusSelect?.value || "all";
+    const sellerFilter = sellerSelect?.value || "all";
+    const locationFilter = locationSelect?.value || "all";
+
+    const filtered = allTickets.filter((ticket: any) => {
+      const matchesCode = !codeFilter || ticket.ticket_code.toLowerCase().includes(codeFilter);
+      const matchesStatus = statusFilter === "all" || ticket.status === statusFilter;
+      const matchesSeller = sellerFilter === "all" || ticket.seller_name === sellerFilter;
+      const matchesLocation = locationFilter === "all" || ticket.sales_point === locationFilter;
+
+      return matchesCode && matchesStatus && matchesSeller && matchesLocation;
+    });
+
+    if (body) {
+      body.innerHTML = filtered.map((ticket: any) => {
+        const canSell = ticket.status === "available" || ticket.status === "assigned";
+        const actionLink = canSell 
+          ? `<a class="text-primary font-bold hover:underline" href="/admin/sales?code=${ticket.ticket_code}">Vender</a>`
+          : `<span class="text-on-surface-variant opacity-40">-</span>`;
+
+        const soldDate = ticket.sold_at 
+          ? formatSiteDate(ticket.sold_at)
+          : "-";
+
+        return `
+          <tr class="hover:bg-surface-container-low">
+            <td class="px-4 py-3 font-mono font-bold text-primary">${ticket.ticket_code}</td>
+            <td class="px-4 py-3">
+              <span class="inline-block rounded-full px-3 py-1 text-caption font-caption font-bold ${statusClass[ticket.status] || 'bg-slate-100'}">
+                ${statusLabel[ticket.status] || ticket.status}
+              </span>
+            </td>
+            <td class="px-4 py-3 font-semibold text-on-surface">${ticket.buyer_name || "-"}</td>
+            <td class="px-4 py-3 text-on-surface-variant">${ticket.buyer_phone || "-"}</td>
+            <td class="px-4 py-3 text-on-surface-variant">${ticket.seller_name || "-"}</td>
+            <td class="px-4 py-3 text-on-surface-variant">${ticket.sales_point || "-"}</td>
+            <td class="px-4 py-3 text-on-surface-variant">${soldDate}</td>
+            <td class="px-4 py-3">${actionLink}</td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    if (countLabel) {
+      countLabel.textContent = `Mostrando ${filtered.length} de ${allTickets.length} boletos`;
+    }
+  }
+
+  // Bind event listeners
+  [codeInput, statusSelect, sellerSelect, locationSelect].forEach(el => {
+    el?.addEventListener("input", render);
+    el?.addEventListener("change", render);
+  });
+
+  // Initial render
+  render();
+</script>

@@ -14,13 +14,13 @@ const authConfigured = isAuthConfigured({ supabaseUrl, supabaseAnonKey });
 
 const navItems = [
   { label: "Panel", href: "/admin", icon: "dashboard", key: "dashboard" },
-  { label: "Usuarios", href: "/admin/usuarios", icon: "admin_panel_settings", key: "usuarios" },
-  { label: "Ventas", href: "/admin/ventas", icon: "payments", key: "ventas" },
-  { label: "Boletos", href: "/admin/boletos", icon: "confirmation_number", key: "boletos" },
-  { label: "Lotes", href: "/admin/lotes", icon: "inventory_2", key: "lotes" },
+  { label: "Usuarios", href: "/admin/users", icon: "admin_panel_settings", key: "users" },
+  { label: "Ventas", href: "/admin/sales", icon: "payments", key: "sales" },
+  { label: "Boletos", href: "/admin/tickets", icon: "confirmation_number", key: "tickets" },
+  { label: "Lotes", href: "/admin/batches", icon: "inventory_2", key: "batches" },
   { label: "Acceso", href: "/admin/checkin", icon: "qr_code_scanner", key: "checkin" },
-  { label: "Vendedores", href: "/admin/vendedores", icon: "group", key: "vendedores" },
-  { label: "Reportes", href: "/admin/reportes", icon: "monitoring", key: "reportes" },
+  { label: "Vendedores", href: "/admin/vendors", icon: "group", key: "vendors" },
+  { label: "Reportes", href: "/admin/reports", icon: "monitoring", key: "reports" },
 ].filter((item) => staffProfile && canAccessRoute(staffProfile.role, item.href));
 
 const linkClass = (key: string) => {
@@ -63,12 +63,11 @@ const linkClass = (key: string) => {
   </button>
 </aside>
 
-<script define:vars={{ supabaseUrl, supabaseAnonKey, authConfigured }}>
-  import { createBrowserClient } from "@supabase/ssr";
+<script>
+  import { supabase } from "@/lib/supabase";
 
-  const supabase = authConfigured ? createBrowserClient(supabaseUrl, supabaseAnonKey) : null;
   document.getElementById("admin-logout")?.addEventListener("click", async () => {
-    if (supabase) await supabase.auth.signOut();
+    await supabase.auth.signOut();
     window.location.href = "/admin/login";
   });
 </script>

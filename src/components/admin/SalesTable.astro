@@ -1,11 +1,11 @@
 ---
 import { supabase } from "@/lib/supabase";
-import { formatSiteDate } from "@/lib/locale";
+import { formatSiteDate, formatSiteCurrency } from "@/lib/locale";
 
-// Fetch orders with customers joined
-const { data: orders } = await supabase
-  .from("orders")
-  .select("*, customer:customers(*)")
+// Fetch sales with tickets joined
+const { data: sales = [] } = await supabase
+  .from("sales")
+  .select("*, ticket:tickets(*)")
   .order("created_at", { ascending: false });
 
 const formatDate = (isoString: string) =>
@@ -13,14 +13,16 @@ const formatDate = (isoString: string) =>
     day: "2-digit",
     month: "short",
     year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit"
   });
 ---
 
 <div class="bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden flex flex-col text-on-surface">
   <div class="p-6 border-b border-outline-variant flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
     <div>
-      <h3 class="text-headline-md font-headline-md text-on-surface">Registro de Ventas</h3>
-      <p class="text-caption font-caption text-on-surface-variant">Vea y filtre todas las reservaciones realizadas</p>
+      <h3 class="text-headline-md font-headline-md text-on-surface">Historial de Ventas</h3>
+      <p class="text-caption font-caption text-on-surface-variant">Vea y filtre las transacciones registradas</p>
     </div>
   </div>
 
@@ -33,25 +35,24 @@ const formatDate = (isoString: string) =>
         <input 
           id="search-input" 
           type="text" 
-          placeholder="Nombre, correo o código..." 
+          placeholder="Comprador, vendedor o código..." 
           class="w-full pl-10 pr-4 py-2 border border-[rgba(69,65,66,0.2)] focus:border-primary focus:ring-0 outline-none bg-surface text-body-md text-on-surface"
         />
         <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
       </div>
     </div>
 
-    <!-- Status Filter -->
+    <!-- Payment Method Filter -->
     <div>
-      <label class="text-caption font-caption text-on-surface-variant uppercase font-bold block mb-2">Estado</label>
+      <label class="text-caption font-caption text-on-surface-variant uppercase font-bold block mb-2">Método de Pago</label>
       <select 
-        id="status-filter" 
+        id="payment-filter" 
         class="w-full px-3 py-2 border border-[rgba(69,65,66,0.2)] focus:border-primary focus:ring-0 outline-none bg-surface text-body-md text-on-surface"
       >
-        <option value="all">Todos los estados</option>
-        <option value="pending">Pendiente</option>
-        <option value="paid">Pagado</option>
-        <option value="validated">Validado</option>
-        <option value="cancelled">Cancelado</option>
+        <option value="all">Todos</option>
+        <option value="cash">Efectivo</option>
+        <option value="transfer">Transferencia</option>
+        <option value="card">Tarjeta</option>
       </select>
     </div>
 
@@ -74,72 +75,51 @@ const formatDate = (isoString: string) =>
     <table class="w-full text-left border-collapse" id="sales-table">
       <thead class="bg-surface-container-low">
         <tr>
-          <th class="px-6 py-4 text-label-md font-label-md text-on-surface-variant uppercase font-semibold">Código Orden</th>
+          <th class="px-6 py-4 text-label-md font-label-md text-on-surface-variant uppercase font-semibold">Boleto</th>
           <th class="px-6 py-4 text-label-md font-label-md text-on-surface-variant uppercase font-semibold">Comprador</th>
-          <th class="px-6 py-4 text-label-md font-label-md text-on-surface-variant uppercase font-semibold">Cant. Boletos</th>
-          <th class="px-6 py-4 text-label-md font-label-md text-on-surface-variant uppercase font-semibold">Monto Total</th>
+          <th class="px-6 py-4 text-label-md font-label-md text-on-surface-variant uppercase font-semibold">Monto</th>
+          <th class="px-6 py-4 text-label-md font-label-md text-on-surface-variant uppercase font-semibold">Método Pago</th>
+          <th class="px-6 py-4 text-label-md font-label-md text-on-surface-variant uppercase font-semibold">Vendedor</th>
           <th class="px-6 py-4 text-label-md font-label-md text-on-surface-variant uppercase font-semibold">Fecha</th>
-          <th class="px-6 py-4 text-label-md font-label-md text-on-surface-variant uppercase font-semibold">Estado</th>
-          <th class="px-6 py-4 text-label-md font-label-md text-on-surface-variant uppercase font-semibold">Acción</th>
         </tr>
       </thead>
       <tbody class="divide-y divide-outline-variant" id="table-body">
-        {orders && orders.map((order: any) => {
-          const cust = order.customer || { name: "Invitado", email: "", phone: "" };
-          
-          let badgeClass = "px-3 py-1 rounded-full text-caption font-caption font-bold inline-block";
-          let statusText = "";
-          if (order.status === "paid") {
-            badgeClass += " bg-green-100 text-green-700";
-            statusText = "Pagado";
-          } else if (order.status === "pending") {
-            badgeClass += " bg-yellow-100 text-yellow-700";
-            statusText = "Pendiente";
-          } else if (order.status === "validated") {
-            badgeClass += " bg-blue-100 text-blue-700";
-            statusText = "Validado";
-          } else {
-            badgeClass += " bg-red-100 text-red-700";
-            statusText = "Cancelado";
-          }
-
-          // Data-attrs for client-side filtering
-          const dateStr = new Date(order.created_at).toISOString().split("T")[0];
+        {sales && sales.map((sale: any) => {
+          const ticket = sale.ticket || { ticket_code: "N/A", buyer_name: "Desconocido", buyer_phone: "", buyer_email: "" };
+          const dateStr = new Date(sale.created_at).toISOString().split("T")[0];
 
           return (
             <tr 
               class="hover:bg-surface-container-low transition-colors group sales-row" 
-              data-name={cust.name.toLowerCase()} 
-              data-email={cust.email.toLowerCase()}
-              data-code={order.id.toLowerCase()} 
-              data-status={order.status}
+              data-buyer={ticket.buyer_name?.toLowerCase() || ""} 
+              data-seller={sale.seller_name.toLowerCase()} 
+              data-code={ticket.ticket_code.toLowerCase()} 
+              data-payment={sale.payment_method.toLowerCase()}
               data-date={dateStr}
             >
-              <td class="px-6 py-4 text-body-md font-body-md font-semibold text-primary">
-                {order.id.substr(0, 8).toUpperCase()}
+              <td class="px-6 py-4 text-body-md font-body-md font-semibold text-primary font-mono">
+                {ticket.ticket_code}
               </td>
               <td class="px-6 py-4">
                 <div class="flex flex-col">
-                  <span class="text-body-md font-body-md text-on-surface font-bold">{cust.name}</span>
-                  <span class="text-caption font-caption text-on-surface-variant">{cust.phone || cust.email}</span>
+                  <span class="text-body-md font-body-md text-on-surface font-bold">{ticket.buyer_name}</span>
+                  <span class="text-caption font-caption text-on-surface-variant">{ticket.buyer_phone || ticket.buyer_email}</span>
                 </div>
               </td>
-              <td class="px-6 py-4 text-body-md font-body-md">
-                {order.ticket_count}
-              </td>
               <td class="px-6 py-4 text-body-md font-body-md font-bold">
-                L. {Number(order.total_amount).toFixed(2)}
+                {formatSiteCurrency(sale.amount)}
+              </td>
+              <td class="px-6 py-4 text-body-md font-body-md capitalize">
+                {sale.payment_method}
+              </td>
+              <td class="px-6 py-4 text-body-md font-body-md">
+                <div class="flex flex-col">
+                  <span class="font-semibold">{sale.seller_name}</span>
+                  <span class="text-caption font-caption text-on-surface-variant">{sale.sales_point}</span>
+                </div>
               </td>
               <td class="px-6 py-4 text-body-md font-body-md text-on-surface-variant">
-                {formatDate(order.created_at)}
-              </td>
-              <td class="px-6 py-4">
-                <span class={badgeClass}>{statusText}</span>
-              </td>
-              <td class="px-6 py-4">
-                <button class="p-2 text-on-surface-variant hover:text-primary transition-colors flex items-center justify-center rounded-full hover:bg-surface-container-high">
-                  <span class="material-symbols-outlined">more_vert</span>
-                </button>
+                {formatDate(sale.created_at)}
               </td>
             </tr>
           );
@@ -151,19 +131,19 @@ const formatDate = (isoString: string) =>
   <!-- Empty State -->
   <div id="empty-state" class="hidden py-10 text-center text-on-surface-variant">
     <span class="material-symbols-outlined text-4xl mb-2">find_in_page</span>
-    <p class="text-body-lg font-body-lg">No se encontraron reservaciones que coincidan con los filtros.</p>
+    <p class="text-body-lg font-body-lg">No se encontraron ventas que coincidan con los filtros.</p>
   </div>
 
   <div class="p-6 bg-surface-container-low border-t border-outline-variant flex items-center justify-between">
     <span class="text-caption font-caption text-on-surface-variant" id="results-count">
-      Mostrando {orders?.length || 0} reservaciones
+      Mostrando {sales?.length || 0} ventas
     </span>
   </div>
 </div>
 
 <script>
   const searchInput = document.getElementById("search-input") as HTMLInputElement | null;
-  const statusFilter = document.getElementById("status-filter") as HTMLSelectElement | null;
+  const paymentFilter = document.getElementById("payment-filter") as HTMLSelectElement | null;
   const dateFilter = document.getElementById("date-filter") as HTMLInputElement | null;
   const tableRows = document.querySelectorAll(".sales-row") as NodeListOf<HTMLTableRowElement>;
   const emptyState = document.getElementById("empty-state");
@@ -171,23 +151,23 @@ const formatDate = (isoString: string) =>
 
   const filterTable = () => {
     const searchVal = searchInput?.value.toLowerCase() || "";
-    const statusVal = statusFilter?.value || "all";
+    const paymentVal = paymentFilter?.value || "all";
     const dateVal = dateFilter?.value || "";
 
     let visibleCount = 0;
 
     tableRows.forEach(row => {
-      const name = row.getAttribute("data-name") || "";
-      const email = row.getAttribute("data-email") || "";
+      const buyer = row.getAttribute("data-buyer") || "";
+      const seller = row.getAttribute("data-seller") || "";
       const code = row.getAttribute("data-code") || "";
-      const status = row.getAttribute("data-status") || "";
+      const payment = row.getAttribute("data-payment") || "";
       const date = row.getAttribute("data-date") || "";
 
-      const matchesSearch = name.includes(searchVal) || email.includes(searchVal) || code.includes(searchVal);
-      const matchesStatus = statusVal === "all" || status === statusVal;
+      const matchesSearch = buyer.includes(searchVal) || seller.includes(searchVal) || code.includes(searchVal);
+      const matchesPayment = paymentVal === "all" || payment === paymentVal;
       const matchesDate = !dateVal || date === dateVal;
 
-      if (matchesSearch && matchesStatus && matchesDate) {
+      if (matchesSearch && matchesPayment && matchesDate) {
         row.classList.remove("hidden");
         visibleCount++;
       } else {
@@ -209,6 +189,6 @@ const formatDate = (isoString: string) =>
   };
 
   searchInput?.addEventListener("input", filterTable);
-  statusFilter?.addEventListener("change", filterTable);
+  paymentFilter?.addEventListener("change", filterTable);
   dateFilter?.addEventListener("change", filterTable);
 </script>

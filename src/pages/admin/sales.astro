@@ -1,0 +1,308 @@
+---
+import AdminLayout from "@/layouts/AdminLayout.astro";
+import AdminHeader from "@/components/admin/AdminHeader.astro";
+import { createSupabaseServerClient } from "@/lib/auth";
+
+const supabase = createSupabaseServerClient(Astro);
+let formMessage = "";
+let formError = false;
+
+// Normalize helper
+function normalizeTicketCode(ticketCode: string): string {
+  return ticketCode.trim().toUpperCase();
+}
+
+if (Astro.request.method === "POST") {
+  try {
+    const data = await Astro.request.formData();
+    const ticketCode = normalizeTicketCode(String(data.get("code") || ""));
+    const buyerName = String(data.get("buyer_name") || "").trim();
+    const buyerPhone = String(data.get("buyer_phone") || "").trim();
+    const buyerEmail = String(data.get("buyer_email") || "").trim().toLowerCase() || null;
+    const sellerId = String(data.get("seller_id") || "");
+    const saleLocation = String(data.get("sale_location") || "").trim();
+    const paymentMethod = String(data.get("payment_method") || "");
+    const paymentReference = String(data.get("payment_reference") || "").trim() || null;
+
+    if (!ticketCode || !buyerName || !buyerPhone || !sellerId || !saleLocation || !paymentMethod) {
+      throw new Error("Complete todos los campos obligatorios.");
+    }
+
+    // 1. Get seller details
+    const { data: seller, error: sellerErr } = await supabase
+      .from("sellers")
+      .select("*")
+      .eq("id", sellerId)
+      .single();
+
+    if (sellerErr || !seller) {
+      throw new Error("El vendedor seleccionado no existe.");
+    }
+
+    // 2. Fetch ticket details and verify status
+    const { data: ticket, error: ticketErr } = await supabase
+      .from("tickets")
+      .select("*")
+      .eq("ticket_code", ticketCode)
+      .single();
+
+    if (ticketErr || !ticket) {
+      throw new Error(`El boleto ${ticketCode} no existe en el inventario.`);
+    }
+
+    if (ticket.status === "cancelled") throw new Error("No se puede vender: boleto anulado.");
+    if (ticket.status === "validated") throw new Error("No se puede vender: boleto ya utilizado/validado.");
+    if (ticket.status === "sold") throw new Error("Este boleto ya está vendido/pagado.");
+    if (ticket.status !== "available" && ticket.status !== "assigned") {
+      throw new Error("Estado de boleto no permitido para venta.");
+    }
+
+    // 3. Update ticket details in database
+    const { error: updateErr } = await supabase
+      .from("tickets")
+      .update({
+        status: "sold",
+        buyer_name: buyerName,
+        buyer_phone: buyerPhone,
+        buyer_email: buyerEmail,
+        seller_name: seller.name,
+        sales_point: saleLocation,
+        payment_method: paymentMethod,
+        payment_reference: paymentReference,
+        sold_at: new Date().toISOString()
+      })
+      .eq("id", ticket.id);
+
+    if (updateErr) throw updateErr;
+
+    // 4. Create financial record
+    const { error: saleErr } = await supabase
+      .from("sales")
+      .insert({
+        ticket_id: ticket.id,
+        amount: 500.00, // Fixed price for physical ticket sales
+        payment_method: paymentMethod,
+        seller_name: seller.name,
+        sales_point: saleLocation
+      });
+
+    if (saleErr) throw saleErr;
+
+    // 5. Create audit trail record
+    const userEmail = Astro.locals.staffProfile?.email || "Admin";
+    const { error: auditErr } = await supabase
+      .from("audit_logs")
+      .insert({
+        action: "ticket.sold",
+        entity: "tickets",
+        entity_id: ticket.id,
+        performed_by: userEmail
+      });
+
+    formMessage = `${ticketCode} marcado como vendido/pagado correctamente.`;
+  } catch (err: any) {
+    formError = true;
+    formMessage = err.message || "Error al registrar la venta.";
+  }
+}
+
+// Fetch active sellers for selector dropdown
+const { data: sellers = [] } = await supabase
+  .from("sellers")
+  .select("*")
+  .eq("active", true)
+  .order("name", { ascending: true });
+
+// Fetch recent sales for history table
+const { data: recentSales = [] } = await supabase
+  .from("tickets")
+  .select("*")
+  .eq("status", "sold")
+  .order("sold_at", { ascending: false })
+  .limit(10);
+---
+
+<AdminLayout title="Ventas Físicas | FARECOH" description="Registro de venta física de boletos" active="sales">
+  <AdminHeader title="Venta Física" section="Ventas" />
+
+  <div class="px-margin py-8 max-w-container-max pb-24 md:pb-8 space-y-stack-lg">
+    <section class="grid gap-gutter lg:grid-cols-3">
+      <form id="sale-form" method="POST" class="rounded-lg border border-outline-variant bg-surface-container-lowest p-6 shadow-sm lg:col-span-1">
+        <h2 class="text-headline-sm font-headline-sm text-on-surface">Marcar boleto vendido/pagado</h2>
+        <p class="mt-1 text-body-md font-body-md text-on-surface-variant">Venta presencial sin pago online.</p>
+
+        <div class="mt-6 space-y-4">
+          <label class="block">
+            <span class="text-caption font-caption font-bold uppercase text-on-surface-variant">Código boleto</span>
+            <input id="code-input" name="code" required placeholder="PF-000001" class="mt-2 w-full rounded border border-outline-variant bg-surface px-3 py-3 font-mono text-body-md outline-none focus:border-primary" />
+          </label>
+          <label class="block">
+            <span class="text-caption font-caption font-bold uppercase text-on-surface-variant">Nombre comprador</span>
+            <input name="buyer_name" required class="mt-2 w-full rounded border border-outline-variant bg-surface px-3 py-3 text-body-md outline-none focus:border-primary" />
+          </label>
+          <label class="block">
+            <span class="text-caption font-caption font-bold uppercase text-on-surface-variant">Teléfono</span>
+            <input name="buyer_phone" required class="mt-2 w-full rounded border border-outline-variant bg-surface px-3 py-3 text-body-md outline-none focus:border-primary" />
+          </label>
+          <label class="block">
+            <span class="text-caption font-caption font-bold uppercase text-on-surface-variant">Correo opcional</span>
+            <input name="buyer_email" type="email" class="mt-2 w-full rounded border border-outline-variant bg-surface px-3 py-3 text-body-md outline-none focus:border-primary" />
+          </label>
+          <label class="block">
+            <span class="text-caption font-caption font-bold uppercase text-on-surface-variant">Vendedor</span>
+            <select id="seller-select" name="seller_id" required class="mt-2 w-full rounded border border-outline-variant bg-surface px-3 py-3 text-body-md outline-none focus:border-primary">
+              <option value="">Seleccione un vendedor</option>
+              {sellers && sellers.map((seller) => (
+                <option value={seller.id}>{seller.name} ({seller.type === "vendor" ? "Vendedor" : "Punto físico"})</option>
+              ))}
+            </select>
+            <p class="mt-2 text-caption text-on-surface-variant">
+              <a href="/admin/vendors" class="font-bold text-primary hover:underline">Registrar vendedor</a>
+            </p>
+          </label>
+          <label class="block">
+            <span class="text-caption font-caption font-bold uppercase text-on-surface-variant">Punto de venta</span>
+            <input name="sale_location" required placeholder="Escuela Nacional de Música" class="mt-2 w-full rounded border border-outline-variant bg-surface px-3 py-3 text-body-md outline-none focus:border-primary" />
+          </label>
+          <label class="block">
+            <span class="text-caption font-caption font-bold uppercase text-on-surface-variant">Método de pago</span>
+            <select name="payment_method" required class="mt-2 w-full rounded border border-outline-variant bg-surface px-3 py-3 text-body-md outline-none focus:border-primary">
+              <option value="">Seleccione</option>
+              <option value="Efectivo">Efectivo</option>
+              <option value="Transferencia">Transferencia</option>
+              <option value="POS">POS</option>
+              <option value="Cortesía">Cortesía</option>
+            </select>
+          </label>
+          <label class="block">
+            <span class="text-caption font-caption font-bold uppercase text-on-surface-variant">Referencia opcional</span>
+            <input name="payment_reference" class="mt-2 w-full rounded border border-outline-variant bg-surface px-3 py-3 text-body-md outline-none focus:border-primary" />
+          </label>
+        </div>
+
+        <button class="mt-6 w-full rounded bg-primary px-4 py-3 text-label-md font-label-md font-bold text-on-primary transition-colors hover:bg-secondary" type="submit">
+          Marcar como vendido/pagado
+        </button>
+
+        {formMessage && (
+          <p id="sale-message" class={`mt-4 rounded p-3 text-body-md font-body-md ${formError ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
+            {formMessage}
+          </p>
+        )}
+      </form>
+
+      <div class="space-y-stack-lg lg:col-span-2">
+        <section class="rounded-lg border border-outline-variant bg-surface-container-lowest p-6 shadow-sm">
+          <h3 class="text-headline-sm font-headline-sm text-on-surface">Estado del boleto</h3>
+          <div id="ticket-preview" class="mt-4 rounded border border-outline-variant bg-surface p-5 text-body-md text-on-surface-variant">Ingrese un código para consultar.</div>
+        </section>
+
+        <section class="rounded-lg border border-outline-variant bg-surface-container-lowest shadow-sm">
+          <div class="border-b border-outline-variant p-6">
+            <h3 class="text-headline-sm font-headline-sm text-on-surface">Últimas ventas físicas</h3>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full min-w-[760px] text-left">
+              <thead class="bg-surface-container-low">
+                <tr>
+                  <th class="px-4 py-3 text-label-md font-label-md font-bold uppercase text-on-surface-variant">Código</th>
+                  <th class="px-4 py-3 text-label-md font-label-md font-bold uppercase text-on-surface-variant">Comprador</th>
+                  <th class="px-4 py-3 text-label-md font-label-md font-bold uppercase text-on-surface-variant">Vendedor</th>
+                  <th class="px-4 py-3 text-label-md font-label-md font-bold uppercase text-on-surface-variant">Punto</th>
+                  <th class="px-4 py-3 text-label-md font-label-md font-bold uppercase text-on-surface-variant">Fecha</th>
+                </tr>
+              </thead>
+              <tbody id="recent-sales" class="divide-y divide-outline-variant">
+                {recentSales && recentSales.length ? recentSales.map((ticket: any) => (
+                  <tr>
+                    <td class="px-4 py-3 font-mono font-bold text-primary">{ticket.ticket_code}</td>
+                    <td class="px-4 py-3">{ticket.buyer_name}</td>
+                    <td class="px-4 py-3">{ticket.seller_name}</td>
+                    <td class="px-4 py-3">{ticket.sales_point}</td>
+                    <td class="px-4 py-3">
+                      {ticket.sold_at ? new Date(ticket.sold_at).toLocaleDateString("es-HN", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : "-"}
+                    </td>
+                  </tr>
+                )) : (
+                  <tr>
+                    <td colspan="5" class="px-4 py-8 text-center text-on-surface-variant">No hay ventas registradas en la base de datos.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </section>
+  </div>
+</AdminLayout>
+
+<script>
+  import { supabase } from "@/lib/supabase";
+
+  const statusLabel: Record<string, string> = {
+    available: "Disponible",
+    assigned: "Asignado",
+    sold: "Vendido",
+    validated: "Validado",
+    cancelled: "Anulado",
+  };
+
+  const preview = document.getElementById("ticket-preview");
+  const input = document.getElementById("code-input") as HTMLInputElement | null;
+
+  // Initialize code from query string
+  const initialCode = new URLSearchParams(window.location.search).get("code");
+  if (initialCode && input) {
+    input.value = initialCode;
+    renderPreview(initialCode);
+  }
+
+  async function renderPreview(code: string) {
+    if (!preview) return;
+    const cleanCode = code.trim().toUpperCase();
+
+    if (!cleanCode) {
+      preview.innerHTML = "Ingrese un código para consultar.";
+      return;
+    }
+
+    if (!/^PF-\d{6}$/.test(cleanCode)) {
+      preview.innerHTML = `<span class="text-red-700 font-bold">Formato inválido. Use PF-000001.</span>`;
+      return;
+    }
+
+    preview.innerHTML = `<div class="flex items-center gap-2"><span class="animate-spin h-5 w-5 border-2 border-primary border-t-transparent rounded-full"></span> Consultando estado...</div>`;
+
+    const { data: ticket, error } = await supabase
+      .from("tickets")
+      .select("*")
+      .eq("ticket_code", cleanCode)
+      .single();
+
+    if (error || !ticket) {
+      preview.innerHTML = `<span class="text-red-700 font-bold">Boleto inexistente.</span>`;
+      return;
+    }
+
+    const soldDate = ticket.sold_at 
+      ? new Date(ticket.sold_at).toLocaleString("es-HN", { dateStyle: "short", timeStyle: "short" }) 
+      : "-";
+
+    preview.innerHTML = `
+      <div class="grid gap-2 sm:grid-cols-2">
+        <p><strong>Código:</strong> ${ticket.ticket_code}</p>
+        <p><strong>Estado:</strong> <span class="font-bold text-primary">${statusLabel[ticket.status] || ticket.status}</span></p>
+        <p><strong>Vendedor:</strong> ${ticket.seller_name || "-"}</p>
+        <p><strong>Punto:</strong> ${ticket.sales_point || "-"}</p>
+        <p><strong>Comprador:</strong> ${ticket.buyer_name || "-"}</p>
+        <p><strong>Vendido:</strong> ${soldDate}</p>
+      </div>
+    `;
+  }
+
+  input?.addEventListener("input", (e) => {
+    const code = (e.target as HTMLInputElement).value;
+    renderPreview(code);
+  });
+</script>
