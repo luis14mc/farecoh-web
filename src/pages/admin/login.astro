@@ -44,7 +44,7 @@ if (emailParam || passwordParam) {
           <p class="mt-4 rounded bg-red-100 p-3 text-body-md text-red-700">{authError}</p>
         )}
 
-        <form id="login-form" method="post" class="mt-6 space-y-4">
+        <form id="login-form" onsubmit="event.preventDefault();" class="mt-6 space-y-4">
           <label class="block">
             <span class="text-caption font-caption font-bold uppercase text-on-surface-variant">Correo</span>
             <input id="email" name="email" type="email" required autocomplete="email" disabled={!authConfigured} class="mt-2 w-full rounded border border-outline-variant bg-surface px-3 py-3 text-body-md outline-none focus:border-primary disabled:cursor-not-allowed disabled:opacity-60" />
@@ -61,7 +61,7 @@ if (emailParam || passwordParam) {
           </div>
         </form>
 
-        <form id="recovery-form" method="post" class="mt-6 space-y-4 hidden">
+        <form id="recovery-form" onsubmit="event.preventDefault();" class="mt-6 space-y-4 hidden">
           <label class="block">
             <span class="text-caption font-caption font-bold uppercase text-on-surface-variant">Correo electrónico</span>
             <input id="recovery-email" name="email" type="email" required autocomplete="email" disabled={!authConfigured} class="mt-2 w-full rounded border border-outline-variant bg-surface px-3 py-3 text-body-md outline-none focus:border-primary disabled:cursor-not-allowed disabled:opacity-60" />
