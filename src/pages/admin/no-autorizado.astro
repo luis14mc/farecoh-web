@@ -16,7 +16,7 @@ const authConfigured = isAuthConfigured({ supabaseUrl, supabaseAnonKey });
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>Acceso no autorizado | FARECOH</title>
   </head>
-  <body class="min-h-screen bg-surface text-on-surface font-body-md text-body-md">
+  <body class="min-h-screen bg-surface text-on-surface font-body-md text-body-md" data-supabase-url={supabaseUrl} data-supabase-anon-key={supabaseAnonKey} data-auth-configured={authConfigured ? "true" : "false"}>
     <main class="flex min-h-screen items-center justify-center px-margin py-12">
       <section class="max-w-md rounded-lg border border-outline-variant bg-surface-container-lowest p-6 text-center shadow-sm">
         <p class="text-label-md font-label-md font-bold uppercase tracking-wider text-red-700">Acceso no autorizado</p>
@@ -29,8 +29,13 @@ const authConfigured = isAuthConfigured({ supabaseUrl, supabaseAnonKey });
       </section>
     </main>
 
-    <script define:vars={{ supabaseUrl, supabaseAnonKey, authConfigured }}>
+    <script>
       import { createBrowserClient } from "@supabase/ssr";
+
+      const body = document.body;
+      const supabaseUrl = body.dataset.supabaseUrl || "";
+      const supabaseAnonKey = body.dataset.supabaseAnonKey || "";
+      const authConfigured = body.dataset.authConfigured === "true";
 
       const supabase = authConfigured ? createBrowserClient(supabaseUrl, supabaseAnonKey) : null;
       document.getElementById("logout-button")?.addEventListener("click", async () => {

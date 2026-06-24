@@ -27,7 +27,7 @@ if (emailParam || passwordParam) {
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>Acceso Administrativo | FARECOH</title>
   </head>
-  <body class="min-h-screen bg-surface text-on-surface font-body-md text-body-md">
+  <body class="min-h-screen bg-surface text-on-surface font-body-md text-body-md" data-supabase-url={supabaseUrl} data-supabase-anon-key={supabaseAnonKey} data-auth-configured={authConfigured ? "true" : "false"}>
     <main class="flex min-h-screen items-center justify-center px-margin py-12">
       <section class="w-full max-w-md rounded-lg border border-outline-variant bg-surface-container-lowest p-6 shadow-sm">
         <p class="text-label-md font-label-md font-bold uppercase tracking-wider text-primary">Panel administrativo</p>
@@ -78,7 +78,9 @@ if (emailParam || passwordParam) {
       </section>
     </main>
 
-    <script define:vars={{ supabaseUrl, supabaseAnonKey, authConfigured }}>
+    <script>
+      import { createBrowserClient } from "@supabase/ssr";
+
       // Guard: immediately redirect to /admin/login without preserving query params if URL contains password or email query params
       if (window.location.search) {
         const params = new URLSearchParams(window.location.search);
@@ -87,7 +89,10 @@ if (emailParam || passwordParam) {
         }
       }
 
-      import { createBrowserClient } from "@supabase/ssr";
+      const body = document.body;
+      const supabaseUrl = body.dataset.supabaseUrl || "";
+      const supabaseAnonKey = body.dataset.supabaseAnonKey || "";
+      const authConfigured = body.dataset.authConfigured === "true";
 
       const loginForm = document.getElementById("login-form");
       const loginButton = document.getElementById("login-button");
@@ -96,12 +101,12 @@ if (emailParam || passwordParam) {
       const toggleRecovery = document.getElementById("toggle-recovery");
       const toggleLogin = document.getElementById("toggle-login");
       const message = document.getElementById("login-message");
-      const emailInput = document.getElementById("email");
-      const passwordInput = document.getElementById("password");
-      const recoveryEmailInput = document.getElementById("recovery-email");
+      const emailInput = document.getElementById("email") as HTMLInputElement | null;
+      const passwordInput = document.getElementById("password") as HTMLInputElement | null;
+      const recoveryEmailInput = document.getElementById("recovery-email") as HTMLInputElement | null;
       const supabase = authConfigured ? createBrowserClient(supabaseUrl, supabaseAnonKey) : null;
 
-      function showMessage(text, type = "error") {
+      function showMessage(text: string, type = "error") {
         if (!message) return;
         message.textContent = text;
         message.className = `mt-4 rounded p-3 text-body-md font-body-md ${type === "error" ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`;
@@ -167,7 +172,8 @@ if (emailParam || passwordParam) {
         password = "";
         passwordInput.value = "";
         showMessage("Sesión iniciada. Redirigiendo...", "success");
-        window.location.href = "/admin";
+        const redirect = new URLSearchParams(window.location.search).get("redirect") || "/admin";
+        window.location.href = redirect;
       });
 
       recoveryForm?.addEventListener("submit", async (event) => {
@@ -194,7 +200,7 @@ if (emailParam || passwordParam) {
         }
 
         showMessage("Correo de recuperación enviado con éxito. Revise su bandeja de entrada.", "success");
-        recoveryForm.reset();
+        (recoveryForm as HTMLFormElement).reset();
         recoveryButton.disabled = false;
         recoveryButton.textContent = "Enviar correo de recuperación";
       });
