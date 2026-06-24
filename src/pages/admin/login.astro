@@ -17,6 +17,7 @@ const authError = Astro.url.searchParams.get("error");
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>Acceso Administrativo | FARECOH</title>
   </head>
   <body class="min-h-screen bg-surface text-on-surface font-body-md text-body-md">
@@ -48,6 +49,22 @@ const authError = Astro.url.searchParams.get("error");
           <button id="login-button" disabled={!authConfigured} class="w-full rounded bg-primary px-4 py-3 text-label-md font-label-md font-bold text-on-primary transition-colors hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-60" type="submit">
             Entrar
           </button>
+          <div class="mt-4 text-center">
+            <button id="toggle-recovery" class="text-caption font-bold text-primary hover:underline cursor-pointer" type="button">Olvidé mi contraseña</button>
+          </div>
+        </form>
+
+        <form id="recovery-form" class="mt-6 space-y-4 hidden">
+          <label class="block">
+            <span class="text-caption font-caption font-bold uppercase text-on-surface-variant">Correo electrónico</span>
+            <input id="recovery-email" name="email" type="email" required autocomplete="email" disabled={!authConfigured} class="mt-2 w-full rounded border border-outline-variant bg-surface px-3 py-3 text-body-md outline-none focus:border-primary disabled:cursor-not-allowed disabled:opacity-60" />
+          </label>
+          <button id="recovery-button" disabled={!authConfigured} class="w-full rounded bg-primary px-4 py-3 text-label-md font-label-md font-bold text-on-primary transition-colors hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-60" type="submit">
+            Enviar correo de recuperación
+          </button>
+          <div class="mt-4 text-center">
+            <button id="toggle-login" class="text-caption font-bold text-primary hover:underline cursor-pointer" type="button">Volver a iniciar sesión</button>
+          </div>
         </form>
 
         <p id="login-message" class="mt-4 hidden rounded p-3 text-body-md font-body-md"></p>
@@ -57,8 +74,12 @@ const authError = Astro.url.searchParams.get("error");
     <script define:vars={{ supabaseUrl, supabaseAnonKey, authConfigured }}>
       import { createBrowserClient } from "@supabase/ssr";
 
-      const form = document.getElementById("login-form");
-      const button = document.getElementById("login-button");
+      const loginForm = document.getElementById("login-form");
+      const loginButton = document.getElementById("login-button");
+      const recoveryForm = document.getElementById("recovery-form");
+      const recoveryButton = document.getElementById("recovery-button");
+      const toggleRecovery = document.getElementById("toggle-recovery");
+      const toggleLogin = document.getElementById("toggle-login");
       const message = document.getElementById("login-message");
       const supabase = authConfigured ? createBrowserClient(supabaseUrl, supabaseAnonKey) : null;
 
@@ -66,28 +87,45 @@ const authError = Astro.url.searchParams.get("error");
         if (!message) return;
         message.textContent = text;
         message.className = `mt-4 rounded p-3 text-body-md font-body-md ${type === "error" ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`;
+        message.classList.remove("hidden");
       }
 
-      form?.addEventListener("submit", async (event) => {
+      function hideMessage() {
+        message?.classList.add("hidden");
+      }
+
+      toggleRecovery?.addEventListener("click", () => {
+        loginForm?.classList.add("hidden");
+        recoveryForm?.classList.remove("hidden");
+        hideMessage();
+      });
+
+      toggleLogin?.addEventListener("click", () => {
+        recoveryForm?.classList.add("hidden");
+        loginForm?.classList.remove("hidden");
+        hideMessage();
+      });
+
+      loginForm?.addEventListener("submit", async (event) => {
         event.preventDefault();
-        if (!button || !form || !supabase) {
+        if (!loginButton || !loginForm || !supabase) {
           showMessage("Autenticación no disponible. Configure Supabase en el entorno de despliegue.");
           return;
         }
 
-        const data = new FormData(form);
+        const data = new FormData(loginForm);
         const email = String(data.get("email") || "").trim();
         const password = String(data.get("password") || "");
         const redirect = new URLSearchParams(window.location.search).get("redirect") || "/admin";
 
-        button.disabled = true;
-        button.textContent = "Validando...";
+        loginButton.disabled = true;
+        loginButton.textContent = "Validando...";
 
         const { data: authData, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error || !authData.user) {
           showMessage("Credenciales inválidas.");
-          button.disabled = false;
-          button.textContent = "Entrar";
+          loginButton.disabled = false;
+          loginButton.textContent = "Entrar";
           return;
         }
 
@@ -101,13 +139,43 @@ const authError = Astro.url.searchParams.get("error");
         if (profileError || !profile) {
           await supabase.auth.signOut();
           showMessage("Usuario autenticado pero sin perfil administrativo activo.");
-          button.disabled = false;
-          button.textContent = "Entrar";
+          loginButton.disabled = false;
+          loginButton.textContent = "Entrar";
           return;
         }
 
         showMessage("Sesión iniciada. Redirigiendo...", "success");
         window.location.href = redirect;
+      });
+
+      recoveryForm?.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        if (!recoveryButton || !recoveryForm || !supabase) {
+          showMessage("Autenticación no disponible.");
+          return;
+        }
+
+        const data = new FormData(recoveryForm);
+        const email = String(data.get("email") || "").trim();
+
+        recoveryButton.disabled = true;
+        recoveryButton.textContent = "Enviando...";
+
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/admin/reset-password`
+        });
+
+        if (error) {
+          showMessage("Error al enviar correo de recuperación: " + error.message);
+          recoveryButton.disabled = false;
+          recoveryButton.textContent = "Enviar correo de recuperación";
+          return;
+        }
+
+        showMessage("Correo de recuperación enviado con éxito. Revise su bandeja de entrada.", "success");
+        recoveryForm.reset();
+        recoveryButton.disabled = false;
+        recoveryButton.textContent = "Enviar correo de recuperación";
       });
     </script>
   </body>
