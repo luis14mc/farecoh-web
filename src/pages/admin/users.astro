@@ -1,7 +1,7 @@
 ---
 import AdminLayout from "@/layouts/AdminLayout.astro";
 import AdminHeader from "@/components/admin/AdminHeader.astro";
-import { createSupabaseServerClient, STAFF_ROLE_LABELS } from "@/lib/auth";
+import { createSupabaseServerClient, ROLE_LABELS, type StaffRole } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabase";
 import { formatSiteDate } from "@/lib/locale";
 
@@ -9,9 +9,14 @@ const supabase = createSupabaseServerClient(Astro);
 let formMessage = "";
 let formError = false;
 
-// Ensure only super_admins can process these actions
 const currentProfile = Astro.locals.staffProfile;
 const isSuperAdmin = currentProfile?.role === "super_admin";
+
+// Helper: get role_id from role name
+async function getRoleId(roleName: string): Promise<string | null> {
+  const { data } = await supabase.from("roles").select("id").eq("name", roleName).single();
+  return data?.id ?? null;
+}
 
 if (Astro.request.method === "POST") {
   try {
@@ -21,23 +26,25 @@ if (Astro.request.method === "POST") {
 
     const data = await Astro.request.formData();
     const action = String(data.get("action") || "");
-    const id = String(data.get("profile_id") || ""); // staff_profile ID
+    const id = String(data.get("profile_id") || "");
 
     if (action === "create") {
       const email = String(data.get("email") || "").trim().toLowerCase();
       const password = String(data.get("password") || "");
       const fullName = String(data.get("full_name") || "").trim();
-      const role = String(data.get("role") || "") as any;
+      const roleName = String(data.get("role") || "");
 
-      if (!email || !password || !fullName || !role) {
+      if (!email || !password || !fullName || !roleName) {
         throw new Error("Complete todos los campos obligatorios.");
       }
 
       if (!supabaseAdmin) {
-        throw new Error("SUPABASE_SERVICE_ROLE_KEY no está configurada. No se pueden crear usuarios de autenticación.");
+        throw new Error("SUPABASE_SERVICE_ROLE_KEY no está configurada.");
       }
 
-      // 1. Create auth user in Supabase Auth
+      const roleId = await getRoleId(roleName);
+      if (!roleId) throw new Error("Rol inválido.");
+
       const { data: authData, error: authErr } = await supabaseAdmin.auth.admin.createUser({
         email,
         password,
@@ -49,19 +56,17 @@ if (Astro.request.method === "POST") {
         throw new Error("Error en Supabase Auth: " + (authErr?.message || "Usuario no creado."));
       }
 
-      // 2. Create staff profile in staff_profiles table
       const { error: profileErr } = await supabase
-        .from("staff_profiles")
+        .from("users")
         .insert({
-          user_id: authData.user.id,
+          auth_user_id: authData.user.id,
           email,
           full_name: fullName,
-          role,
+          role_id: roleId,
           active: true
         });
 
       if (profileErr) {
-        // Rollback auth user creation if profile insert fails
         await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
         throw profileErr;
       }
@@ -69,31 +74,30 @@ if (Astro.request.method === "POST") {
       formMessage = `Usuario ${fullName} creado correctamente.`;
     } else if (action === "update") {
       const fullName = String(data.get("full_name") || "").trim();
-      const role = String(data.get("role") || "") as any;
+      const roleName = String(data.get("role") || "");
 
-      if (!fullName || !role) {
+      if (!fullName || !roleName) {
         throw new Error("Complete todos los campos obligatorios.");
       }
 
+      const roleId = await getRoleId(roleName);
+      if (!roleId) throw new Error("Rol inválido.");
+
       const { error: profileErr } = await supabase
-        .from("staff_profiles")
-        .update({
-          full_name: fullName,
-          role
-        })
+        .from("users")
+        .update({ full_name: fullName, role_id: roleId })
         .eq("id", id);
 
       if (profileErr) throw profileErr;
       formMessage = "Usuario actualizado correctamente.";
     } else if (action === "toggle_active") {
       if (!supabaseAdmin) {
-        throw new Error("SUPABASE_SERVICE_ROLE_KEY no está configurada. No se puede alternar el estado del usuario.");
+        throw new Error("SUPABASE_SERVICE_ROLE_KEY no está configurada.");
       }
 
-      // Find staff profile to get user_id and active state
       const { data: profile, error: fetchErr } = await supabase
-        .from("staff_profiles")
-        .select("user_id, active, full_name")
+        .from("users")
+        .select("auth_user_id, active, full_name")
         .eq("id", id)
         .single();
 
@@ -103,17 +107,15 @@ if (Astro.request.method === "POST") {
 
       const nextActiveState = !profile.active;
 
-      // Update staff profiles table
       const { error: profileErr } = await supabase
-        .from("staff_profiles")
+        .from("users")
         .update({ active: nextActiveState })
         .eq("id", id);
 
       if (profileErr) throw profileErr;
 
-      // Update Supabase Auth user (ban/unban)
-      const { error: authUpdateErr } = await supabaseAdmin.auth.admin.updateUserById(profile.user_id, {
-        ban_duration: nextActiveState ? "none" : "876600h" // 100 years ban to block sign-in
+      const { error: authUpdateErr } = await supabaseAdmin.auth.admin.updateUserById(profile.auth_user_id, {
+        ban_duration: nextActiveState ? "none" : "876600h"
       });
 
       if (authUpdateErr) throw authUpdateErr;
@@ -126,11 +128,14 @@ if (Astro.request.method === "POST") {
   }
 }
 
-// Fetch all staff profiles from DB
+// Fetch all users with role name
 const { data: staffProfiles = [] } = await supabase
-  .from("staff_profiles")
-  .select("*")
+  .from("users")
+  .select("*, roles(name)")
   .order("created_at", { ascending: false });
+
+// Map role names for display
+const roleLabel = (roleName: string) => ROLE_LABELS[roleName as StaffRole] ?? roleName;
 ---
 
 <AdminLayout title="Usuarios | FARECOH" description="Administración de usuarios del panel" active="users">
@@ -226,7 +231,7 @@ const { data: staffProfiles = [] } = await supabase
                 <tr class="user-row">
                   <td class="px-4 py-3 font-semibold text-on-surface">{profile.full_name}</td>
                   <td class="px-4 py-3 text-on-surface-variant">{profile.email}</td>
-                  <td class="px-4 py-3 text-on-surface-variant">{STAFF_ROLE_LABELS[profile.role as keyof typeof STAFF_ROLE_LABELS] ?? profile.role}</td>
+                  <td class="px-4 py-3 text-on-surface-variant">{roleLabel(profile.roles?.name ?? "")}</td>
                   <td class="px-4 py-3">
                     <span class={`inline-block rounded-full px-3 py-1 text-caption font-caption font-bold ${profile.active ? "bg-green-100 text-green-700" : "bg-slate-100 text-slate-700"}`}>
                       {profile.active ? "Activo" : "Inactivo"}
@@ -242,7 +247,7 @@ const { data: staffProfiles = [] } = await supabase
                           data-id={profile.id}
                           data-name={profile.full_name}
                           data-email={profile.email}
-                          data-role={profile.role}
+                          data-role={profile.roles?.name}
                         >
                           Editar
                         </button>
@@ -252,8 +257,8 @@ const { data: staffProfiles = [] } = await supabase
                           <button 
                             type="submit" 
                             class={`rounded border px-3 py-1 text-caption font-caption font-bold ${profile.active ? "border-red-200 text-red-700 hover:bg-red-50" : "border-green-200 text-green-700 hover:bg-green-50"}`}
-                            disabled={profile.id === currentProfile?.id}
-                            title={profile.id === currentProfile?.id ? "No puede desactivarse a sí mismo" : ""}
+                            disabled={profile.auth_user_id === currentProfile?.auth_user_id}
+                            title={profile.auth_user_id === currentProfile?.auth_user_id ? "No puede desactivarse a sí mismo" : ""}
                           >
                             {profile.active ? "Desactivar" : "Reactivar"}
                           </button>

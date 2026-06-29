@@ -145,8 +145,8 @@ import { SITE_LOCALE } from "@/lib/locale";
       
       // Update result card content
       if (resCode) resCode.innerText = data.ticket_code;
-      if (resName) resName.innerText = data.customer?.name || "Invitado";
-      if (resPhone) resPhone.innerText = data.customer?.phone || "Sin teléfono";
+      if (resName) resName.innerText = data.buyer_name || "Invitado";
+      if (resPhone) resPhone.innerText = data.buyer_phone || "Sin teléfono";
       
       let statusStr = "Pendiente";
       if (data.status === "paid") statusStr = "Pagado";
@@ -173,10 +173,10 @@ import { SITE_LOCALE } from "@/lib/locale";
       }
 
       // Check-in details
-      if (data.status === "validated" && data.checked_in_at) {
+      if (data.status === "validated" && data.validated_at) {
         if (checkedInTimeRow) checkedInTimeRow.classList.remove("hidden");
         if (resTime) {
-          const time = new Date(data.checked_in_at).toLocaleTimeString(siteLocale, { hour: "numeric", minute: "2-digit" });
+          const time = new Date(data.validated_at).toLocaleTimeString(siteLocale, { hour: "numeric", minute: "2-digit" });
           resTime.innerText = `Ingresó a las ${time}`;
         }
       } else {
@@ -223,10 +223,15 @@ import { SITE_LOCALE } from "@/lib/locale";
 
     try {
       const now = new Date().toISOString();
-      await supabase.update("tickets", activeTicket.id, {
-        status: "validated",
-        checked_in_at: now
-      });
+      const { error } = await supabase
+        .from("tickets")
+        .update({
+          status: "validated",
+          validated_at: now
+        })
+        .eq("id", activeTicket.id);
+
+      if (error) throw error;
 
       // Show success animation
       validateBtn.innerHTML = `<span class="material-symbols-outlined">check_circle</span> Acceso Concedido`;

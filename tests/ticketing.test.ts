@@ -86,7 +86,7 @@ test("seller report metrics aggregate sales, tickets, and revenue by seller", ()
       { seller_id: "seller-1", seller_name: "María López", status: "validated" },
       { seller_id: "seller-2", seller_name: "Escuela Nacional de Música", status: "paid" },
       { seller_id: null, seller_name: null, status: "available" },
-    ] as Array<{ seller_id: string | null; seller_name: string | null; status: "paid" | "validated" | "available" }>,
+    ],
   });
 
   const maria = reports.find((row) => row.sellerId === "seller-1");

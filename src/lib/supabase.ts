@@ -21,18 +21,54 @@ export const supabaseAdmin = supabaseServiceKey
     })
   : null;
 
-export const SEED_EVENT = {
+export interface EventData {
+  id: string;
+  name: string;
+  description: string;
+  date: string;
+  time: string;
+  venue: string;
+  city: string;
+  ticket_price: number;
+  total_tickets: number;
+  created_at: string;
+}
+
+export const SEED_EVENT: EventData = {
   id: "pink-floyd",
   name: "Tributo a Pink Floyd - Parroquia El Salvador del Mundo",
   description: "Concierto tributo a Pink Floyd por la Fundacion de Artes Institucionales. Recaudacion de fondos para obras de la parroquia.",
-  date: "2026-06-27T19:00:00",
-  location: "Anfiteatro del Salvador, Tegucigalpa",
+  date: "2026-08-29T19:00:00",
+  time: "19:00",
+  venue: "Anfiteatro del Salvador, Tegucigalpa",
+  city: "Tegucigalpa",
   ticket_price: 500.00,
   total_tickets: 500,
   created_at: new Date().toISOString()
 };
 
-export const getEvent = async () => {
-  return SEED_EVENT;
-};
+export const getEvent = async (): Promise<EventData> => {
+  const { data, error } = await supabase
+    .from("events")
+    .select("*")
+    .eq("slug", "pink-floyd")
+    .single();
 
+  if (error || !data) {
+    console.warn("Event not found in DB, using seed data:", error?.message);
+    return SEED_EVENT;
+  }
+
+  return {
+    id: data.id,
+    name: data.title,
+    description: data.description || "",
+    date: data.event_date,
+    time: data.event_time,
+    venue: data.location,
+    city: data.city,
+    ticket_price: data.ticket_price,
+    total_tickets: data.capacity,
+    created_at: data.created_at,
+  };
+};

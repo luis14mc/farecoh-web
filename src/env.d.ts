@@ -1,10 +1,10 @@
 /// <reference types="astro/client" />
 
-import type { StaffProfile } from "@/lib/auth";
+import type { UserProfile } from "@/lib/auth";
 
 declare namespace App {
   interface Locals {
-    staffProfile?: StaffProfile;
+    staffProfile?: UserProfile;
   }
 }
 

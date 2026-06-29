@@ -1,9 +1,18 @@
 ﻿---
-import type { Event } from "@/data/events";
+interface EventData {
+  id: string;
+  name: string;
+  date: string;
+  time: string;
+  venue: string;
+  city: string;
+  ticket_price: number;
+  created_at: string;
+}
 
 interface Props {
   lang?: "es" | "en";
-  event: Event;
+  event: EventData;
   eventHref: string;
 }
 

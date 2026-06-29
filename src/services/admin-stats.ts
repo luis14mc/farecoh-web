@@ -1,8 +1,7 @@
 import type { AdminReportMetrics } from "../types/admin";
-import type { TicketStatus } from "../types/database";
 
 export interface TicketLikeForReports {
-  status: TicketStatus;
+  status: string;
   total_amount?: number;
   validated_at?: string | null;
   checked_in_at?: string | null;

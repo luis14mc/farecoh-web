@@ -6,14 +6,16 @@
         "dev": "astro dev",
         "build": "astro build",
         "preview": "astro preview",
+        "test": "node --experimental-strip-types --test tests/*.test.ts",
         "test:rbac": "node --experimental-strip-types --test tests/rbac.test.ts",
+        "test:ticketing": "node --experimental-strip-types --test tests/ticketing.test.ts",
         "astro": "astro",
         "generate:ticket-assets": "node --experimental-strip-types scripts/generate-ticket-assets.ts",
         "export:canva-tickets": "node --experimental-strip-types scripts/export-canva-tickets.ts",
         "optimize:foundation-photos": "node --experimental-strip-types scripts/optimize-foundation-photos.ts"
     },
     "dependencies": {
-        "@astrojs/vercel": "^9.0.5",
+        "@astrojs/node": "^9.5.5",
         "@lucide/astro": "^1.21.0",
         "@motionone/dom": "^10.18.0",
         "@supabase/ssr": "^0.12.0",

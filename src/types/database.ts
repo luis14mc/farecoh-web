@@ -2,9 +2,11 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 
 export type EventStatus = "draft" | "active" | "sold_out" | "completed" | "cancelled";
 export type OrderStatus = "pending" | "paid" | "cancelled" | "refunded";
-export type TicketStatus = "pending" | "paid" | "validated" | "cancelled";
+export type TicketStatus = "available" | "assigned" | "reserved" | "paid" | "sold" | "validated" | "cancelled" | "pending";
 export type AdminRole = "super_admin" | "event_manager" | "seller" | "checkin_operator";
 export type StaffRole = AdminRole;
+export type SellerType = "vendor" | "physical_point";
+export type BatchStatus = "active" | "closed" | "cancelled";
 
 export interface Database {
   public: {
@@ -77,86 +79,188 @@ export interface Database {
       tickets: {
         Row: {
           id: string;
-          event_id: string;
-          order_id: string;
-          customer_id: string;
+          event_id: string | null;
+          order_id: string | null;
+          customer_id: string | null;
+          batch_id: string | null;
+          event_slug: string;
           ticket_code: string;
           status: TicketStatus;
-          qr_token: string;
-          ticket_url: string | null;
+          qr_token: string | null;
+          qr_url: string | null;
+          buyer_name: string | null;
+          buyer_phone: string | null;
+          buyer_email: string | null;
+          seller_id: string | null;
+          seller_name: string | null;
+          sale_location: string | null;
+          payment_method: string | null;
+          payment_reference: string | null;
+          payment_amount: number | null;
           issued_at: string;
+          sold_at: string | null;
           validated_at: string | null;
+          notes: string | null;
           created_at: string;
           updated_at: string;
         };
         Insert: {
-          event_id: string;
-          order_id: string;
-          customer_id: string;
+          ticket_code: string;
           status?: TicketStatus;
-          ticket_code?: string;
-          qr_token?: string;
-          ticket_url?: string | null;
+          event_id?: string | null;
+          order_id?: string | null;
+          customer_id?: string | null;
+          batch_id?: string | null;
+          event_slug?: string;
+          qr_token?: string | null;
+          qr_url?: string | null;
+          buyer_name?: string | null;
+          buyer_phone?: string | null;
+          buyer_email?: string | null;
+          seller_id?: string | null;
+          seller_name?: string | null;
+          sale_location?: string | null;
+          payment_method?: string | null;
+          payment_reference?: string | null;
+          payment_amount?: number | null;
+          notes?: string | null;
         };
         Update: Partial<Database["public"]["Tables"]["tickets"]["Row"]>;
+      };
+      sellers: {
+        Row: {
+          id: string;
+          name: string;
+          phone: string;
+          email: string;
+          type: SellerType;
+          active: boolean;
+          created_at: string;
+        };
+        Insert: {
+          name: string;
+          phone: string;
+          email: string;
+          type: SellerType;
+          active?: boolean;
+        };
+        Update: Partial<Database["public"]["Tables"]["sellers"]["Row"]>;
+      };
+      ticket_batches: {
+        Row: {
+          id: string;
+          name: string;
+          start_code: string;
+          end_code: string;
+          total_tickets: number;
+          assigned_seller_id: string | null;
+          location: string | null;
+          status: BatchStatus;
+          created_at: string;
+        };
+        Insert: {
+          name: string;
+          start_code: string;
+          end_code: string;
+          total_tickets: number;
+          assigned_seller_id?: string | null;
+          location?: string | null;
+          status?: BatchStatus;
+        };
+        Update: Partial<Database["public"]["Tables"]["ticket_batches"]["Row"]>;
+      };
+      sales: {
+        Row: {
+          id: string;
+          ticket_id: string;
+          amount: number;
+          payment_method: string;
+          seller_name: string;
+          sales_point: string;
+          created_at: string;
+        };
+        Insert: {
+          ticket_id: string;
+          amount: number;
+          payment_method: string;
+          seller_name: string;
+          sales_point: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["sales"]["Row"]>;
+      };
+      roles: {
+        Row: {
+          id: string;
+          name: string;
+          description: string | null;
+          created_at: string;
+        };
+        Insert: {
+          name: string;
+          description?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["roles"]["Row"]>;
+      };
+      users: {
+        Row: {
+          id: string;
+          auth_user_id: string;
+          email: string;
+          full_name: string;
+          role_id: string;
+          active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          auth_user_id: string;
+          email: string;
+          full_name: string;
+          role_id: string;
+          active?: boolean;
+        };
+        Update: Partial<Database["public"]["Tables"]["users"]["Row"]>;
       };
       checkins: {
         Row: {
           id: string;
           ticket_id: string;
-          checked_by: string | null;
-          checked_at: string;
-          device_info: string | null;
+          validated_by: string;
+          validated_at: string;
         };
-        Insert: { ticket_id: string; checked_by?: string | null; device_info?: string | null };
+        Insert: {
+          ticket_id: string;
+          validated_by: string;
+        };
         Update: never;
       };
       audit_logs: {
         Row: {
           id: string;
-          user_id: string | null;
           action: string;
           entity: string;
-          entity_id: string | null;
-          old_value: Json | null;
-          new_value: Json | null;
-          created_at: string;
-        };
-        Insert: Omit<Database["public"]["Tables"]["audit_logs"]["Row"], "id" | "created_at">;
-        Update: never;
-      };
-      admins: {
-        Row: {
-          id: string;
-          email: string;
-          name: string;
-          role: AdminRole;
-          created_at: string;
-        };
-        Insert: { id: string; email: string; name: string; role?: AdminRole };
-        Update: Partial<Database["public"]["Tables"]["admins"]["Row"]>;
-      };
-      staff_profiles: {
-        Row: {
-          id: string;
-          user_id: string;
-          email: string;
-          full_name: string;
-          role: StaffRole;
-          active: boolean;
+          entity_id: string;
+          performed_by: string;
           created_at: string;
         };
         Insert: {
-          user_id: string;
-          email: string;
-          full_name: string;
-          role: StaffRole;
-          active?: boolean;
+          action: string;
+          entity: string;
+          entity_id: string;
+          performed_by: string;
         };
-        Update: Partial<Database["public"]["Tables"]["staff_profiles"]["Row"]>;
+        Update: never;
       };
     };
     Functions: {
+      get_auth_user_role: {
+        Args: Record<string, never>;
+        Returns: string;
+      };
+      is_admin: {
+        Args: Record<string, never>;
+        Returns: boolean;
+      };
       create_ticket_order: {
         Args: {
           p_event_slug: string;
@@ -181,6 +285,32 @@ export interface Database {
           status: TicketStatus | null;
           validated_at: string | null;
         }[];
+      };
+      assign_ticket_range: {
+        Args: { p_start_code: string; p_end_code: string; p_seller_id: string; p_location: string };
+        Returns: number;
+      };
+      sell_physical_ticket: {
+        Args: {
+          p_code: string;
+          p_buyer_name: string;
+          p_buyer_phone: string;
+          p_buyer_email: string;
+          p_seller_id: string;
+          p_sale_location: string;
+          p_payment_method: string;
+          p_payment_reference?: string | null;
+          p_notes?: string | null;
+        };
+        Returns: Database["public"]["Tables"]["tickets"]["Row"];
+      };
+      validate_physical_ticket: {
+        Args: { p_code: string };
+        Returns: Database["public"]["Tables"]["tickets"]["Row"];
+      };
+      get_public_ticket_status: {
+        Args: { p_qr_token: string };
+        Returns: { ticket_code: string; status: string; event_slug: string }[];
       };
     };
   };

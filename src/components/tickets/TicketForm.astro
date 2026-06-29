@@ -121,7 +121,7 @@ const eventSchedule = `${pinkFloydEvent.date} · ${pinkFloydEvent.time}`;
   </div>
 </div>
 
-<script define:vars={{ ticketPrice }}>
+<script>
   import { supabase } from "@/lib/supabase";
 
   const form = document.getElementById("ticket-form") as HTMLFormElement | null;
@@ -143,73 +143,29 @@ const eventSchedule = `${pinkFloydEvent.date} · ${pinkFloydEvent.time}`;
       const phone = formData.get("phone") as string;
       const qty = parseInt(formData.get("ticket_count") as string) || 1;
       
-      // 1. Loading state
       submitBtn.disabled = true;
       const originalText = submitBtn.innerHTML;
       submitBtn.innerHTML = `<span class="material-symbols-outlined animate-spin">sync</span> Procesando...`;
 
       try {
-        // 2. Manage Customer (Check if exists first or insert new)
-        const customerId = "cust-" + Math.random().toString(36).substr(2, 9);
-        const customerData = {
-          id: customerId,
-          name,
-          email,
-          phone,
-          created_at: new Date().toISOString()
-        };
+        const { data, error } = await supabase.rpc("create_ticket_order", {
+          p_event_slug: "pink-floyd",
+          p_full_name: name,
+          p_email: email,
+          p_phone: phone,
+          p_quantity: qty,
+        });
 
-        // Call client insertion helper (it handles local storage or real Supabase client)
-        await supabase.insert("customers", customerData);
+        if (error) throw error;
 
-        // 3. Create Order
-        const orderId = "order-" + Math.random().toString(36).substr(2, 9);
-        const orderData = {
-          id: orderId,
-          customer_id: customerId,
-          event_id: "pink-floyd",
-          ticket_count: qty,
-          total_amount: qty * ticketPrice,
-          status: "pending",
-          created_at: new Date().toISOString()
-        };
-        await supabase.insert("orders", orderData);
+        const order = data?.[0];
+        if (!order) throw new Error("No se pudo crear la orden.");
 
-        // 4. Create Tickets with sequential codes PF-XXXXXX
-        // Query ticket count for code sequencing
-        let startCodeIndex = 20; // Default offset
-        const { data: currentTickets } = await supabase.from("tickets").select("ticket_code");
-        if (currentTickets && Array.isArray(currentTickets)) {
-          startCodeIndex = currentTickets.length + 1;
-        }
-
-        const ticketsToInsert = [];
-        const ticketCodes = [];
-
-        for (let i = 0; i < qty; i++) {
-          const currentIndex = startCodeIndex + i;
-          const paddedCode = "PF-" + String(currentIndex).padStart(6, '0');
-          ticketCodes.push(paddedCode);
-
-          ticketsToInsert.push({
-            id: "ticket-" + Math.random().toString(36).substr(2, 9),
-            order_id: orderId,
-            event_id: "pink-floyd",
-            ticket_code: paddedCode,
-            status: "pending",
-            checked_in_at: null,
-            created_at: new Date().toISOString()
-          });
-        }
-
-        await supabase.insert("tickets", ticketsToInsert);
-
-        // 5. Render Success Screen
         if (summaryName) summaryName.innerText = name;
         if (summaryQty) summaryQty.innerText = `${qty} boleto(s)`;
         if (summaryCodes) {
-          summaryCodes.innerHTML = ticketCodes
-            .map(code => `
+          summaryCodes.innerHTML = order.ticket_codes
+            .map((code: string) => `
               <div class="rounded border border-concert-orange/25 bg-concert-orange/10 p-2 text-center font-mono text-body-md font-bold text-concert-amber">
                 ${code}
               </div>

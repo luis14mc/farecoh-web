@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { generateTicketCode } from "@/lib/ticketing";
+import { formatTicketCode } from "@/services/ticket-code";
 
 export const PRINT_TICKET_COUNT = 500;
 export const QR_TOKEN_NAMESPACE = "farecoh:pink-floyd";
@@ -14,7 +14,7 @@ export function createTicketQrUrl(siteUrl: string, qrToken: string): string {
 
 export function getPrintableTicketTokenMap(siteUrl = "https://farecoh.org") {
   return Array.from({ length: PRINT_TICKET_COUNT }, (_, index) => {
-    const code = generateTicketCode(index + 1);
+    const code = formatTicketCode(index + 1);
     const qrToken = createTicketQrToken(code);
     return {
       code,

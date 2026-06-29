@@ -1,5 +1,5 @@
 ---
-import type { StaffProfile } from "@/lib/auth";
+import type { UserProfile } from "@/lib/auth";
 import { canAccessRoute } from "@/lib/rbac";
 
 interface Props {
@@ -7,7 +7,7 @@ interface Props {
 }
 
 const { active = "dashboard" } = Astro.props;
-const staffProfile = Astro.locals.staffProfile as StaffProfile | undefined;
+const staffProfile = Astro.locals.staffProfile as UserProfile | undefined;
 
 const navItems = [
   { label: "Panel", href: "/admin", icon: "dashboard", key: "dashboard" },

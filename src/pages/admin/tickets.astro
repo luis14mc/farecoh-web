@@ -12,7 +12,7 @@ const { data: tickets = [] } = await supabase
 
 // Extract unique sellers/sales points for the filters
 const sellers = Array.from(new Set(tickets.map((t: any) => t.seller_name).filter(Boolean)));
-const locations = Array.from(new Set(tickets.map((t: any) => t.sales_point).filter(Boolean)));
+const locations = Array.from(new Set(tickets.map((t: any) => t.sale_location).filter(Boolean)));
 ---
 
 <AdminLayout title="Boletos | FARECOH" description="Administración de boletos físicos" active="tickets">
@@ -130,7 +130,7 @@ const locations = Array.from(new Set(tickets.map((t: any) => t.sales_point).filt
       const matchesCode = !codeFilter || ticket.ticket_code.toLowerCase().includes(codeFilter);
       const matchesStatus = statusFilter === "all" || ticket.status === statusFilter;
       const matchesSeller = sellerFilter === "all" || ticket.seller_name === sellerFilter;
-      const matchesLocation = locationFilter === "all" || ticket.sales_point === locationFilter;
+      const matchesLocation = locationFilter === "all" || ticket.sale_location === locationFilter;
 
       return matchesCode && matchesStatus && matchesSeller && matchesLocation;
     });
@@ -157,7 +157,7 @@ const locations = Array.from(new Set(tickets.map((t: any) => t.sales_point).filt
             <td class="px-4 py-3 font-semibold text-on-surface">${ticket.buyer_name || "-"}</td>
             <td class="px-4 py-3 text-on-surface-variant">${ticket.buyer_phone || "-"}</td>
             <td class="px-4 py-3 text-on-surface-variant">${ticket.seller_name || "-"}</td>
-            <td class="px-4 py-3 text-on-surface-variant">${ticket.sales_point || "-"}</td>
+            <td class="px-4 py-3 text-on-surface-variant">${ticket.sale_location || "-"}</td>
             <td class="px-4 py-3 text-on-surface-variant">${soldDate}</td>
             <td class="px-4 py-3">${actionLink}</td>
           </tr>

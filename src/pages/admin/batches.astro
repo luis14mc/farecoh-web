@@ -84,7 +84,9 @@ if (Astro.request.method === "POST") {
         name: batchName,
         start_code: startCode,
         end_code: endCode,
-        assigned_to: `${seller.name} @ ${location}`
+        total_tickets: matchedTickets.length,
+        assigned_seller_id: sellerId,
+        location: location
       })
       .select()
       .single();
@@ -99,7 +101,7 @@ if (Astro.request.method === "POST") {
         status: "assigned",
         batch_id: newBatch.id,
         seller_name: seller.name,
-        sales_point: location
+        sale_location: location
       })
       .in("id", ticketIds);
 
@@ -248,9 +250,9 @@ const stats = {
           <div id="assignments-list" class="mt-4 space-y-3">
             {batches && batches.length ? batches.map((batch: any) => (
               <div class="rounded border border-outline-variant bg-surface p-4">
-                <p class="font-bold text-on-surface">{batch.assigned_to}</p>
+                <p class="font-bold text-on-surface">{batch.name}</p>
                 <p class="text-body-md text-on-surface-variant">
-                  Rango: <span class="font-mono text-primary font-bold">{batch.start_code} - {batch.end_code}</span> &middot; Creado el {new Date(batch.created_at).toLocaleDateString("es-HN", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
+                  Rango: <span class="font-mono text-primary font-bold">{batch.start_code} - {batch.end_code}</span> &middot; {batch.location || "Sin ubicación"} &middot; Creado el {new Date(batch.created_at).toLocaleDateString("es-HN", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
                 </p>
               </div>
             )) : (

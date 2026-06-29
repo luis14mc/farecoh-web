@@ -1,6 +1,6 @@
 ---
 import FarecohLogo from "@/components/layout/FarecohLogo.astro";
-import { getPublicSupabaseConfig, isAuthConfigured, STAFF_ROLE_LABELS, type StaffProfile } from "@/lib/auth";
+import { getPublicSupabaseConfig, isAuthConfigured, ROLE_LABELS, type UserProfile } from "@/lib/auth";
 import { canAccessRoute } from "@/lib/rbac";
 
 interface Props {
@@ -8,7 +8,7 @@ interface Props {
 }
 
 const { active = "dashboard" } = Astro.props;
-const staffProfile = Astro.locals.staffProfile as StaffProfile | undefined;
+const staffProfile = Astro.locals.staffProfile as UserProfile | undefined;
 const { supabaseUrl, supabaseAnonKey } = getPublicSupabaseConfig();
 const authConfigured = isAuthConfigured({ supabaseUrl, supabaseAnonKey });
 
@@ -44,7 +44,7 @@ const linkClass = (key: string) => {
     </div>
     <div class="min-w-0">
       <p class="truncate text-label-md font-label-md text-on-surface font-bold">{staffProfile?.full_name ?? "Administrador"}</p>
-      <p class="truncate text-caption font-caption text-on-surface-variant">{staffProfile ? STAFF_ROLE_LABELS[staffProfile.role] : "staff"}</p>
+      <p class="truncate text-caption font-caption text-on-surface-variant">{staffProfile ? ROLE_LABELS[staffProfile.role] : "staff"}</p>
     </div>
   </div>
   

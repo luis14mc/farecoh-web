@@ -3,11 +3,12 @@ import type { APIContext } from "astro";
 
 export type StaffRole = "super_admin" | "event_manager" | "seller" | "checkin_operator";
 
-export interface StaffProfile {
+export interface UserProfile {
   id: string;
-  user_id: string;
+  auth_user_id: string;
   email: string;
   full_name: string;
+  role_id: string;
   role: StaffRole;
   active: boolean;
   created_at: string;
@@ -39,12 +40,15 @@ export function getSupabaseEnv(config: PublicSupabaseConfig = getPublicSupabaseC
   return { supabaseUrl, supabaseAnonKey };
 }
 
-export const STAFF_ROLE_LABELS: Record<StaffRole, string> = {
+export const ROLE_LABELS: Record<StaffRole, string> = {
   super_admin: "Super administrador",
   event_manager: "Gestor de eventos",
   seller: "Vendedor",
   checkin_operator: "Operador de acceso",
 };
+
+/** @deprecated Use ROLE_LABELS instead */
+export const STAFF_ROLE_LABELS = ROLE_LABELS;
 
 export function createSupabaseBrowserClient(config?: PublicSupabaseConfig) {
   const { supabaseUrl, supabaseAnonKey } = config ?? getPublicSupabaseConfig();

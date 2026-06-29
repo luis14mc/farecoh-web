@@ -9,6 +9,13 @@ import { eventPage } from "@/data/event-page";
 import { seoPages, musicEventJsonLd, breadcrumbJsonLd } from "@/data/seo";
 
 const event = await getEvent();
+
+// Format event date to Spanish locale
+const eventDate = new Date(event.date + "T00:00:00").toLocaleDateString("es-HN", {
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+});
 ---
 
 <Layout
@@ -32,7 +39,7 @@ const event = await getEvent();
     tagline={eventPage.hero.tagline}
     venue={event.venue}
     city={event.city}
-    date="29 de agosto de 2026"
+    date={eventDate}
     time={event.time}
   />
 

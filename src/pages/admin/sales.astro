@@ -7,6 +7,14 @@ const supabase = createSupabaseServerClient(Astro);
 let formMessage = "";
 let formError = false;
 
+// Fetch event ticket price from DB
+const { data: event } = await supabase
+  .from("events")
+  .select("ticket_price")
+  .eq("slug", "pink-floyd")
+  .single();
+const ticketPrice = event?.ticket_price || 500.00;
+
 // Normalize helper
 function normalizeTicketCode(ticketCode: string): string {
   return ticketCode.trim().toUpperCase();
@@ -66,7 +74,7 @@ if (Astro.request.method === "POST") {
         buyer_phone: buyerPhone,
         buyer_email: buyerEmail,
         seller_name: seller.name,
-        sales_point: saleLocation,
+        sale_location: saleLocation,
         payment_method: paymentMethod,
         payment_reference: paymentReference,
         sold_at: new Date().toISOString()
@@ -80,7 +88,7 @@ if (Astro.request.method === "POST") {
       .from("sales")
       .insert({
         ticket_id: ticket.id,
-        amount: 500.00, // Fixed price for physical ticket sales
+        amount: ticketPrice,
         payment_method: paymentMethod,
         seller_name: seller.name,
         sales_point: saleLocation
@@ -218,7 +226,7 @@ const { data: recentSales = [] } = await supabase
                     <td class="px-4 py-3 font-mono font-bold text-primary">{ticket.ticket_code}</td>
                     <td class="px-4 py-3">{ticket.buyer_name}</td>
                     <td class="px-4 py-3">{ticket.seller_name}</td>
-                    <td class="px-4 py-3">{ticket.sales_point}</td>
+                    <td class="px-4 py-3">{ticket.sale_location}</td>
                     <td class="px-4 py-3">
                       {ticket.sold_at ? new Date(ticket.sold_at).toLocaleDateString("es-HN", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : "-"}
                     </td>
@@ -294,7 +302,7 @@ const { data: recentSales = [] } = await supabase
         <p><strong>Código:</strong> ${ticket.ticket_code}</p>
         <p><strong>Estado:</strong> <span class="font-bold text-primary">${statusLabel[ticket.status] || ticket.status}</span></p>
         <p><strong>Vendedor:</strong> ${ticket.seller_name || "-"}</p>
-        <p><strong>Punto:</strong> ${ticket.sales_point || "-"}</p>
+        <p><strong>Punto:</strong> ${ticket.sale_location || "-"}</p>
         <p><strong>Comprador:</strong> ${ticket.buyer_name || "-"}</p>
         <p><strong>Vendido:</strong> ${soldDate}</p>
       </div>

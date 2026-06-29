@@ -1,14 +1,19 @@
-import type { PhysicalTicket } from "../types/ticketing";
 import type { Seller, SellerReportRow } from "../types/sellers";
 import { compareSiteText } from "../lib/locale.ts";
 
+export interface TicketLikeForSellerReport {
+  seller_id: string | null;
+  seller_name: string | null;
+  status: string;
+}
+
 export function calculateSellerReports(params: {
-  tickets: PhysicalTicket[];
+  tickets: TicketLikeForSellerReport[];
   sellers: Seller[];
   ticketPrice: number;
 }): SellerReportRow[] {
   const { tickets, sellers, ticketPrice } = params;
-  const soldStatuses = new Set<PhysicalTicket["status"]>(["paid", "validated"]);
+  const soldStatuses = new Set(["paid", "sold", "validated"]);
 
   const rows = new Map<string, SellerReportRow>();
 

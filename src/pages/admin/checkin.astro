@@ -29,9 +29,12 @@ import AdminHeader from "@/components/admin/AdminHeader.astro";
   const PHYSICAL_STATUS_LABELS: Record<string, string> = {
     available: "Disponible",
     assigned: "Asignado",
+    reserved: "Reservado",
+    paid: "Pagado",
     sold: "Vendido",
     validated: "Validado",
     cancelled: "Anulado",
+    pending: "Pendiente",
   };
 
   let activeTicket: any = null;
@@ -96,7 +99,7 @@ import AdminHeader from "@/components/admin/AdminHeader.astro";
           </div>
           <div>
             <dt class="text-caption font-caption font-bold uppercase text-on-surface-variant">Punto</dt>
-            <dd class="text-on-surface">${ticket.sales_point || "-"}</dd>
+            <dd class="text-on-surface">${ticket.sale_location || "-"}</dd>
           </div>
           <div>
             <dt class="text-caption font-caption font-bold uppercase text-on-surface-variant">Venta</dt>
@@ -110,7 +113,7 @@ import AdminHeader from "@/components/admin/AdminHeader.astro";
       </div>
     `;
 
-    if (ticket.status === "sold") {
+    if (ticket.status === "paid" || ticket.status === "sold") {
       button.classList.remove("hidden");
     } else {
       button.classList.add("hidden");
@@ -151,10 +154,10 @@ import AdminHeader from "@/components/admin/AdminHeader.astro";
     activeTicket = ticket;
     renderTicket(ticket);
 
-    if (ticket.status === "sold") {
+    if (ticket.status === "paid" || ticket.status === "sold") {
       showMessage("Boleto pagado. Puede validar ingreso.", "success");
     } else if (ticket.status === "validated") {
-      showMessage("TICKET ALREADY USED (Boleto ya utilizado).", "error");
+      showMessage("Boleto ya utilizado.", "error");
     } else if (ticket.status === "available" || ticket.status === "assigned") {
       showMessage("Boleto no vendido aún.", "warning");
     } else if (ticket.status === "cancelled") {
@@ -167,70 +170,20 @@ import AdminHeader from "@/components/admin/AdminHeader.astro";
 
     showMessage("Validando boleto...", "info");
 
-    // 1. Get current logged in staff profile ID
-    const { data: authUser } = await supabase.auth.getUser();
-    if (!authUser?.user) {
-      showMessage("Sesión expirada. Por favor inicie sesión de nuevo.", "error");
+    const { data, error } = await supabase.rpc("validate_physical_ticket", {
+      p_code: activeTicket.ticket_code,
+    });
+
+    if (error) {
+      showMessage("Error al validar: " + error.message, "error");
       return;
     }
 
-    const { data: staffProfile, error: profileErr } = await supabase
-      .from("staff_profiles")
-      .select("id, email")
-      .eq("user_id", authUser.user.id)
-      .single();
-
-    if (profileErr || !staffProfile) {
-      showMessage("No se pudo obtener el perfil de operador.", "error");
-      return;
+    if (data) {
+      activeTicket = data;
+      showMessage("Ingreso validado correctamente.", "success");
+      renderTicket(activeTicket);
     }
-
-    const validatedAt = new Date().toISOString();
-
-    // 2. Update ticket status
-    const { error: ticketErr } = await supabase
-      .from("tickets")
-      .update({
-        status: "validated",
-        validated_at: validatedAt,
-      })
-      .eq("id", activeTicket.id);
-
-    if (ticketErr) {
-      showMessage("Error al actualizar estado de boleto: " + ticketErr.message, "error");
-      return;
-    }
-
-    // 3. Create checkin record
-    const { error: checkinErr } = await supabase
-      .from("checkins")
-      .insert({
-        ticket_id: activeTicket.id,
-        validated_by: staffProfile.id,
-        validated_at: validatedAt,
-      });
-
-    if (checkinErr) {
-      showMessage("Error al registrar checkin: " + checkinErr.message, "error");
-      return;
-    }
-
-    // 4. Log audit log
-    await supabase
-      .from("audit_logs")
-      .insert({
-        action: "ticket.validated",
-        entity: "tickets",
-        entity_id: activeTicket.id,
-        performed_by: staffProfile.email,
-      });
-
-    // Refresh active ticket view
-    activeTicket.status = "validated";
-    activeTicket.validated_at = validatedAt;
-    
-    showMessage("Ingreso validado correctamente.", "success");
-    renderTicket(activeTicket);
   }
 
   document.getElementById("search-ticket")?.addEventListener("click", searchTicket);

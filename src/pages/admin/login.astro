@@ -153,9 +153,9 @@ if (emailParam || passwordParam) {
         }
 
         const { data: profile, error: profileError } = await supabase
-          .from("staff_profiles")
-          .select("id, role, active")
-          .eq("user_id", authData.user.id)
+          .from("users")
+          .select("id, role_id, active")
+          .eq("auth_user_id", authData.user.id)
           .eq("active", true)
           .single();
 
