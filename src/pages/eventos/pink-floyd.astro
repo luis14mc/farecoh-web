@@ -11,7 +11,7 @@ import { seoPages, musicEventJsonLd, breadcrumbJsonLd } from "@/data/seo";
 const event = await getEvent();
 
 // Format event date to Spanish locale
-const eventDate = new Date(event.date + "T00:00:00").toLocaleDateString("es-HN", {
+const eventDate = new Date(event.date).toLocaleDateString("es-HN", {
   day: "numeric",
   month: "long",
   year: "numeric",

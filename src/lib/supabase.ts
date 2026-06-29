@@ -38,7 +38,7 @@ export const SEED_EVENT: EventData = {
   id: "pink-floyd",
   name: "Tributo a Pink Floyd - Escuela Nacional de Música",
   description: "Concierto tributo a Pink Floyd por la Fundacion de Artes Institucionales.",
-  date: "2026-08-29T20:00:00",
+  date: "2026-08-08T20:00:00",
   time: "8:00 p. m.",
   venue: "Escuela Nacional de Música, Tegucigalpa",
   city: "Tegucigalpa",
