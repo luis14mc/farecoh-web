@@ -36,11 +36,11 @@ export interface EventData {
 
 export const SEED_EVENT: EventData = {
   id: "pink-floyd",
-  name: "Tributo a Pink Floyd - Parroquia El Salvador del Mundo",
-  description: "Concierto tributo a Pink Floyd por la Fundacion de Artes Institucionales. Recaudacion de fondos para obras de la parroquia.",
-  date: "2026-08-29T19:00:00",
-  time: "19:00",
-  venue: "Anfiteatro del Salvador, Tegucigalpa",
+  name: "Tributo a Pink Floyd - Escuela Nacional de Música",
+  description: "Concierto tributo a Pink Floyd por la Fundacion de Artes Institucionales.",
+  date: "2026-08-29T20:00:00",
+  time: "8:00 p. m.",
+  venue: "Escuela Nacional de Música, Tegucigalpa",
   city: "Tegucigalpa",
   ticket_price: 500.00,
   total_tickets: 500,
