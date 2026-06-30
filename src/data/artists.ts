@@ -10,8 +10,8 @@ export type Artist = {
 
 const ARTISTS_BASE = "/images/artists";
 
-function artistImage(slug: string) {
-  return `${ARTISTS_BASE}/${slug}.webp`;
+function artistImage(slug: string, ext: "webp" | "jpg" = "webp") {
+  return `${ARTISTS_BASE}/${slug}.${ext}`;
 }
 
 function artistAlt(name: string, role: string) {
@@ -35,14 +35,14 @@ export const ensembleMembers: Artist[] = [
     order: 1,
     name: "Gustavo Madrid",
     role: "Guitarra Principal",
-    image: artistImage("gustavo-madrid"),
+    image: artistImage("gustavo-madrid", "jpg"),
     imageAlt: artistAlt("Gustavo Madrid", "Guitarra Principal"),
   },
   {
     order: 2,
     name: "Sergio Molina",
     role: "Guitarra",
-    image: artistImage("sergio-molina"),
+    image: artistImage("sergio-molina", "jpg"),
     imageAlt: artistAlt("Sergio Molina", "Guitarra"),
   },
   {
@@ -56,14 +56,14 @@ export const ensembleMembers: Artist[] = [
     order: 4,
     name: "Miguel Enríquez",
     role: "Bajo",
-    image: artistImage("miguel-enriquez"),
+    image: artistImage("miguel-enriquez", "jpg"),
     imageAlt: artistAlt("Miguel Enríquez", "Bajo"),
   },
   {
     order: 5,
     name: "Mauricio Rodríguez",
     role: "Voz Principal",
-    image: artistImage("mauricio-rodriguez"),
+    image: artistImage("mauricio-rodriguez", "jpg"),
     imageAlt: artistAlt("Mauricio Rodríguez", "Voz Principal"),
   },
   {
@@ -91,7 +91,7 @@ export const ensembleMembers: Artist[] = [
     order: 9,
     name: "Gabriela Zelaya",
     role: "Coros",
-    image: artistImage("gabriela-zelaya"),
+    image: artistImage("gabriela-zelaya", "jpg"),
     imageAlt: artistAlt("Gabriela Zelaya", "Coros"),
   },
   {
