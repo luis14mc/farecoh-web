@@ -67,8 +67,9 @@ pnpm export:canva-tickets
 ```
 
 - [ ] Output file: `exports/canva-tickets-pink-floyd.csv`
-- [ ] Columns: `ticket_code`, `qr_url`, `status`
+- [ ] Columns: `ticket_code`, `qr_url`, `qr_image`, `status`
 - [ ] `qr_url` = `PUBLIC_SITE_URL/t/{qr_token}`
+- [ ] `qr_image` = `PUBLIC_SITE_URL/api/qr/{qr_token}`
 
 ## 10. Public QR page (`/t/{token}`)
 

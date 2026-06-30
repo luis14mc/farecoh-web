@@ -7,7 +7,7 @@ const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3
 export const GET: APIRoute = async ({ params }) => {
   const token = (params.token ?? "").trim().toLowerCase();
   if (!UUID_PATTERN.test(token)) {
-    return new Response("QR token inválido.", { status: 404 });
+    return new Response("QR token inválido.", { status: 400 });
   }
 
   try {

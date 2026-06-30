@@ -1,61 +1,68 @@
-# Canva Bulk Create - Boletos FARECOH Pink Floyd
+# Canva Bulk Create — Pink Floyd tickets
 
-## Objetivo
+FARECOH only exports CSV data for Canva. Ticket design and PDF export happen in Canva.
 
-Usar un CSV con 500 filas para crear boletos variables en Canva. El diseño del boleto se hace en Canva; el sistema solo entrega datos.
+## Generate CSV
 
-Archivo generado:
-
-```text
-exports/canva-tickets-pink-floyd.csv
-```
-
-Columnas:
-
-```csv
-code,qr_url,status,batch_name,assigned_to
-```
-
-## Generar CSV
-
-Ejecutar con el dominio público final:
+From the project root, with Supabase credentials:
 
 ```bash
-PUBLIC_SITE_URL=https://farecoh.org pnpm run export:canva-tickets
+PUBLIC_SITE_URL=https://www.farecoh.org \
+PUBLIC_SUPABASE_URL=... \
+SUPABASE_SERVICE_ROLE_KEY=... \
+pnpm export:canva-tickets
 ```
 
-Esto genera 500 filas:
+Output: `exports/canva-tickets-pink-floyd.csv`
+
+If `PUBLIC_SITE_URL` is omitted, the script defaults to `https://www.farecoh.org`.
+
+Columns:
+
+| Column       | Description                                      |
+|-------------|--------------------------------------------------|
+| ticket_code | e.g. `PF-000001`                                 |
+| qr_url      | Public ticket page: `/t/{qr_token}`              |
+| qr_image    | PNG QR URL: `/api/qr/{qr_token}`                 |
+| status      | Current ticket status in Supabase                |
+
+Example row:
 
 ```csv
-PF-000001,https://farecoh.org/t/{qr_token},available,LOTE GENERAL 001,
-PF-000002,https://farecoh.org/t/{qr_token},available,LOTE GENERAL 001,
+ticket_code,qr_url,qr_image,status
+PF-000001,https://www.farecoh.org/t/uuid,https://www.farecoh.org/api/qr/uuid,available
 ```
 
-## Paso a paso en Canva
+Rows are sorted by `ticket_code` ascending (500 tickets for the Pink Floyd event).
 
-1. Diseñar el boleto en Canva con el estilo final de imprenta.
-2. Abrir Apps > Bulk Create.
-3. Subir `exports/canva-tickets-pink-floyd.csv`.
-4. Insertar el campo `code` en el área del código visible del boleto.
-5. Crear un QR en Canva usando el campo `qr_url` como fuente del enlace.
-6. Generar los 500 boletos desde Bulk Create.
-7. Revisar una muestra de boletos: primero, mitad y último rango.
-8. Exportar PDF para imprenta desde Canva.
+The CSV contains no buyer name, phone, email, or payment data.
 
-## Campos mínimos recomendados del boleto
+## QR image API
 
-- Código visible: `code`
-- QR generado desde: `qr_url`
-- Evento: Tributo a Pink Floyd 2026
-- Fecha: 08 Agosto 2026
-- Hora: 8:00 PM
-- Lugar: Escuela Nacional de Música, Tegucigalpa
-- Nota: El QR consulta estado, no valida ingreso automáticamente.
+After deploy, Canva fetches QR PNGs from:
 
-## Control antes de imprenta
+```text
+https://www.farecoh.org/api/qr/{qr_token}
+```
 
-- Confirmar que el CSV tiene 500 filas de datos.
-- Confirmar que cada `code` es único.
-- Confirmar que cada `qr_url` es único.
-- Escanear al menos 10 QR al azar.
-- Verificar que el código impreso coincide con el QR de la misma fila.
+Each image encodes `https://www.farecoh.org/t/{qr_token}`. Invalid token format returns HTTP 400.
+
+## Canva Bulk Create steps
+
+1. Run `pnpm export:canva-tickets`.
+2. Open your ticket design in Canva.
+3. Go to **Apps → Bulk Create**.
+4. Upload `exports/canva-tickets-pink-floyd.csv`.
+5. Connect **ticket_code** to the visible code text on the ticket.
+6. Connect **qr_image** to the QR / image frame (Canva loads each PNG from the URL).
+7. Generate all rows and spot-check first, middle, and last tickets.
+8. **Export → PDF Print** for the print shop.
+
+## Before printing
+
+- Confirm 500 data rows in the CSV.
+- Confirm each `ticket_code` and `qr_url` pair is unique.
+- Open a few `qr_image` URLs in the browser and scan with a phone.
+- Verify the printed code matches the QR on the same row.
+
+See also `docs/qr-ticket-flow.md` for how QR check-in works on event day.

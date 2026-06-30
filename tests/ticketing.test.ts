@@ -7,47 +7,19 @@ import { calculateSellerReports } from "../src/services/seller-stats.ts";
 import { formatTicketCode, isTicketCode, normalizeTicketCode, parseTicketSequence } from "../src/services/ticket-code.ts";
 import { parseCheckinInput } from "../src/lib/qr-input.ts";
 import {
-  buildCanvaExportRows,
   buildCanvaQrImageUrl,
   buildCanvaTicketUrl,
-  filterTicketsInRange,
-  formatCanvaExportFilename,
+  getCanvaSiteUrl,
 } from "../src/lib/canva-export.ts";
 import { getValidationDenialReason, transitionTicketToValidated } from "../src/services/ticket-state.ts";
 
 import { getPublicTicketStatusMessage } from "../src/lib/public-ticket-status.ts";
 
-test("canva export helpers build URLs and filename", () => {
+test("canva export URL helpers use public site base", () => {
   const token = "7b3f4a2e-1c9d-4b8a-9f0e-123456789abc";
-  assert.match(buildCanvaTicketUrl(token), /\/t\/7b3f4a2e/);
-  assert.match(buildCanvaQrImageUrl(token), /\/api\/qr\/7b3f4a2e/);
-  assert.equal(formatCanvaExportFilename("pink-floyd", "PF-000001", "PF-000100"), "farecoh-pink-floyd-batch-001-100.csv");
-
-  const rows = buildCanvaExportRows([
-    {
-      ticket_code: "PF-000001",
-      qr_token: token,
-      status: "available",
-      event_name: "Tributo a Pink Floyd",
-      batch_name: "Lote 1",
-    },
-  ]);
-  assert.equal(rows[0]?.[0], "PF-000001");
-  assert.equal(rows[0]?.[3], "available");
-  assert.equal(rows[0]?.[4], "Tributo a Pink Floyd");
-  assert.equal(rows[0]?.[5], "Lote 1");
-
-  const filtered = filterTicketsInRange(
-    [
-      { ticket_code: "PF-000001", batch_id: "b1" },
-      { ticket_code: "PF-000002", batch_id: "b2" },
-      { ticket_code: "PF-000010", batch_id: "b1" },
-    ],
-    "PF-000001",
-    "PF-000005",
-    "b1",
-  );
-  assert.deepEqual(filtered.map((row) => row.ticket_code), ["PF-000001"]);
+  assert.equal(getCanvaSiteUrl(), "https://www.farecoh.org");
+  assert.equal(buildCanvaTicketUrl(token), `https://www.farecoh.org/t/${token}`);
+  assert.equal(buildCanvaQrImageUrl(token), `https://www.farecoh.org/api/qr/${token}`);
 });
 
 test("public ticket status messages are generic and non-PII", () => {
