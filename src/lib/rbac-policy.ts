@@ -1,5 +1,31 @@
 export type StaffRole = "super_admin" | "event_manager" | "seller" | "checkin_operator";
 
+export type AdminAccessReason = "unauthenticated" | "no_profile" | "unauthorized";
+
+export interface StaffProfileLike {
+  role: StaffRole;
+}
+
+export function resolveAdminAccess(params: {
+  hasUser: boolean;
+  profile: StaffProfileLike | null;
+  pathname: string;
+}): { ok: true } | { ok: false; reason: AdminAccessReason } {
+  if (!params.hasUser) {
+    return { ok: false, reason: "unauthenticated" };
+  }
+
+  if (!params.profile) {
+    return { ok: false, reason: "no_profile" };
+  }
+
+  if (!canAccessRoute(params.profile.role, params.pathname)) {
+    return { ok: false, reason: "unauthorized" };
+  }
+
+  return { ok: true };
+}
+
 export const routePermissions: Record<string, StaffRole[]> = {
   "/admin": ["super_admin", "event_manager"],
   "/admin/dashboard": ["super_admin", "event_manager"],

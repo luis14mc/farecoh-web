@@ -1,4 +1,4 @@
-import { createBrowserClient, createServerClient, type CookieOptions } from "@supabase/ssr";
+import { createBrowserClient, createServerClient, parseCookieHeader, type CookieOptions } from "@supabase/ssr";
 import type { APIContext } from "astro";
 
 export type StaffRole = "super_admin" | "event_manager" | "seller" | "checkin_operator";
@@ -62,7 +62,7 @@ export function createSupabaseServerClient(context: APIContext) {
   return createServerClient(supabaseUrl, supabaseAnonKey, {
     cookies: {
       getAll() {
-        return context.cookies.getAll().map((cookie) => ({ name: cookie.name, value: cookie.value }));
+        return parseCookieHeader(context.request.headers.get("Cookie") ?? "");
       },
       setAll(cookiesToSet) {
         cookiesToSet.forEach(({ name, value, options }) => {

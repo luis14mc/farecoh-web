@@ -1,17 +1,46 @@
 ---
 import "../../styles/global.css";
-import { getPublicSupabaseConfig, isAuthConfigured } from "@/lib/auth";
+import { createSupabaseServerClient, getPublicSupabaseConfig, isAuthConfigured } from "@/lib/auth";
+import { requireAdminAccess, roleHomePath } from "@/lib/rbac";
 import { SITE_LANG } from "@/lib/locale";
 
 const { supabaseUrl, supabaseAnonKey } = getPublicSupabaseConfig();
 const authConfigured = isAuthConfigured({ supabaseUrl, supabaseAnonKey });
 const authError = Astro.url.searchParams.get("error");
+const redirectParam = Astro.url.searchParams.get("redirect");
+const safeRedirect =
+  redirectParam && redirectParam.startsWith("/admin") && !redirectParam.startsWith("//")
+    ? redirectParam
+    : "/admin";
 
 // Guard: immediately redirect to /admin/login without preserving query params if URL contains password or email query params
 const emailParam = Astro.url.searchParams.get("email");
 const passwordParam = Astro.url.searchParams.get("password");
 if (emailParam || passwordParam) {
   return Astro.redirect("/admin/login");
+}
+
+if (authConfigured && Astro.request.method === "GET") {
+  const supabase = createSupabaseServerClient(Astro);
+  await supabase.auth.getUser();
+
+  const access = await requireAdminAccess(Astro, safeRedirect, supabase).catch(() => ({
+    ok: false as const,
+    profile: null,
+    reason: "unauthenticated" as const,
+  }));
+
+  if (access.ok) {
+    return Astro.redirect(safeRedirect);
+  }
+
+  if (access.reason === "no_profile") {
+    return Astro.redirect("/admin/no-autorizado");
+  }
+
+  if (access.reason === "unauthorized" && access.profile) {
+    return Astro.redirect(roleHomePath[access.profile.role] ?? "/admin/no-autorizado");
+  }
 }
 ---
 
@@ -79,19 +108,27 @@ if (emailParam || passwordParam) {
     </main>
 
     <script>
-      import { createBrowserClient } from "@supabase/ssr";
+      import { createSupabaseBrowserClient } from "@/lib/auth";
+
+      const isDev = import.meta.env.DEV;
 
       // Guard: immediately redirect to /admin/login without preserving query params if URL contains password or email query params
       if (window.location.search) {
         const params = new URLSearchParams(window.location.search);
         if (params.has("email") || params.has("password")) {
-          window.location.href = "/admin/login";
+          window.location.assign("/admin/login");
         }
       }
 
+      function getRedirectTarget(): string {
+        const param = new URLSearchParams(window.location.search).get("redirect");
+        if (param && param.startsWith("/admin") && !param.startsWith("//")) {
+          return param;
+        }
+        return "/admin";
+      }
+
       const body = document.body;
-      const supabaseUrl = body.dataset.supabaseUrl || "";
-      const supabaseAnonKey = body.dataset.supabaseAnonKey || "";
       const authConfigured = body.dataset.authConfigured === "true";
 
       const loginForm = document.getElementById("login-form");
@@ -104,7 +141,7 @@ if (emailParam || passwordParam) {
       const emailInput = document.getElementById("email") as HTMLInputElement | null;
       const passwordInput = document.getElementById("password") as HTMLInputElement | null;
       const recoveryEmailInput = document.getElementById("recovery-email") as HTMLInputElement | null;
-      const supabase = authConfigured ? createBrowserClient(supabaseUrl, supabaseAnonKey) : null;
+      const supabase = authConfigured ? createSupabaseBrowserClient() : null;
 
       function showMessage(text: string, type = "error") {
         if (!message) return;
@@ -142,38 +179,34 @@ if (emailParam || passwordParam) {
         loginButton.disabled = true;
         loginButton.textContent = "Validando...";
 
-        const { data: authData, error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error || !authData.user) {
-          password = "";
-          passwordInput.value = "";
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        password = "";
+        passwordInput.value = "";
+
+        if (error) {
           showMessage("Credenciales inválidas.");
           loginButton.disabled = false;
           loginButton.textContent = "Entrar";
           return;
         }
 
-        const { data: profile, error: profileError } = await supabase
-          .from("users")
-          .select("id, role_id, active")
-          .eq("auth_user_id", authData.user.id)
-          .eq("active", true)
-          .single();
-
-        if (profileError || !profile) {
-          password = "";
-          passwordInput.value = "";
-          await supabase.auth.signOut();
-          showMessage("Usuario autenticado pero sin perfil administrativo activo.");
+        const { data: sessionData } = await supabase.auth.getSession();
+        if (!sessionData.session) {
+          showMessage("No se pudo establecer la sesión. Intente de nuevo.");
           loginButton.disabled = false;
           loginButton.textContent = "Entrar";
           return;
         }
 
-        password = "";
-        passwordInput.value = "";
-        showMessage("Sesión iniciada. Redirigiendo...", "success");
-        const redirect = new URLSearchParams(window.location.search).get("redirect") || "/admin";
-        window.location.href = redirect;
+        const redirectTo = getRedirectTarget();
+
+        if (isDev) {
+          console.debug("[admin login] login success");
+          console.debug("[admin login] session exists", Boolean(sessionData.session));
+          console.debug("[admin login] redirect target", redirectTo);
+        }
+
+        window.location.assign(redirectTo);
       });
 
       recoveryForm?.addEventListener("submit", async (event) => {

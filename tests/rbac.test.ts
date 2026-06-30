@@ -6,6 +6,7 @@ import {
   roleHomePath,
   routePermissions,
 } from "../src/lib/rbac-policy.ts";
+import { resolveAdminAccess } from "../src/lib/rbac-policy.ts";
 import type { StaffRole } from "../src/lib/rbac-policy.ts";
 
 test("normalizeAdminPath keeps /admin and first-level admin routes", () => {
@@ -39,6 +40,38 @@ test("event_manager cannot access users", () => {
   assert.equal(canAccessRoute("event_manager", "/admin/reports"), true);
 });
 
+test("resolveAdminAccess distinguishes unauthenticated, missing profile, and unauthorized", () => {
+  const profile = {
+    id: "u1",
+    auth_user_id: "a1",
+    email: "seller@farecoh.org",
+    full_name: "Seller",
+    role_id: "r1",
+    role: "seller" as const,
+    active: true,
+    created_at: "2026-01-01T00:00:00.000Z",
+  };
+
+  assert.deepEqual(resolveAdminAccess({ hasUser: false, profile: null, pathname: "/admin" }), {
+    ok: false,
+    reason: "unauthenticated",
+  });
+
+  assert.deepEqual(resolveAdminAccess({ hasUser: true, profile: null, pathname: "/admin" }), {
+    ok: false,
+    reason: "no_profile",
+  });
+
+  assert.deepEqual(resolveAdminAccess({ hasUser: true, profile, pathname: "/admin/users" }), {
+    ok: false,
+    reason: "unauthorized",
+  });
+
+  assert.deepEqual(resolveAdminAccess({ hasUser: true, profile, pathname: "/admin/sales" }), {
+    ok: true,
+  });
+});
+
 test("roleHomePath sends each role to its primary workspace", () => {
   const expected: Record<StaffRole, string> = {
     super_admin: "/admin",
@@ -49,4 +82,3 @@ test("roleHomePath sends each role to its primary workspace", () => {
 
   assert.deepEqual(roleHomePath, expected);
 });
-
