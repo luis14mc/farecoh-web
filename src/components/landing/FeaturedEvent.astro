@@ -1,8 +1,10 @@
 ---
-import { pinkFloydEvent } from "@/data/event";
+import { getPinkFloydEvent } from "@/lib/events";
 import { homeFeaturedEvent } from "@/data/home";
 import LandingButton from "@/components/landing/LandingButton.astro";
 import { formatSiteCurrency } from "@/lib/locale";
+
+const pinkFloydEvent = await getPinkFloydEvent();
 ---
 
 <section class="concert-bridge concert-bridge--full reveal-section" aria-labelledby="featured-event-title">
@@ -37,7 +39,7 @@ import { formatSiteCurrency } from "@/lib/locale";
             <span class="material-symbols-outlined" aria-hidden="true">calendar_today</span>
             <div>
               <dt class="text-caption font-caption uppercase tracking-wider text-white/55">Fecha</dt>
-              <dd class="body-md text-white">{pinkFloydEvent.date}</dd>
+              <dd class="body-md text-white">{pinkFloydEvent.dateDisplay}</dd>
             </div>
           </div>
           <div class="concert-detail-chip">

@@ -49,8 +49,8 @@ WHERE r.name = 'super_admin';
 
 - Slug: `pink-floyd`
 - Nombre: Tributo a Pink Floyd 2026
-- Fecha: 08 Agosto 2026
-- Hora: 8:00 PM
+- Fecha: 29 de agosto de 2026
+- Hora: 8:00 p. m.
 - Lugar: Escuela Nacional de Música, Tegucigalpa
 - Donativo: L.500
 

@@ -1,12 +1,11 @@
 ﻿---
 import InputField from "@/components/Forms/InputField.astro";
 import TicketSummary from "@/components/tickets/TicketSummary.astro";
-import { getEvent } from "@/lib/supabase";
-import { pinkFloydEvent } from "@/data/event";
+import { getPinkFloydEvent } from "@/lib/events";
 
-const event = await getEvent();
+const event = await getPinkFloydEvent();
 const ticketPrice = event.ticket_price;
-const eventSchedule = `${pinkFloydEvent.date} · ${pinkFloydEvent.time}`;
+const eventSchedule = `${event.dateDisplay} · ${event.time}`;
 ---
 
 <div class="concert-form-panel">

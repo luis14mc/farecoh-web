@@ -2,14 +2,14 @@
 import AdminLayout from "@/layouts/AdminLayout.astro";
 import AdminHeader from "@/components/admin/AdminHeader.astro";
 import { createSupabaseServerClient } from "@/lib/auth";
-import { getEvent } from "@/lib/supabase";
+import { getPinkFloydEvent } from "@/lib/events";
 import { formatSiteCurrency } from "@/lib/locale";
 import { SELLER_TYPE_LABELS } from "@/types/sellers";
 
 const supabase = createSupabaseServerClient(Astro);
 
 // Fetch event details
-const event = await getEvent();
+const event = await getPinkFloydEvent();
 const ticketPrice = event.ticket_price;
 
 // Fetch tickets from database

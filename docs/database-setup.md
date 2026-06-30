@@ -2,6 +2,17 @@
 
 This guide applies the canonical ticketing schema used by the public reservation form, admin sales, and check-in modules.
 
+## Important: manual migrations
+
+**Vercel deploys do not run Supabase migrations automatically.**
+
+Every SQL file under `supabase/migrations/` must be executed manually in the **Supabase Dashboard → SQL Editor** after deploy (or whenever schema/data changes).
+
+Recommended order:
+
+1. `supabase/migrations/001_ticketing_core.sql`
+2. `supabase/migrations/20260629_fix_pink_floyd_event_date.sql` (if the event row already exists with an older date)
+
 ## Prerequisites
 
 - A Supabase project with Auth enabled
@@ -33,9 +44,25 @@ Expected result:
   - `sell_physical_ticket(...)`
   - `validate_ticket(...)`
   - `get_public_ticket_status(...)`
-- Pink Floyd event seeded (`slug = pink-floyd`, date `2026-08-08`)
+- Pink Floyd event seeded (`slug = pink-floyd`, date `2026-08-29`)
 - Inventory seeded: `PF-000001` … `PF-000500`
 - PostgREST schema cache reload via `NOTIFY pgrst, 'reload schema';`
+
+## 1b. Fix Pink Floyd event date (existing projects)
+
+If `public.events` already contains `pink-floyd` with an older date, run:
+
+```
+supabase/migrations/20260629_fix_pink_floyd_event_date.sql
+```
+
+This upserts:
+
+- `event_date`: `2026-08-29`
+- `event_time`: `8:00 p. m.`
+- `location`: `Escuela Nacional de Música, Tegucigalpa`
+- `ticket_price`: `500`
+- `capacity`: `500`
 
 ## 2. Verify RPCs exist
 

@@ -1,21 +1,6 @@
-﻿export interface EventData {
-  id: string;
-  name: string;
-  date: string;
-  time: string;
-  venue: string;
-  city: string;
-  ticket_price: number;
-  created_at: string;
-}
+﻿import { getPinkFloydEventFallback, type EventData } from "@/lib/events";
 
-export const pinkFloydEvent: EventData = {
-  id: "pink-floyd",
-  name: "Tributo a Pink Floyd",
-  date: "8 de agosto de 2026",
-  time: "8:00 p. m.",
-  venue: "Escuela Nacional de Música, Tegucigalpa",
-  city: "Tegucigalpa",
-  ticket_price: 500,
-  created_at: new Date("2026-01-01").toISOString(),
-};
+export type { EventData };
+
+/** Static display snapshot — values mirror getPinkFloydEventFallback(). */
+export const pinkFloydEvent: EventData = getPinkFloydEventFallback();

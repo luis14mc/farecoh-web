@@ -30,7 +30,7 @@ test("admin report metrics reflect sales, reserved tickets, validations, and cap
     ticketPrice: 500,
     tickets: [
       { status: "sold" },
-      { status: "validated", validated_at: "2026-08-08T20:15:00Z" },
+      { status: "validated", validated_at: "2026-08-29T20:15:00Z" },
       { status: "reserved" },
       { status: "cancelled" },
     ],

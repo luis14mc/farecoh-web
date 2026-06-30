@@ -3,6 +3,7 @@ import { pinkFloydEvent } from "@/data/event";
 import { homeHero } from "@/data/home";
 import { eventPage } from "@/data/event-page";
 import { absoluteUrl, truncateDescription } from "@/lib/seo";
+import { PINK_FLOYD_EVENT_ISO_JSON_LD } from "@/lib/events";
 
 export const seoPages = {
   home: {
@@ -16,7 +17,7 @@ export const seoPages = {
   event: {
     title: `${pinkFloydEvent.name} | Concierto benéfico FARECOH`,
     description: truncateDescription(
-      `${eventPage.hero.body} ${pinkFloydEvent.date}, ${pinkFloydEvent.venue}, ${pinkFloydEvent.city}.`,
+      `${eventPage.hero.body} ${pinkFloydEvent.dateDisplay}, ${pinkFloydEvent.venue}, ${pinkFloydEvent.city}.`,
     ),
     image: "/images/evento/hero.webp",
     path: "/eventos/pink-floyd",
@@ -24,7 +25,7 @@ export const seoPages = {
   tickets: {
     title: `Reservar boletos | ${pinkFloydEvent.name}`,
     description: truncateDescription(
-      `Reserve boletos para ${pinkFloydEvent.name}. ${pinkFloydEvent.date} a las ${pinkFloydEvent.time}, ${pinkFloydEvent.venue}, ${pinkFloydEvent.city}. Aporte solidario L. ${pinkFloydEvent.ticket_price}.`,
+      `Reserve boletos para ${pinkFloydEvent.name}. ${pinkFloydEvent.dateDisplay} a las ${pinkFloydEvent.time}, ${pinkFloydEvent.venue}, ${pinkFloydEvent.city}. Aporte solidario L. ${pinkFloydEvent.ticket_price}.`,
     ),
     image: "/images/evento/106.webp",
     path: "/eventos/pink-floyd/boletos",
@@ -74,7 +75,7 @@ export function musicEventJsonLd() {
     "@type": "MusicEvent",
     name: pinkFloydEvent.name,
     description: eventPage.hero.body,
-    startDate: "2026-08-08T20:00:00-06:00",
+    startDate: PINK_FLOYD_EVENT_ISO_JSON_LD,
     eventStatus: "https://schema.org/EventScheduled",
     eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
     image: [absoluteUrl("/images/evento/hero.webp"), absoluteUrl("/images/evento/106.webp")],

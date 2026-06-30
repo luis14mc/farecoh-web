@@ -4,18 +4,13 @@ import EventHero from "@/components/event/EventHero.astro";
 import EventInfo from "@/components/event/EventInfo.astro";
 import ArtistLineup from "@/components/event/ArtistLineup.astro";
 import EventCTA from "@/components/event/EventCTA.astro";
-import { getEvent } from "../../lib/supabase";
+import { getPinkFloydEvent } from "@/lib/events";
 import { eventPage } from "@/data/event-page";
 import { seoPages, musicEventJsonLd, breadcrumbJsonLd } from "@/data/seo";
 
-const event = await getEvent();
+const event = await getPinkFloydEvent();
 
-// Format event date to Spanish locale
-const eventDate = new Date(event.date).toLocaleDateString("es-HN", {
-  day: "numeric",
-  month: "long",
-  year: "numeric",
-});
+const eventDate = event.dateDisplay;
 ---
 
 <Layout
