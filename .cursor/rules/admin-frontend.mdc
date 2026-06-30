@@ -1,0 +1,14 @@
+---
+description: Astro + Tailwind patterns for admin UI components and pages
+globs: src/pages/admin/**/*,src/components/admin/**/*,src/layouts/AdminLayout.astro
+alwaysApply: false
+---
+
+# Admin frontend (Astro + Tailwind)
+
+Read and follow `.cursor/skills/frontend-astro-tailwind/SKILL.md` when editing admin files.
+
+- Reuse `src/components/admin/ui/*` primitives; do not duplicate input/button styles inline.
+- Admin look: `bg-zinc-50` shell, white cards, `border-outline-variant`, no concert/dark public styles.
+- Inputs `h-11`, tables in `Table.astro`, mobile actions `w-full sm:w-auto`.
+- Do not change Supabase RPCs, auth middleware, or route paths in UI-only tasks.

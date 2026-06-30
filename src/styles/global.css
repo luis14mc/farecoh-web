@@ -111,6 +111,12 @@
   --prism-section-mobile: 48px;
 }
 
+@layer components {
+  .admin-focus-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2;
+  }
+}
+
 *,
 *::before,
 *::after {

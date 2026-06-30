@@ -84,35 +84,36 @@ const formatDate = (isoString: string) =>
           const dateStr = new Date(sale.created_at).toISOString().split("T")[0];
 
           return (
-            <tr class="sales-row hover:bg-surface-container-low/70 transition-colors">
-              data-buyer={ticket.buyer_name?.toLowerCase() || ""} 
-              data-seller={sale.seller_name.toLowerCase()} 
-              data-code={ticket.ticket_code.toLowerCase()} 
+            <tr
+              class="sales-row transition-colors hover:bg-surface-container-low/70"
+              data-buyer={ticket.buyer_name?.toLowerCase() || ""}
+              data-seller={sale.seller_name.toLowerCase()}
+              data-code={ticket.ticket_code.toLowerCase()}
               data-payment={sale.payment_method.toLowerCase()}
               data-date={dateStr}
             >
               <td class="px-4 py-3 font-mono text-sm font-semibold text-primary">
                 {ticket.ticket_code}
               </td>
-              <td class="px-6 py-4">
+              <td class="px-4 py-3">
                 <div class="flex flex-col">
-                  <span class="text-body-md font-body-md text-on-surface font-bold">{ticket.buyer_name}</span>
-                  <span class="text-caption font-caption text-on-surface-variant">{ticket.buyer_phone || ticket.buyer_email}</span>
+                  <span class="text-sm font-semibold text-on-surface">{ticket.buyer_name}</span>
+                  <span class="text-xs text-on-surface-variant">{ticket.buyer_phone || ticket.buyer_email}</span>
                 </div>
               </td>
-              <td class="px-6 py-4 text-body-md font-body-md font-bold">
+              <td class="px-4 py-3 text-sm font-semibold">
                 {formatSiteCurrency(sale.amount)}
               </td>
-              <td class="px-6 py-4 text-body-md font-body-md capitalize">
+              <td class="px-4 py-3 text-sm capitalize">
                 {sale.payment_method}
               </td>
-              <td class="px-6 py-4 text-body-md font-body-md">
+              <td class="px-4 py-3 text-sm">
                 <div class="flex flex-col">
-                  <span class="font-semibold">{sale.seller_name}</span>
-                  <span class="text-caption font-caption text-on-surface-variant">{sale.sales_point}</span>
+                  <span class="font-medium">{sale.seller_name}</span>
+                  <span class="text-xs text-on-surface-variant">{sale.sales_point}</span>
                 </div>
               </td>
-              <td class="px-6 py-4 text-body-md font-body-md text-on-surface-variant">
+              <td class="px-4 py-3 text-sm text-on-surface-variant">
                 {formatDate(sale.created_at)}
               </td>
             </tr>
@@ -124,12 +125,12 @@ const formatDate = (isoString: string) =>
   
   <!-- Empty State -->
   <div id="empty-state" class="hidden py-10 text-center text-on-surface-variant">
-    <span class="material-symbols-outlined text-4xl mb-2">find_in_page</span>
-    <p class="text-body-lg font-body-lg">No se encontraron ventas que coincidan con los filtros.</p>
+    <span class="material-symbols-outlined mb-2 text-4xl">find_in_page</span>
+    <p class="text-sm">No se encontraron ventas que coincidan con los filtros.</p>
   </div>
 
-  <div class="p-6 bg-surface-container-low border-t border-outline-variant flex items-center justify-between">
-    <span class="text-caption font-caption text-on-surface-variant" id="results-count">
+  <div class="flex items-center justify-between border-t border-outline-variant bg-surface-container-low p-4 md:p-6">
+    <span class="text-sm text-on-surface-variant" id="results-count">
       Mostrando {sales?.length || 0} ventas
     </span>
   </div>

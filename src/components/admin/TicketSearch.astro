@@ -1,94 +1,76 @@
 ---
+import Card from "@/components/admin/ui/Card.astro";
+import FormField from "@/components/admin/ui/FormField.astro";
+import Input from "@/components/admin/ui/Input.astro";
+import Button from "@/components/admin/ui/Button.astro";
 import { SITE_LOCALE } from "@/lib/locale";
 ---
 
-<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-6 h-full text-on-surface">
-  <h3 class="text-headline-md font-headline-md text-on-surface mb-6 flex items-center gap-2">
+<Card class="h-full">
+  <h3 class="mb-4 flex items-center gap-2 text-base font-semibold text-on-surface">
     <span class="material-symbols-outlined text-primary">qr_code_scanner</span>
-    <span>Control de acceso</span>
+    Control de acceso rápido
   </h3>
-  
-  <div class="space-y-4">
-    <div>
-      <label class="text-label-md font-label-md text-on-surface-variant block mb-2 font-bold uppercase tracking-wider">
-        Buscar por código de boleto
-      </label>
-      <div class="relative">
-        <input 
-          id="checkin-search" 
-          class="w-full pl-10 pr-24 py-3 rounded border border-[rgba(69,65,66,0.2)] focus:border-primary focus:ring-0 outline-none transition-all bg-surface text-body-md text-on-surface" 
-          placeholder="PF-000000" 
-          type="text"
-          value=""
-        />
-        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
-        <button 
-          id="search-btn" 
-          class="absolute right-2 top-1/2 -translate-y-1/2 bg-primary text-on-primary px-4 py-1.5 text-caption font-caption font-bold rounded hover:bg-secondary transition-all"
-        >
-          BUSCAR
-        </button>
-      </div>
-    </div>
-    
-    <!-- State Messaging -->
-    <div id="checkin-status-msg" class="hidden text-caption font-caption p-3 text-center rounded">
-      <!-- Dynamic msg -->
-    </div>
 
-    <!-- Result Card (Hidden by default, shown when ticket is found) -->
-    <div id="result-card" class="hidden border border-primary-container bg-primary-container/5 rounded-xl p-5 border-dashed transition-all">
-      <div class="flex justify-between items-start mb-4">
+  <div class="space-y-4">
+    <FormField label="Buscar por código" htmlFor="checkin-search">
+      <div class="flex flex-col gap-3 sm:flex-row">
+        <Input id="checkin-search" placeholder="PF-000001" mono class="min-w-0 flex-1" />
+        <Button id="search-btn" type="button" fullWidthMobile class="sm:shrink-0">
+          <span class="material-symbols-outlined text-base">search</span>
+          Buscar
+        </Button>
+      </div>
+    </FormField>
+
+    <div id="checkin-status-msg" class="hidden rounded-lg border px-4 py-3 text-sm" role="alert"></div>
+
+    <div id="result-card" class="hidden rounded-lg border border-dashed border-primary/30 bg-primary/5 p-4">
+      <div class="mb-4 flex items-start justify-between gap-4">
         <div>
-          <p class="text-caption font-caption text-primary uppercase tracking-wider font-bold">Boleto encontrado</p>
-          <h4 class="text-headline-sm font-headline-sm text-on-surface" id="res-code">PF-000001</h4>
+          <p class="text-xs font-medium uppercase tracking-wide text-primary">Boleto encontrado</p>
+          <h4 class="font-mono text-lg font-semibold text-on-surface" id="res-code">PF-000001</h4>
         </div>
-        <span id="res-badge" class="px-3 py-1 rounded-full text-caption font-caption font-bold">
-          Válido
-        </span>
+        <span id="res-badge" class="inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold"></span>
       </div>
-      
-      <div class="space-y-2 mb-6 text-body-md">
-        <div class="flex justify-between border-b border-outline-variant/20 pb-2">
-          <span class="text-on-surface-variant">Comprador:</span>
-          <span class="font-semibold text-right" id="res-name">Carlos Mendoza</span>
+
+      <dl class="mb-4 space-y-2 text-sm">
+        <div class="flex justify-between gap-4 border-b border-outline-variant/30 pb-2">
+          <dt class="text-on-surface-variant">Comprador</dt>
+          <dd class="font-medium text-right" id="res-name">-</dd>
         </div>
-        <div class="flex justify-between border-b border-outline-variant/20 pb-2">
-          <span class="text-on-surface-variant">Teléfono:</span>
-          <span class="font-semibold text-right" id="res-phone">+504 9999-8888</span>
+        <div class="flex justify-between gap-4 border-b border-outline-variant/30 pb-2">
+          <dt class="text-on-surface-variant">Teléfono</dt>
+          <dd class="font-medium text-right" id="res-phone">-</dd>
         </div>
-        <div class="flex justify-between border-b border-outline-variant/20 pb-2">
-          <span class="text-on-surface-variant">Estado:</span>
-          <span class="font-semibold text-right" id="res-status">Vendido</span>
+        <div class="flex justify-between gap-4 border-b border-outline-variant/30 pb-2">
+          <dt class="text-on-surface-variant">Estado</dt>
+          <dd class="font-medium text-right" id="res-status">-</dd>
         </div>
-        <div id="checked-in-time-row" class="hidden flex justify-between">
-          <span class="text-on-surface-variant">Ingreso:</span>
-          <span class="font-semibold text-right text-green-600" id="res-time">Hace un momento</span>
+        <div id="checked-in-time-row" class="hidden flex justify-between gap-4">
+          <dt class="text-on-surface-variant">Ingreso</dt>
+          <dd class="font-medium text-right text-green-700" id="res-time">-</dd>
         </div>
-      </div>
-      
-      <button 
-        id="validate-btn" 
-        class="w-full py-3 bg-secondary text-on-secondary rounded font-bold hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
-      >
-        <span class="material-symbols-outlined">how_to_reg</span>
-        <span>Validar ingreso</span>
-      </button>
+      </dl>
+
+      <Button id="validate-btn" type="button" variant="secondary" fullWidthMobile class="w-full">
+        <span class="material-symbols-outlined text-base">how_to_reg</span>
+        Validar ingreso
+      </Button>
     </div>
   </div>
-</div>
+</Card>
 
 <script define:vars={{ siteLocale: SITE_LOCALE }}>
   import { supabase } from "@/lib/supabase";
-  import { TICKET_STATUS_LABELS } from "@/lib/ticket-status";
+  import { TICKET_STATUS_LABELS, TICKET_STATUS_CLASSES } from "@/lib/ticket-status";
 
-  const searchInput = document.getElementById("checkin-search") as HTMLInputElement | null;
-  const searchBtn = document.getElementById("search-btn") as HTMLButtonElement | null;
+  const searchInput = document.getElementById("checkin-search");
+  const searchBtn = document.getElementById("search-btn");
   const msgBox = document.getElementById("checkin-status-msg");
   const resultCard = document.getElementById("result-card");
   const validateBtn = document.getElementById("validate-btn") as HTMLButtonElement | null;
 
-  // Result card DOM nodes
   const resCode = document.getElementById("res-code");
   const resBadge = document.getElementById("res-badge");
   const resName = document.getElementById("res-name");
@@ -99,23 +81,53 @@ import { SITE_LOCALE } from "@/lib/locale";
 
   let activeTicket: any = null;
 
+  const msgClasses = {
+    error: "border-red-200 bg-red-50 text-red-800",
+    success: "border-green-200 bg-green-50 text-green-800",
+    info: "border-blue-200 bg-blue-50 text-blue-800",
+  };
+
   const showMsg = (text: string, type: "error" | "info" | "success") => {
     if (!msgBox) return;
-    msgBox.innerText = text;
-    msgBox.classList.remove("hidden", "bg-red-100", "text-red-700", "bg-blue-100", "text-blue-700", "bg-green-100", "text-green-700");
-    
-    if (type === "error") {
-      msgBox.classList.add("bg-red-100", "text-red-700");
-    } else if (type === "success") {
-      msgBox.classList.add("bg-green-100", "text-green-700");
-    } else {
-      msgBox.classList.add("bg-blue-100", "text-blue-700");
+    msgBox.textContent = text;
+    msgBox.className = `rounded-lg border px-4 py-3 text-sm ${msgClasses[type]}`;
+    msgBox.classList.remove("hidden");
+  };
+
+  const setValidateBtnState = (mode: "ready" | "disabled" | "loading" | "success", label?: string) => {
+    if (!validateBtn) return;
+    validateBtn.className =
+      "inline-flex h-11 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors sm:w-auto";
+
+    if (mode === "loading") {
+      validateBtn.disabled = true;
+      validateBtn.classList.add("bg-secondary", "text-on-secondary", "opacity-80", "cursor-wait");
+      validateBtn.innerHTML = `<span class="material-symbols-outlined animate-spin text-base">sync</span> Validando...`;
+      return;
     }
+
+    if (mode === "success") {
+      validateBtn.disabled = true;
+      validateBtn.classList.add("bg-green-600", "text-white");
+      validateBtn.innerHTML = `<span class="material-symbols-outlined text-base">check_circle</span> Acceso concedido`;
+      return;
+    }
+
+    if (mode === "disabled") {
+      validateBtn.disabled = true;
+      validateBtn.classList.add("bg-zinc-300", "text-white", "cursor-not-allowed");
+      validateBtn.textContent = label || "No disponible";
+      return;
+    }
+
+    validateBtn.disabled = false;
+    validateBtn.classList.add("bg-secondary", "text-on-secondary", "hover:opacity-90");
+    validateBtn.innerHTML = `<span class="material-symbols-outlined text-base">how_to_reg</span> ${label || "Validar ingreso"}`;
   };
 
   const handleSearch = async () => {
     if (!searchInput || !resultCard) return;
-    const query = searchInput.value.trim().toUpperCase();
+    const query = (searchInput as HTMLInputElement).value.trim().toUpperCase();
 
     if (!query) {
       showMsg("Por favor ingrese un código de boleto.", "error");
@@ -127,104 +139,53 @@ import { SITE_LOCALE } from "@/lib/locale";
     resultCard.classList.add("hidden");
     activeTicket = null;
 
-    try {
-      // Query ticket by code
-      const { data, error } = await supabase
-        .from("tickets")
-        .select("*")
-        .eq("ticket_code", query)
-        .single();
+    const { data, error } = await supabase.from("tickets").select("*").eq("ticket_code", query).single();
 
-      if (error || !data) {
-        showMsg("Boleto no encontrado. Verifique el código.", "error");
-        return;
-      }
-
-      // Found
-      activeTicket = data;
-      showMsg("Boleto encontrado", "success");
-      
-      // Update result card content
-      if (resCode) resCode.innerText = data.ticket_code;
-      if (resName) resName.innerText = data.buyer_name || "Invitado";
-      if (resPhone) resPhone.innerText = data.buyer_phone || "Sin teléfono";
-      
-      let statusStr = TICKET_STATUS_LABELS[data.status as keyof typeof TICKET_STATUS_LABELS] || data.status;
-      if (resStatus) resStatus.innerText = statusStr;
-
-      // Badges
-      if (resBadge) {
-        resBadge.className = "px-3 py-1 rounded-full text-caption font-caption font-bold";
-        if (data.status === "validated") {
-          resBadge.innerText = "Ingresado";
-          resBadge.classList.add("bg-blue-100", "text-blue-700");
-        } else if (data.status === "sold") {
-          resBadge.innerText = "Listo";
-          resBadge.classList.add("bg-green-100", "text-green-700");
-        } else if (data.status === "reserved") {
-          resBadge.innerText = "Reservado";
-          resBadge.classList.add("bg-yellow-100", "text-yellow-700");
-        } else if (data.status === "available" || data.status === "assigned") {
-          resBadge.innerText = "No vendido";
-          resBadge.classList.add("bg-gray-100", "text-gray-700");
-        } else {
-          resBadge.innerText = "Cancelado";
-          resBadge.classList.add("bg-red-100", "text-red-700");
-        }
-      }
-
-      // Check-in details
-      if (data.status === "validated" && data.validated_at) {
-        if (checkedInTimeRow) checkedInTimeRow.classList.remove("hidden");
-        if (resTime) {
-          const time = new Date(data.validated_at).toLocaleTimeString(siteLocale, { hour: "numeric", minute: "2-digit" });
-          resTime.innerText = `Ingresó a las ${time}`;
-        }
-      } else {
-        if (checkedInTimeRow) checkedInTimeRow.classList.add("hidden");
-      }
-
-      // Enable/Disable validation button
-      if (validateBtn) {
-        if (data.status === "validated") {
-          validateBtn.disabled = true;
-          validateBtn.innerText = "Ingreso ya Validado";
-          validateBtn.className = "w-full py-3 bg-gray-400 text-white rounded font-bold cursor-not-allowed flex items-center justify-center gap-2";
-        } else if (data.status === "cancelled") {
-          validateBtn.disabled = true;
-          validateBtn.innerText = "Boleto Cancelado";
-          validateBtn.className = "w-full py-3 bg-red-400 text-white rounded font-bold cursor-not-allowed flex items-center justify-center gap-2";
-        } else if (data.status !== "sold") {
-          validateBtn.disabled = true;
-          validateBtn.innerText = "Boleto no vendido";
-          validateBtn.className = "w-full py-3 bg-gray-400 text-white rounded font-bold cursor-not-allowed flex items-center justify-center gap-2";
-        } else {
-          validateBtn.disabled = false;
-          validateBtn.innerHTML = `<span class="material-symbols-outlined">how_to_reg</span> Validar ingreso`;
-          validateBtn.className = "w-full py-3 bg-secondary text-on-secondary rounded font-bold hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer";
-        }
-      }
-
-      resultCard.classList.remove("hidden");
-    } catch (err) {
-      console.error(err);
-      showMsg("Error al conectar con la base de datos.", "error");
+    if (error || !data) {
+      showMsg("Boleto no encontrado. Verifique el código.", "error");
+      return;
     }
+
+    activeTicket = data;
+    showMsg("Boleto encontrado.", "success");
+
+    if (resCode) resCode.textContent = data.ticket_code;
+    if (resName) resName.textContent = data.buyer_name || "Invitado";
+    if (resPhone) resPhone.textContent = data.buyer_phone || "Sin teléfono";
+    if (resStatus) resStatus.textContent = TICKET_STATUS_LABELS[data.status as keyof typeof TICKET_STATUS_LABELS] || data.status;
+
+    if (resBadge) {
+      const badgeClass = TICKET_STATUS_CLASSES[data.status as keyof typeof TICKET_STATUS_CLASSES] || TICKET_STATUS_CLASSES.available;
+      resBadge.className = `inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${badgeClass}`;
+      resBadge.textContent = TICKET_STATUS_LABELS[data.status as keyof typeof TICKET_STATUS_LABELS] || data.status;
+    }
+
+    if (data.status === "validated" && data.validated_at) {
+      checkedInTimeRow?.classList.remove("hidden");
+      if (resTime) {
+        const time = new Date(data.validated_at).toLocaleTimeString(siteLocale, { hour: "numeric", minute: "2-digit" });
+        resTime.textContent = `Ingresó a las ${time}`;
+      }
+    } else {
+      checkedInTimeRow?.classList.add("hidden");
+    }
+
+    if (data.status === "validated") setValidateBtnState("disabled", "Ingreso ya validado");
+    else if (data.status === "cancelled") setValidateBtnState("disabled", "Boleto anulado");
+    else if (data.status !== "sold") setValidateBtnState("disabled", "Boleto no vendido");
+    else setValidateBtnState("ready");
+
+    resultCard.classList.remove("hidden");
   };
 
   searchBtn?.addEventListener("click", handleSearch);
   searchInput?.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
-      handleSearch();
-    }
+    if (e.key === "Enter") handleSearch();
   });
 
   validateBtn?.addEventListener("click", async () => {
     if (!activeTicket || !validateBtn) return;
-    
-    // Disable button & show spinner
-    validateBtn.disabled = true;
-    validateBtn.innerHTML = `<span class="material-symbols-outlined animate-spin">sync</span> Validando...`;
+    setValidateBtnState("loading");
 
     try {
       const { data, error } = await supabase.rpc("validate_ticket", {
@@ -233,35 +194,25 @@ import { SITE_LOCALE } from "@/lib/locale";
       });
 
       if (error) throw error;
-
       const result = data?.[0];
-      if (!result?.ok) {
-        throw new Error(result?.message || "No se pudo validar el boleto.");
-      }
+      if (!result?.ok) throw new Error(result?.message || "No se pudo validar el boleto.");
 
       const now = result.validated_at || new Date().toISOString();
+      setValidateBtnState("success");
 
-      // Show success animation
-      validateBtn.innerHTML = `<span class="material-symbols-outlined">check_circle</span> Acceso Concedido`;
-      validateBtn.className = "w-full py-3 bg-green-600 text-white rounded font-bold flex items-center justify-center gap-2";
-
-      // Refresh data details in card
       if (resBadge) {
-        resBadge.innerText = "Ingresado";
-        resBadge.className = "px-3 py-1 rounded-full text-caption font-caption font-bold bg-blue-100 text-blue-700";
+        resBadge.className = `inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${TICKET_STATUS_CLASSES.validated}`;
+        resBadge.textContent = TICKET_STATUS_LABELS.validated;
       }
-      if (checkedInTimeRow) checkedInTimeRow.classList.remove("hidden");
+      checkedInTimeRow?.classList.remove("hidden");
       if (resTime) {
         const time = new Date(now).toLocaleTimeString(siteLocale, { hour: "numeric", minute: "2-digit" });
-        resTime.innerText = `Ingresó a las ${time}`;
+        resTime.textContent = `Ingresó a las ${time}`;
       }
 
       showMsg("Entrada validada correctamente.", "success");
-    } catch (err) {
-      console.error("Error al validar ingreso:", err);
-      validateBtn.disabled = false;
-      validateBtn.innerHTML = `<span class="material-symbols-outlined">how_to_reg</span> Validar ingreso`;
-      validateBtn.className = "w-full py-3 bg-secondary text-on-secondary rounded font-bold hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer";
+    } catch {
+      setValidateBtnState("ready");
       showMsg("Error al validar el ingreso. Intente de nuevo.", "error");
     }
   });
