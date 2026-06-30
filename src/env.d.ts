@@ -18,3 +18,8 @@ interface ImportMetaEnv {
 interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
+
+declare module "*?arrayBuffer" {
+  const value: ArrayBuffer;
+  export default value;
+}

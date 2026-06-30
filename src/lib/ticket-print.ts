@@ -15,7 +15,6 @@ import {
   QR_SIZE,
   QR_X,
   QR_Y,
-  TICKET_TEMPLATE_FILENAME,
   TICKET_TEMPLATE_PUBLIC_PATH,
   TICKET_TEMPLATE_RELATIVE_PATH,
 } from "@/lib/ticket-print-config";
@@ -40,11 +39,45 @@ export {
 export const TICKET_TEMPLATE_PATH = path.join(process.cwd(), TICKET_TEMPLATE_RELATIVE_PATH);
 
 export function resolveTicketTemplateUrl(): string {
-  const vercelUrl = typeof process !== "undefined" ? process.env.VERCEL_URL?.replace(/\/$/, "") : undefined;
-  if (vercelUrl) {
-    return `https://${vercelUrl}${TICKET_TEMPLATE_PUBLIC_PATH}`;
-  }
   return `${getCanvaSiteUrl()}${TICKET_TEMPLATE_PUBLIC_PATH}`;
+}
+
+async function loadBundledTemplateBytes(): Promise<Buffer | null> {
+  try {
+    const { loadBundledTicketTemplateBytes } = await import("@/lib/ticket-template-bundle");
+    return loadBundledTicketTemplateBytes();
+  } catch {
+    return null;
+  }
+}
+
+async function fetchTemplateBytes(templateUrl: string): Promise<Buffer> {
+  const response = await fetch(templateUrl, {
+    cache: "no-store",
+    redirect: "follow",
+    headers: { accept: "image/png,image/*" },
+  });
+
+  if (!response.ok) {
+    throw new Error(
+      `Plantilla no encontrada. Verifique ${TICKET_TEMPLATE_PUBLIC_PATH} (${response.status} desde ${templateUrl}).`,
+    );
+  }
+
+  const contentType = response.headers.get("content-type") ?? "";
+  if (contentType.includes("text/html")) {
+    throw new Error(
+      `La URL de plantilla devolvió HTML en lugar de PNG (${templateUrl}).`,
+    );
+  }
+
+  const buffer = Buffer.from(await response.arrayBuffer());
+  const { isPngBuffer } = await import("@/lib/ticket-template-bundle");
+  if (!isPngBuffer(buffer)) {
+    throw new Error(`La respuesta de ${templateUrl} no es un PNG válido.`);
+  }
+
+  return buffer;
 }
 
 async function readTemplateFromFilesystem(): Promise<Buffer | null> {
@@ -68,33 +101,23 @@ async function readTemplateFromFilesystem(): Promise<Buffer | null> {
 export async function loadTicketTemplateBytes(): Promise<Buffer> {
   const fromDisk = await readTemplateFromFilesystem();
   if (fromDisk) {
+    const { isPngBuffer } = await import("@/lib/ticket-template-bundle");
+    if (!isPngBuffer(fromDisk)) {
+      throw new Error("El archivo de plantilla en disco no es un PNG válido.");
+    }
     return fromDisk;
   }
 
-  const templateUrl = resolveTicketTemplateUrl();
-  const response = await fetch(templateUrl, { cache: "no-store" });
-  if (!response.ok) {
-    throw new Error(
-      `Plantilla no encontrada. Verifique ${TICKET_TEMPLATE_PUBLIC_PATH} (${response.status} desde ${templateUrl}).`,
-    );
+  const fromBundle = await loadBundledTemplateBytes();
+  if (fromBundle) {
+    return fromBundle;
   }
 
-  return Buffer.from(await response.arrayBuffer());
+  return fetchTemplateBytes(resolveTicketTemplateUrl());
 }
 
 export async function ensureTicketTemplateExists(): Promise<void> {
-  const fromDisk = await readTemplateFromFilesystem();
-  if (fromDisk) {
-    return;
-  }
-
-  const templateUrl = resolveTicketTemplateUrl();
-  const response = await fetch(templateUrl, { method: "HEAD", cache: "no-store" });
-  if (!response.ok) {
-    throw new Error(
-      `Plantilla no encontrada. Coloque el PNG de Canva en public/templates/${TICKET_TEMPLATE_FILENAME}.`,
-    );
-  }
+  await loadTicketTemplateBytes();
 }
 
 export interface TicketPrintRow {

@@ -90,7 +90,7 @@ Coordinates use the template image’s pixel space (same as the PNG dimensions).
 | File on disk (repo) | `public/templates/ticket-pink-floyd.png` |
 | Public URL (browser / Vercel) | `/templates/ticket-pink-floyd.png` |
 
-The print API reads from disk locally and falls back to the public URL in Vercel serverless (where `public/` is not on the filesystem).
+The print API reads from disk locally and uses a bundled PNG in Vercel serverless (avoid self-fetch returning HTML). Public URL for manual checks: `/templates/ticket-pink-floyd.png`.
 
 Workflow to tune placement:
 
