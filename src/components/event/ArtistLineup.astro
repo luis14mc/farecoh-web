@@ -11,17 +11,19 @@ import { eventPage } from "@/data/event-page";
 <section class="reveal-section lineup-section" id="lineup-stage" aria-labelledby="lineup-heading">
   <div class="landing-shell lineup-section__shell">
     <article class="lineup-director" aria-label="Dirección musical">
-      <div class="lineup-director__photo">
+      <figure class="lineup-director__figure">
         <img
+          class="lineup-director__img"
           src={musicalDirector.image}
           alt={musicalDirector.imageAlt}
           loading="eager"
-          width="640"
-          height="800"
+          fetchpriority="high"
+          width="960"
+          height="640"
           data-lineup-photo
           data-fallback={lineupPhotoFallback}
         />
-      </div>
+      </figure>
 
       <div class="lineup-director__panel">
         <div class="lineup-director__prism" aria-hidden="true">
@@ -43,31 +45,35 @@ import { eventPage } from "@/data/event-page";
 
     <div class="lineup-ensemble">
       <header class="lineup-ensemble__header">
-        <h2 id="lineup-heading" class="lineup-ensemble__title">{eventPage.lineup.label}</h2>
-        <p class="lineup-ensemble__subtitle">{eventPage.lineup.subtitle}</p>
+        <div class="lineup-ensemble__intro">
+          <h2 id="lineup-heading" class="lineup-ensemble__title">{eventPage.lineup.label}</h2>
+          <p class="lineup-ensemble__subtitle">{eventPage.lineup.subtitle}</p>
+        </div>
+        <p class="lineup-ensemble__meta" aria-hidden="true">
+          {ensembleOnStageCount + 1} artistas
+        </p>
       </header>
 
       <ul class="lineup-ensemble__grid" role="list">
         {ensembleMembers.map((member) => (
           <li class="lineup-card">
-            <div class="lineup-card__photo">
+            <figure class="lineup-card__figure">
               <img
+                class="lineup-card__img"
                 src={member.image}
                 alt={member.imageAlt}
                 loading="lazy"
+                decoding="async"
                 width="480"
-                height="600"
+                height="640"
                 data-lineup-photo
                 data-fallback={lineupPhotoFallback}
               />
-              <span class="lineup-card__index" aria-hidden="true">
-                {String(member.order).padStart(2, "0")}
-              </span>
-            </div>
-            <div class="lineup-card__body">
-              <h3 class="lineup-card__name">{member.name}</h3>
-              <p class="lineup-card__role">{member.role}</p>
-            </div>
+              <figcaption class="lineup-card__caption">
+                <h3 class="lineup-card__name">{member.name}</h3>
+                <p class="lineup-card__role">{member.role}</p>
+              </figcaption>
+            </figure>
           </li>
         ))}
       </ul>

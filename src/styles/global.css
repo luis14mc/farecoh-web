@@ -1476,11 +1476,13 @@ html.concert {
   border-top: 1px solid rgba(255, 184, 0, 0.18);
 }
 
-/* ── Elenco premium (mockup tributo) ── */
+/* ── Elenco premium (retratos /images/artists) ── */
 .lineup-section {
   padding-block: var(--spacing-section-mobile);
   padding-inline: var(--spacing-margin-mobile);
-  background: #050505;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255, 184, 0, 0.07) 0%, transparent 55%),
+    #050505;
   color: #fff;
 }
 
@@ -1494,7 +1496,7 @@ html.concert {
 .lineup-section__shell {
   display: flex;
   flex-direction: column;
-  gap: clamp(2.5rem, 5vw, 4rem);
+  gap: clamp(2.75rem, 5vw, 4.5rem);
 }
 
 .lineup-director {
@@ -1502,50 +1504,56 @@ html.concert {
   display: grid;
   grid-template-columns: 1fr;
   overflow: hidden;
-  border: 1px solid rgba(255, 184, 0, 0.45);
-  background: #101010;
+  border: 1px solid rgba(255, 184, 0, 0.38);
+  background: #0a0a0a;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.45);
 }
 
 @media (min-width: 768px) {
   .lineup-director {
-    grid-template-columns: minmax(0, 42%) minmax(0, 1fr);
-    min-height: 22rem;
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+    min-height: 26rem;
   }
 }
 
-.lineup-director__photo {
+.lineup-director__figure {
   position: relative;
-  min-height: 18rem;
+  margin: 0;
+  min-height: 20rem;
   overflow: hidden;
   background: #0b0b0b;
 }
 
-.lineup-director__photo img {
+.lineup-director__img {
   display: block;
   width: 100%;
   height: 100%;
   min-height: inherit;
   object-fit: cover;
-  object-position: center top;
+  object-position: center center;
 }
 
 @media (min-width: 768px) {
-  .lineup-director__photo {
+  .lineup-director__figure {
     min-height: 100%;
+  }
+
+  .lineup-director__img {
+    object-position: center 22%;
   }
 }
 
-.lineup-director__photo::after {
+.lineup-director__figure::after {
   content: "";
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: linear-gradient(180deg, transparent 55%, rgba(5, 5, 5, 0.55) 100%);
+  background: linear-gradient(180deg, transparent 62%, rgba(5, 5, 5, 0.72) 100%);
 }
 
 @media (min-width: 768px) {
-  .lineup-director__photo::after {
-    background: linear-gradient(90deg, transparent 40%, rgba(5, 5, 5, 0.92) 100%);
+  .lineup-director__figure::after {
+    background: linear-gradient(90deg, transparent 58%, rgba(5, 5, 5, 0.88) 100%);
   }
 }
 
@@ -1659,12 +1667,18 @@ html.concert {
 .lineup-ensemble__header {
   display: flex;
   flex-wrap: wrap;
-  align-items: baseline;
+  align-items: end;
   justify-content: space-between;
   gap: 0.75rem 1.5rem;
   margin-bottom: var(--spacing-stack-md);
   padding-bottom: var(--spacing-stack-md);
   border-bottom: 1px solid rgba(255, 184, 0, 0.28);
+}
+
+.lineup-ensemble__intro {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
 }
 
 .lineup-ensemble__title {
@@ -1678,30 +1692,44 @@ html.concert {
 
 .lineup-ensemble__subtitle {
   margin: 0;
+  max-width: 36rem;
   font-size: 14px;
-  line-height: 1.5;
+  line-height: 1.55;
   color: #cfcfcf;
+}
+
+.lineup-ensemble__meta {
+  margin: 0;
+  padding: 0.35rem 0.75rem;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 184, 0, 0.85);
+  border: 1px solid rgba(255, 184, 0, 0.35);
+  background: rgba(255, 184, 0, 0.06);
 }
 
 .lineup-ensemble__grid {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 0.75rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-@media (min-width: 540px) {
-  .lineup-ensemble__grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (min-width: 900px) {
+@media (min-width: 768px) {
   .lineup-ensemble__grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 1rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .lineup-ensemble__grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1.1rem;
   }
 }
 
@@ -1712,82 +1740,80 @@ html.concert {
 }
 
 .lineup-card {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  border: 1px solid rgba(255, 184, 0, 0.45);
-  background: #101010;
-  transition: border-color 220ms ease;
+  list-style: none;
 }
 
-.lineup-card:hover {
-  border-color: rgba(255, 184, 0, 0.78);
-}
-
-.lineup-card__photo {
+.lineup-card__figure {
   position: relative;
-  aspect-ratio: 4 / 5;
+  margin: 0;
+  aspect-ratio: 3 / 4;
   overflow: hidden;
+  border: 1px solid rgba(255, 184, 0, 0.32);
   background: #0b0b0b;
+  transition:
+    border-color 220ms ease,
+    box-shadow 220ms ease,
+    transform 220ms ease;
 }
 
-.lineup-card__photo img {
+.lineup-card:hover .lineup-card__figure,
+.lineup-card:focus-within .lineup-card__figure {
+  border-color: rgba(255, 184, 0, 0.72);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.42);
+  transform: translateY(-2px);
+}
+
+.lineup-card__img {
   display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center top;
-  transition: transform 450ms ease;
+  object-position: center 18%;
+  transition: transform 500ms ease;
 }
 
-.lineup-card:hover .lineup-card__photo img {
-  transform: scale(1.04);
+.lineup-card:hover .lineup-card__img,
+.lineup-card:focus-within .lineup-card__img {
+  transform: scale(1.05);
 }
 
-.lineup-card__photo::after {
+.lineup-card__figure::after {
   content: "";
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: linear-gradient(to top, rgba(5, 5, 5, 0.82) 0%, transparent 48%);
+  background: linear-gradient(
+    to top,
+    rgba(5, 5, 5, 0.92) 0%,
+    rgba(5, 5, 5, 0.45) 34%,
+    transparent 62%
+  );
 }
 
-.lineup-card__index {
+.lineup-card__caption {
   position: absolute;
-  top: 0.55rem;
-  right: 0.55rem;
+  inset: auto 0 0;
   z-index: 1;
-  min-width: 2rem;
-  padding: 0.15rem 0.4rem;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-align: center;
-  color: var(--color-concert-amber);
-  background: rgba(5, 5, 5, 0.78);
-  border: 1px solid rgba(255, 184, 0, 0.45);
-}
-
-.lineup-card__body {
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
-  padding: 0.875rem 0.9rem 1rem;
+  gap: 0.15rem;
+  padding: 1rem 0.85rem 0.9rem;
 }
 
 .lineup-card__name {
   margin: 0;
-  font-size: 15px;
+  font-size: clamp(0.9rem, 1.6vw, 1rem);
   font-weight: 700;
-  line-height: 1.35;
+  line-height: 1.3;
   color: #fff;
+  text-wrap: balance;
 }
 
 .lineup-card__role {
   margin: 0;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 600;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--color-concert-amber);
 }
