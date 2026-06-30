@@ -1,4 +1,4 @@
-import { CreditCard, Download, Ticket, UserCheck, Users } from "lucide-react";
+import { CreditCard, Download, FileSpreadsheet, Ticket, UserCheck, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ResponsiveScrollArea } from "@/components/admin/react/ResponsiveScrollArea";
@@ -68,6 +68,23 @@ export function ReportsAdminPanel({ eventName, metrics, reportRows }: ReportsAdm
             <a href="/admin/reports/export-checkins.csv">
               <Download className="h-4 w-4" />
               Check-ins
+            </a>
+          </Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Exportar boletos para Canva</CardTitle>
+          <CardDescription>
+            CSV con códigos, URLs de consulta e imágenes QR para Canva Bulk Create (Pink Floyd).
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button asChild>
+            <a href="/api/exports/canva-tickets.csv">
+              <FileSpreadsheet className="h-4 w-4" />
+              Descargar CSV Canva
             </a>
           </Button>
         </CardContent>
