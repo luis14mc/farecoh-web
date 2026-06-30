@@ -9,15 +9,19 @@ import {
   CODE_FONT_SIZE,
   CODE_X,
   CODE_Y,
+  isDebugPrintLayout,
   MAX_PRINT_TICKETS_PER_REQUEST,
-  QR_PADDING,
   QR_RENDER_SCALE,
   QR_SIZE,
-  QR_X,
-  QR_Y,
   TICKET_TEMPLATE_PUBLIC_PATH,
   TICKET_TEMPLATE_RELATIVE_PATH,
 } from "@/lib/ticket-print-config";
+import {
+  codeMaskRect,
+  codeTextBaselineY,
+  drawPrintLayoutDebugBoxes,
+  qrImageRect,
+} from "@/lib/ticket-print-layout";
 import { isTicketCode, normalizeTicketCode, parseTicketSequence } from "@/services/ticket-code";
 
 export {
@@ -28,8 +32,8 @@ export {
   DEFAULT_TEST_PRINT_TO,
   FULL_PRINT_FROM,
   FULL_PRINT_TO,
+  isDebugPrintLayout,
   MAX_PRINT_TICKETS_PER_REQUEST,
-  QR_PADDING,
   QR_RENDER_SCALE,
   QR_SIZE,
   QR_X,
@@ -205,31 +209,26 @@ export async function loadPinkFloydPrintTickets(
 
 async function buildQrPng(qrUrl: string): Promise<Buffer> {
   const renderSize = QR_SIZE * QR_RENDER_SCALE;
-  const qrBuffer = await QRCode.toBuffer(qrUrl, {
+  return QRCode.toBuffer(qrUrl, {
     type: "png",
     width: renderSize,
-    margin: 0,
+    margin: 1,
     errorCorrectionLevel: "M",
     color: { dark: "#1a1033", light: "#ffffff" },
   });
-
-  return sharp(qrBuffer)
-    .extend({
-      top: QR_PADDING * QR_RENDER_SCALE,
-      bottom: QR_PADDING * QR_RENDER_SCALE,
-      left: QR_PADDING * QR_RENDER_SCALE,
-      right: QR_PADDING * QR_RENDER_SCALE,
-      background: "#ffffff",
-    })
-    .png()
-    .toBuffer();
 }
 
 function drawTicketCode(page: PDFPage, font: PDFFont, pageHeight: number, ticketCode: string) {
+  const mask = codeMaskRect(pageHeight);
+  page.drawRectangle({
+    ...mask,
+    color: rgb(0.15, 0.14, 0.15),
+  });
+
   const textWidth = font.widthOfTextAtSize(ticketCode, CODE_FONT_SIZE);
   page.drawText(ticketCode, {
     x: CODE_X - textWidth / 2,
-    y: pageHeight - CODE_Y - CODE_FONT_SIZE / 3,
+    y: codeTextBaselineY(pageHeight),
     size: CODE_FONT_SIZE,
     font,
     color: CODE_COLOR,
@@ -252,23 +251,22 @@ export async function buildTicketPrintPdf(tickets: TicketPrintRow[]): Promise<Ui
   const pdfDoc = await PDFDocument.create();
   const background = await pdfDoc.embedPng(normalizedTemplate);
   const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+  const debugLayout = isDebugPrintLayout();
 
   for (const ticket of tickets) {
     const page = pdfDoc.addPage([pageWidth, pageHeight]);
     page.drawImage(background, { x: 0, y: 0, width: pageWidth, height: pageHeight });
-    drawTicketCode(page, font, pageHeight, ticket.ticket_code);
 
     const qrUrl = buildCanvaTicketUrl(ticket.qr_token);
     const qrPng = await buildQrPng(qrUrl);
     const embeddedQr = await pdfDoc.embedPng(qrPng);
-    const qrDrawSize = QR_SIZE + QR_PADDING * 2;
+    page.drawImage(embeddedQr, qrImageRect(pageHeight));
 
-    page.drawImage(embeddedQr, {
-      x: QR_X,
-      y: pageHeight - QR_Y - qrDrawSize,
-      width: qrDrawSize,
-      height: qrDrawSize,
-    });
+    drawTicketCode(page, font, pageHeight, ticket.ticket_code);
+
+    if (debugLayout) {
+      drawPrintLayoutDebugBoxes(page, pageHeight);
+    }
   }
 
   return pdfDoc.save();

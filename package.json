@@ -9,10 +9,12 @@
         "test": "node --experimental-strip-types --test tests/*.test.ts",
         "test:rbac": "node --experimental-strip-types --test tests/rbac.test.ts",
         "test:ticketing": "node --experimental-strip-types --test tests/ticketing.test.ts",
+        "test:ticket-print": "node --experimental-strip-types --test tests/ticket-print.test.ts",
         "astro": "astro",
         "generate:ticket-assets": "node --experimental-strip-types scripts/generate-ticket-assets.ts",
         "export:canva-tickets": "node --experimental-strip-types scripts/export-canva-tickets.ts",
         "generate:print-tickets": "node --experimental-strip-types scripts/generate-print-tickets.ts",
+        "test:print-layout-pdf": "node --experimental-strip-types scripts/test-print-layout-pdf.ts",
         "optimize:foundation-photos": "node --experimental-strip-types scripts/optimize-foundation-photos.ts",
         "optimize:site-images": "node --experimental-strip-types scripts/optimize-site-images.ts"
     },

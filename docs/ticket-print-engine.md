@@ -69,17 +69,20 @@ pnpm generate:print-tickets --from PF-000001 --to PF-000100
 
 ## Adjusting code and QR placement
 
-Edit constants in `src/lib/ticket-print-config.ts`:
+Edit constants in `src/lib/ticket-print-constants.ts`:
 
 | Constant | Purpose |
 |----------|---------|
 | `CODE_X` | Horizontal center of the code box (px, top-left origin) |
 | `CODE_Y` | Vertical center of the code box (px, top-left origin) |
 | `CODE_FONT_SIZE` | Font size for `PF-000001` |
-| `QR_X` | Left edge of QR frame (px) |
-| `QR_Y` | Top edge of QR frame (px) |
-| `QR_SIZE` | QR square size before white padding |
-| `QR_PADDING` | White margin around QR (px) |
+| `QR_X` | Left edge of QR square inside purple frame (px) |
+| `QR_Y` | Top edge of QR square inside purple frame (px) |
+| `QR_SIZE` | QR square draw size (px) |
+
+Right stub on the 2000×800 template: code overlays the static `PF-0001` box; QR sits in the purple corner frame below it. Do not place code over the left-side donation area.
+
+Set `DEBUG_PRINT_LAYOUT=true` to draw a blue box on the code mask and a red box on the QR square while tuning.
 
 Coordinates use the template image’s pixel space (same as the PNG dimensions). PDF page size matches the template automatically.
 
@@ -96,7 +99,7 @@ Workflow to tune placement:
 
 1. Generate a test PDF from `/admin/printing` or `pnpm generate:print-tickets --test`
 2. Open the PDF and check alignment with the Canva boxes
-3. Adjust constants in `src/lib/ticket-print-config.ts` and repeat
+3. Adjust constants in `src/lib/ticket-print-constants.ts` and repeat
 
 ## Print recommendation
 
