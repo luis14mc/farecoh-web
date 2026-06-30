@@ -1,176 +1,72 @@
 ---
 import AdminLayout from "@/layouts/AdminLayout.astro";
-import PageHeader from "@/components/admin/ui/PageHeader.astro";
-import AdminPage from "@/components/admin/ui/AdminPage.astro";
-import { createSupabaseServerClient } from "@/lib/auth";
+import { AdminPageHeader } from "@/components/admin/react/AdminPageHeader";
+import { ReportsAdminPanel } from "@/components/admin/react/ReportsAdminPanel";
+import { createSupabaseServerClient, getPublicSupabaseConfig, isAuthConfigured, type UserProfile } from "@/lib/auth";
 import { getPinkFloydEvent } from "@/lib/events";
-import { formatSiteCurrency } from "@/lib/locale";
-import { SELLER_TYPE_LABELS } from "@/types/sellers";
+import { formatSiteCurrency, formatSiteDate, formatSiteNumber } from "@/lib/locale";
+import { calculateAdminReportMetrics } from "@/services/admin-stats";
+import { calculateSellerReports } from "@/services/seller-stats";
 
 const supabase = createSupabaseServerClient(Astro);
+const staffProfile = Astro.locals.staffProfile as UserProfile | undefined;
+const authConfigured = isAuthConfigured(getPublicSupabaseConfig());
+const currentDate = formatSiteDate(new Date(), { month: "short", day: "numeric", year: "numeric" });
 
-// Fetch event details
 const event = await getPinkFloydEvent();
 const ticketPrice = event.ticket_price;
 
-// Fetch tickets from database
-const { data: tickets = [] } = await supabase
-  .from("tickets")
-  .select("*");
+const { data: tickets = [] } = await supabase.from("tickets").select("status, seller_id, seller_name, validated_at");
+const { data: sellers = [] } = await supabase.from("sellers").select("*");
+const { data: sales = [] } = await supabase.from("sales").select("amount");
 
-// Fetch sellers from database
-const { data: sellers = [] } = await supabase
-  .from("sellers")
-  .select("*");
-
-// Calculate summaries
-const soldTickets = tickets ? tickets.filter((t: any) => t.status === "sold" || t.status === "validated") : [];
-const validatedTickets = tickets ? tickets.filter((t: any) => t.status === "validated") : [];
-const grossRevenue = soldTickets.length * Number(ticketPrice);
-
-// Group statistics by seller name
-const sellerStatsMap = new Map<string, { sellerName: string, type: string, salesCount: number, ticketsSold: number, revenue: number }>();
-
-// Initialize active sellers in the map so they appear in reports even with 0 sales
-sellers?.forEach((s: any) => {
-  sellerStatsMap.set(s.name, {
-    sellerName: s.name,
-    type: s.type,
-    salesCount: 0,
-    ticketsSold: 0,
-    revenue: 0
-  });
+const metricsData = calculateAdminReportMetrics({
+  capacity: event.total_tickets,
+  ticketPrice,
+  tickets: tickets.map((t) => ({ status: t.status, validated_at: t.validated_at })),
 });
 
-// Aggregate data from tickets table
-tickets?.forEach((t: any) => {
-  if (t.status === "sold" || t.status === "validated") {
-    const sName = t.seller_name || "Desconocido";
-    const current = sellerStatsMap.get(sName) || {
-      sellerName: sName,
-      type: "vendor",
-      salesCount: 0,
-      ticketsSold: 0,
-      revenue: 0
-    };
-    current.ticketsSold += 1;
-    current.salesCount += 1;
-    current.revenue += Number(ticketPrice);
-    sellerStatsMap.set(sName, current);
-  }
+const grossRevenue = sales.reduce((sum, row) => sum + Number(row.amount), 0);
+
+const sellerReports = calculateSellerReports({
+  ticketPrice,
+  sellers: sellers ?? [],
+  tickets: tickets.map((t) => ({
+    seller_id: t.seller_id,
+    seller_name: t.seller_name,
+    status: t.status,
+  })),
 });
 
-const reportRows = Array.from(sellerStatsMap.values())
-  .filter(r => r.ticketsSold > 0 || sellers?.some((s: any) => s.name === r.sellerName))
-  .sort((a, b) => b.revenue - a.revenue);
+const metrics = [
+  { label: "Boletos vendidos", value: formatSiteNumber(metricsData.ticketsSold) },
+  { label: "Boletos validados", value: formatSiteNumber(metricsData.ticketsValidated) },
+  { label: "Recaudación bruta", value: formatSiteCurrency(grossRevenue) },
+];
+
+const reportRows = sellerReports
+  .filter((row) => row.ticketsSold > 0)
+  .map((row) => ({
+    sellerName: row.sellerName,
+    type: row.sellerType,
+    salesCount: row.salesCount,
+    ticketsSold: row.ticketsSold,
+    revenue: row.revenue,
+  }));
 ---
 
-<AdminLayout
-  title="Reportes | FARECOH"
-  description="Reportes administrativos de ventas, boletos y check-in"
-  active="reports"
->
-  <PageHeader title="Reportes" section="Análisis" description="Exportaciones y métricas por vendedor." />
+<AdminLayout title="Reportes | FARECOH" description="Reportes administrativos de ventas, boletos y check-in" active="reports">
+  <AdminPageHeader
+    client:load
+    title="Reportes"
+    section="Análisis"
+    description="Exportaciones y métricas por vendedor."
+    currentDate={currentDate}
+    staffProfile={staffProfile}
+    authConfigured={authConfigured}
+  />
 
-  <AdminPage>
-    <section class="rounded-lg border border-outline-variant bg-surface-container-lowest p-6 shadow-sm">
-      <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-        <div>
-          <p class="text-label-md font-label-md font-bold uppercase tracking-wider text-primary">Evento activo</p>
-          <h2 class="mt-1 text-headline-md font-headline-md text-on-surface">{event.name}</h2>
-          <p class="mt-2 text-body-md font-body-md text-on-surface-variant">
-            Reportes de ventas físicas por vendedor y estado general del lote.
-          </p>
-        </div>
-        <a
-          href="/admin/vendors"
-          class="inline-flex items-center justify-center gap-2 rounded border border-outline-variant px-4 py-3 text-label-md font-label-md font-bold text-on-surface transition-colors hover:bg-surface-container-high"
-        >
-          <span class="material-symbols-outlined">group</span>
-          Gestionar vendedores
-        </a>
-      </div>
-    </section>
-
-    <section class="rounded-lg border border-outline-variant bg-surface-container-lowest p-6 shadow-sm">
-      <h3 class="text-headline-sm font-headline-sm text-on-surface">Exportar CSV</h3>
-      <p class="mt-1 text-body-md font-body-md text-on-surface-variant">
-        Descargas operativas para respaldo y conciliación.
-      </p>
-      <div class="mt-4 flex flex-wrap gap-3">
-        <a href="/admin/reports/export-tickets.csv" class="rounded bg-primary px-4 py-2 text-label-md font-label-md font-bold text-on-primary hover:bg-secondary">Boletos</a>
-        <a href="/admin/reports/export-sales.csv" class="rounded bg-primary px-4 py-2 text-label-md font-label-md font-bold text-on-primary hover:bg-secondary">Ventas</a>
-        <a href="/admin/reports/export-checkins.csv" class="rounded bg-primary px-4 py-2 text-label-md font-label-md font-bold text-on-primary hover:bg-secondary">Check-ins</a>
-      </div>
-    </section>
-
-    <section class="grid gap-gutter sm:grid-cols-2 xl:grid-cols-3" id="summary-cards">
-      <article class="rounded-lg border border-outline-variant bg-surface-container-lowest p-5 shadow-sm animate-fade-in">
-        <div class="mb-4 flex h-11 w-11 items-center justify-center rounded bg-primary-container text-primary">
-          <span class="material-symbols-outlined">confirmation_number</span>
-        </div>
-        <p class="text-label-md font-label-md font-bold uppercase tracking-wider text-on-surface-variant">Boletos vendidos</p>
-        <p id="metric-tickets-sold" class="mt-2 text-display-sm font-display-sm text-on-surface font-bold">
-          {soldTickets.length}
-        </p>
-      </article>
-      <article class="rounded-lg border border-outline-variant bg-surface-container-lowest p-5 shadow-sm animate-fade-in">
-        <div class="mb-4 flex h-11 w-11 items-center justify-center rounded bg-primary-container text-primary">
-          <span class="material-symbols-outlined">how_to_reg</span>
-        </div>
-        <p class="text-label-md font-label-md font-bold uppercase tracking-wider text-on-surface-variant">Boletos validados</p>
-        <p id="metric-tickets-validated" class="mt-2 text-display-sm font-display-sm text-on-surface font-bold">
-          {validatedTickets.length}
-        </p>
-      </article>
-      <article class="rounded-lg border border-outline-variant bg-surface-container-lowest p-5 shadow-sm animate-fade-in">
-        <div class="mb-4 flex h-11 w-11 items-center justify-center rounded bg-primary-container text-primary">
-          <span class="material-symbols-outlined">payments</span>
-        </div>
-        <p class="text-label-md font-label-md font-bold uppercase tracking-wider text-on-surface-variant">Recaudación bruta</p>
-        <p id="metric-gross-revenue" class="mt-2 text-display-sm font-display-sm text-on-surface font-bold text-primary">
-          {formatSiteCurrency(grossRevenue)}
-        </p>
-      </article>
-    </section>
-
-    <section class="rounded-lg border border-outline-variant bg-surface-container-lowest shadow-sm">
-      <div class="border-b border-outline-variant p-6">
-        <h3 class="text-headline-sm font-headline-sm text-on-surface">Ventas por vendedor</h3>
-        <p class="mt-1 text-body-md font-body-md text-on-surface-variant">
-          Transacciones registradas por cada vendedor o punto físico activo.
-        </p>
-      </div>
-      <div class="overflow-x-auto">
-        <table class="w-full min-w-[760px] text-left">
-          <thead class="bg-surface-container-low">
-            <tr>
-              <th class="px-4 py-3 text-label-md font-label-md font-bold uppercase text-on-surface-variant">Vendedor</th>
-              <th class="px-4 py-3 text-label-md font-label-md font-bold uppercase text-on-surface-variant">Tipo</th>
-              <th class="px-4 py-3 text-label-md font-label-md font-bold uppercase text-on-surface-variant">Ventas</th>
-              <th class="px-4 py-3 text-label-md font-label-md font-bold uppercase text-on-surface-variant">Boletos vendidos</th>
-              <th class="px-4 py-3 text-label-md font-label-md font-bold uppercase text-on-surface-variant">Ingresos</th>
-            </tr>
-          </thead>
-          <tbody id="seller-reports" class="divide-y divide-outline-variant">
-            {reportRows && reportRows.length ? reportRows.map((row) => (
-              <tr>
-                <td class="px-4 py-3 font-semibold text-on-surface">{row.sellerName}</td>
-                <td class="px-4 py-3 text-on-surface-variant">
-                  {SELLER_TYPE_LABELS[row.type as keyof typeof SELLER_TYPE_LABELS] || row.type}
-                </td>
-                <td class="px-4 py-3 text-on-surface">{row.salesCount}</td>
-                <td class="px-4 py-3 text-on-surface">{row.ticketsSold}</td>
-                <td class="px-4 py-3 font-bold text-primary">{formatSiteCurrency(row.revenue)}</td>
-              </tr>
-            )) : (
-              <tr>
-                <td colspan="5" class="px-4 py-8 text-center text-on-surface-variant">Aún no hay ventas registradas por vendedor.</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-    </section>
-  </AdminPage>
+  <div class="mx-auto w-full max-w-7xl space-y-6 px-4 py-6 pb-24 md:px-8 md:py-8 md:pb-8">
+    <ReportsAdminPanel client:load eventName={event.name} metrics={metrics} reportRows={reportRows} />
+  </div>
 </AdminLayout>
