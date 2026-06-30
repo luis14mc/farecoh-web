@@ -1,6 +1,7 @@
 ---
 import AdminLayout from "@/layouts/AdminLayout.astro";
-import AdminHeader from "@/components/admin/AdminHeader.astro";
+import PageHeader from "@/components/admin/ui/PageHeader.astro";
+import AdminPage from "@/components/admin/ui/AdminPage.astro";
 import { createSupabaseServerClient } from "@/lib/auth";
 
 const supabase = createSupabaseServerClient(Astro);
@@ -155,9 +156,9 @@ const stats = {
 ---
 
 <AdminLayout title="Lotes de Boletos | FARECOH" description="Administración de lotes físicos" active="batches">
-  <AdminHeader title="Lotes de Boletos" section="Boletos físicos" />
+  <PageHeader title="Lotes de boletos" section="Inventario" description="Asigne rangos de códigos a vendedores y puntos de venta." />
 
-  <div class="px-margin py-8 max-w-container-max pb-24 md:pb-8 space-y-stack-lg">
+  <AdminPage>
     <section class="rounded-lg border border-outline-variant bg-surface-container-lowest p-6 shadow-sm">
       <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
@@ -262,5 +263,5 @@ const stats = {
         </div>
       </div>
     </section>
-  </div>
+  </AdminPage>
 </AdminLayout>

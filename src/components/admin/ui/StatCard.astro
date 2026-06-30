@@ -1,0 +1,52 @@
+---
+interface Props {
+  label: string;
+  value: string;
+  icon?: string;
+  tone?: "slate" | "blue" | "indigo" | "amber" | "green" | "purple" | "red" | "primary";
+  class?: string;
+}
+
+const { label, value, icon, tone = "slate", class: className = "" } = Astro.props;
+
+const toneClasses: Record<NonNullable<Props["tone"]>, { wrap: string; icon: string }> = {
+  slate: { wrap: "bg-zinc-100", icon: "text-zinc-600" },
+  blue: { wrap: "bg-blue-100", icon: "text-blue-600" },
+  indigo: { wrap: "bg-indigo-100", icon: "text-indigo-600" },
+  amber: { wrap: "bg-amber-100", icon: "text-amber-700" },
+  green: { wrap: "bg-green-100", icon: "text-green-700" },
+  purple: { wrap: "bg-purple-100", icon: "text-purple-700" },
+  red: { wrap: "bg-red-100", icon: "text-red-700" },
+  primary: { wrap: "bg-primary/10", icon: "text-primary" },
+};
+
+const toneStyle = toneClasses[tone];
+const isHighlight = tone === "primary";
+---
+
+<article
+  class:list={[
+    "rounded-lg border border-outline-variant p-5 shadow-sm transition-shadow hover:shadow-md",
+    isHighlight ? "bg-primary text-white border-primary/20" : "bg-white",
+    className,
+  ]}
+>
+  {icon && (
+    <div
+      class:list={[
+        "mb-4 inline-flex h-10 w-10 items-center justify-center rounded-md",
+        isHighlight ? "bg-white/15" : toneStyle.wrap,
+      ]}
+    >
+      <span class:list={["material-symbols-outlined text-[22px]", isHighlight ? "text-white" : toneStyle.icon]}>
+        {icon}
+      </span>
+    </div>
+  )}
+  <p class:list={["text-xs font-medium uppercase tracking-wide", isHighlight ? "text-white/80" : "text-on-surface-variant"]}>
+    {label}
+  </p>
+  <p class:list={["mt-1 text-2xl font-bold tracking-tight", isHighlight ? "text-white" : "text-on-surface"]}>
+    {value}
+  </p>
+</article>

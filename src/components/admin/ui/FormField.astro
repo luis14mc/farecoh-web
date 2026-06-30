@@ -1,0 +1,20 @@
+---
+interface Props {
+  label: string;
+  htmlFor?: string;
+  required?: boolean;
+  hint?: string;
+  class?: string;
+}
+
+const { label, htmlFor, required = false, hint, class: className = "" } = Astro.props;
+---
+
+<label class={`block space-y-2 ${className}`} for={htmlFor}>
+  <span class="text-sm font-medium text-on-surface">
+    {label}
+    {required && <span class="text-error" aria-hidden="true"> *</span>}
+  </span>
+  <slot />
+  {hint && <p class="text-xs text-on-surface-variant">{hint}</p>}
+</label>

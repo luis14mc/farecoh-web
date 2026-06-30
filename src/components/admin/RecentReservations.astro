@@ -1,4 +1,6 @@
 ---
+import Card from "@/components/admin/ui/Card.astro";
+import Table from "@/components/admin/ui/Table.astro";
 import { supabase } from "@/lib/supabase";
 import { getTicketStatusLabel } from "@/lib/ticket-status";
 
@@ -10,35 +12,33 @@ const { data: reservations = [] } = await supabase
   .limit(8);
 ---
 
-<section class="rounded-lg border border-outline-variant bg-surface-container-lowest shadow-sm text-on-surface">
-  <div class="border-b border-outline-variant p-6">
-    <h3 class="text-headline-sm font-headline-sm text-on-surface">Reservas recientes</h3>
-    <p class="mt-1 text-body-md font-body-md text-on-surface-variant">Boletos reservados desde el formulario público</p>
+<Card padding={false}>
+  <div class="border-b border-outline-variant px-6 py-4">
+    <h3 class="text-base font-semibold text-on-surface">Reservas recientes</h3>
+    <p class="mt-1 text-sm text-on-surface-variant">Boletos reservados desde el formulario público</p>
   </div>
-  <div class="overflow-x-auto">
-    <table class="w-full min-w-[640px] text-left">
-      <thead class="bg-surface-container-low">
-        <tr>
-          <th class="px-4 py-3 text-label-md font-label-md font-bold uppercase text-on-surface-variant">Código</th>
-          <th class="px-4 py-3 text-label-md font-label-md font-bold uppercase text-on-surface-variant">Comprador</th>
-          <th class="px-4 py-3 text-label-md font-label-md font-bold uppercase text-on-surface-variant">Teléfono</th>
-          <th class="px-4 py-3 text-label-md font-label-md font-bold uppercase text-on-surface-variant">Estado</th>
+  <Table minWidth="640px" class="border-0 rounded-none">
+    <thead class="border-b border-outline-variant bg-surface-container-low">
+      <tr>
+        <th class="h-11 px-4 text-left text-xs font-medium uppercase tracking-wide text-on-surface-variant">Código</th>
+        <th class="h-11 px-4 text-left text-xs font-medium uppercase tracking-wide text-on-surface-variant">Comprador</th>
+        <th class="h-11 px-4 text-left text-xs font-medium uppercase tracking-wide text-on-surface-variant">Teléfono</th>
+        <th class="h-11 px-4 text-left text-xs font-medium uppercase tracking-wide text-on-surface-variant">Estado</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-outline-variant">
+      {reservations.length ? reservations.map((ticket) => (
+        <tr class="hover:bg-surface-container-low/70">
+          <td class="px-4 py-3 font-mono text-sm font-semibold text-primary">{ticket.ticket_code}</td>
+          <td class="px-4 py-3 text-sm">{ticket.buyer_name || "-"}</td>
+          <td class="px-4 py-3 text-sm text-on-surface-variant">{ticket.buyer_phone || "-"}</td>
+          <td class="px-4 py-3 text-sm">{getTicketStatusLabel("reserved")}</td>
         </tr>
-      </thead>
-      <tbody class="divide-y divide-outline-variant">
-        {reservations.length ? reservations.map((ticket) => (
-          <tr>
-            <td class="px-4 py-3 font-mono font-bold text-primary">{ticket.ticket_code}</td>
-            <td class="px-4 py-3">{ticket.buyer_name || "-"}</td>
-            <td class="px-4 py-3">{ticket.buyer_phone || "-"}</td>
-            <td class="px-4 py-3">{getTicketStatusLabel("reserved")}</td>
-          </tr>
-        )) : (
-          <tr>
-            <td colspan="4" class="px-4 py-8 text-center text-on-surface-variant">No hay reservas recientes.</td>
-          </tr>
-        )}
-      </tbody>
-    </table>
-  </div>
-</section>
+      )) : (
+        <tr>
+          <td colspan="4" class="px-4 py-10 text-center text-sm text-on-surface-variant">No hay reservas recientes.</td>
+        </tr>
+      )}
+    </tbody>
+  </Table>
+</Card>

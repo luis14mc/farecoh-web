@@ -1,0 +1,54 @@
+---
+interface Props {
+  id?: string;
+  name?: string;
+  type?: string;
+  value?: string;
+  placeholder?: string;
+  required?: boolean;
+  disabled?: boolean;
+  readonly?: boolean;
+  autocomplete?: string;
+  class?: string;
+  mono?: boolean;
+}
+
+const {
+  id,
+  name,
+  type = "text",
+  value,
+  placeholder,
+  required = false,
+  disabled = false,
+  readonly = false,
+  autocomplete,
+  class: className = "",
+  mono = false,
+} = Astro.props;
+
+const classes = [
+  "flex h-11 w-full rounded-md border border-outline-variant bg-white px-3 py-2 text-sm text-on-surface shadow-sm transition-colors",
+  "placeholder:text-on-surface-variant/60",
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2",
+  "disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-surface-container-low",
+  "read-only:bg-surface-container-low read-only:cursor-default",
+  mono ? "font-mono" : "",
+  className,
+]
+  .filter(Boolean)
+  .join(" ");
+---
+
+<input
+  class={classes}
+  id={id}
+  name={name}
+  type={type}
+  value={value}
+  placeholder={placeholder}
+  required={required}
+  disabled={disabled}
+  readonly={readonly}
+  autocomplete={autocomplete}
+/>

@@ -1,0 +1,129 @@
+---
+import FarecohLogo from "@/components/layout/FarecohLogo.astro";
+import Badge from "@/components/admin/ui/Badge.astro";
+import Button from "@/components/admin/ui/Button.astro";
+import { ROLE_LABELS, type UserProfile } from "@/lib/auth";
+import { canAccessRoute } from "@/lib/rbac";
+import { ADMIN_NAV_ITEMS, type AdminNavKey } from "@/lib/admin-nav";
+
+interface Props {
+  active?: AdminNavKey;
+}
+
+const { active = "dashboard" } = Astro.props;
+const staffProfile = Astro.locals.staffProfile as UserProfile | undefined;
+
+const navItems = ADMIN_NAV_ITEMS.filter(
+  (item) => staffProfile && canAccessRoute(staffProfile.role, item.href),
+);
+
+const linkClass = (key: string) => {
+  const base =
+    "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30";
+  if (active === key) {
+    return `${base} bg-primary/10 text-primary font-semibold`;
+  }
+  return `${base} text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface`;
+};
+---
+
+<header class="fixed inset-x-0 top-0 z-40 flex h-14 items-center justify-between border-b border-outline-variant bg-white px-4 md:hidden">
+  <button
+    type="button"
+    id="admin-mobile-menu-open"
+    class="inline-flex h-10 w-10 items-center justify-center rounded-md border border-outline-variant bg-white text-on-surface hover:bg-surface-container-low"
+    aria-label="Abrir menú"
+    aria-controls="admin-mobile-drawer"
+    aria-expanded="false"
+  >
+    <span class="material-symbols-outlined">menu</span>
+  </button>
+
+  <a href="/admin" class="min-w-0 flex-1 px-3" aria-label="Panel administrativo">
+    <p class="truncate text-sm font-semibold text-on-surface">FARECOH Admin</p>
+  </a>
+
+  <div class="flex items-center gap-2">
+    {staffProfile && (
+      <Badge variant="outline" class="max-w-[7rem] truncate">
+        {ROLE_LABELS[staffProfile.role]}
+      </Badge>
+    )}
+    <button
+      type="button"
+      data-admin-logout
+      class="inline-flex h-10 w-10 items-center justify-center rounded-md text-on-surface-variant hover:bg-surface-container-low"
+      aria-label="Cerrar sesión"
+    >
+      <span class="material-symbols-outlined">logout</span>
+    </button>
+  </div>
+</header>
+
+<div id="admin-mobile-overlay" class="fixed inset-0 z-40 hidden bg-black/40 md:hidden" aria-hidden="true"></div>
+
+<aside
+  id="admin-mobile-drawer"
+  class="fixed inset-y-0 left-0 z-50 flex w-[min(88vw,20rem)] -translate-x-full flex-col border-r border-outline-variant bg-white p-4 shadow-xl transition-transform duration-200 md:hidden"
+  aria-hidden="true"
+>
+  <div class="mb-4 flex items-center justify-between">
+    <FarecohLogo variant="stacked" theme="color" size="admin" />
+    <button
+      type="button"
+      id="admin-mobile-menu-close"
+      class="inline-flex h-10 w-10 items-center justify-center rounded-md hover:bg-surface-container-low"
+      aria-label="Cerrar menú"
+    >
+      <span class="material-symbols-outlined">close</span>
+    </button>
+  </div>
+
+  {staffProfile && (
+    <div class="mb-4 rounded-lg border border-outline-variant bg-surface-container-low p-3">
+      <p class="truncate text-sm font-semibold text-on-surface">{staffProfile.full_name}</p>
+      <p class="mt-1 text-xs text-on-surface-variant">{staffProfile.email}</p>
+      <div class="mt-2">
+        <Badge variant="outline">{ROLE_LABELS[staffProfile.role]}</Badge>
+      </div>
+    </div>
+  )}
+
+  <nav class="flex-1 space-y-1 overflow-y-auto" aria-label="Menú administrativo">
+    {navItems.map((item) => (
+      <a class={linkClass(item.key)} href={item.href}>
+        <span class="material-symbols-outlined text-[20px]">{item.icon}</span>
+        <span>{item.label}</span>
+      </a>
+    ))}
+  </nav>
+
+    <Button variant="outline" fullWidthMobile adminLogout class="mt-4">
+    <span class="material-symbols-outlined text-base">logout</span>
+    Cerrar sesión
+  </Button>
+</aside>
+
+<script>
+  const openBtn = document.getElementById("admin-mobile-menu-open");
+  const closeBtn = document.getElementById("admin-mobile-menu-close");
+  const drawer = document.getElementById("admin-mobile-drawer");
+  const overlay = document.getElementById("admin-mobile-overlay");
+
+  function setDrawerOpen(open: boolean) {
+    if (!drawer || !overlay || !openBtn) return;
+    drawer.classList.toggle("-translate-x-full", !open);
+    drawer.setAttribute("aria-hidden", open ? "false" : "true");
+    overlay.classList.toggle("hidden", !open);
+    openBtn.setAttribute("aria-expanded", open ? "true" : "false");
+    document.body.classList.toggle("overflow-hidden", open);
+  }
+
+  openBtn?.addEventListener("click", () => setDrawerOpen(true));
+  closeBtn?.addEventListener("click", () => setDrawerOpen(false));
+  overlay?.addEventListener("click", () => setDrawerOpen(false));
+
+  drawer?.querySelectorAll("a").forEach((link) => {
+    link.addEventListener("click", () => setDrawerOpen(false));
+  });
+</script>

@@ -2,6 +2,7 @@
 import { supabase } from "@/lib/supabase";
 import { formatSiteCurrency, formatSiteNumber } from "@/lib/locale";
 import { getPinkFloydEventFallback } from "@/lib/events";
+import StatCard from "@/components/admin/ui/StatCard.astro";
 
 const CAPACITY = getPinkFloydEventFallback().total_tickets;
 
@@ -12,13 +13,6 @@ const { data: tickets = [] } = await supabase
 const countByStatus = (status: string) =>
   tickets.filter((t: { status: string }) => t.status === status).length;
 
-const availableTickets = countByStatus("available");
-const assignedTickets = countByStatus("assigned");
-const reservedTickets = countByStatus("reserved");
-const soldTickets = countByStatus("sold");
-const validatedTickets = countByStatus("validated");
-const cancelledTickets = countByStatus("cancelled");
-
 const { data: sales = [] } = await supabase
   .from("sales")
   .select("amount");
@@ -26,49 +20,19 @@ const { data: sales = [] } = await supabase
 const totalRevenue = sales.reduce((sum: number, s: { amount: number | string }) => sum + Number(s.amount), 0);
 
 const kpis = [
-  { label: "Capacidad", value: formatSiteNumber(CAPACITY), icon: "stadium", tone: "slate" },
-  { label: "Disponibles", value: formatSiteNumber(availableTickets), icon: "event_seat", tone: "blue" },
-  { label: "Asignados", value: formatSiteNumber(assignedTickets), icon: "local_shipping", tone: "indigo" },
-  { label: "Reservados", value: formatSiteNumber(reservedTickets), icon: "schedule", tone: "yellow" },
-  { label: "Vendidos", value: formatSiteNumber(soldTickets), icon: "check_circle", tone: "green" },
-  { label: "Validados", value: formatSiteNumber(validatedTickets), icon: "qr_code_scanner", tone: "purple" },
-  { label: "Anulados", value: formatSiteNumber(cancelledTickets), icon: "block", tone: "red" },
+  { label: "Capacidad", value: formatSiteNumber(CAPACITY), icon: "stadium", tone: "slate" as const },
+  { label: "Disponibles", value: formatSiteNumber(countByStatus("available")), icon: "event_seat", tone: "slate" as const },
+  { label: "Asignados", value: formatSiteNumber(countByStatus("assigned")), icon: "local_shipping", tone: "blue" as const },
+  { label: "Reservados", value: formatSiteNumber(countByStatus("reserved")), icon: "schedule", tone: "amber" as const },
+  { label: "Vendidos", value: formatSiteNumber(countByStatus("sold")), icon: "check_circle", tone: "green" as const },
+  { label: "Validados", value: formatSiteNumber(countByStatus("validated")), icon: "qr_code_scanner", tone: "purple" as const },
+  { label: "Anulados", value: formatSiteNumber(countByStatus("cancelled")), icon: "block", tone: "red" as const },
 ];
-
-const toneClasses: Record<string, { bg: string; text: string }> = {
-  slate: { bg: "bg-slate-100", text: "text-slate-600" },
-  blue: { bg: "bg-blue-100", text: "text-blue-600" },
-  indigo: { bg: "bg-indigo-100", text: "text-indigo-600" },
-  yellow: { bg: "bg-yellow-100", text: "text-yellow-600" },
-  green: { bg: "bg-green-100", text: "text-green-600" },
-  purple: { bg: "bg-purple-100", text: "text-purple-600" },
-  red: { bg: "bg-red-100", text: "text-red-600" },
-};
 ---
 
-<section class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-gutter text-on-surface">
-  {kpis.map((kpi) => {
-    const tone = toneClasses[kpi.tone] ?? toneClasses.slate;
-    return (
-      <div class="bg-surface-container-lowest border border-outline-variant p-6 rounded-lg hover:shadow-lg transition-shadow duration-300">
-        <div class="flex justify-between items-start mb-4">
-          <div class={`p-2 rounded-lg ${tone.bg}`}>
-            <span class={`material-symbols-outlined ${tone.text}`}>{kpi.icon}</span>
-          </div>
-        </div>
-        <p class="text-label-md font-label-md text-on-surface-variant uppercase font-semibold">{kpi.label}</p>
-        <p class="text-headline-lg font-headline-lg text-on-surface mt-1">{kpi.value}</p>
-      </div>
-    );
-  })}
-
-  <div class="bg-primary text-white p-6 rounded-lg hover:shadow-lg transition-shadow duration-300 sm:col-span-2 xl:col-span-1">
-    <div class="flex justify-between items-start mb-4">
-      <div class="p-2 bg-white/20 rounded-lg text-white">
-        <span class="material-symbols-outlined text-white">payments</span>
-      </div>
-    </div>
-    <p class="text-label-md font-label-md text-white/80 uppercase font-semibold">Recaudación</p>
-    <p class="text-headline-lg font-headline-lg text-white mt-1">{formatSiteCurrency(totalRevenue)}</p>
-  </div>
+<section class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+  {kpis.map((kpi) => (
+    <StatCard label={kpi.label} value={kpi.value} icon={kpi.icon} tone={kpi.tone} />
+  ))}
+  <StatCard label="Recaudación" value={formatSiteCurrency(totalRevenue)} icon="payments" tone="primary" class="sm:col-span-2 xl:col-span-1" />
 </section>

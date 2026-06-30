@@ -1,6 +1,8 @@
 ---
 import AdminLayout from "@/layouts/AdminLayout.astro";
-import AdminHeader from "@/components/admin/AdminHeader.astro";
+import PageHeader from "@/components/admin/ui/PageHeader.astro";
+import AdminPage from "@/components/admin/ui/AdminPage.astro";
+import Card from "@/components/admin/ui/Card.astro";
 import StatsCard from "@/components/admin/StatsCard.astro";
 import TicketSearch from "@/components/admin/TicketSearch.astro";
 import SalesTable from "@/components/admin/SalesTable.astro";
@@ -10,13 +12,11 @@ import SalesByPoint from "@/components/admin/SalesByPoint.astro";
 import { supabase } from "@/lib/supabase";
 import { formatSiteCurrency } from "@/lib/locale";
 
-// Fetch sales for dashboard groupings
 const { data: sales = [] } = await supabase
   .from("sales")
   .select("amount, seller_name, created_at")
   .order("created_at", { ascending: true });
 
-// Group Sales by Day
 const salesByDayMap: Record<string, number> = {};
 sales?.forEach((sale: any) => {
   const dayStr = new Date(sale.created_at).toLocaleDateString("es-HN", {
@@ -25,10 +25,9 @@ sales?.forEach((sale: any) => {
   });
   salesByDayMap[dayStr] = (salesByDayMap[dayStr] || 0) + Number(sale.amount);
 });
-const salesByDay = Object.entries(salesByDayMap).slice(-7); // Last 7 active days
+const salesByDay = Object.entries(salesByDayMap).slice(-7);
 const maxDaySales = Math.max(...salesByDay.map(([_, amt]) => amt), 1);
 
-// Group Sales by Seller
 const salesBySellerMap: Record<string, number> = {};
 sales?.forEach((sale: any) => {
   const seller = sale.seller_name || "Desconocido";
@@ -36,97 +35,86 @@ sales?.forEach((sale: any) => {
 });
 const salesBySeller = Object.entries(salesBySellerMap)
   .sort((a, b) => b[1] - a[1])
-  .slice(0, 5); // Top 5 sellers
+  .slice(0, 5);
 const maxSellerSales = Math.max(...salesBySeller.map(([_, amt]) => amt), 1);
 ---
 
-<AdminLayout 
-  title="Panel administrativo | FARECOH" 
-  description="Panel de administración de boletería de FARECOH" 
+<AdminLayout
+  title="Panel administrativo | FARECOH"
+  description="Panel de administración de boletería de FARECOH"
   active="dashboard"
 >
-  <AdminHeader title="Panel de control" section="Administración" />
+  <PageHeader title="Panel de control" section="Dashboard" description="Resumen operativo del evento Pink Floyd." />
 
-  <!-- Dashboard Main Grid -->
-  <div class="px-margin py-8 space-y-stack-lg max-w-container-max pb-24 md:pb-8">
-    <!-- Live KPIs Cards -->
+  <AdminPage>
     <StatsCard />
 
-    <!-- Sales Trends (Sales by Day / Sales by Seller / Sales by Point) -->
-    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-gutter">
-      <!-- Sales by Day -->
-      <div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-6 text-on-surface">
-        <h3 class="text-label-md font-label-md uppercase font-bold text-on-surface-variant tracking-wider">Ventas por día</h3>
-        <p class="text-caption font-caption text-on-surface-variant mb-6">Tendencia de recaudación diaria</p>
-        
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <Card>
+        <h3 class="text-sm font-semibold text-on-surface">Ventas por día</h3>
+        <p class="mt-1 text-xs text-on-surface-variant">Tendencia de recaudación diaria</p>
         {salesByDay.length > 0 ? (
-          <div class="space-y-4">
+          <div class="mt-5 space-y-4">
             {salesByDay.map(([day, amount]) => {
               const pct = (amount / maxDaySales) * 100;
               return (
-                <div class="space-y-1">
-                  <div class="flex justify-between text-body-md">
+                <div class="space-y-1.5">
+                  <div class="flex justify-between text-sm">
                     <span class="font-medium">{day}</span>
-                    <span class="font-bold text-primary">{formatSiteCurrency(amount)}</span>
+                    <span class="font-semibold text-primary">{formatSiteCurrency(amount)}</span>
                   </div>
-                  <div class="w-full bg-surface-container-low h-3 rounded-full overflow-hidden">
-                    <div class="bg-primary h-full rounded-full transition-all duration-500" style={`width: ${pct}%`}></div>
+                  <div class="h-2 w-full overflow-hidden rounded-full bg-surface-container-low">
+                    <div class="h-full rounded-full bg-primary transition-all" style={`width: ${pct}%`}></div>
                   </div>
                 </div>
               );
             })}
           </div>
         ) : (
-          <p class="text-body-md text-on-surface-variant italic py-6">No hay registros de ventas recientes.</p>
+          <p class="py-8 text-sm text-on-surface-variant">No hay registros de ventas recientes.</p>
         )}
-      </div>
+      </Card>
 
-      <!-- Sales by Seller -->
-      <div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-6 text-on-surface">
-        <h3 class="text-label-md font-label-md uppercase font-bold text-on-surface-variant tracking-wider">Ventas por vendedor</h3>
-        <p class="text-caption font-caption text-on-surface-variant mb-6 font-medium">Top vendedores de boletería física</p>
-        
+      <Card>
+        <h3 class="text-sm font-semibold text-on-surface">Ventas por vendedor</h3>
+        <p class="mt-1 text-xs text-on-surface-variant">Top vendedores de boletería física</p>
         {salesBySeller.length > 0 ? (
-          <div class="space-y-4">
+          <div class="mt-5 space-y-4">
             {salesBySeller.map(([seller, amount]) => {
               const pct = (amount / maxSellerSales) * 100;
               return (
-                <div class="space-y-1">
-                  <div class="flex justify-between text-body-md">
-                    <span class="font-medium">{seller}</span>
-                    <span class="font-bold text-secondary">{formatSiteCurrency(amount)}</span>
+                <div class="space-y-1.5">
+                  <div class="flex justify-between gap-3 text-sm">
+                    <span class="truncate font-medium">{seller}</span>
+                    <span class="shrink-0 font-semibold text-secondary">{formatSiteCurrency(amount)}</span>
                   </div>
-                  <div class="w-full bg-surface-container-low h-3 rounded-full overflow-hidden">
-                    <div class="bg-secondary-container h-full rounded-full transition-all duration-500" style={`width: ${pct}%`}></div>
+                  <div class="h-2 w-full overflow-hidden rounded-full bg-surface-container-low">
+                    <div class="h-full rounded-full bg-secondary-container transition-all" style={`width: ${pct}%`}></div>
                   </div>
                 </div>
               );
             })}
           </div>
         ) : (
-          <p class="text-body-md text-on-surface-variant italic py-6">No hay registros de vendedores activos.</p>
+          <p class="py-8 text-sm text-on-surface-variant">No hay registros de vendedores activos.</p>
         )}
-      </div>
+      </Card>
 
       <SalesByPoint />
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-gutter">
+    <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
       <RecentReservations />
       <RecentCheckins />
     </div>
 
-    <!-- Check-in & Recent Sales Grid -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-gutter items-start">
-      <!-- Check-in section (1 Column) -->
+    <div class="grid grid-cols-1 items-start gap-4 lg:grid-cols-3">
       <section class="lg:col-span-1">
         <TicketSearch />
       </section>
-
-      <!-- Recent Sales Table (2 Columns) -->
       <section class="lg:col-span-2">
         <SalesTable />
       </section>
     </div>
-  </div>
+  </AdminPage>
 </AdminLayout>

@@ -1,39 +1,46 @@
 ---
 import AdminLayout from "@/layouts/AdminLayout.astro";
-import AdminHeader from "@/components/admin/AdminHeader.astro";
+import PageHeader from "@/components/admin/ui/PageHeader.astro";
+import AdminPage from "@/components/admin/ui/AdminPage.astro";
+import Card from "@/components/admin/ui/Card.astro";
+import Input from "@/components/admin/ui/Input.astro";
+import Button from "@/components/admin/ui/Button.astro";
 ---
 
 <AdminLayout title="Control de acceso | FARECOH" description="Validación de ingreso de boletos físicos" active="checkin">
-  <AdminHeader title="Control de acceso" section="Administración" />
+  <PageHeader
+    title="Control de acceso"
+    section="Check-in"
+    description="Busque el código impreso del boleto físico para validar ingreso."
+  />
 
-  <div class="px-margin py-8 max-w-2xl mx-auto pb-24 md:pb-8">
-    <section class="rounded-lg border border-outline-variant bg-surface-container-lowest p-6 text-on-surface shadow-sm">
-      <h2 class="text-headline-sm font-headline-sm text-on-surface">Validar ingreso</h2>
-      <p class="mt-1 text-body-md font-body-md text-on-surface-variant">Busque el código impreso del boleto físico.</p>
+  <AdminPage class="max-w-2xl">
+    <Card>
+      <h2 class="text-lg font-semibold text-on-surface">Validar ingreso</h2>
+      <p class="mt-1 text-sm text-on-surface-variant">Ingrese el código PF-000001 y confirme el estado antes de validar.</p>
 
       <div class="mt-6 flex flex-col gap-3 sm:flex-row">
-        <input id="checkin-code" placeholder="PF-000001" class="min-w-0 flex-1 rounded border border-outline-variant bg-surface px-4 py-3 font-mono text-body-lg outline-none focus:border-primary" />
-        <button id="search-ticket" class="rounded bg-primary px-5 py-3 text-label-md font-label-md font-bold text-on-primary hover:bg-secondary">Buscar</button>
+        <Input id="checkin-code" placeholder="PF-000001" mono class="min-w-0 flex-1" />
+        <Button id="search-ticket" type="button" fullWidthMobile class="sm:shrink-0">
+          <span class="material-symbols-outlined text-base">search</span>
+          Buscar
+        </Button>
       </div>
 
-      <div id="checkin-message" class="mt-5 hidden rounded p-4 text-body-md font-body-md"></div>
-      <div id="ticket-result" class="mt-5 hidden rounded border border-outline-variant bg-surface p-5"></div>
-      <button id="validate-ticket" class="mt-5 hidden w-full rounded bg-secondary px-5 py-3 text-label-md font-label-md font-bold text-on-secondary hover:opacity-90">Validar ingreso</button>
-    </section>
-  </div>
+      <div id="checkin-message" class="mt-5 hidden rounded-lg border px-4 py-3 text-sm" role="alert"></div>
+      <div id="ticket-result" class="mt-5 hidden rounded-md border border-outline-variant bg-surface-container-low p-4"></div>
+
+      <Button id="validate-ticket" type="button" variant="secondary" fullWidthMobile class="mt-5 hidden w-full">
+        <span class="material-symbols-outlined text-base">how_to_reg</span>
+        Validar ingreso
+      </Button>
+    </Card>
+  </AdminPage>
 </AdminLayout>
 
 <script>
   import { supabase } from "@/lib/supabase";
-
-  const PHYSICAL_STATUS_LABELS: Record<string, string> = {
-    available: "Disponible",
-    assigned: "Asignado",
-    reserved: "Reservado",
-    sold: "Vendido",
-    validated: "Validado",
-    cancelled: "Anulado",
-  };
+  import { TICKET_STATUS_LABELS } from "@/lib/ticket-status";
 
   let activeTicket: any = null;
 
@@ -41,13 +48,13 @@ import AdminHeader from "@/components/admin/AdminHeader.astro";
     const node = document.getElementById("checkin-message");
     if (!node) return;
     const classes = {
-      error: "bg-red-100 text-red-700 font-bold",
-      warning: "bg-yellow-100 text-yellow-800",
-      success: "bg-green-100 text-green-700 font-bold",
-      info: "bg-blue-100 text-blue-700",
+      error: "border-red-200 bg-red-50 text-red-800",
+      warning: "border-amber-200 bg-amber-50 text-amber-900",
+      success: "border-green-200 bg-green-50 text-green-800",
+      info: "border-blue-200 bg-blue-50 text-blue-800",
     };
     node.textContent = text;
-    node.className = `mt-5 rounded p-4 text-body-md font-body-md ${classes[type] || classes.info}`;
+    node.className = `mt-5 rounded-lg border px-4 py-3 text-sm ${classes[type] || classes.info}`;
     node.classList.remove("hidden");
   }
 
@@ -72,50 +79,40 @@ import AdminHeader from "@/components/admin/AdminHeader.astro";
 
     result.classList.remove("hidden");
     result.innerHTML = `
-      <div class="space-y-3">
+      <div class="space-y-4">
         <div class="flex items-start justify-between gap-4">
           <div>
-            <p class="text-caption font-caption font-bold uppercase text-primary">Boleto</p>
-            <h3 class="font-mono text-headline-sm font-headline-sm text-on-surface">${ticket.ticket_code}</h3>
+            <p class="text-xs font-medium uppercase tracking-wide text-primary">Boleto</p>
+            <h3 class="font-mono text-xl font-semibold text-on-surface">${ticket.ticket_code}</h3>
           </div>
-          <span class="rounded-full bg-surface-container-high px-3 py-1 text-caption font-caption font-bold">
-            ${PHYSICAL_STATUS_LABELS[ticket.status] || ticket.status}
+          <span class="inline-flex rounded-full border px-2.5 py-0.5 text-xs font-semibold ${getStatusBadgeClass(ticket.status)}">
+            ${TICKET_STATUS_LABELS[ticket.status as keyof typeof TICKET_STATUS_LABELS] || ticket.status}
           </span>
         </div>
         <dl class="grid gap-3 sm:grid-cols-2">
-          <div>
-            <dt class="text-caption font-caption font-bold uppercase text-on-surface-variant">Comprador</dt>
-            <dd class="font-semibold text-on-surface">${ticket.buyer_name || "-"}</dd>
-          </div>
-          <div>
-            <dt class="text-caption font-caption font-bold uppercase text-on-surface-variant">Teléfono</dt>
-            <dd class="text-on-surface">${ticket.buyer_phone || "-"}</dd>
-          </div>
-          <div>
-            <dt class="text-caption font-caption font-bold uppercase text-on-surface-variant">Vendedor</dt>
-            <dd class="text-on-surface">${ticket.seller_name || "-"}</dd>
-          </div>
-          <div>
-            <dt class="text-caption font-caption font-bold uppercase text-on-surface-variant">Punto</dt>
-            <dd class="text-on-surface">${ticket.sale_location || "-"}</dd>
-          </div>
-          <div>
-            <dt class="text-caption font-caption font-bold uppercase text-on-surface-variant">Venta</dt>
-            <dd class="text-on-surface">${formatDate(ticket.sold_at)}</dd>
-          </div>
-          <div>
-            <dt class="text-caption font-caption font-bold uppercase text-on-surface-variant">Validación</dt>
-            <dd class="text-on-surface">${formatDate(ticket.validated_at)}</dd>
-          </div>
+          <div><dt class="text-xs text-on-surface-variant">Comprador</dt><dd class="text-sm font-medium">${ticket.buyer_name || "-"}</dd></div>
+          <div><dt class="text-xs text-on-surface-variant">Teléfono</dt><dd class="text-sm">${ticket.buyer_phone || "-"}</dd></div>
+          <div><dt class="text-xs text-on-surface-variant">Vendedor</dt><dd class="text-sm">${ticket.seller_name || "-"}</dd></div>
+          <div><dt class="text-xs text-on-surface-variant">Punto</dt><dd class="text-sm">${ticket.sale_location || "-"}</dd></div>
+          <div><dt class="text-xs text-on-surface-variant">Venta</dt><dd class="text-sm">${formatDate(ticket.sold_at)}</dd></div>
+          <div><dt class="text-xs text-on-surface-variant">Validación</dt><dd class="text-sm">${formatDate(ticket.validated_at)}</dd></div>
         </dl>
       </div>
     `;
 
-    if (ticket.status === "sold") {
-      button.classList.remove("hidden");
-    } else {
-      button.classList.add("hidden");
-    }
+    button.classList.toggle("hidden", ticket.status !== "sold");
+  }
+
+  function getStatusBadgeClass(status: string) {
+    const map: Record<string, string> = {
+      available: "bg-zinc-100 text-zinc-700 border-zinc-200",
+      assigned: "bg-blue-100 text-blue-700 border-blue-200",
+      reserved: "bg-amber-100 text-amber-800 border-amber-200",
+      sold: "bg-green-100 text-green-700 border-green-200",
+      validated: "bg-purple-100 text-purple-700 border-purple-200",
+      cancelled: "bg-red-100 text-red-700 border-red-200",
+    };
+    return map[status] || map.available;
   }
 
   async function searchTicket() {
@@ -137,11 +134,7 @@ import AdminHeader from "@/components/admin/AdminHeader.astro";
 
     showMessage("Buscando boleto...", "info");
 
-    const { data: ticket, error } = await supabase
-      .from("tickets")
-      .select("*")
-      .eq("ticket_code", ticketCode)
-      .single();
+    const { data: ticket, error } = await supabase.from("tickets").select("*").eq("ticket_code", ticketCode).single();
 
     if (error || !ticket) {
       showMessage("Boleto inexistente.", "error");
@@ -186,11 +179,7 @@ import AdminHeader from "@/components/admin/AdminHeader.astro";
       return;
     }
 
-    activeTicket = {
-      ...activeTicket,
-      status: "validated",
-      validated_at: result.validated_at,
-    };
+    activeTicket = { ...activeTicket, status: "validated", validated_at: result.validated_at };
     showMessage("Ingreso validado correctamente.", "success");
     renderTicket(activeTicket);
   }

@@ -1,6 +1,7 @@
 ---
 import AdminLayout from "@/layouts/AdminLayout.astro";
-import AdminHeader from "@/components/admin/AdminHeader.astro";
+import PageHeader from "@/components/admin/ui/PageHeader.astro";
+import AdminPage from "@/components/admin/ui/AdminPage.astro";
 import { createSupabaseServerClient } from "@/lib/auth";
 import { SELLER_TYPE_LABELS } from "@/types/sellers";
 
@@ -67,9 +68,9 @@ const { data: sellers = [] } = await supabase
 ---
 
 <AdminLayout title="Vendedores | FARECOH" description="Administración de vendedores y puntos físicos" active="vendors">
-  <AdminHeader title="Vendedores" section="Administración" />
+  <PageHeader title="Vendedores" section="Operaciones" description="Administre vendedores y puntos físicos de venta." />
 
-  <div class="px-margin py-8 max-w-container-max pb-24 md:pb-8 space-y-stack-lg">
+  <AdminPage>
     <section class="grid gap-gutter lg:grid-cols-3">
       <form id="seller-form" method="POST" class="rounded-lg border border-outline-variant bg-surface-container-lowest p-6 shadow-sm lg:col-span-1">
         <h2 id="seller-form-title" class="text-headline-sm font-headline-sm text-on-surface">Nuevo vendedor</h2>
@@ -196,7 +197,7 @@ const { data: sellers = [] } = await supabase
         </div>
       </section>
     </section>
-  </div>
+  </AdminPage>
 </AdminLayout>
 
 <script>

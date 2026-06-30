@@ -1,6 +1,7 @@
 ---
 import AdminLayout from "@/layouts/AdminLayout.astro";
-import AdminHeader from "@/components/admin/AdminHeader.astro";
+import PageHeader from "@/components/admin/ui/PageHeader.astro";
+import AdminPage from "@/components/admin/ui/AdminPage.astro";
 import { createSupabaseServerClient } from "@/lib/auth";
 import { getPinkFloydEvent } from "@/lib/events";
 import { formatSiteCurrency } from "@/lib/locale";
@@ -69,9 +70,9 @@ const reportRows = Array.from(sellerStatsMap.values())
   description="Reportes administrativos de ventas, boletos y check-in"
   active="reports"
 >
-  <AdminHeader title="Reportes" section="Administración" />
+  <PageHeader title="Reportes" section="Análisis" description="Exportaciones y métricas por vendedor." />
 
-  <div class="px-margin py-8 max-w-container-max pb-24 md:pb-8 space-y-stack-lg">
+  <AdminPage>
     <section class="rounded-lg border border-outline-variant bg-surface-container-lowest p-6 shadow-sm">
       <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
@@ -171,5 +172,5 @@ const reportRows = Array.from(sellerStatsMap.values())
         </table>
       </div>
     </section>
-  </div>
+  </AdminPage>
 </AdminLayout>

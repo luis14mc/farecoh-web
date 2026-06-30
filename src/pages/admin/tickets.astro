@@ -1,35 +1,39 @@
 ---
 import AdminLayout from "@/layouts/AdminLayout.astro";
-import AdminHeader from "@/components/admin/AdminHeader.astro";
+import PageHeader from "@/components/admin/ui/PageHeader.astro";
+import AdminPage from "@/components/admin/ui/AdminPage.astro";
+import Card from "@/components/admin/ui/Card.astro";
+import FormField from "@/components/admin/ui/FormField.astro";
+import Input from "@/components/admin/ui/Input.astro";
+import Select from "@/components/admin/ui/Select.astro";
+import Button from "@/components/admin/ui/Button.astro";
+import Table from "@/components/admin/ui/Table.astro";
 import { supabase } from "@/lib/supabase";
-import { formatSiteDate } from "@/lib/locale";
 
-// Fetch all 500 tickets from Supabase for real-time client-side search/filter
 const { data: tickets = [] } = await supabase
   .from("tickets")
   .select("*")
   .order("ticket_code", { ascending: true });
 
-// Extract unique sellers/sales points for the filters
 const sellers = Array.from(new Set(tickets.map((t: any) => t.seller_name).filter(Boolean)));
 const locations = Array.from(new Set(tickets.map((t: any) => t.sale_location).filter(Boolean)));
 ---
 
 <AdminLayout title="Boletos | FARECOH" description="Administración de boletos físicos" active="tickets">
-  <AdminHeader title="Boletos Físicos" section="Boletos" />
+  <PageHeader
+    title="Boletos"
+    section="Inventario"
+    description="Consulte, filtre y gestione el estado de los 500 boletos del evento."
+  />
 
-  <div class="px-margin py-8 space-y-stack-lg max-w-container-max pb-24 md:pb-8">
-    <div class="rounded-lg border border-outline-variant bg-surface-container-lowest text-on-surface shadow-sm">
-      
-      <!-- Filters grid -->
-      <div class="grid grid-cols-1 gap-4 border-b border-outline-variant bg-surface-container-low p-6 md:grid-cols-4">
-        <label class="block">
-          <span class="text-caption font-caption font-bold uppercase text-on-surface-variant">Código</span>
-          <input id="code-filter" placeholder="PF-000001" class="mt-2 w-full rounded border border-[rgba(69,65,66,0.2)] bg-surface px-3 py-2 font-mono text-body-md outline-none focus:border-primary" />
-        </label>
-        <label class="block">
-          <span class="text-caption font-caption font-bold uppercase text-on-surface-variant">Estado</span>
-          <select id="status-filter" class="mt-2 w-full rounded border border-[rgba(69,65,66,0.2)] bg-surface px-3 py-2 text-body-md outline-none focus:border-primary">
+  <AdminPage>
+    <Card padding={false}>
+      <div class="grid grid-cols-1 gap-4 border-b border-outline-variant bg-surface-container-low p-4 md:grid-cols-2 xl:grid-cols-4">
+        <FormField label="Código" htmlFor="code-filter">
+          <Input id="code-filter" placeholder="PF-000001" mono />
+        </FormField>
+        <FormField label="Estado" htmlFor="status-filter">
+          <Select id="status-filter">
             <option value="all">Todos</option>
             <option value="available">Disponible</option>
             <option value="assigned">Asignado</option>
@@ -37,73 +41,56 @@ const locations = Array.from(new Set(tickets.map((t: any) => t.sale_location).fi
             <option value="sold">Vendido</option>
             <option value="validated">Validado</option>
             <option value="cancelled">Anulado</option>
-          </select>
-        </label>
-        <label class="block">
-          <span class="text-caption font-caption font-bold uppercase text-on-surface-variant">Vendedor</span>
-          <select id="seller-filter" class="mt-2 w-full rounded border border-[rgba(69,65,66,0.2)] bg-surface px-3 py-2 text-body-md outline-none focus:border-primary">
+          </Select>
+        </FormField>
+        <FormField label="Vendedor" htmlFor="seller-filter">
+          <Select id="seller-filter">
             <option value="all">Todos</option>
             {sellers.map((seller: any) => (
               <option value={seller}>{seller}</option>
             ))}
-          </select>
-        </label>
-        <label class="block">
-          <span class="text-caption font-caption font-bold uppercase text-on-surface-variant">Punto de venta</span>
-          <select id="location-filter" class="mt-2 w-full rounded border border-[rgba(69,65,66,0.2)] bg-surface px-3 py-2 text-body-md outline-none focus:border-primary">
+          </Select>
+        </FormField>
+        <FormField label="Punto de venta" htmlFor="location-filter">
+          <Select id="location-filter">
             <option value="all">Todos</option>
             {locations.map((loc: any) => (
               <option value={loc}>{loc}</option>
             ))}
-          </select>
-        </label>
+          </Select>
+        </FormField>
       </div>
 
-      <!-- Tickets data source (serialized safely) -->
       <div id="tickets-data" data-tickets={JSON.stringify(tickets)} class="hidden"></div>
 
-      <!-- Table Section -->
-      <div class="overflow-x-auto">
-        <table class="w-full min-w-[980px] text-left" id="tickets-table">
-          <thead class="bg-surface-container-low">
-            <tr>
-              <th class="px-4 py-4 text-label-md font-label-md font-bold uppercase text-on-surface-variant">Código</th>
-              <th class="px-4 py-4 text-label-md font-label-md font-bold uppercase text-on-surface-variant">Estado</th>
-              <th class="px-4 py-4 text-label-md font-label-md font-bold uppercase text-on-surface-variant">Comprador</th>
-              <th class="px-4 py-4 text-label-md font-label-md font-bold uppercase text-on-surface-variant">Teléfono</th>
-              <th class="px-4 py-4 text-label-md font-label-md font-bold uppercase text-on-surface-variant">Vendedor</th>
-              <th class="px-4 py-4 text-label-md font-label-md font-bold uppercase text-on-surface-variant">Punto</th>
-              <th class="px-4 py-4 text-label-md font-label-md font-bold uppercase text-on-surface-variant">Fecha venta</th>
-              <th class="px-4 py-4 text-label-md font-label-md font-bold uppercase text-on-surface-variant">Acción</th>
-            </tr>
-          </thead>
-          <tbody id="tickets-body" class="divide-y divide-outline-variant">
-            <!-- Rendered by client script -->
-          </tbody>
-        </table>
-      </div>
+      <Table minWidth="980px" class="border-0 rounded-none">
+        <thead class="border-b border-outline-variant bg-surface-container-low">
+          <tr>
+            <th class="h-11 px-4 text-left text-xs font-medium uppercase tracking-wide text-on-surface-variant">Código</th>
+            <th class="h-11 px-4 text-left text-xs font-medium uppercase tracking-wide text-on-surface-variant">Estado</th>
+            <th class="h-11 px-4 text-left text-xs font-medium uppercase tracking-wide text-on-surface-variant">Comprador</th>
+            <th class="h-11 px-4 text-left text-xs font-medium uppercase tracking-wide text-on-surface-variant">Teléfono</th>
+            <th class="h-11 px-4 text-left text-xs font-medium uppercase tracking-wide text-on-surface-variant">Vendedor</th>
+            <th class="h-11 px-4 text-left text-xs font-medium uppercase tracking-wide text-on-surface-variant">Punto</th>
+            <th class="h-11 px-4 text-left text-xs font-medium uppercase tracking-wide text-on-surface-variant">Fecha venta</th>
+            <th class="h-11 px-4 text-right text-xs font-medium uppercase tracking-wide text-on-surface-variant">Acción</th>
+          </tr>
+        </thead>
+        <tbody id="tickets-body" class="divide-y divide-outline-variant"></tbody>
+      </Table>
 
-      <div class="flex items-center justify-between border-t border-outline-variant bg-surface-container-low p-6">
-        <span id="results-count" class="text-caption font-caption text-on-surface-variant">Cargando boletos...</span>
-        <a href="/admin/sales" class="rounded bg-primary px-4 py-2 text-label-md font-label-md font-bold text-on-primary hover:bg-secondary">Registrar venta</a>
+      <div class="flex flex-col gap-3 border-t border-outline-variant bg-surface-container-low p-4 sm:flex-row sm:items-center sm:justify-between">
+        <span id="results-count" class="text-sm text-on-surface-variant">Cargando boletos...</span>
+        <Button href="/admin/sales" size="sm" class="w-full sm:w-auto">Registrar venta</Button>
       </div>
-    </div>
-  </div>
+    </Card>
+  </AdminPage>
 </AdminLayout>
 
 <script>
   import { formatSiteDate } from "@/lib/locale";
-  import {
-    TICKET_STATUS_LABELS,
-    TICKET_STATUS_CLASSES,
-    getTicketActionLabel,
-    canConfirmPayment,
-  } from "@/lib/ticket-status";
+  import { TICKET_STATUS_LABELS, TICKET_STATUS_CLASSES, getTicketActionLabel, canConfirmPayment } from "@/lib/ticket-status";
 
-  const statusLabel = TICKET_STATUS_LABELS;
-  const statusClass = TICKET_STATUS_CLASSES;
-
-  // Parse tickets data from server render
   const dataEl = document.getElementById("tickets-data");
   const allTickets = dataEl ? JSON.parse(dataEl.getAttribute("data-tickets") || "[]") : [];
 
@@ -125,38 +112,33 @@ const locations = Array.from(new Set(tickets.map((t: any) => t.sale_location).fi
       const matchesStatus = statusFilter === "all" || ticket.status === statusFilter;
       const matchesSeller = sellerFilter === "all" || ticket.seller_name === sellerFilter;
       const matchesLocation = locationFilter === "all" || ticket.sale_location === locationFilter;
-
       return matchesCode && matchesStatus && matchesSeller && matchesLocation;
     });
 
     if (body) {
-      body.innerHTML = filtered.map((ticket: any) => {
-        const actionText = getTicketActionLabel(ticket.status);
-        const actionLink = canConfirmPayment(ticket.status)
-          ? `<a class="text-primary font-bold hover:underline" href="/admin/sales?code=${ticket.ticket_code}">${actionText}</a>`
-          : `<span class="text-on-surface-variant">${actionText}</span>`;
+      body.innerHTML = filtered
+        .map((ticket: any) => {
+          const actionText = getTicketActionLabel(ticket.status);
+          const actionCell = canConfirmPayment(ticket.status)
+            ? `<a class="text-sm font-semibold text-primary hover:underline" href="/admin/sales?code=${ticket.ticket_code}">${actionText}</a>`
+            : `<span class="text-sm text-on-surface-variant">${actionText}</span>`;
+          const soldDate = ticket.sold_at ? formatSiteDate(ticket.sold_at) : "-";
+          const badgeClass = TICKET_STATUS_CLASSES[ticket.status as keyof typeof TICKET_STATUS_CLASSES] || TICKET_STATUS_CLASSES.available;
 
-        const soldDate = ticket.sold_at 
-          ? formatSiteDate(ticket.sold_at)
-          : "-";
-
-        return `
-          <tr class="hover:bg-surface-container-low">
-            <td class="px-4 py-3 font-mono font-bold text-primary">${ticket.ticket_code}</td>
-            <td class="px-4 py-3">
-              <span class="inline-block rounded-full px-3 py-1 text-caption font-caption font-bold ${statusClass[ticket.status] || 'bg-slate-100'}">
-                ${statusLabel[ticket.status] || ticket.status}
-              </span>
-            </td>
-            <td class="px-4 py-3 font-semibold text-on-surface">${ticket.buyer_name || "-"}</td>
-            <td class="px-4 py-3 text-on-surface-variant">${ticket.buyer_phone || "-"}</td>
-            <td class="px-4 py-3 text-on-surface-variant">${ticket.seller_name || "-"}</td>
-            <td class="px-4 py-3 text-on-surface-variant">${ticket.sale_location || "-"}</td>
-            <td class="px-4 py-3 text-on-surface-variant">${soldDate}</td>
-            <td class="px-4 py-3">${actionLink}</td>
-          </tr>
-        `;
-      }).join("");
+          return `
+            <tr class="hover:bg-surface-container-low/70">
+              <td class="px-4 py-3 font-mono text-sm font-semibold text-primary">${ticket.ticket_code}</td>
+              <td class="px-4 py-3"><span class="inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${badgeClass}">${TICKET_STATUS_LABELS[ticket.status as keyof typeof TICKET_STATUS_LABELS] || ticket.status}</span></td>
+              <td class="px-4 py-3 text-sm font-medium">${ticket.buyer_name || "-"}</td>
+              <td class="px-4 py-3 text-sm text-on-surface-variant">${ticket.buyer_phone || "-"}</td>
+              <td class="px-4 py-3 text-sm text-on-surface-variant">${ticket.seller_name || "-"}</td>
+              <td class="px-4 py-3 text-sm text-on-surface-variant">${ticket.sale_location || "-"}</td>
+              <td class="px-4 py-3 text-sm text-on-surface-variant">${soldDate}</td>
+              <td class="px-4 py-3 text-right">${actionCell}</td>
+            </tr>
+          `;
+        })
+        .join("");
     }
 
     if (countLabel) {
@@ -164,12 +146,10 @@ const locations = Array.from(new Set(tickets.map((t: any) => t.sale_location).fi
     }
   }
 
-  // Bind event listeners
-  [codeInput, statusSelect, sellerSelect, locationSelect].forEach(el => {
+  [codeInput, statusSelect, sellerSelect, locationSelect].forEach((el) => {
     el?.addEventListener("input", render);
     el?.addEventListener("change", render);
   });
 
-  // Initial render
   render();
 </script>

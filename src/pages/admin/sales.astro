@@ -1,6 +1,15 @@
 ---
 import AdminLayout from "@/layouts/AdminLayout.astro";
-import AdminHeader from "@/components/admin/AdminHeader.astro";
+import PageHeader from "@/components/admin/ui/PageHeader.astro";
+import AdminPage from "@/components/admin/ui/AdminPage.astro";
+import Card from "@/components/admin/ui/Card.astro";
+import FormField from "@/components/admin/ui/FormField.astro";
+import Input from "@/components/admin/ui/Input.astro";
+import Select from "@/components/admin/ui/Select.astro";
+import Button from "@/components/admin/ui/Button.astro";
+import Alert from "@/components/admin/ui/Alert.astro";
+import Table from "@/components/admin/ui/Table.astro";
+import EmptyState from "@/components/admin/ui/EmptyState.astro";
 import { createSupabaseServerClient } from "@/lib/auth";
 import { confirmTicketPayment } from "@/services/ticket-payment";
 
@@ -73,130 +82,147 @@ const { data: recentSales = [] } = await supabase
   .limit(10);
 ---
 
-<AdminLayout title="Ventas Físicas | FARECOH" description="Registro de venta física de boletos" active="sales">
-  <AdminHeader title="Venta Física" section="Ventas" />
+<AdminLayout title="Ventas | FARECOH" description="Registro de venta física de boletos" active="sales">
+  <PageHeader
+    title="Ventas"
+    section="Operaciones"
+    description="Confirme pagos de reservas web o registre ventas presenciales."
+  />
 
-  <div class="px-margin py-8 max-w-container-max pb-24 md:pb-8 space-y-stack-lg">
-    <section class="grid gap-gutter lg:grid-cols-3">
-      <form id="sale-form" method="POST" class="rounded-lg border border-outline-variant bg-surface-container-lowest p-6 shadow-sm lg:col-span-1">
-        <h2 class="text-headline-sm font-headline-sm text-on-surface">Confirmar pago / registrar venta</h2>
-        <p class="mt-1 text-body-md font-body-md text-on-surface-variant">Reservas web o venta presencial.</p>
+  <AdminPage>
+    <section class="grid gap-4 lg:grid-cols-3">
+      <Card class="lg:col-span-1">
+        <h2 class="text-lg font-semibold text-on-surface">Confirmar pago / registrar venta</h2>
+        <p class="mt-1 text-sm text-on-surface-variant">Reservas web o venta presencial.</p>
 
-        <div class="mt-6 space-y-4">
-          <label class="block">
-            <span class="text-caption font-caption font-bold uppercase text-on-surface-variant">Código boleto</span>
-            <input id="code-input" name="code" required placeholder="PF-000001" class="mt-2 w-full rounded border border-outline-variant bg-surface px-3 py-3 font-mono text-body-md outline-none focus:border-primary" />
-          </label>
-          <div id="ticket-status-banner" class="hidden rounded border p-3 text-body-md"></div>
-          <label class="block">
-            <span class="text-caption font-caption font-bold uppercase text-on-surface-variant">Nombre comprador</span>
-            <input id="buyer-name-input" name="buyer_name" required class="mt-2 w-full rounded border border-outline-variant bg-surface px-3 py-3 text-body-md outline-none focus:border-primary" />
-          </label>
-          <label class="block">
-            <span class="text-caption font-caption font-bold uppercase text-on-surface-variant">Teléfono</span>
-            <input id="buyer-phone-input" name="buyer_phone" required class="mt-2 w-full rounded border border-outline-variant bg-surface px-3 py-3 text-body-md outline-none focus:border-primary" />
-          </label>
-          <label class="block">
-            <span class="text-caption font-caption font-bold uppercase text-on-surface-variant">Correo opcional</span>
-            <input id="buyer-email-input" name="buyer_email" type="email" class="mt-2 w-full rounded border border-outline-variant bg-surface px-3 py-3 text-body-md outline-none focus:border-primary" />
-          </label>
-          <label class="block">
-            <span class="text-caption font-caption font-bold uppercase text-on-surface-variant">Vendedor</span>
-            <select id="seller-select" name="seller_id" required class="mt-2 w-full rounded border border-outline-variant bg-surface px-3 py-3 text-body-md outline-none focus:border-primary">
+        <form id="sale-form" method="POST" class="mt-6 space-y-4">
+          <FormField label="Código boleto" htmlFor="code-input" required>
+            <Input id="code-input" name="code" required placeholder="PF-000001" mono />
+          </FormField>
+
+          <Alert id="ticket-status-banner" variant="info" hidden />
+
+          <FormField label="Nombre comprador" htmlFor="buyer-name-input" required>
+            <Input id="buyer-name-input" name="buyer_name" required />
+          </FormField>
+
+          <FormField label="Teléfono" htmlFor="buyer-phone-input" required>
+            <Input id="buyer-phone-input" name="buyer_phone" required type="tel" autocomplete="tel" />
+          </FormField>
+
+          <FormField label="Correo" htmlFor="buyer-email-input" hint="Opcional">
+            <Input id="buyer-email-input" name="buyer_email" type="email" autocomplete="email" />
+          </FormField>
+
+          <FormField label="Vendedor" htmlFor="seller-select" required>
+            <Select id="seller-select" name="seller_id" required>
               <option value="">Seleccione un vendedor</option>
-              {sellers && sellers.map((seller) => (
-                <option value={seller.id}>{seller.name} ({seller.type === "vendor" ? "Vendedor" : "Punto físico"})</option>
+              {sellers.map((seller) => (
+                <option value={seller.id}>
+                  {seller.name} ({seller.type === "vendor" ? "Vendedor" : "Punto físico"})
+                </option>
               ))}
-            </select>
-            <p class="mt-2 text-caption text-on-surface-variant">
-              <a href="/admin/vendors" class="font-bold text-primary hover:underline">Registrar vendedor</a>
+            </Select>
+            <p class="text-xs text-on-surface-variant">
+              <a href="/admin/vendors" class="font-medium text-primary hover:underline">Registrar vendedor</a>
             </p>
-          </label>
-          <label class="block">
-            <span class="text-caption font-caption font-bold uppercase text-on-surface-variant">Punto de venta</span>
-            <input name="sale_location" required placeholder="Escuela Nacional de Música" class="mt-2 w-full rounded border border-outline-variant bg-surface px-3 py-3 text-body-md outline-none focus:border-primary" />
-          </label>
-          <label class="block">
-            <span class="text-caption font-caption font-bold uppercase text-on-surface-variant">Método de pago</span>
-            <select name="payment_method" required class="mt-2 w-full rounded border border-outline-variant bg-surface px-3 py-3 text-body-md outline-none focus:border-primary">
+          </FormField>
+
+          <FormField label="Punto de venta" htmlFor="sale-location" required>
+            <Input id="sale-location" name="sale_location" required placeholder="Escuela Nacional de Música" />
+          </FormField>
+
+          <FormField label="Método de pago" htmlFor="payment-method" required>
+            <Select id="payment-method" name="payment_method" required>
               <option value="">Seleccione</option>
               <option value="Efectivo">Efectivo</option>
               <option value="Transferencia">Transferencia</option>
               <option value="POS">POS</option>
               <option value="Cortesía">Cortesía</option>
-            </select>
-          </label>
-          <label class="block">
-            <span class="text-caption font-caption font-bold uppercase text-on-surface-variant">Referencia opcional</span>
-            <input name="payment_reference" class="mt-2 w-full rounded border border-outline-variant bg-surface px-3 py-3 text-body-md outline-none focus:border-primary" />
-          </label>
-        </div>
+            </Select>
+          </FormField>
 
-        <button id="submit-btn" class="mt-6 w-full rounded bg-primary px-4 py-3 text-label-md font-label-md font-bold text-on-primary transition-colors hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-50" type="submit">
-          Registrar venta
-        </button>
+          <FormField label="Referencia" htmlFor="payment-reference" hint="Opcional">
+            <Input id="payment-reference" name="payment_reference" />
+          </FormField>
 
-        {formMessage && (
-          <p id="sale-message" class={`mt-4 rounded p-3 text-body-md font-body-md ${formError ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
-            {formMessage}
-          </p>
-        )}
-      </form>
+          <Button id="submit-btn" type="submit" fullWidthMobile class="mt-2 w-full">
+            Registrar venta
+          </Button>
 
-      <div class="space-y-stack-lg lg:col-span-2">
-        <section class="rounded-lg border border-outline-variant bg-surface-container-lowest p-6 shadow-sm">
-          <h3 class="text-headline-sm font-headline-sm text-on-surface">Estado del boleto</h3>
-          <div id="ticket-preview" class="mt-4 rounded border border-outline-variant bg-surface p-5 text-body-md text-on-surface-variant">Ingrese un código para consultar.</div>
-        </section>
+          {formMessage && (
+            <Alert variant={formError ? "error" : "success"} id="sale-message">
+              {formMessage}
+            </Alert>
+          )}
+        </form>
+      </Card>
 
-        <section class="rounded-lg border border-outline-variant bg-surface-container-lowest shadow-sm">
-          <div class="border-b border-outline-variant p-6">
-            <h3 class="text-headline-sm font-headline-sm text-on-surface">Últimas ventas</h3>
-            <p class="mt-1 text-body-md text-on-surface-variant">Precio unitario: L {ticketPrice}</p>
+      <div class="space-y-4 lg:col-span-2">
+        <Card>
+          <h3 class="text-base font-semibold text-on-surface">Estado del boleto</h3>
+          <div
+            id="ticket-preview"
+            class="mt-4 rounded-md border border-outline-variant bg-surface-container-low p-4 text-sm text-on-surface-variant"
+          >
+            Ingrese un código para consultar.
           </div>
-          <div class="overflow-x-auto">
-            <table class="w-full min-w-[760px] text-left">
-              <thead class="bg-surface-container-low">
+        </Card>
+
+        <Card padding={false}>
+          <div class="border-b border-outline-variant px-6 py-4">
+            <h3 class="text-base font-semibold text-on-surface">Últimas ventas</h3>
+            <p class="mt-1 text-sm text-on-surface-variant">Precio unitario: L {ticketPrice}</p>
+          </div>
+
+          {recentSales.length ? (
+            <Table minWidth="760px">
+              <thead class="border-b border-outline-variant bg-surface-container-low">
                 <tr>
-                  <th class="px-4 py-3 text-label-md font-label-md font-bold uppercase text-on-surface-variant">Código</th>
-                  <th class="px-4 py-3 text-label-md font-label-md font-bold uppercase text-on-surface-variant">Comprador</th>
-                  <th class="px-4 py-3 text-label-md font-label-md font-bold uppercase text-on-surface-variant">Vendedor</th>
-                  <th class="px-4 py-3 text-label-md font-label-md font-bold uppercase text-on-surface-variant">Punto</th>
-                  <th class="px-4 py-3 text-label-md font-label-md font-bold uppercase text-on-surface-variant">Fecha</th>
+                  <th class="h-11 px-4 text-left text-xs font-medium uppercase tracking-wide text-on-surface-variant">Código</th>
+                  <th class="h-11 px-4 text-left text-xs font-medium uppercase tracking-wide text-on-surface-variant">Comprador</th>
+                  <th class="h-11 px-4 text-left text-xs font-medium uppercase tracking-wide text-on-surface-variant">Vendedor</th>
+                  <th class="h-11 px-4 text-left text-xs font-medium uppercase tracking-wide text-on-surface-variant">Punto</th>
+                  <th class="h-11 px-4 text-left text-xs font-medium uppercase tracking-wide text-on-surface-variant">Fecha</th>
                 </tr>
               </thead>
-              <tbody id="recent-sales" class="divide-y divide-outline-variant">
-                {recentSales && recentSales.length ? recentSales.map((ticket: any) => (
-                  <tr>
-                    <td class="px-4 py-3 font-mono font-bold text-primary">{ticket.ticket_code}</td>
-                    <td class="px-4 py-3">{ticket.buyer_name}</td>
-                    <td class="px-4 py-3">{ticket.seller_name}</td>
-                    <td class="px-4 py-3">{ticket.sale_location}</td>
-                    <td class="px-4 py-3">
-                      {ticket.sold_at ? new Date(ticket.sold_at).toLocaleDateString("es-HN", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : "-"}
+              <tbody class="divide-y divide-outline-variant">
+                {recentSales.map((ticket: any) => (
+                  <tr class="hover:bg-surface-container-low/70">
+                    <td class="px-4 py-3 font-mono text-sm font-semibold text-primary">{ticket.ticket_code}</td>
+                    <td class="px-4 py-3 text-sm">{ticket.buyer_name}</td>
+                    <td class="px-4 py-3 text-sm">{ticket.seller_name}</td>
+                    <td class="px-4 py-3 text-sm">{ticket.sale_location}</td>
+                    <td class="px-4 py-3 text-sm text-on-surface-variant">
+                      {ticket.sold_at
+                        ? new Date(ticket.sold_at).toLocaleDateString("es-HN", {
+                            day: "2-digit",
+                            month: "short",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })
+                        : "-"}
                     </td>
                   </tr>
-                )) : (
-                  <tr>
-                    <td colspan="5" class="px-4 py-8 text-center text-on-surface-variant">No hay ventas registradas en la base de datos.</td>
-                  </tr>
-                )}
+                ))}
               </tbody>
-            </table>
-          </div>
-        </section>
+            </Table>
+          ) : (
+            <EmptyState
+              icon="receipt_long"
+              title="Sin ventas registradas"
+              description="Las ventas confirmadas aparecerán aquí."
+            />
+          )}
+        </Card>
       </div>
     </section>
-  </div>
+  </AdminPage>
 </AdminLayout>
 
 <script>
   import { supabase } from "@/lib/supabase";
-  import {
-    TICKET_STATUS_LABELS,
-    getTicketActionLabel,
-    canConfirmPayment,
-  } from "@/lib/ticket-status";
+  import { TICKET_STATUS_LABELS, getTicketActionLabel, canConfirmPayment } from "@/lib/ticket-status";
 
   const preview = document.getElementById("ticket-preview");
   const input = document.getElementById("code-input") as HTMLInputElement | null;
@@ -205,8 +231,6 @@ const { data: recentSales = [] } = await supabase
   const buyerNameInput = document.getElementById("buyer-name-input") as HTMLInputElement | null;
   const buyerPhoneInput = document.getElementById("buyer-phone-input") as HTMLInputElement | null;
   const buyerEmailInput = document.getElementById("buyer-email-input") as HTMLInputElement | null;
-
-  let activeTicket: Record<string, string | null> | null = null;
 
   const initialCode = new URLSearchParams(window.location.search).get("code");
   if (initialCode && input) {
@@ -235,36 +259,30 @@ const { data: recentSales = [] } = await supabase
   function updateFormForStatus(status: string) {
     const actionLabel = getTicketActionLabel(status);
     if (submitBtn) {
-      if (canConfirmPayment(status)) {
-        submitBtn.disabled = false;
-        submitBtn.textContent = actionLabel;
-      } else {
-        submitBtn.disabled = true;
-        submitBtn.textContent = actionLabel;
-      }
+      submitBtn.disabled = !canConfirmPayment(status);
+      submitBtn.textContent = actionLabel;
     }
 
     if (statusBanner) {
-      statusBanner.classList.remove("hidden", "border-yellow-300", "bg-yellow-50", "border-green-300", "bg-green-50", "border-red-300", "bg-red-50");
+      statusBanner.classList.remove("hidden");
+      statusBanner.className = statusBanner.className.replace(/border-\S+|bg-\S+|text-\S+/g, "").trim();
       if (canConfirmPayment(status)) {
-        statusBanner.classList.add("border-green-300", "bg-green-50");
+        statusBanner.classList.add("rounded-lg", "border", "border-green-200", "bg-green-50", "px-4", "py-3", "text-sm", "text-green-800");
         statusBanner.textContent = `Estado: ${TICKET_STATUS_LABELS[status as keyof typeof TICKET_STATUS_LABELS] || status}. Puede ${actionLabel.toLowerCase()}.`;
       } else {
-        statusBanner.classList.add("border-red-300", "bg-red-50");
+        statusBanner.classList.add("rounded-lg", "border", "border-red-200", "bg-red-50", "px-4", "py-3", "text-sm", "text-red-800");
         statusBanner.textContent = `Estado: ${TICKET_STATUS_LABELS[status as keyof typeof TICKET_STATUS_LABELS] || status}. ${actionLabel}.`;
       }
-      statusBanner.classList.remove("hidden");
     }
   }
 
   async function renderPreview(code: string) {
     if (!preview) return;
     const cleanCode = code.trim().toUpperCase();
-    activeTicket = null;
 
     if (!cleanCode) {
-      preview.innerHTML = "Ingrese un código para consultar.";
-      if (statusBanner) statusBanner.classList.add("hidden");
+      preview.textContent = "Ingrese un código para consultar.";
+      statusBanner?.classList.add("hidden");
       if (submitBtn) {
         submitBtn.disabled = false;
         submitBtn.textContent = "Registrar venta";
@@ -273,37 +291,32 @@ const { data: recentSales = [] } = await supabase
     }
 
     if (!/^PF-\d{6}$/.test(cleanCode)) {
-      preview.innerHTML = `<span class="text-red-700 font-bold">Formato inválido. Use PF-000001.</span>`;
+      preview.innerHTML = `<span class="font-medium text-red-700">Formato inválido. Use PF-000001.</span>`;
       return;
     }
 
-    preview.innerHTML = `<div class="flex items-center gap-2"><span class="animate-spin h-5 w-5 border-2 border-primary border-t-transparent rounded-full"></span> Consultando estado...</div>`;
+    preview.innerHTML = `<div class="flex items-center gap-2"><span class="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent"></span> Consultando...</div>`;
 
-    const { data: ticket, error } = await supabase
-      .from("tickets")
-      .select("*")
-      .eq("ticket_code", cleanCode)
-      .single();
+    const { data: ticket, error } = await supabase.from("tickets").select("*").eq("ticket_code", cleanCode).single();
 
     if (error || !ticket) {
-      preview.innerHTML = `<span class="text-red-700 font-bold">Boleto inexistente.</span>`;
+      preview.innerHTML = `<span class="font-medium text-red-700">Boleto inexistente.</span>`;
       if (submitBtn) submitBtn.disabled = true;
       return;
     }
 
-    activeTicket = ticket;
     const soldDate = ticket.sold_at
       ? new Date(ticket.sold_at).toLocaleString("es-HN", { dateStyle: "short", timeStyle: "short" })
       : "-";
 
     preview.innerHTML = `
-      <div class="grid gap-2 sm:grid-cols-2">
-        <p><strong>Código:</strong> ${ticket.ticket_code}</p>
-        <p><strong>Estado:</strong> <span class="font-bold text-primary">${TICKET_STATUS_LABELS[ticket.status as keyof typeof TICKET_STATUS_LABELS] || ticket.status}</span></p>
-        <p><strong>Vendedor:</strong> ${ticket.seller_name || "-"}</p>
-        <p><strong>Punto:</strong> ${ticket.sale_location || "-"}</p>
-        <p><strong>Comprador:</strong> ${ticket.buyer_name || "-"}</p>
-        <p><strong>Vendido:</strong> ${soldDate}</p>
+      <div class="grid gap-3 sm:grid-cols-2">
+        <p><span class="text-on-surface-variant">Código:</span> <strong>${ticket.ticket_code}</strong></p>
+        <p><span class="text-on-surface-variant">Estado:</span> <strong class="text-primary">${TICKET_STATUS_LABELS[ticket.status as keyof typeof TICKET_STATUS_LABELS] || ticket.status}</strong></p>
+        <p><span class="text-on-surface-variant">Vendedor:</span> ${ticket.seller_name || "-"}</p>
+        <p><span class="text-on-surface-variant">Punto:</span> ${ticket.sale_location || "-"}</p>
+        <p><span class="text-on-surface-variant">Comprador:</span> ${ticket.buyer_name || "-"}</p>
+        <p><span class="text-on-surface-variant">Vendido:</span> ${soldDate}</p>
       </div>
     `;
 
@@ -313,7 +326,6 @@ const { data: recentSales = [] } = await supabase
   }
 
   input?.addEventListener("input", (e) => {
-    const code = (e.target as HTMLInputElement).value;
-    renderPreview(code);
+    renderPreview((e.target as HTMLInputElement).value);
   });
 </script>

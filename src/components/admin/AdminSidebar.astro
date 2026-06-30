@@ -1,73 +1,70 @@
 ---
 import FarecohLogo from "@/components/layout/FarecohLogo.astro";
-import { getPublicSupabaseConfig, isAuthConfigured, ROLE_LABELS, type UserProfile } from "@/lib/auth";
+import Badge from "@/components/admin/ui/Badge.astro";
+import Button from "@/components/admin/ui/Button.astro";
+import { ROLE_LABELS, type UserProfile } from "@/lib/auth";
 import { canAccessRoute } from "@/lib/rbac";
+import { ADMIN_NAV_ITEMS, type AdminNavKey } from "@/lib/admin-nav";
 
 interface Props {
-  active?: string;
+  active?: AdminNavKey;
 }
 
 const { active = "dashboard" } = Astro.props;
 const staffProfile = Astro.locals.staffProfile as UserProfile | undefined;
-const { supabaseUrl, supabaseAnonKey } = getPublicSupabaseConfig();
-const authConfigured = isAuthConfigured({ supabaseUrl, supabaseAnonKey });
 
-const navItems = [
-  { label: "Panel", href: "/admin", icon: "dashboard", key: "dashboard" },
-  { label: "Usuarios", href: "/admin/users", icon: "admin_panel_settings", key: "users" },
-  { label: "Ventas", href: "/admin/sales", icon: "payments", key: "sales" },
-  { label: "Boletos", href: "/admin/tickets", icon: "confirmation_number", key: "tickets" },
-  { label: "Lotes", href: "/admin/batches", icon: "inventory_2", key: "batches" },
-  { label: "Acceso", href: "/admin/checkin", icon: "qr_code_scanner", key: "checkin" },
-  { label: "Vendedores", href: "/admin/vendors", icon: "group", key: "vendors" },
-  { label: "Reportes", href: "/admin/reports", icon: "monitoring", key: "reports" },
-].filter((item) => staffProfile && canAccessRoute(staffProfile.role, item.href));
+const navItems = ADMIN_NAV_ITEMS.filter(
+  (item) => staffProfile && canAccessRoute(staffProfile.role, item.href),
+);
 
 const linkClass = (key: string) => {
-  const base = "flex items-center gap-3 px-4 py-3 rounded-lg text-label-md font-label-md transition-all";
-  if (active === key) return `${base} bg-secondary-container text-on-secondary-container font-bold translate-x-1`;
-  return `${base} text-on-surface-variant hover:bg-surface-container-highest`;
+  const base =
+    "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30";
+  if (active === key) {
+    return `${base} bg-primary/10 text-primary font-semibold`;
+  }
+  return `${base} text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface`;
 };
 ---
 
-<aside class="hidden md:flex flex-col h-screen p-4 space-y-stack-md bg-surface-container-low border-r border-outline-variant w-64 shrink-0 overflow-y-auto custom-scrollbar text-on-surface">
-  <div class="mb-8 px-2">
-    <a href="/" aria-label="FARECOH inicio">
-      <FarecohLogo variant="stacked" theme="color" size="admin" />
-    </a>
-    <p class="mt-2 text-label-md font-label-md text-on-surface-variant opacity-70">Portal administrativo</p>
-  </div>
-  
-  <div class="flex items-center gap-3 p-3 mb-6 bg-surface-container rounded-lg">
-    <div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center text-on-primary">
-      <span class="material-symbols-outlined">person</span>
-    </div>
-    <div class="min-w-0">
-      <p class="truncate text-label-md font-label-md text-on-surface font-bold">{staffProfile?.full_name ?? "Administrador"}</p>
-      <p class="truncate text-caption font-caption text-on-surface-variant">{staffProfile ? ROLE_LABELS[staffProfile.role] : "staff"}</p>
-    </div>
-  </div>
-  
-  <nav class="flex-1 space-y-2">
-    {navItems.map((item) => (
-      <a class={linkClass(item.key)} href={item.href}>
-        <span class="material-symbols-outlined">{item.icon}</span>
-        <span>{item.label}</span>
+<aside class="hidden md:fixed md:inset-y-0 md:flex md:w-64 md:flex-col md:border-r md:border-outline-variant md:bg-white">
+  <div class="flex h-full flex-col px-4 py-5">
+    <div class="mb-6 px-1">
+      <a href="/admin" aria-label="Panel administrativo">
+        <FarecohLogo variant="stacked" theme="color" size="admin" />
       </a>
-    ))}
-  </nav>
+      <p class="mt-2 text-xs text-on-surface-variant">Portal operativo</p>
+    </div>
 
-  <button id="admin-logout" class="w-full mt-auto py-3 border border-outline-variant text-on-surface font-bold rounded-lg hover:bg-surface-container-high transition-colors flex items-center justify-center gap-2 text-center text-label-md font-label-md cursor-pointer" type="button">
-    <span class="material-symbols-outlined">logout</span>
-    Cerrar sesión
-  </button>
+    {staffProfile && (
+      <div class="mb-5 rounded-lg border border-outline-variant bg-surface-container-low p-3">
+        <div class="flex items-start gap-3">
+          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+            <span class="material-symbols-outlined">person</span>
+          </div>
+          <div class="min-w-0">
+            <p class="truncate text-sm font-semibold text-on-surface">{staffProfile.full_name}</p>
+            <p class="truncate text-xs text-on-surface-variant">{staffProfile.email}</p>
+            <div class="mt-2">
+              <Badge variant="outline">{ROLE_LABELS[staffProfile.role]}</Badge>
+            </div>
+          </div>
+        </div>
+      </div>
+    )}
+
+    <nav class="flex-1 space-y-1 overflow-y-auto" aria-label="Menú administrativo">
+      {navItems.map((item) => (
+        <a class={linkClass(item.key)} href={item.href}>
+          <span class="material-symbols-outlined text-[20px]">{item.icon}</span>
+          <span>{item.label}</span>
+        </a>
+      ))}
+    </nav>
+
+    <Button variant="outline" fullWidthMobile adminLogout class="mt-4">
+      <span class="material-symbols-outlined text-base">logout</span>
+      Cerrar sesión
+    </Button>
+  </div>
 </aside>
-
-<script>
-  import { supabase } from "@/lib/supabase";
-
-  document.getElementById("admin-logout")?.addEventListener("click", async () => {
-    await supabase.auth.signOut();
-    window.location.href = "/admin/login";
-  });
-</script>

@@ -19,12 +19,12 @@ export const TICKET_STATUS_LABELS: Record<PhysicalTicketStatus, string> = {
 };
 
 export const TICKET_STATUS_CLASSES: Record<PhysicalTicketStatus, string> = {
-  available: "bg-slate-100 text-slate-700",
-  assigned: "bg-blue-100 text-blue-700",
-  reserved: "bg-yellow-100 text-yellow-700",
-  sold: "bg-green-100 text-green-700",
-  validated: "bg-purple-100 text-purple-700",
-  cancelled: "bg-red-100 text-red-700",
+  available: "bg-zinc-100 text-zinc-700 border border-zinc-200",
+  assigned: "bg-blue-100 text-blue-700 border border-blue-200",
+  reserved: "bg-amber-100 text-amber-800 border border-amber-200",
+  sold: "bg-green-100 text-green-700 border border-green-200",
+  validated: "bg-purple-100 text-purple-700 border border-purple-200",
+  cancelled: "bg-red-100 text-red-700 border border-red-200",
 };
 
 export function getTicketStatusLabel(status: string): string {

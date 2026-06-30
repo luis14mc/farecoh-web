@@ -1,0 +1,52 @@
+---
+import Badge from "@/components/admin/ui/Badge.astro";
+import Button from "@/components/admin/ui/Button.astro";
+import { ROLE_LABELS, type UserProfile } from "@/lib/auth";
+import { formatSiteDate } from "@/lib/locale";
+
+interface Props {
+  title: string;
+  section?: string;
+  description?: string;
+}
+
+const { title, section = "Administración", description } = Astro.props;
+const staffProfile = Astro.locals.staffProfile as UserProfile | undefined;
+const currentDate = formatSiteDate(new Date(), {
+  month: "short",
+  day: "numeric",
+  year: "numeric",
+});
+---
+
+<header class="sticky top-0 z-20 border-b border-outline-variant bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/80">
+  <div class="mx-auto flex w-full max-w-container-max flex-col gap-4 px-4 py-4 md:flex-row md:items-center md:justify-between md:px-8 md:py-5">
+    <div class="min-w-0">
+      <nav aria-label="Breadcrumb" class="mb-1 text-xs font-medium uppercase tracking-wide text-on-surface-variant">
+        <ol class="inline-flex flex-wrap items-center gap-1">
+          <li><a class="hover:text-primary transition-colors" href="/admin">Admin</a></li>
+          <li aria-hidden="true" class="text-on-surface-variant/50">/</li>
+          <li class="text-primary">{section}</li>
+        </ol>
+      </nav>
+      <h1 class="text-xl font-semibold tracking-tight text-on-surface md:text-2xl">{title}</h1>
+      {description && <p class="mt-1 text-sm text-on-surface-variant">{description}</p>}
+    </div>
+
+    <div class="flex flex-wrap items-center gap-2 md:justify-end">
+      {staffProfile && (
+        <Badge variant="outline" class="hidden sm:inline-flex">
+          {ROLE_LABELS[staffProfile.role]}
+        </Badge>
+      )}
+      <span class="hidden items-center gap-1.5 text-xs text-on-surface-variant lg:inline-flex">
+        <span class="material-symbols-outlined text-base">calendar_today</span>
+        {currentDate}
+      </span>
+      <Button variant="outline" size="sm" class="hidden md:inline-flex" adminLogout>
+        <span class="material-symbols-outlined text-base">logout</span>
+        Salir
+      </Button>
+    </div>
+  </div>
+</header>

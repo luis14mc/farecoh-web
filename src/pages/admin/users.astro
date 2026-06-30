@@ -1,6 +1,7 @@
 ---
 import AdminLayout from "@/layouts/AdminLayout.astro";
-import AdminHeader from "@/components/admin/AdminHeader.astro";
+import PageHeader from "@/components/admin/ui/PageHeader.astro";
+import AdminPage from "@/components/admin/ui/AdminPage.astro";
 import { createSupabaseServerClient, ROLE_LABELS, type StaffRole } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabase";
 import { formatSiteDate } from "@/lib/locale";
@@ -139,9 +140,9 @@ const roleLabel = (roleName: string) => ROLE_LABELS[roleName as StaffRole] ?? ro
 ---
 
 <AdminLayout title="Usuarios | FARECOH" description="Administración de usuarios del panel" active="users">
-  <AdminHeader title="Usuarios" section="Administración" />
+  <PageHeader title="Usuarios" section="Accesos" description="Gestione cuentas y roles del panel administrativo." />
 
-  <div class="px-margin py-8 max-w-container-max pb-24 md:pb-8 space-y-stack-lg">
+  <AdminPage>
     <section class="rounded-lg border border-outline-variant bg-surface-container-lowest p-6 shadow-sm">
       <p class="text-label-md font-label-md font-bold uppercase tracking-wider text-primary">Solo super administrador</p>
       <h2 class="mt-1 text-headline-md font-headline-md text-on-surface">Gestión de usuarios administrativos</h2>
@@ -275,7 +276,7 @@ const roleLabel = (roleName: string) => ROLE_LABELS[roleName as StaffRole] ?? ro
         </div>
       </section>
     </section>
-  </div>
+  </AdminPage>
 </AdminLayout>
 
 <script>

@@ -18,36 +18,33 @@ const formatDate = (isoString: string) =>
   });
 ---
 
-<div class="bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden flex flex-col text-on-surface">
-  <div class="p-6 border-b border-outline-variant flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+<div class="overflow-hidden rounded-lg border border-outline-variant bg-white shadow-sm text-on-surface">
+  <div class="flex flex-col gap-4 border-b border-outline-variant p-4 md:flex-row md:items-center md:justify-between md:p-6">
     <div>
-      <h3 class="text-headline-md font-headline-md text-on-surface">Historial de Ventas</h3>
-      <p class="text-caption font-caption text-on-surface-variant">Vea y filtre las transacciones registradas</p>
+      <h3 class="text-base font-semibold text-on-surface">Historial de ventas</h3>
+      <p class="text-sm text-on-surface-variant">Vea y filtre las transacciones registradas</p>
     </div>
   </div>
 
-  <!-- Dynamic Filters Section -->
-  <div class="p-6 bg-surface-container-low border-b border-outline-variant grid grid-cols-1 sm:grid-cols-3 gap-4">
-    <!-- Name / Code Filter -->
+  <div class="grid grid-cols-1 gap-4 border-b border-outline-variant bg-surface-container-low p-4 sm:grid-cols-3 md:p-6">
     <div>
-      <label class="text-caption font-caption text-on-surface-variant uppercase font-bold block mb-2">Buscar</label>
+      <label class="mb-2 block text-xs font-medium uppercase tracking-wide text-on-surface-variant">Buscar</label>
       <div class="relative">
-        <input 
-          id="search-input" 
-          type="text" 
-          placeholder="Comprador, vendedor o código..." 
-          class="w-full pl-10 pr-4 py-2 border border-[rgba(69,65,66,0.2)] focus:border-primary focus:ring-0 outline-none bg-surface text-body-md text-on-surface"
+        <input
+          id="search-input"
+          type="text"
+          placeholder="Comprador, vendedor o código..."
+          class="flex h-11 w-full rounded-md border border-outline-variant bg-white pl-10 pr-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
         />
-        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
+        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
       </div>
     </div>
 
-    <!-- Payment Method Filter -->
     <div>
-      <label class="text-caption font-caption text-on-surface-variant uppercase font-bold block mb-2">Método de Pago</label>
-      <select 
-        id="payment-filter" 
-        class="w-full px-3 py-2 border border-[rgba(69,65,66,0.2)] focus:border-primary focus:ring-0 outline-none bg-surface text-body-md text-on-surface"
+      <label class="mb-2 block text-xs font-medium uppercase tracking-wide text-on-surface-variant">Método de pago</label>
+      <select
+        id="payment-filter"
+        class="flex h-11 w-full rounded-md border border-outline-variant bg-white px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
       >
         <option value="all">Todos</option>
         <option value="cash">Efectivo</option>
@@ -56,31 +53,29 @@ const formatDate = (isoString: string) =>
       </select>
     </div>
 
-    <!-- Date Filter -->
     <div>
-      <label class="text-caption font-caption text-on-surface-variant uppercase font-bold block mb-2">Fecha</label>
+      <label class="mb-2 block text-xs font-medium uppercase tracking-wide text-on-surface-variant">Fecha</label>
       <div class="relative">
-        <input 
-          id="date-filter" 
-          type="date" 
-          class="w-full pl-10 pr-4 py-2 border border-[rgba(69,65,66,0.2)] focus:border-primary focus:ring-0 outline-none bg-surface text-body-md text-on-surface"
+        <input
+          id="date-filter"
+          type="date"
+          class="flex h-11 w-full rounded-md border border-outline-variant bg-white pl-10 pr-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
         />
-        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">calendar_today</span>
+        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">calendar_today</span>
       </div>
     </div>
   </div>
 
-  <!-- Table Section -->
   <div class="overflow-x-auto">
-    <table class="w-full text-left border-collapse" id="sales-table">
-      <thead class="bg-surface-container-low">
+    <table class="w-full min-w-[760px] text-left text-sm" id="sales-table">
+      <thead class="border-b border-outline-variant bg-surface-container-low">
         <tr>
-          <th class="px-6 py-4 text-label-md font-label-md text-on-surface-variant uppercase font-semibold">Boleto</th>
-          <th class="px-6 py-4 text-label-md font-label-md text-on-surface-variant uppercase font-semibold">Comprador</th>
-          <th class="px-6 py-4 text-label-md font-label-md text-on-surface-variant uppercase font-semibold">Monto</th>
-          <th class="px-6 py-4 text-label-md font-label-md text-on-surface-variant uppercase font-semibold">Método Pago</th>
-          <th class="px-6 py-4 text-label-md font-label-md text-on-surface-variant uppercase font-semibold">Vendedor</th>
-          <th class="px-6 py-4 text-label-md font-label-md text-on-surface-variant uppercase font-semibold">Fecha</th>
+          <th class="h-11 px-4 text-xs font-medium uppercase tracking-wide text-on-surface-variant">Boleto</th>
+          <th class="h-11 px-4 text-xs font-medium uppercase tracking-wide text-on-surface-variant">Comprador</th>
+          <th class="h-11 px-4 text-xs font-medium uppercase tracking-wide text-on-surface-variant">Monto</th>
+          <th class="h-11 px-4 text-xs font-medium uppercase tracking-wide text-on-surface-variant">Método</th>
+          <th class="h-11 px-4 text-xs font-medium uppercase tracking-wide text-on-surface-variant">Vendedor</th>
+          <th class="h-11 px-4 text-xs font-medium uppercase tracking-wide text-on-surface-variant">Fecha</th>
         </tr>
       </thead>
       <tbody class="divide-y divide-outline-variant" id="table-body">
@@ -89,15 +84,14 @@ const formatDate = (isoString: string) =>
           const dateStr = new Date(sale.created_at).toISOString().split("T")[0];
 
           return (
-            <tr 
-              class="hover:bg-surface-container-low transition-colors group sales-row" 
+            <tr class="sales-row hover:bg-surface-container-low/70 transition-colors">
               data-buyer={ticket.buyer_name?.toLowerCase() || ""} 
               data-seller={sale.seller_name.toLowerCase()} 
               data-code={ticket.ticket_code.toLowerCase()} 
               data-payment={sale.payment_method.toLowerCase()}
               data-date={dateStr}
             >
-              <td class="px-6 py-4 text-body-md font-body-md font-semibold text-primary font-mono">
+              <td class="px-4 py-3 font-mono text-sm font-semibold text-primary">
                 {ticket.ticket_code}
               </td>
               <td class="px-6 py-4">
