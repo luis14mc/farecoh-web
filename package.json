@@ -39,6 +39,7 @@
         "qrcode": "^1.5.4",
         "react": "^19.2.7",
         "react-dom": "^19.2.7",
+        "sharp": "^0.34.3",
         "tailwind-merge": "^3.6.0",
         "tailwindcss": "^4.1.11",
         "tailwindcss-animate": "^1.0.7",
@@ -46,8 +47,7 @@
     },
     "devDependencies": {
         "@types/react": "^19.2.17",
-        "@types/react-dom": "^19.2.3",
-        "sharp": "^0.34.3"
+        "@types/react-dom": "^19.2.3"
     },
     "packageManager": "pnpm@11.1.2+sha512.415a1cc25974731e75455c1468371be74c5aa5fb7621b50d4056d222451609f11412f23fd602e6169f1e060466641f798597e1be961a10688836a67b16569499"
 }

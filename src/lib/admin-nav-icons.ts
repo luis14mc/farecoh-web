@@ -5,6 +5,7 @@ import {
   LogOut,
   Menu,
   Package,
+  Printer,
   ScanLine,
   Shield,
   Ticket,
@@ -22,6 +23,7 @@ export const ADMIN_NAV_ICONS: Record<AdminNavKey, LucideIcon> = {
   checkin: ScanLine,
   vendors: Users,
   reports: BarChart3,
+  printing: Printer,
 };
 
 export { Menu, LogOut };

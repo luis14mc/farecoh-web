@@ -11,7 +11,7 @@ Export from Canva as **PNG** at print resolution (300 DPI recommended). The PNG 
 1. `ticket_code` (e.g. `PF-000001`)
 2. QR code linking to `https://www.farecoh.org/t/{qr_token}`
 
-After adding the file, run:
+After adding the file, generate a test PDF from `/admin/printing` or run:
 
 ```bash
 pnpm generate:print-tickets --test

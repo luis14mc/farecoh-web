@@ -38,6 +38,7 @@ test("checkin_operator can access checkin and no-autorizado", () => {
 test("event_manager cannot access users", () => {
   assert.equal(canAccessRoute("event_manager", "/admin/users"), false);
   assert.equal(canAccessRoute("event_manager", "/admin/reports"), true);
+  assert.equal(canAccessRoute("event_manager", "/admin/printing"), true);
 });
 
 test("resolveAdminAccess distinguishes unauthenticated, missing profile, and unauthorized", () => {

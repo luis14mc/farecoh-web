@@ -6,7 +6,8 @@ export type AdminNavKey =
   | "batches"
   | "checkin"
   | "vendors"
-  | "reports";
+  | "reports"
+  | "printing";
 
 export interface AdminNavItem {
   label: string;
@@ -24,4 +25,5 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
   { label: "Acceso", href: "/admin/checkin", icon: "qr_code_scanner", key: "checkin" },
   { label: "Vendedores", href: "/admin/vendors", icon: "group", key: "vendors" },
   { label: "Reportes", href: "/admin/reports", icon: "monitoring", key: "reports" },
+  { label: "Impresión", href: "/admin/printing", icon: "print", key: "printing" },
 ];

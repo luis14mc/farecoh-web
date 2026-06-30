@@ -8,7 +8,7 @@ The engine does **not** recreate ticket artwork in code. It only composites:
 2. Ticket code text
 3. QR encoding `https://www.farecoh.org/t/{qr_token}`
 
-No Canva automation. No changes to reservation, sales, or check-in logic.
+No Canva automation. No changes to reservation, sales, or check-in logic. PDFs never include buyer data.
 
 ## Template setup
 
@@ -21,7 +21,22 @@ public/templates/ticket-pink-floyd.png
 
 See also `public/templates/README.md`.
 
-## Environment
+## Admin panel (recommended)
+
+1. Sign in as `super_admin` or `event_manager`.
+2. Open **Impresión** → `/admin/printing`.
+3. Set the ticket range (defaults: `PF-000001` – `PF-000005`).
+4. Click **Generar PDF de prueba** for the selected range (defaults to `PF-000001` – `PF-000005`), or **Generar PDF completo** for `PF-000001` – `PF-000500`.
+
+The browser downloads via `GET /api/print/tickets?from=...&to=...`. The server uses your admin session (not the service role key in the browser). Output filename example:
+
+```text
+farecoh-pink-floyd-PF-000001-PF-000005.pdf
+```
+
+## CLI (optional)
+
+For local or CI runs without the admin UI:
 
 ```bash
 PUBLIC_SITE_URL=https://www.farecoh.org \
@@ -29,10 +44,6 @@ PUBLIC_SUPABASE_URL=... \
 SUPABASE_SERVICE_ROLE_KEY=... \
 pnpm generate:print-tickets
 ```
-
-`PUBLIC_SITE_URL` defaults to `https://www.farecoh.org` when building QR URLs if unset in the shared Canva helpers.
-
-## Commands
 
 ### 5-ticket test PDF
 
@@ -48,7 +59,7 @@ Output: `exports/print/test-5-tickets.pdf` (PF-000001 – PF-000005)
 pnpm generate:print-tickets
 ```
 
-Output: `exports/print/farecoh-pink-floyd-tickets.pdf` (PF-000001 – PF-000500)
+Output: `exports/print/farecoh-pink-floyd-PF-000001-PF-000500.pdf`
 
 ### Custom range
 
@@ -56,11 +67,9 @@ Output: `exports/print/farecoh-pink-floyd-tickets.pdf` (PF-000001 – PF-000500)
 pnpm generate:print-tickets --from PF-000001 --to PF-000100
 ```
 
-Writes the full output filename; use `--test` for the 5-ticket sample path.
-
 ## Adjusting code and QR placement
 
-Edit constants at the top of `scripts/generate-print-tickets.ts`:
+Edit constants in `src/lib/ticket-print-config.ts`:
 
 | Constant | Purpose |
 |----------|---------|
@@ -76,9 +85,9 @@ Coordinates use the template image’s pixel space (same as the PNG dimensions).
 
 Workflow to tune placement:
 
-1. Run `pnpm generate:print-tickets --test`
-2. Open `exports/print/test-5-tickets.pdf`
-3. Adjust constants and repeat until code and QR align with the Canva boxes
+1. Generate a test PDF from `/admin/printing` or `pnpm generate:print-tickets --test`
+2. Open the PDF and check alignment with the Canva boxes
+3. Adjust constants in `src/lib/ticket-print-config.ts` and repeat
 
 ## Print recommendation
 
@@ -93,3 +102,10 @@ Workflow to tune placement:
 - `pdf-lib` — PDF assembly
 - `sharp` — template dimensions and QR padding
 - `qrcode` — high-resolution QR PNG generation
+
+## Security
+
+- `/admin/printing` and `/api/print/tickets` require admin login
+- Only `super_admin` and `event_manager` roles can access
+- Server uses the authenticated Supabase client; service role is CLI-only
+- PDF contains only `ticket_code` and QR URL — no buyer PII
