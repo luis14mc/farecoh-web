@@ -59,6 +59,13 @@ const eventSchedule = `${event.dateDisplay} · ${event.time}`;
 
       <TicketSummary price={ticketPrice} />
 
+      <div
+        id="booking-error"
+        class="hidden rounded border border-red-400/40 bg-red-950/40 p-3 text-body-md text-red-200"
+        role="alert"
+        aria-live="polite"
+      ></div>
+
       <button type="submit" id="submit-btn" class="concert-form-submit">
         <span>Reservar boletos</span>
         <span class="material-symbols-outlined">confirmation_number</span>
@@ -128,14 +135,46 @@ const eventSchedule = `${event.dateDisplay} · ${event.time}`;
   
   const formContainer = document.getElementById("form-container");
   const successContainer = document.getElementById("success-container");
+  const bookingError = document.getElementById("booking-error");
   const summaryName = document.getElementById("summary-name");
   const summaryQty = document.getElementById("summary-qty");
   const summaryCodes = document.getElementById("summary-codes");
 
+  function clearBookingError() {
+    if (!bookingError) return;
+    bookingError.textContent = "";
+    bookingError.classList.add("hidden");
+  }
+
+  function showBookingError(message: string) {
+    if (!bookingError) return;
+    bookingError.textContent = message;
+    bookingError.classList.remove("hidden");
+  }
+
+  function getBookingErrorMessage(err: unknown): string {
+    const supabaseErr = err as {
+      message?: string;
+      details?: string;
+      hint?: string;
+      code?: string;
+    };
+
+    if (supabaseErr?.message && supabaseErr.message.trim()) {
+      return supabaseErr.message;
+    }
+
+    if (err instanceof Error && err.message.trim()) {
+      return err.message;
+    }
+
+    return "Ocurrió un error al procesar su reservación. Por favor intente de nuevo.";
+  }
+
   if (form && submitBtn) {
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
-      
+      clearBookingError();
       const formData = new FormData(form);
       const name = formData.get("name") as string;
       const email = formData.get("email") as string;
@@ -176,9 +215,23 @@ const eventSchedule = `${event.dateDisplay} · ${event.time}`;
           formContainer.classList.add("hidden");
           successContainer.classList.remove("hidden");
         }
-      } catch (err) {
-        console.error("Booking error:", err);
-        alert("Ocurrió un error al procesar su reservación. Por favor intente de nuevo.");
+      } catch (err: unknown) {
+        const supabaseErr = err as {
+          message?: string;
+          details?: string;
+          hint?: string;
+          code?: string;
+        };
+
+        console.error("Booking error full:", {
+          message: supabaseErr?.message,
+          details: supabaseErr?.details,
+          hint: supabaseErr?.hint,
+          code: supabaseErr?.code,
+          raw: err,
+        });
+
+        showBookingError(getBookingErrorMessage(err));
         submitBtn.disabled = false;
         submitBtn.innerHTML = originalText;
       }
