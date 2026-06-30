@@ -12,6 +12,7 @@
         "astro": "astro",
         "generate:ticket-assets": "node --experimental-strip-types scripts/generate-ticket-assets.ts",
         "export:canva-tickets": "node --experimental-strip-types scripts/export-canva-tickets.ts",
+        "generate:print-tickets": "node --experimental-strip-types scripts/generate-print-tickets.ts",
         "optimize:foundation-photos": "node --experimental-strip-types scripts/optimize-foundation-photos.ts"
     },
     "dependencies": {
@@ -34,6 +35,7 @@
         "clsx": "^2.1.1",
         "html5-qrcode": "^2.3.8",
         "lucide-react": "^1.22.0",
+        "pdf-lib": "^1.17.1",
         "qrcode": "^1.5.4",
         "react": "^19.2.7",
         "react-dom": "^19.2.7",
