@@ -3,19 +3,29 @@ import { Loader2, Search, UserCheck } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { TicketStatusBadge } from "@/components/admin/react/TicketStatusBadge";
+import { formatSiteTime } from "@/lib/locale";
 import { supabase } from "@/lib/supabase";
 import { TICKET_STATUS_LABELS } from "@/lib/ticket-status";
 
-export function TicketSearchQuick({ siteLocale }: { siteLocale: string }) {
+export function TicketSearchQuick() {
   const [code, setCode] = useState("");
   const [message, setMessage] = useState<{ text: string; variant: "info" | "success" | "warning" | "destructive" } | null>(null);
   const [loading, setLoading] = useState(false);
   const [ticket, setTicket] = useState<Record<string, string | null> | null>(null);
   const [validating, setValidating] = useState(false);
   const [validated, setValidated] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   useEffect(() => {
     const initial = new URLSearchParams(window.location.search).get("code");
@@ -62,6 +72,7 @@ export function TicketSearchQuick({ siteLocale }: { siteLocale: string }) {
       setValidated(true);
       setTicket({ ...ticket, status: "validated", validated_at: result.validated_at });
       setMessage({ text: "Entrada validada correctamente.", variant: "success" });
+      setConfirmOpen(false);
     } catch {
       setMessage({ text: "Error al validar el ingreso. Intente de nuevo.", variant: "destructive" });
     } finally {
@@ -72,90 +83,109 @@ export function TicketSearchQuick({ siteLocale }: { siteLocale: string }) {
   const canValidate = ticket?.status === "sold" && !validated;
 
   return (
-    <Card className="h-full">
-      <CardHeader>
-        <CardTitle className="text-base">Control de acceso rápido</CardTitle>
-        <CardDescription>Busque y valide boletos desde el panel</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="checkin-search">Buscar por código</Label>
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <Input
-              id="checkin-search"
-              className="min-w-0 flex-1 font-mono"
-              placeholder="PF-000001"
-              value={code}
-              onChange={(e) => setCode(e.target.value.toUpperCase())}
-              onKeyDown={(e) => e.key === "Enter" && void searchTicket(code)}
-            />
-            <Button type="button" className="w-full sm:w-auto" onClick={() => void searchTicket(code)} disabled={loading}>
-              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
-              Buscar
-            </Button>
-          </div>
-        </div>
-
-        {message && (
-          <Alert variant={message.variant === "destructive" ? "destructive" : message.variant === "success" ? "success" : message.variant === "warning" ? "warning" : "info"}>
-            <AlertDescription>{message.text}</AlertDescription>
-          </Alert>
-        )}
-
-        {ticket && (
-          <div className="rounded-lg border border-dashed p-4">
-            <div className="mb-4 flex items-start justify-between gap-4">
-              <div>
-                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Boleto encontrado</p>
-                <p className="font-mono text-lg font-semibold">{ticket.ticket_code}</p>
-              </div>
-              <TicketStatusBadge status={ticket.status || "available"} />
+    <>
+      <Card className="h-full">
+        <CardHeader>
+          <CardTitle className="text-base">Control de acceso rápido</CardTitle>
+          <CardDescription>Busque y valide boletos desde el panel</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="checkin-search">Buscar por código</Label>
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <Input
+                id="checkin-search"
+                className="min-w-0 flex-1 font-mono"
+                placeholder="PF-000001"
+                value={code}
+                onChange={(e) => setCode(e.target.value.toUpperCase())}
+                onKeyDown={(e) => e.key === "Enter" && void searchTicket(code)}
+              />
+              <Button type="button" className="w-full sm:w-auto" onClick={() => void searchTicket(code)} disabled={loading}>
+                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+                Buscar
+              </Button>
             </div>
-
-            <dl className="mb-4 space-y-2 text-sm">
-              <div className="flex justify-between gap-4 border-b pb-2">
-                <dt className="text-muted-foreground">Comprador</dt>
-                <dd className="font-medium">{ticket.buyer_name || "Invitado"}</dd>
-              </div>
-              <div className="flex justify-between gap-4 border-b pb-2">
-                <dt className="text-muted-foreground">Teléfono</dt>
-                <dd>{ticket.buyer_phone || "Sin teléfono"}</dd>
-              </div>
-              <div className="flex justify-between gap-4 border-b pb-2">
-                <dt className="text-muted-foreground">Estado</dt>
-                <dd>{TICKET_STATUS_LABELS[ticket.status as keyof typeof TICKET_STATUS_LABELS] || ticket.status}</dd>
-              </div>
-              {ticket.status === "validated" && ticket.validated_at && (
-                <div className="flex justify-between gap-4">
-                  <dt className="text-muted-foreground">Ingreso</dt>
-                  <dd className="font-medium text-green-700">
-                    {new Date(ticket.validated_at).toLocaleTimeString(siteLocale, { hour: "numeric", minute: "2-digit" })}
-                  </dd>
-                </div>
-              )}
-            </dl>
-
-            <Button
-              type="button"
-              variant="secondary"
-              className="w-full"
-              disabled={!canValidate || validating || validated}
-              onClick={() => void validateTicket()}
-            >
-              {validating ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : validated ? (
-                "Acceso concedido"
-              ) : (
-                <>
-                  <UserCheck className="h-4 w-4" />
-                  Validar ingreso
-                </>
-              )}
-            </Button>
           </div>
-        )}
-      </CardContent>
-    </Card>
+
+          {message && (
+            <Alert variant={message.variant === "destructive" ? "destructive" : message.variant === "success" ? "success" : message.variant === "warning" ? "warning" : "info"}>
+              <AlertDescription>{message.text}</AlertDescription>
+            </Alert>
+          )}
+
+          {ticket && (
+            <div className="rounded-lg border border-dashed p-4">
+              <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Boleto encontrado</p>
+                  <p className="font-mono text-lg font-semibold">{ticket.ticket_code}</p>
+                </div>
+                <TicketStatusBadge status={ticket.status || "available"} />
+              </div>
+
+              <dl className="mb-4 space-y-2 text-sm">
+                <div className="flex justify-between gap-4 border-b pb-2">
+                  <dt className="text-muted-foreground">Comprador</dt>
+                  <dd className="text-right font-medium">{ticket.buyer_name || "Invitado"}</dd>
+                </div>
+                <div className="flex justify-between gap-4 border-b pb-2">
+                  <dt className="text-muted-foreground">Teléfono</dt>
+                  <dd className="text-right">{ticket.buyer_phone || "Sin teléfono"}</dd>
+                </div>
+                <div className="flex justify-between gap-4 border-b pb-2">
+                  <dt className="text-muted-foreground">Estado</dt>
+                  <dd className="text-right">{TICKET_STATUS_LABELS[ticket.status as keyof typeof TICKET_STATUS_LABELS] || ticket.status}</dd>
+                </div>
+                {ticket.status === "validated" && ticket.validated_at && (
+                  <div className="flex justify-between gap-4">
+                    <dt className="text-muted-foreground">Ingreso</dt>
+                    <dd className="font-medium text-green-700">
+                      {formatSiteTime(ticket.validated_at, { hour: "numeric", minute: "2-digit" })}
+                    </dd>
+                  </div>
+                )}
+              </dl>
+
+              <Button
+                type="button"
+                variant="secondary"
+                className="w-full"
+                disabled={!canValidate || validating || validated}
+                onClick={() => setConfirmOpen(true)}
+              >
+                {validated ? (
+                  "Acceso concedido"
+                ) : (
+                  <>
+                    <UserCheck className="h-4 w-4" />
+                    Validar ingreso
+                  </>
+                )}
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Confirmar ingreso</DialogTitle>
+            <DialogDescription>
+              Validar acceso para <span className="font-mono font-semibold">{ticket?.ticket_code}</span>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => setConfirmOpen(false)}>
+              Cancelar
+            </Button>
+            <Button type="button" className="w-full sm:w-auto" onClick={() => void validateTicket()} disabled={validating}>
+              {validating ? <Loader2 className="h-4 w-4 animate-spin" /> : "Confirmar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

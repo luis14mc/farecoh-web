@@ -6,7 +6,7 @@ import { RecentCheckinsTable, RecentReservationsTable } from "@/components/admin
 import { SalesHistoryTable } from "@/components/admin/react/SalesHistoryTable";
 import { TicketSearchQuick } from "@/components/admin/react/TicketSearchQuick";
 import { supabase } from "@/lib/supabase";
-import { formatSiteCurrency, formatSiteDate, formatSiteNumber, SITE_LOCALE } from "@/lib/locale";
+import { formatSiteCurrency, formatSiteDate, formatSiteNumber } from "@/lib/locale";
 import { getPublicSupabaseConfig, isAuthConfigured, type UserProfile } from "@/lib/auth";
 import { getPinkFloydEventFallback } from "@/lib/events";
 
@@ -22,7 +22,7 @@ const { data: sales = [] } = await supabase
 
 const salesByDayMap: Record<string, number> = {};
 sales?.forEach((sale: { created_at: string; amount: number | string }) => {
-  const dayStr = new Date(sale.created_at).toLocaleDateString("es-HN", { day: "numeric", month: "short" });
+  const dayStr = formatSiteDate(sale.created_at, { day: "numeric", month: "short" });
   salesByDayMap[dayStr] = (salesByDayMap[dayStr] || 0) + Number(sale.amount);
 });
 const salesByDay = Object.entries(salesByDayMap).slice(-7);
@@ -137,7 +137,7 @@ const { data: checkins = [] } = await supabase
 
     <div class="grid grid-cols-1 items-start gap-4 lg:grid-cols-3">
       <section class="lg:col-span-1">
-        <TicketSearchQuick client:load siteLocale={SITE_LOCALE} />
+        <TicketSearchQuick client:load />
       </section>
       <section class="lg:col-span-2">
         <SalesHistoryTable client:load sales={sales ?? []} />

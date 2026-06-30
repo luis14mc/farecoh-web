@@ -38,15 +38,19 @@ const navItems = ADMIN_NAV_ITEMS.filter(
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <title>{title}</title>
   </head>
-  <body class="antialiased" style="font-family: Inter, ui-sans-serif, system-ui, sans-serif;">
+  <body class="admin-shell min-h-screen antialiased" style="font-family: Inter, ui-sans-serif, system-ui, sans-serif;">
     <AdminShell
       client:load
       active={active}
       navItems={navItems}
       staffProfile={staffProfile}
       authConfigured={authConfigured}
-    >
-      <slot />
-    </AdminShell>
+    />
+
+    <div class="md:pl-64">
+      <main class="min-h-screen pt-14 md:pt-0">
+        <slot />
+      </main>
+    </div>
   </body>
 </html>

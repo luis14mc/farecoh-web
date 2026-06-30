@@ -14,7 +14,6 @@ export interface AdminShellProps {
   navItems: AdminNavItem[];
   staffProfile?: UserProfile;
   authConfigured: boolean;
-  children: React.ReactNode;
 }
 
 function NavLinks({
@@ -88,11 +87,12 @@ function LogoutButton({ authConfigured, className }: { authConfigured: boolean; 
   );
 }
 
-export function AdminShell({ active, navItems, staffProfile, authConfigured, children }: AdminShellProps) {
+/** Sidebar + mobile nav only. Page content must live outside this component (Astro slot). */
+export function AdminShell({ active, navItems, staffProfile, authConfigured }: AdminShellProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <div className="admin-shell min-h-screen">
+    <>
       <header className="fixed inset-x-0 top-0 z-40 flex h-14 items-center justify-between border-b bg-background px-4 md:hidden">
         <Button variant="outline" size="icon" onClick={() => setMobileOpen(true)} aria-label="Abrir menú">
           <Menu className="h-5 w-5" />
@@ -138,10 +138,6 @@ export function AdminShell({ active, navItems, staffProfile, authConfigured, chi
           <LogoutButton authConfigured={authConfigured} />
         </SheetContent>
       </Sheet>
-
-      <div className="md:pl-64">
-        <main className="min-h-screen pt-14 md:pt-0">{children}</main>
-      </div>
-    </div>
+    </>
   );
 }

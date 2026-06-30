@@ -29,7 +29,7 @@ export function AdminPageHeader({
   authConfigured,
 }: AdminPageHeaderProps) {
   return (
-    <header className="sticky top-0 z-20 border-b bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+    <header className="sticky top-14 z-20 border-b bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/80 md:top-0">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 px-4 py-4 md:flex-row md:items-center md:justify-between md:px-8 md:py-5">
         <div className="min-w-0">
           <nav aria-label="Breadcrumb" className="mb-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">

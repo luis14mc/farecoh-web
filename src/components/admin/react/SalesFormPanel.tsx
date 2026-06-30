@@ -1,16 +1,23 @@
 import { useEffect, useState } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, Plus, Search } from "lucide-react";
 import { formatSiteDate } from "@/lib/locale";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { NativeSelect } from "@/components/admin/react/NativeSelect";
+import { SaleFormFields, getSaleSubmitState } from "@/components/admin/react/SaleFormFields";
+import { ResponsiveScrollArea } from "@/components/admin/react/ResponsiveScrollArea";
 import { TicketStatusBadge } from "@/components/admin/react/TicketStatusBadge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/lib/supabase";
-import { TICKET_STATUS_LABELS, canConfirmPayment, getTicketActionLabel } from "@/lib/ticket-status";
 
 interface Seller {
   id: string;
@@ -41,6 +48,7 @@ export function SalesFormPanel({
   formMessage,
   formError,
 }: SalesFormPanelProps) {
+  const [modalOpen, setModalOpen] = useState(false);
   const [code, setCode] = useState("");
   const [preview, setPreview] = useState<Record<string, string | null> | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
@@ -50,13 +58,20 @@ export function SalesFormPanel({
   const [buyerPhone, setBuyerPhone] = useState("");
   const [buyerEmail, setBuyerEmail] = useState("");
 
+  const { submitDisabled, submitLabel } = getSaleSubmitState(
+    preview ? { status: preview.status || "" } : null,
+  );
+
   useEffect(() => {
-    const initial = new URLSearchParams(window.location.search).get("code");
+    const params = new URLSearchParams(window.location.search);
+    const initial = params.get("code");
+    if (formMessage) setModalOpen(true);
     if (initial) {
       setCode(initial);
       void loadPreview(initial);
+      setModalOpen(true);
     }
-  }, []);
+  }, [formMessage]);
 
   async function loadPreview(rawCode: string) {
     const cleanCode = rawCode.trim().toUpperCase();
@@ -91,224 +106,182 @@ export function SalesFormPanel({
     setBuyerEmail(ticket.buyer_email || "");
   }
 
-  const status = preview?.status || "";
-  const submitDisabled = preview ? !canConfirmPayment(status) : false;
-  const submitLabel = preview ? getTicketActionLabel(status) : "Registrar venta";
+  function openSaleModal() {
+    setModalOpen(true);
+  }
+
+  function handleCodeChange(value: string) {
+    setCode(value);
+    void loadPreview(value);
+  }
 
   return (
-    <section className="grid gap-4 lg:grid-cols-3">
-      <Card className="lg:col-span-1">
-        <CardHeader>
-          <CardTitle>Confirmar pago / registrar venta</CardTitle>
-          <CardDescription>Reservas web o venta presencial.</CardDescription>
+    <section className="space-y-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 className="text-lg font-semibold">Ventas del evento</h2>
+          <p className="text-sm text-muted-foreground">Precio unitario: L {ticketPrice}</p>
+        </div>
+        <Button className="w-full sm:w-auto" onClick={openSaleModal}>
+          <Plus className="h-4 w-4" />
+          Registrar venta
+        </Button>
+      </div>
+
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">Consultar boleto</CardTitle>
+          <CardDescription>Busque un código antes de confirmar pago o registrar venta.</CardDescription>
         </CardHeader>
-        <CardContent>
-          <form id="sale-form" method="POST" className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="code-input">Código boleto *</Label>
+        <CardContent className="space-y-4">
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <div className="min-w-0 flex-1 space-y-2">
+              <Label htmlFor="lookup-code">Código</Label>
               <Input
-                id="code-input"
-                name="code"
-                required
+                id="lookup-code"
                 placeholder="PF-000001"
                 className="font-mono"
                 value={code}
-                onChange={(e) => {
-                  const v = e.target.value.toUpperCase();
-                  setCode(v);
-                  void loadPreview(v);
-                }}
+                onChange={(e) => handleCodeChange(e.target.value.toUpperCase())}
+                onKeyDown={(e) => e.key === "Enter" && void loadPreview(code)}
               />
             </div>
-
-            {preview && (
-              <Alert variant={canConfirmPayment(status) ? "success" : "destructive"}>
-                <AlertDescription>
-                  Estado: {TICKET_STATUS_LABELS[status as keyof typeof TICKET_STATUS_LABELS] || status}.{" "}
-                  {canConfirmPayment(status) ? `Puede ${submitLabel.toLowerCase()}.` : submitLabel + "."}
-                </AlertDescription>
-              </Alert>
-            )}
-
-            <div className="space-y-2">
-              <Label htmlFor="buyer-name-input">Nombre comprador *</Label>
-              <Input
-                id="buyer-name-input"
-                name="buyer_name"
-                required
-                value={buyerName}
-                readOnly={buyerReadonly}
-                onChange={(e) => setBuyerName(e.target.value)}
-                className={buyerReadonly ? "bg-muted" : undefined}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="buyer-phone-input">Teléfono *</Label>
-              <Input
-                id="buyer-phone-input"
-                name="buyer_phone"
-                required
-                type="tel"
-                autoComplete="tel"
-                value={buyerPhone}
-                readOnly={buyerReadonly}
-                onChange={(e) => setBuyerPhone(e.target.value)}
-                className={buyerReadonly ? "bg-muted" : undefined}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="buyer-email-input">Correo</Label>
-              <Input
-                id="buyer-email-input"
-                name="buyer_email"
-                type="email"
-                autoComplete="email"
-                value={buyerEmail}
-                readOnly={buyerReadonly}
-                onChange={(e) => setBuyerEmail(e.target.value)}
-                className={buyerReadonly ? "bg-muted" : undefined}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="seller-select">Vendedor *</Label>
-              <NativeSelect id="seller-select" name="seller_id" required defaultValue="">
-                <option value="" disabled>
-                  Seleccione un vendedor
-                </option>
-                {sellers.map((seller) => (
-                  <option key={seller.id} value={seller.id}>
-                    {seller.name} ({seller.type === "vendor" ? "Vendedor" : "Punto físico"})
-                  </option>
-                ))}
-              </NativeSelect>
-              <p className="text-xs text-muted-foreground">
-                <a href="/admin/vendors" className="font-medium text-primary hover:underline">
-                  Registrar vendedor
-                </a>
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="sale-location">Punto de venta *</Label>
-              <Input id="sale-location" name="sale_location" required placeholder="Escuela Nacional de Música" />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="payment-method">Método de pago *</Label>
-              <NativeSelect id="payment-method" name="payment_method" required defaultValue="">
-                <option value="" disabled>
-                  Seleccione
-                </option>
-                <option value="Efectivo">Efectivo</option>
-                <option value="Transferencia">Transferencia</option>
-                <option value="POS">POS</option>
-                <option value="Cortesía">Cortesía</option>
-              </NativeSelect>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="payment-reference">Referencia</Label>
-              <Input id="payment-reference" name="payment_reference" />
-            </div>
-
-            <Button type="submit" className="w-full" disabled={submitDisabled}>
-              {submitLabel}
+            <Button type="button" variant="secondary" className="w-full sm:mt-7 sm:w-auto sm:shrink-0" onClick={() => void loadPreview(code)} disabled={previewLoading}>
+              {previewLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+              Buscar
             </Button>
+          </div>
 
-            {formMessage && (
-              <Alert variant={formError ? "destructive" : "success"}>
-                <AlertDescription>{formMessage}</AlertDescription>
-              </Alert>
-            )}
-          </form>
+          {previewError && (
+            <Alert variant="destructive">
+              <AlertDescription>{previewError}</AlertDescription>
+            </Alert>
+          )}
+
+          {preview && (
+            <div className="rounded-lg border bg-muted/30 p-4">
+              <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Boleto</p>
+                  <p className="font-mono text-lg font-semibold">{preview.ticket_code}</p>
+                </div>
+                <TicketStatusBadge status={preview.status || "available"} />
+              </div>
+              <dl className="grid gap-2 text-sm sm:grid-cols-2">
+                <div>
+                  <dt className="text-muted-foreground">Comprador</dt>
+                  <dd className="font-medium">{preview.buyer_name || "-"}</dd>
+                </div>
+                <div>
+                  <dt className="text-muted-foreground">Teléfono</dt>
+                  <dd>{preview.buyer_phone || "-"}</dd>
+                </div>
+              </dl>
+              <Button type="button" className="mt-4 w-full sm:w-auto" onClick={openSaleModal} disabled={submitDisabled}>
+                {submitLabel}
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
 
-      <div className="space-y-4 lg:col-span-2">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Estado del boleto</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {previewLoading ? (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Consultando...
+      <Card>
+        <CardHeader className="border-b pb-4">
+          <CardTitle className="text-base">Últimas ventas</CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          {recentSales.length ? (
+            <>
+              <div className="hidden md:block">
+                <ResponsiveScrollArea minWidth="720px">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Código</TableHead>
+                        <TableHead>Comprador</TableHead>
+                        <TableHead>Vendedor</TableHead>
+                        <TableHead>Punto</TableHead>
+                        <TableHead>Fecha</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {recentSales.map((ticket) => (
+                        <TableRow key={ticket.ticket_code}>
+                          <TableCell className="font-mono font-semibold">{ticket.ticket_code}</TableCell>
+                          <TableCell>{ticket.buyer_name}</TableCell>
+                          <TableCell>{ticket.seller_name}</TableCell>
+                          <TableCell>{ticket.sale_location}</TableCell>
+                          <TableCell className="text-muted-foreground">
+                            {ticket.sold_at
+                              ? formatSiteDate(ticket.sold_at, { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })
+                              : "-"}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </ResponsiveScrollArea>
               </div>
-            ) : previewError ? (
-              <p className="text-sm font-medium text-destructive">{previewError}</p>
-            ) : preview ? (
-              <div className="grid gap-3 sm:grid-cols-2 text-sm">
-                <p>
-                  <span className="text-muted-foreground">Código:</span> <strong>{preview.ticket_code}</strong>
-                </p>
-                <p className="flex items-center gap-2">
-                  <span className="text-muted-foreground">Estado:</span>
-                  <TicketStatusBadge status={preview.status || "available"} />
-                </p>
-                <p>
-                  <span className="text-muted-foreground">Vendedor:</span> {preview.seller_name || "-"}
-                </p>
-                <p>
-                  <span className="text-muted-foreground">Punto:</span> {preview.sale_location || "-"}
-                </p>
-                <p>
-                  <span className="text-muted-foreground">Comprador:</span> {preview.buyer_name || "-"}
-                </p>
-                <p>
-                  <span className="text-muted-foreground">Vendido:</span>{" "}
-                  {preview.sold_at
-                    ? formatSiteDate(preview.sold_at, { dateStyle: "short", timeStyle: "short" })
-                    : "-"}
-                </p>
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground">Ingrese un código para consultar.</p>
-            )}
-          </CardContent>
-        </Card>
 
-        <Card>
-          <CardHeader className="border-b">
-            <CardTitle className="text-base">Últimas ventas</CardTitle>
-            <CardDescription>Precio unitario: L {ticketPrice}</CardDescription>
-          </CardHeader>
-          <CardContent className="p-0">
-            {recentSales.length ? (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Código</TableHead>
-                    <TableHead>Comprador</TableHead>
-                    <TableHead>Vendedor</TableHead>
-                    <TableHead>Punto</TableHead>
-                    <TableHead>Fecha</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {recentSales.map((ticket) => (
-                    <TableRow key={ticket.ticket_code}>
-                      <TableCell className="font-mono font-semibold">{ticket.ticket_code}</TableCell>
-                      <TableCell>{ticket.buyer_name}</TableCell>
-                      <TableCell>{ticket.seller_name}</TableCell>
-                      <TableCell>{ticket.sale_location}</TableCell>
-                      <TableCell className="text-muted-foreground">
+              <div className="divide-y md:hidden">
+                {recentSales.map((ticket) => (
+                  <article key={ticket.ticket_code} className="space-y-2 p-4">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-mono font-semibold">{ticket.ticket_code}</span>
+                      <span className="text-xs text-muted-foreground">
                         {ticket.sold_at
                           ? formatSiteDate(ticket.sold_at, { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })
                           : "-"}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            ) : (
-              <p className="py-10 text-center text-sm text-muted-foreground">Sin ventas registradas</p>
-            )}
-          </CardContent>
-        </Card>
+                      </span>
+                    </div>
+                    <p className="text-sm font-medium">{ticket.buyer_name || "-"}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {ticket.seller_name} · {ticket.sale_location}
+                    </p>
+                  </article>
+                ))}
+              </div>
+            </>
+          ) : (
+            <p className="py-10 text-center text-sm text-muted-foreground">Sin ventas registradas</p>
+          )}
+        </CardContent>
+      </Card>
+
+      <Dialog open={modalOpen} onOpenChange={setModalOpen}>
+        <DialogContent className="max-w-lg sm:max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Confirmar pago / registrar venta</DialogTitle>
+            <DialogDescription>Reservas web o venta presencial. Complete los datos y confirme.</DialogDescription>
+          </DialogHeader>
+
+          <form id="sale-form" method="POST" className="space-y-4">
+            <SaleFormFields
+              code={code}
+              onCodeChange={handleCodeChange}
+              buyerName={buyerName}
+              buyerPhone={buyerPhone}
+              buyerEmail={buyerEmail}
+              buyerReadonly={buyerReadonly}
+              onBuyerNameChange={setBuyerName}
+              onBuyerPhoneChange={setBuyerPhone}
+              onBuyerEmailChange={setBuyerEmail}
+              sellers={sellers}
+              ticketStatus={preview?.status || undefined}
+              submitDisabled={submitDisabled}
+              submitLabel={submitLabel}
+              formMessage={formMessage}
+              formError={formError}
+            />
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <div className="fixed bottom-4 left-4 right-4 z-30 md:hidden">
+        <Button className="h-12 w-full shadow-lg" onClick={openSaleModal}>
+          <Plus className="h-4 w-4" />
+          Registrar venta
+        </Button>
       </div>
     </section>
   );
