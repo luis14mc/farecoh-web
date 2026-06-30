@@ -12,7 +12,7 @@ const currentDate = formatSiteDate(new Date(), { month: "short", day: "numeric",
 
 const { data: tickets = [] } = await supabase
   .from("tickets")
-  .select("ticket_code, status, buyer_name, buyer_phone, seller_name, sale_location, sold_at")
+  .select("ticket_code, qr_token, status, buyer_name, buyer_phone, seller_name, sale_location, sold_at, validated_at")
   .order("ticket_code", { ascending: true });
 
 const sellers = Array.from(new Set(tickets.map((t) => t.seller_name).filter(Boolean))) as string[];

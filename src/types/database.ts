@@ -280,6 +280,16 @@ export interface Database {
         Args: { p_qr_token: string };
         Returns: { ticket_code: string; status: string; event_slug: string }[];
       };
+      validate_ticket_by_qr: {
+        Args: { p_qr_token: string; p_validated_by: string };
+        Returns: {
+          ok: boolean;
+          message: string;
+          ticket_code: string;
+          status: string;
+          validated_at: string | null;
+        }[];
+      };
     };
   };
 }

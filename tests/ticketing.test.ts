@@ -5,11 +5,35 @@ import { sanitizeText } from "../src/lib/security.ts";
 import { calculateAdminReportMetrics } from "../src/services/admin-stats.ts";
 import { calculateSellerReports } from "../src/services/seller-stats.ts";
 import { formatTicketCode, isTicketCode, normalizeTicketCode, parseTicketSequence } from "../src/services/ticket-code.ts";
+import { parseCheckinInput } from "../src/lib/qr-input.ts";
 import { getValidationDenialReason, transitionTicketToValidated } from "../src/services/ticket-state.ts";
+
+import { getPublicTicketStatusMessage } from "../src/lib/public-ticket-status.ts";
+
+test("public ticket status messages are generic and non-PII", () => {
+  assert.equal(getPublicTicketStatusMessage("sold"), "Boleto válido para ingreso.");
+  assert.equal(getPublicTicketStatusMessage("reserved"), "Boleto reservado, pendiente de confirmación de pago.");
+  assert.equal(getPublicTicketStatusMessage("validated"), "Este boleto ya fue utilizado.");
+});
 
 test("formatTicketCode creates PF codes with six digits", () => {
   assert.equal(formatTicketCode(1), "PF-000001");
   assert.equal(formatTicketCode(27), "PF-000027");
+});
+
+test("parseCheckinInput accepts QR URL, UUID, and ticket code", () => {
+  const token = "7b3f4a2e-1c9d-4b8a-9f0e-123456789abc";
+  assert.deepEqual(parseCheckinInput(`https://www.farecoh.org/t/${token}`), {
+    kind: "qr_token",
+    value: token,
+  });
+  assert.deepEqual(parseCheckinInput(`https://farecoh.org/t/${token}/`), {
+    kind: "qr_token",
+    value: token,
+  });
+  assert.deepEqual(parseCheckinInput(token), { kind: "qr_token", value: token });
+  assert.deepEqual(parseCheckinInput(" pf-000123 "), { kind: "ticket_code", value: "PF-000123" });
+  assert.equal(parseCheckinInput("not-a-code"), null);
 });
 
 test("ticket code helpers validate, normalize, and parse codes", () => {

@@ -60,17 +60,39 @@ Use this checklist after applying Supabase migrations and deploying the app.
 ## 9. Canva export script
 
 ```bash
-PUBLIC_SITE_URL=https://farecoh.org \
+PUBLIC_SITE_URL=https://www.farecoh.org \
 PUBLIC_SUPABASE_URL=... \
 SUPABASE_SERVICE_ROLE_KEY=... \
 pnpm export:canva-tickets
 ```
 
 - [ ] Output file: `exports/canva-tickets-pink-floyd.csv`
-- [ ] Columns: `code`, `qr_url`, `status`
+- [ ] Columns: `ticket_code`, `qr_url`, `status`
 - [ ] `qr_url` = `PUBLIC_SITE_URL/t/{qr_token}`
 
-## 10. Regression — do not break public flow
+## 10. Public QR page (`/t/{token}`)
+
+- [ ] Open `/t/{valid_token}` for a known ticket
+- [ ] Page shows event name, ticket code, status badge, and generic message (no buyer/phone/email)
+- [ ] Open `/t/{invalid_token}` — shows **Boleto no encontrado**
+- [ ] Page does not link to admin check-in or validate tickets
+
+## 11. QR check-in (`/admin/checkin`)
+
+- [ ] Paste QR URL (`https://www.farecoh.org/t/...` or `https://farecoh.org/t/...`) — ticket loads
+- [ ] Paste raw UUID — ticket loads
+- [ ] Manual `PF-000001` search still works
+- [ ] Validate a **`sold`** ticket via QR URL — status becomes **`validated`**
+- [ ] Validate the same ticket again — **Boleto ya utilizado**
+- [ ] Scan/search a **`reserved`** ticket — warning, cannot validate
+- [ ] Scan/search a **`cancelled`** ticket — rejected
+
+## 12. Admin tickets QR columns
+
+- [ ] `/admin/tickets` shows QR URL copy button and **Ver** link to `/t/{qr_token}`
+- [ ] `sold_at` and `validated_at` visible per ticket
+
+## 13. Regression — do not break public flow
 
 - [ ] Public reservation still works after admin changes
 - [ ] `pnpm build` passes

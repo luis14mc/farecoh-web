@@ -1,83 +1,84 @@
 ---
 import Layout from "@/layouts/Layout.astro";
-import { getPrintableTicketTokenMap } from "@/lib/ticket-qr";
+import { getPinkFloydEventFallback } from "@/lib/events";
+import {
+  getPublicTicketStatusBadgeClass,
+  getPublicTicketStatusLabel,
+  getPublicTicketStatusMessage,
+} from "@/lib/public-ticket-status";
 import { seoPages } from "@/data/seo";
+import { site } from "@/data/site";
+import { supabase } from "@/lib/supabase";
 
-const token = Astro.params.token ?? "";
-const ticket = getPrintableTicketTokenMap().find((item) => item.qr_token === token) ?? {
-  code: "Boleto no encontrado",
-  qr_token: token,
-  qr_url: "",
-};
+const token = (Astro.params.token ?? "").trim();
+const pinkFloyd = getPinkFloydEventFallback();
+const eventPath = "/eventos/pink-floyd";
+
+const { data, error } = await supabase.rpc("get_public_ticket_status", { p_qr_token: token });
+const ticket = !error && Array.isArray(data) ? data[0] : null;
+
+const notFound = !ticket;
+const eventName = ticket?.event_slug === "pink-floyd" ? pinkFloyd.name : pinkFloyd.name;
+const status = ticket?.status ?? "";
+const statusLabel = ticket ? getPublicTicketStatusLabel(status) : "";
+const statusMessage = ticket ? getPublicTicketStatusMessage(status) : "Boleto no encontrado.";
+const badgeClass = ticket ? getPublicTicketStatusBadgeClass(status) : "border-red-400/40 bg-red-500/15 text-red-100";
 ---
 
 <Layout
   title={seoPages.ticketLookup.title}
   description={seoPages.ticketLookup.description}
   noindex={true}
+  variant="concert"
 >
-  <main class="min-h-screen bg-surface px-margin py-28 text-on-surface">
-    <section class="mx-auto max-w-2xl rounded-lg border border-outline-variant bg-surface-container-lowest p-6 shadow-sm">
-      <p class="text-label-md font-label-md font-bold uppercase tracking-wider text-primary">Consulta de boleto</p>
-      <h1 class="mt-2 text-headline-lg font-headline-lg text-on-surface">{ticket.code}</h1>
-      <p class="mt-2 text-body-md font-body-md text-on-surface-variant">Esta consulta no valida el ingreso. La validación solo se realiza desde el módulo de control de acceso administrativo.</p>
-
-      <div id="ticket-status" class="mt-6 rounded border border-outline-variant bg-surface p-5 text-body-md text-on-surface-variant">
-        Consultando estado del boleto...
+  <main class="min-h-[calc(100dvh-5rem)] px-margin py-10 md:py-16">
+    <section class="mx-auto max-w-lg">
+      <div class="mb-8 text-center">
+        <p class="text-label-md font-label-md font-bold uppercase tracking-[0.2em] text-concert-amber">FARECOH Ticketing</p>
+        <h1 class="mt-2 text-headline-md font-headline-md text-white">{site.name}</h1>
+        <p class="mt-1 text-body-sm text-white/70">Consulta de boleto</p>
       </div>
 
-      <div class="mt-6 flex flex-col gap-3 sm:flex-row">
-        <a href="/admin/checkin" class="inline-flex items-center justify-center rounded bg-primary px-4 py-3 text-label-md font-label-md font-bold text-on-primary hover:bg-secondary">
-          Ir al control de acceso
-        </a>
-        <a href="/" class="inline-flex items-center justify-center rounded border border-outline-variant px-4 py-3 text-label-md font-label-md font-bold text-on-surface hover:bg-surface-container-high">
-          Volver al inicio
-        </a>
+      <div class="overflow-hidden rounded-xl border border-concert-orange/25 bg-concert-elevated/90 shadow-[0_0_40px_rgba(255,77,0,0.12)]">
+        <div class="border-b border-concert-orange/20 bg-gradient-to-r from-concert-orange/20 to-concert-amber/10 px-5 py-4">
+          <p class="text-label-sm font-label-sm uppercase tracking-wider text-concert-amber/90">Evento</p>
+          <h2 class="mt-1 text-title-lg font-title-lg text-white">{notFound ? "—" : eventName}</h2>
+        </div>
+
+        <div class="space-y-5 p-5">
+          {
+            notFound ? (
+              <div class={`rounded-lg border px-4 py-5 text-center ${badgeClass}`}>
+                <p class="text-title-md font-title-md font-semibold">No encontrado</p>
+                <p class="mt-2 text-body-md">{statusMessage}</p>
+              </div>
+            ) : (
+              <>
+                <div class="text-center">
+                  <p class="text-label-sm font-label-sm uppercase tracking-wider text-white/60">Código del boleto</p>
+                  <p class="mt-1 font-mono text-2xl font-bold tracking-wide text-concert-amber">{ticket.ticket_code}</p>
+                </div>
+
+                <div class={`rounded-lg border px-4 py-5 text-center ${badgeClass}`}>
+                  <p class="text-label-md font-label-md font-bold uppercase tracking-wider">{statusLabel}</p>
+                  <p class="mt-2 text-body-md">{statusMessage}</p>
+                </div>
+
+                <p class="text-center text-body-sm text-white/60">
+                  Esta consulta no valida el ingreso. La validación se realiza en el control de acceso del evento.
+                </p>
+              </>
+            )
+          }
+
+          <a
+            href={eventPath}
+            class="inline-flex w-full items-center justify-center rounded-lg bg-gradient-to-r from-concert-orange to-concert-orange-mid px-4 py-3 text-label-md font-label-md font-bold text-white transition hover:from-concert-orange-mid hover:to-concert-amber"
+          >
+            Volver al evento
+          </a>
+        </div>
       </div>
     </section>
   </main>
-
-  <script define:vars={{ token, code: ticket.code }}>
-    import { supabase } from "@/lib/supabase";
-
-    const statusNode = document.getElementById("ticket-status");
-    const statusCopy = {
-      available: { label: "válido", detail: "Boleto emitido, todavía no vendido.", className: "bg-blue-100 text-blue-800" },
-      assigned: { label: "válido", detail: "Boleto asignado a punto físico, todavía no pagado.", className: "bg-blue-100 text-blue-800" },
-      reserved: { label: "reservado", detail: "Boleto reservado, pendiente de pago.", className: "bg-yellow-100 text-yellow-800" },
-      sold: { label: "vendido", detail: "Boleto vendido. Debe validarse en acceso.", className: "bg-green-100 text-green-800" },
-      validated: { label: "validado", detail: "Este boleto ya fue utilizado para ingresar.", className: "bg-red-100 text-red-800" },
-      cancelled: { label: "anulado", detail: "Este boleto fue anulado.", className: "bg-red-100 text-red-800" },
-    };
-
-    function renderStatus(ticket) {
-      if (!statusNode) return;
-      const status = ticket?.status || "available";
-      const copy = statusCopy[status] || statusCopy.available;
-      statusNode.className = `mt-6 rounded p-5 text-body-md font-body-md ${copy.className}`;
-      statusNode.innerHTML = `<p class="text-label-md font-label-md font-bold uppercase tracking-wider">Estado: ${copy.label}</p><p class="mt-2">${copy.detail}</p><p class="mt-3 font-mono text-sm">${ticket?.code || code}</p>`;
-    }
-
-    async function loadStatus() {
-      const localTickets = JSON.parse(localStorage.getItem("farecoh_physical_tickets_v1") || "[]");
-      const localTicket = localTickets.find((item) => item.qr_token === token || item.code === code);
-      if (localTicket) {
-        renderStatus(localTicket);
-        return;
-      }
-
-      if (typeof supabase.rpc === "function") {
-        const { data, error } = await supabase.rpc("get_public_ticket_status", { p_qr_token: token });
-        const remoteTicket = Array.isArray(data) ? data[0] : data;
-        if (!error && remoteTicket) {
-          renderStatus(remoteTicket);
-          return;
-        }
-      }
-
-      renderStatus({ code, status: "available" });
-    }
-
-    loadStatus();
-  </script>
 </Layout>

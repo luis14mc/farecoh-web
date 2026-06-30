@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Filter, Plus } from "lucide-react";
 import { formatSiteDate } from "@/lib/locale";
+import { buildTicketQrUrl } from "@/lib/ticket-qr-url";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,17 +10,20 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ResponsiveScrollArea } from "@/components/admin/react/ResponsiveScrollArea";
+import { CopyTextButton } from "@/components/admin/react/CopyTextButton";
 import { TicketStatusBadge } from "@/components/admin/react/TicketStatusBadge";
 import { canConfirmPayment, getTicketActionLabel } from "@/lib/ticket-status";
 
 interface TicketRow {
   ticket_code: string;
+  qr_token: string;
   status: string;
   buyer_name: string | null;
   buyer_phone: string | null;
   seller_name: string | null;
   sale_location: string | null;
   sold_at: string | null;
+  validated_at: string | null;
 }
 
 interface TicketsInventoryTableProps {
@@ -185,28 +189,41 @@ export function TicketsInventoryTable({ tickets, sellers, locations }: TicketsIn
                     <TableRow>
                       <TableHead>Código</TableHead>
                       <TableHead>Estado</TableHead>
+                      <TableHead>QR</TableHead>
                       <TableHead>Comprador</TableHead>
-                      <TableHead>Teléfono</TableHead>
-                      <TableHead>Vendedor</TableHead>
-                      <TableHead>Punto</TableHead>
                       <TableHead>Fecha venta</TableHead>
+                      <TableHead>Validación</TableHead>
                       <TableHead className="text-right">Acción</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filtered.map((ticket) => {
                       const actionText = getTicketActionLabel(ticket.status);
+                      const qrUrl = buildTicketQrUrl(ticket.qr_token);
                       return (
                         <TableRow key={ticket.ticket_code}>
                           <TableCell className="font-mono font-semibold">{ticket.ticket_code}</TableCell>
                           <TableCell>
                             <TicketStatusBadge status={ticket.status} />
                           </TableCell>
+                          <TableCell>
+                            <div className="flex flex-wrap items-center gap-2">
+                              <CopyTextButton value={qrUrl} label="URL" />
+                              <a
+                                className="text-xs font-semibold text-primary hover:underline"
+                                href={`/t/${ticket.qr_token}`}
+                                target="_blank"
+                                rel="noreferrer"
+                              >
+                                Ver
+                              </a>
+                            </div>
+                          </TableCell>
                           <TableCell className="font-medium">{ticket.buyer_name || "-"}</TableCell>
-                          <TableCell className="text-muted-foreground">{ticket.buyer_phone || "-"}</TableCell>
-                          <TableCell className="text-muted-foreground">{ticket.seller_name || "-"}</TableCell>
-                          <TableCell className="text-muted-foreground">{ticket.sale_location || "-"}</TableCell>
                           <TableCell className="text-muted-foreground">{ticket.sold_at ? formatSiteDate(ticket.sold_at) : "-"}</TableCell>
+                          <TableCell className="text-muted-foreground">
+                            {ticket.validated_at ? formatSiteDate(ticket.validated_at) : "-"}
+                          </TableCell>
                           <TableCell className="text-right">
                             {canConfirmPayment(ticket.status) ? (
                               <a className="text-sm font-semibold text-primary hover:underline" href={`/admin/sales?code=${ticket.ticket_code}`}>
@@ -227,20 +244,27 @@ export function TicketsInventoryTable({ tickets, sellers, locations }: TicketsIn
             <div className="divide-y lg:hidden">
               {filtered.map((ticket) => {
                 const actionText = getTicketActionLabel(ticket.status);
+                const qrUrl = buildTicketQrUrl(ticket.qr_token);
                 return (
                   <article key={ticket.ticket_code} className="space-y-3 p-4">
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <p className="font-mono text-base font-semibold">{ticket.ticket_code}</p>
                         <p className="mt-1 text-sm font-medium">{ticket.buyer_name || "Sin comprador"}</p>
-                        <p className="text-xs text-muted-foreground">{ticket.buyer_phone || "-"}</p>
                       </div>
                       <TicketStatusBadge status={ticket.status} />
                     </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <CopyTextButton value={qrUrl} label="Copiar QR URL" className="h-8" />
+                      <Button asChild variant="outline" size="sm" className="h-8">
+                        <a href={`/t/${ticket.qr_token}`} target="_blank" rel="noreferrer">
+                          Ver consulta
+                        </a>
+                      </Button>
+                    </div>
                     <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
-                      <span>{ticket.seller_name || "Sin vendedor"}</span>
-                      <span className="text-right">{ticket.sold_at ? formatSiteDate(ticket.sold_at) : "-"}</span>
-                      <span className="col-span-2">{ticket.sale_location || "Sin punto"}</span>
+                      <span>Venta: {ticket.sold_at ? formatSiteDate(ticket.sold_at) : "-"}</span>
+                      <span className="text-right">Validación: {ticket.validated_at ? formatSiteDate(ticket.validated_at) : "-"}</span>
                     </div>
                     {canConfirmPayment(ticket.status) ? (
                       <Button asChild size="sm" className="w-full">

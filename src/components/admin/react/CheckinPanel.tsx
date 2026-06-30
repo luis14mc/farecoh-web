@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Loader2, Search, UserCheck } from "lucide-react";
 import { formatSiteDate } from "@/lib/locale";
+import { parseCheckinInput, type CheckinInputKind } from "@/lib/qr-input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,6 +20,7 @@ import { supabase } from "@/lib/supabase";
 
 interface TicketRecord {
   ticket_code: string;
+  qr_token: string;
   status: string;
   buyer_name: string | null;
   buyer_phone: string | null;
@@ -34,24 +36,40 @@ export function CheckinPanel() {
   const [loading, setLoading] = useState(false);
   const [validating, setValidating] = useState(false);
   const [ticket, setTicket] = useState<TicketRecord | null>(null);
+  const [searchKind, setSearchKind] = useState<CheckinInputKind | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
 
-  async function searchTicket() {
-    const ticketCode = code.trim().toUpperCase();
-    setTicket(null);
+  function setTicketStatusMessage(status: string) {
+    if (status === "sold") setMessage({ text: "Boleto vendido. Puede validar ingreso.", variant: "success" });
+    else if (status === "validated") setMessage({ text: "Boleto ya utilizado.", variant: "destructive" });
+    else if (status === "reserved") setMessage({ text: "Boleto reservado, pago no confirmado", variant: "warning" });
+    else if (status === "available" || status === "assigned")
+      setMessage({ text: "Boleto no vendido", variant: "warning" });
+    else if (status === "cancelled") setMessage({ text: "Boleto anulado.", variant: "destructive" });
+  }
 
-    if (!ticketCode) {
-      setMessage({ text: "Ingrese un código de boleto.", variant: "warning" });
-      return;
-    }
-    if (!/^PF-\d{6}$/.test(ticketCode)) {
-      setMessage({ text: "Formato inválido. Use PF-000001.", variant: "destructive" });
+  async function searchTicket() {
+    const parsed = parseCheckinInput(code);
+    setTicket(null);
+    setSearchKind(null);
+
+    if (!parsed) {
+      setMessage({
+        text: "Formato inválido. Use PF-000001, un UUID o la URL del QR.",
+        variant: "destructive",
+      });
       return;
     }
 
     setLoading(true);
     setMessage({ text: "Buscando boleto...", variant: "info" });
-    const { data, error } = await supabase.from("tickets").select("*").eq("ticket_code", ticketCode).single();
+
+    const query =
+      parsed.kind === "ticket_code"
+        ? supabase.from("tickets").select("*").eq("ticket_code", parsed.value).single()
+        : supabase.from("tickets").select("*").eq("qr_token", parsed.value).single();
+
+    const { data, error } = await query;
     setLoading(false);
 
     if (error || !data) {
@@ -60,12 +78,8 @@ export function CheckinPanel() {
     }
 
     setTicket(data);
-    if (data.status === "sold") setMessage({ text: "Boleto vendido. Puede validar ingreso.", variant: "success" });
-    else if (data.status === "validated") setMessage({ text: "Boleto ya utilizado.", variant: "destructive" });
-    else if (data.status === "reserved") setMessage({ text: "Boleto reservado, pago no confirmado", variant: "warning" });
-    else if (data.status === "available" || data.status === "assigned")
-      setMessage({ text: "Boleto no vendido", variant: "warning" });
-    else if (data.status === "cancelled") setMessage({ text: "Boleto anulado.", variant: "destructive" });
+    setSearchKind(parsed.kind);
+    setTicketStatusMessage(data.status);
   }
 
   async function validateTicket() {
@@ -73,10 +87,16 @@ export function CheckinPanel() {
     setValidating(true);
     setMessage({ text: "Validando boleto...", variant: "info" });
 
-    const { data, error } = await supabase.rpc("validate_ticket", {
-      p_ticket_code: ticket.ticket_code,
-      p_validated_by: "admin-checkin",
-    });
+    const useQr = searchKind === "qr_token";
+    const { data, error } = useQr
+      ? await supabase.rpc("validate_ticket_by_qr", {
+          p_qr_token: ticket.qr_token,
+          p_validated_by: "admin-checkin",
+        })
+      : await supabase.rpc("validate_ticket", {
+          p_ticket_code: ticket.ticket_code,
+          p_validated_by: "admin-checkin",
+        });
 
     setValidating(false);
     setConfirmOpen(false);
@@ -101,18 +121,20 @@ export function CheckinPanel() {
       <Card>
         <CardHeader>
           <CardTitle>Validar ingreso</CardTitle>
-          <CardDescription>Ingrese el código PF-000001 y confirme el estado antes de validar.</CardDescription>
+          <CardDescription>
+            Escanee el QR, pegue la URL, ingrese el UUID o el código PF-000001.
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-5">
           <div className="flex flex-col gap-3 sm:flex-row">
             <div className="min-w-0 flex-1 space-y-2">
-              <Label htmlFor="checkin-code">Código del boleto</Label>
+              <Label htmlFor="checkin-code">Código, QR o URL</Label>
               <Input
                 id="checkin-code"
-                placeholder="PF-000001"
+                placeholder="PF-000001 o https://www.farecoh.org/t/..."
                 className="font-mono text-base"
                 value={code}
-                onChange={(e) => setCode(e.target.value.toUpperCase())}
+                onChange={(e) => setCode(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && void searchTicket()}
               />
             </div>

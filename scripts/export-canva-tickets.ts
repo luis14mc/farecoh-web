@@ -13,6 +13,14 @@ function requireEnv(name: string): string {
   return value;
 }
 
+function getEnv(name: string, fallback?: string): string {
+  const value = process.env[name] ?? fallback;
+  if (!value) {
+    throw new Error(`${name} is required.`);
+  }
+  return value;
+}
+
 function csvEscape(value: string): string {
   if ([",", "\n", '"'].some((char) => value.includes(char))) {
     return `"${value.replaceAll('"', '""')}"`;
@@ -20,7 +28,7 @@ function csvEscape(value: string): string {
   return value;
 }
 
-const PUBLIC_SITE_URL = requireEnv("PUBLIC_SITE_URL").replace(/\/$/, "");
+const PUBLIC_SITE_URL = getEnv("PUBLIC_SITE_URL", "https://www.farecoh.org").replace(/\/$/, "");
 const SUPABASE_URL = requireEnv("PUBLIC_SUPABASE_URL");
 const SUPABASE_SERVICE_ROLE_KEY = requireEnv("SUPABASE_SERVICE_ROLE_KEY");
 
@@ -53,17 +61,17 @@ if (!tickets.length) {
 }
 
 const rows = tickets.map((ticket) => ({
-  code: ticket.ticket_code,
+  ticket_code: ticket.ticket_code,
   qr_url: `${PUBLIC_SITE_URL}/t/${ticket.qr_token}`,
   status: ticket.status,
 }));
 
 await mkdir(EXPORT_DIR, { recursive: true });
 
-const header = ["code", "qr_url", "status"];
+const header = ["ticket_code", "qr_url", "status"];
 const csv = [
   header,
-  ...rows.map((row) => [row.code, row.qr_url, row.status]),
+  ...rows.map((row) => [row.ticket_code, row.qr_url, row.status]),
 ]
   .map((row) => row.map(csvEscape).join(","))
   .join("\n");
