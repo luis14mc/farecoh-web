@@ -1,0 +1,45 @@
+---
+import { supabase } from "@/lib/supabase";
+import { formatSiteCurrency } from "@/lib/locale";
+
+const { data: sales = [] } = await supabase
+  .from("sales")
+  .select("sales_point, amount");
+
+const salesByPointMap: Record<string, number> = {};
+sales?.forEach((sale: { sales_point: string | null; amount: number | string }) => {
+  const point = sale.sales_point || "Sin punto";
+  salesByPointMap[point] = (salesByPointMap[point] || 0) + Number(sale.amount);
+});
+
+const salesByPoint = Object.entries(salesByPointMap)
+  .sort((a, b) => b[1] - a[1])
+  .slice(0, 5);
+const maxPointSales = Math.max(...salesByPoint.map(([, amt]) => amt), 1);
+---
+
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-6 text-on-surface">
+  <h3 class="text-label-md font-label-md uppercase font-bold text-on-surface-variant tracking-wider">Ventas por punto</h3>
+  <p class="text-caption font-caption text-on-surface-variant mb-6">Recaudación por punto de venta</p>
+
+  {salesByPoint.length > 0 ? (
+    <div class="space-y-4">
+      {salesByPoint.map(([point, amount]) => {
+        const pct = (amount / maxPointSales) * 100;
+        return (
+          <div class="space-y-1">
+            <div class="flex justify-between text-body-md">
+              <span class="font-medium">{point}</span>
+              <span class="font-bold text-secondary">{formatSiteCurrency(amount)}</span>
+            </div>
+            <div class="w-full bg-surface-container-low h-3 rounded-full overflow-hidden">
+              <div class="bg-secondary-container h-full rounded-full transition-all duration-500" style={`width: ${pct}%`}></div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  ) : (
+    <p class="text-body-md text-on-surface-variant italic py-6">No hay registros por punto de venta.</p>
+  )}
+</div>

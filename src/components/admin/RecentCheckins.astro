@@ -1,0 +1,55 @@
+---
+import { supabase } from "@/lib/supabase";
+import { formatSiteDate } from "@/lib/locale";
+
+const { data: checkins = [] } = await supabase
+  .from("checkins")
+  .select("validated_by, validated_at, ticket:tickets(ticket_code, buyer_name)")
+  .order("validated_at", { ascending: false })
+  .limit(8);
+---
+
+<section class="rounded-lg border border-outline-variant bg-surface-container-lowest shadow-sm text-on-surface">
+  <div class="border-b border-outline-variant p-6">
+    <h3 class="text-headline-sm font-headline-sm text-on-surface">Check-ins recientes</h3>
+    <p class="mt-1 text-body-md font-body-md text-on-surface-variant">Últimos ingresos validados en puerta</p>
+  </div>
+  <div class="overflow-x-auto">
+    <table class="w-full min-w-[640px] text-left">
+      <thead class="bg-surface-container-low">
+        <tr>
+          <th class="px-4 py-3 text-label-md font-label-md font-bold uppercase text-on-surface-variant">Código</th>
+          <th class="px-4 py-3 text-label-md font-label-md font-bold uppercase text-on-surface-variant">Comprador</th>
+          <th class="px-4 py-3 text-label-md font-label-md font-bold uppercase text-on-surface-variant">Validado por</th>
+          <th class="px-4 py-3 text-label-md font-label-md font-bold uppercase text-on-surface-variant">Fecha</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-outline-variant">
+        {checkins.length ? checkins.map((row) => {
+          const ticket = row.ticket as { ticket_code?: string; buyer_name?: string | null } | null;
+          return (
+            <tr>
+              <td class="px-4 py-3 font-mono font-bold text-primary">{ticket?.ticket_code || "-"}</td>
+              <td class="px-4 py-3">{ticket?.buyer_name || "-"}</td>
+              <td class="px-4 py-3">{row.validated_by || "-"}</td>
+              <td class="px-4 py-3 text-on-surface-variant">
+                {row.validated_at
+                  ? formatSiteDate(row.validated_at, {
+                      day: "2-digit",
+                      month: "short",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })
+                  : "-"}
+              </td>
+            </tr>
+          );
+        }) : (
+          <tr>
+            <td colspan="4" class="px-4 py-8 text-center text-on-surface-variant">No hay check-ins registrados.</td>
+          </tr>
+        )}
+      </tbody>
+    </table>
+  </div>
+</section>

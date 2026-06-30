@@ -1,79 +1,69 @@
-import { createHash } from "node:crypto";
+import { createClient } from "@supabase/supabase-js";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-const TICKET_COUNT = 500;
-const BATCH_NAME = "LOTE GENERAL 001";
 const EXPORT_DIR = path.join(process.cwd(), "exports");
 const EXPORT_PATH = path.join(EXPORT_DIR, "canva-tickets-pink-floyd.csv");
-const PUBLIC_SITE_URL = requirePublicSiteUrl();
 
-interface CanvaTicketRow {
-  code: string;
-  qr_token: string;
-  qr_url: string;
-  status: "available";
-  batch_name: string;
-  assigned_to: string;
-}
-
-function requirePublicSiteUrl(): string {
-  const value = process.env.PUBLIC_SITE_URL;
+function requireEnv(name: string): string {
+  const value = process.env[name];
   if (!value) {
-    throw new Error("PUBLIC_SITE_URL is required. Example: PUBLIC_SITE_URL=https://farecoh.org pnpm run export:canva-tickets");
+    throw new Error(`${name} is required.`);
   }
-
-  return value.replace(/\/$/, "");
-}
-
-function generateTicketCode(number: number): string {
-  if (!Number.isInteger(number) || number < 1) {
-    throw new Error("Ticket number must be a positive integer.");
-  }
-
-  return `PF-${String(number).padStart(6, "0")}`;
-}
-
-function createQrToken(code: string): string {
-  return createHash("sha256").update(`farecoh:pink-floyd:${code}`).digest("hex");
+  return value;
 }
 
 function csvEscape(value: string): string {
   if ([",", "\n", '"'].some((char) => value.includes(char))) {
     return `"${value.replaceAll('"', '""')}"`;
   }
-
   return value;
 }
 
-const rows: CanvaTicketRow[] = Array.from({ length: TICKET_COUNT }, (_, index) => {
-  const code = generateTicketCode(index + 1);
-  const qrToken = createQrToken(code);
+const PUBLIC_SITE_URL = requireEnv("PUBLIC_SITE_URL").replace(/\/$/, "");
+const SUPABASE_URL = requireEnv("PUBLIC_SUPABASE_URL");
+const SUPABASE_SERVICE_ROLE_KEY = requireEnv("SUPABASE_SERVICE_ROLE_KEY");
 
-  return {
-    code,
-    qr_token: qrToken,
-    qr_url: `${PUBLIC_SITE_URL}/t/${qrToken}`,
-    status: "available",
-    batch_name: BATCH_NAME,
-    assigned_to: "",
-  };
+const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+  auth: { persistSession: false, autoRefreshToken: false },
 });
 
-const uniqueCodes = new Set(rows.map((row) => row.code));
-const uniqueTokens = new Set(rows.map((row) => row.qr_token));
-const uniqueUrls = new Set(rows.map((row) => row.qr_url));
+const { data: event, error: eventError } = await supabase
+  .from("events")
+  .select("id")
+  .eq("slug", "pink-floyd")
+  .single();
 
-if (uniqueCodes.size !== TICKET_COUNT) throw new Error("Duplicate ticket code detected.");
-if (uniqueTokens.size !== TICKET_COUNT) throw new Error("Duplicate qr_token detected.");
-if (uniqueUrls.size !== TICKET_COUNT) throw new Error("Duplicate qr_url detected.");
+if (eventError || !event) {
+  throw new Error(`Pink Floyd event not found: ${eventError?.message ?? "missing row"}`);
+}
+
+const { data: tickets = [], error: ticketsError } = await supabase
+  .from("tickets")
+  .select("ticket_code, qr_token, status")
+  .eq("event_id", event.id)
+  .order("ticket_code", { ascending: true });
+
+if (ticketsError) {
+  throw new Error(`Failed to load tickets: ${ticketsError.message}`);
+}
+
+if (!tickets.length) {
+  throw new Error("No tickets found for pink-floyd event.");
+}
+
+const rows = tickets.map((ticket) => ({
+  code: ticket.ticket_code,
+  qr_url: `${PUBLIC_SITE_URL}/t/${ticket.qr_token}`,
+  status: ticket.status,
+}));
 
 await mkdir(EXPORT_DIR, { recursive: true });
 
-const header = ["code", "qr_url", "status", "batch_name", "assigned_to"];
+const header = ["code", "qr_url", "status"];
 const csv = [
   header,
-  ...rows.map((row) => [row.code, row.qr_url, row.status, row.batch_name, row.assigned_to]),
+  ...rows.map((row) => [row.code, row.qr_url, row.status]),
 ]
   .map((row) => row.map(csvEscape).join(","))
   .join("\n");
@@ -81,6 +71,4 @@ const csv = [
 await writeFile(EXPORT_PATH, `${csv}\n`, "utf8");
 
 console.log(`Exported ${rows.length} Canva rows to ${EXPORT_PATH}`);
-console.log(`Unique codes: ${uniqueCodes.size}`);
-console.log(`Unique qr_tokens: ${uniqueTokens.size}`);
 console.log(`Public site URL: ${PUBLIC_SITE_URL}`);

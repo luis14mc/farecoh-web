@@ -5,10 +5,10 @@ export function canValidateTicket(status: TicketStatus): boolean {
 }
 
 export function getValidationDenialReason(status: TicketStatus): string | null {
-  if (status === "reserved") return "Boleto reservado, pendiente de pago";
-  if (status === "available" || status === "assigned") return "Boleto no vendido aún";
-  if (status === "validated") return "Boleto ya validado";
-  if (status === "cancelled") return "Boleto cancelado";
+  if (status === "reserved") return "Boleto reservado, pago no confirmado";
+  if (status === "available" || status === "assigned") return "Boleto no vendido";
+  if (status === "validated") return "Boleto ya utilizado";
+  if (status === "cancelled") return "Boleto anulado";
   return null;
 }
 

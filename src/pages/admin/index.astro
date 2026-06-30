@@ -4,6 +4,9 @@ import AdminHeader from "@/components/admin/AdminHeader.astro";
 import StatsCard from "@/components/admin/StatsCard.astro";
 import TicketSearch from "@/components/admin/TicketSearch.astro";
 import SalesTable from "@/components/admin/SalesTable.astro";
+import RecentReservations from "@/components/admin/RecentReservations.astro";
+import RecentCheckins from "@/components/admin/RecentCheckins.astro";
+import SalesByPoint from "@/components/admin/SalesByPoint.astro";
 import { supabase } from "@/lib/supabase";
 import { formatSiteCurrency } from "@/lib/locale";
 
@@ -49,8 +52,8 @@ const maxSellerSales = Math.max(...salesBySeller.map(([_, amt]) => amt), 1);
     <!-- Live KPIs Cards -->
     <StatsCard />
 
-    <!-- Sales Trends (Sales by Day / Sales by Seller) -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-gutter">
+    <!-- Sales Trends (Sales by Day / Sales by Seller / Sales by Point) -->
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-gutter">
       <!-- Sales by Day -->
       <div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-6 text-on-surface">
         <h3 class="text-label-md font-label-md uppercase font-bold text-on-surface-variant tracking-wider">Ventas por día</h3>
@@ -104,6 +107,13 @@ const maxSellerSales = Math.max(...salesBySeller.map(([_, amt]) => amt), 1);
           <p class="text-body-md text-on-surface-variant italic py-6">No hay registros de vendedores activos.</p>
         )}
       </div>
+
+      <SalesByPoint />
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-gutter">
+      <RecentReservations />
+      <RecentCheckins />
     </div>
 
     <!-- Check-in & Recent Sales Grid -->

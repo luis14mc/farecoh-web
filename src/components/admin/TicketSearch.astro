@@ -58,8 +58,8 @@ import { SITE_LOCALE } from "@/lib/locale";
           <span class="font-semibold text-right" id="res-phone">+504 9999-8888</span>
         </div>
         <div class="flex justify-between border-b border-outline-variant/20 pb-2">
-          <span class="text-on-surface-variant">Estado Pago:</span>
-          <span class="font-semibold text-right" id="res-status">Pagado</span>
+          <span class="text-on-surface-variant">Estado:</span>
+          <span class="font-semibold text-right" id="res-status">Vendido</span>
         </div>
         <div id="checked-in-time-row" class="hidden flex justify-between">
           <span class="text-on-surface-variant">Ingreso:</span>
@@ -80,6 +80,7 @@ import { SITE_LOCALE } from "@/lib/locale";
 
 <script define:vars={{ siteLocale: SITE_LOCALE }}>
   import { supabase } from "@/lib/supabase";
+  import { TICKET_STATUS_LABELS } from "@/lib/ticket-status";
 
   const searchInput = document.getElementById("checkin-search") as HTMLInputElement | null;
   const searchBtn = document.getElementById("search-btn") as HTMLButtonElement | null;
@@ -148,12 +149,7 @@ import { SITE_LOCALE } from "@/lib/locale";
       if (resName) resName.innerText = data.buyer_name || "Invitado";
       if (resPhone) resPhone.innerText = data.buyer_phone || "Sin teléfono";
       
-      let statusStr = "Disponible";
-      if (data.status === "sold") statusStr = "Vendido";
-      else if (data.status === "reserved") statusStr = "Reservado";
-      else if (data.status === "validated") statusStr = "Validado";
-      else if (data.status === "cancelled") statusStr = "Cancelado";
-      else if (data.status === "assigned") statusStr = "Asignado";
+      let statusStr = TICKET_STATUS_LABELS[data.status as keyof typeof TICKET_STATUS_LABELS] || data.status;
       if (resStatus) resStatus.innerText = statusStr;
 
       // Badges

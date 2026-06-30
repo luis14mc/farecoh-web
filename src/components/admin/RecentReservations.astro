@@ -1,0 +1,44 @@
+---
+import { supabase } from "@/lib/supabase";
+import { getTicketStatusLabel } from "@/lib/ticket-status";
+
+const { data: reservations = [] } = await supabase
+  .from("tickets")
+  .select("ticket_code, buyer_name, buyer_phone, created_at")
+  .eq("status", "reserved")
+  .order("ticket_code", { ascending: false })
+  .limit(8);
+---
+
+<section class="rounded-lg border border-outline-variant bg-surface-container-lowest shadow-sm text-on-surface">
+  <div class="border-b border-outline-variant p-6">
+    <h3 class="text-headline-sm font-headline-sm text-on-surface">Reservas recientes</h3>
+    <p class="mt-1 text-body-md font-body-md text-on-surface-variant">Boletos reservados desde el formulario público</p>
+  </div>
+  <div class="overflow-x-auto">
+    <table class="w-full min-w-[640px] text-left">
+      <thead class="bg-surface-container-low">
+        <tr>
+          <th class="px-4 py-3 text-label-md font-label-md font-bold uppercase text-on-surface-variant">Código</th>
+          <th class="px-4 py-3 text-label-md font-label-md font-bold uppercase text-on-surface-variant">Comprador</th>
+          <th class="px-4 py-3 text-label-md font-label-md font-bold uppercase text-on-surface-variant">Teléfono</th>
+          <th class="px-4 py-3 text-label-md font-label-md font-bold uppercase text-on-surface-variant">Estado</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-outline-variant">
+        {reservations.length ? reservations.map((ticket) => (
+          <tr>
+            <td class="px-4 py-3 font-mono font-bold text-primary">{ticket.ticket_code}</td>
+            <td class="px-4 py-3">{ticket.buyer_name || "-"}</td>
+            <td class="px-4 py-3">{ticket.buyer_phone || "-"}</td>
+            <td class="px-4 py-3">{getTicketStatusLabel("reserved")}</td>
+          </tr>
+        )) : (
+          <tr>
+            <td colspan="4" class="px-4 py-8 text-center text-on-surface-variant">No hay reservas recientes.</td>
+          </tr>
+        )}
+      </tbody>
+    </table>
+  </div>
+</section>

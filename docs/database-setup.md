@@ -12,6 +12,10 @@ Recommended order:
 
 1. `supabase/migrations/001_ticketing_core.sql`
 2. `supabase/migrations/20260629_fix_pink_floyd_event_date.sql` (if the event row already exists with an older date)
+3. `supabase/migrations/20260629000002_fix_create_ticket_order_status_ambiguity.sql` (fixes RPC error `42702 column reference "status" is ambiguous`)
+4. `supabase/migrations/20260629_status_cleanup.sql`
+5. `supabase/migrations/20260629_confirm_payment_rpc.sql`
+6. `supabase/migrations/20260629_validate_ticket_rpc.sql`
 
 ## Prerequisites
 
@@ -41,7 +45,8 @@ Expected result:
 - RPC functions created:
   - `create_initial_ticket_inventory()`
   - `create_ticket_order(...)`
-  - `sell_physical_ticket(...)`
+  - `confirm_ticket_payment(...)`
+  - `sell_physical_ticket(...)` (legacy; prefer `confirm_ticket_payment`)
   - `validate_ticket(...)`
   - `get_public_ticket_status(...)`
 - Pink Floyd event seeded (`slug = pink-floyd`, date `2026-08-29`)
@@ -64,6 +69,70 @@ This upserts:
 - `ticket_price`: `500`
 - `capacity`: `500`
 
+## 1c. Fix create_ticket_order status ambiguity
+
+If public reservations fail with:
+
+```
+column reference "status" is ambiguous
+code: 42702
+```
+
+Run in **Supabase Dashboard → SQL Editor**:
+
+```
+supabase/migrations/20260629000002_fix_create_ticket_order_status_ambiguity.sql
+```
+
+This replaces `create_ticket_order` with table-qualified `status` references and renames the RPC output column to `reservation_status` (value `reserved` for public reservations).
+
+Verify:
+
+```sql
+SELECT *
+FROM public.create_ticket_order(
+  'pink-floyd',
+  'Test Usuario',
+  'test@example.com',
+  '+50499998888',
+  1
+);
+```
+
+Expected: one row with `reservation_status = reserved` and a ticket code array.
+
+## 1d. Operational RPC migrations
+
+After the core schema is in place, run these in order:
+
+```
+supabase/migrations/20260629_status_cleanup.sql
+supabase/migrations/20260629_confirm_payment_rpc.sql
+supabase/migrations/20260629_validate_ticket_rpc.sql
+```
+
+- **status_cleanup** — maps legacy `paid → sold`, `pending → reserved`, enforces canonical status constraint
+- **confirm_payment_rpc** — `confirm_ticket_payment(...)` for reserved/assigned/available → sold
+- **validate_ticket_rpc** — refined check-in messages and status guards
+
+Each file ends with `NOTIFY pgrst, 'reload schema';` — required for PostgREST to expose new/changed RPCs.
+
+Verify confirm payment:
+
+```sql
+SELECT public.confirm_ticket_payment(
+  'PF-000002',
+  'Transferencia',
+  'REF-123',
+  (SELECT id FROM public.sellers LIMIT 1),
+  'Escuela Nacional de Música',
+  'admin-test',
+  'María López',
+  '+50499997777',
+  'maria@example.com'
+);
+```
+
 ## 2. Verify RPCs exist
 
 Run:
@@ -76,6 +145,7 @@ WHERE n.nspname = 'public'
   AND proname IN (
     'create_initial_ticket_inventory',
     'create_ticket_order',
+    'confirm_ticket_payment',
     'sell_physical_ticket',
     'validate_ticket',
     'get_public_ticket_status'
@@ -83,7 +153,7 @@ WHERE n.nspname = 'public'
 ORDER BY proname;
 ```
 
-You should see all five functions.
+You should see all six functions.
 
 ## 3. Verify event + inventory
 
@@ -188,7 +258,8 @@ FROM public.validate_ticket('PF-000001', 'checkin-operator');
 |--------|-----------------|
 | `create_ticket_order` | Public (`anon` + `authenticated`) — reserves tickets only |
 | `get_public_ticket_status` | Public — status lookup by QR token |
-| `sell_physical_ticket` | Authenticated staff with role `super_admin`, `event_manager`, or `seller` |
+| `confirm_ticket_payment` | Authenticated staff with role `super_admin`, `event_manager`, or `seller` |
+| `sell_physical_ticket` | Same as above (legacy alias behavior) |
 | `validate_ticket` | Authenticated staff with role `super_admin`, `event_manager`, or `checkin_operator` |
 | Direct table writes | Blocked for public; admin access via RLS + staff session |
 
@@ -217,8 +288,10 @@ This function is **idempotent** — existing codes are skipped.
 ## Canonical ticket lifecycle
 
 ```
-available → reserved   (public form)
-available/assigned/reserved → sold   (admin sales)
-sold → validated   (check-in)
+available → reserved   (public form via create_ticket_order)
+available / assigned / reserved → sold   (admin via confirm_ticket_payment)
+sold → validated   (check-in via validate_ticket)
 any → cancelled   (manual admin action)
 ```
+
+Manual QA steps: see `docs/testing-checklist.md`.

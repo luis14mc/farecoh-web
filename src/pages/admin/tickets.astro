@@ -33,6 +33,7 @@ const locations = Array.from(new Set(tickets.map((t: any) => t.sale_location).fi
             <option value="all">Todos</option>
             <option value="available">Disponible</option>
             <option value="assigned">Asignado</option>
+            <option value="reserved">Reservado</option>
             <option value="sold">Vendido</option>
             <option value="validated">Validado</option>
             <option value="cancelled">Anulado</option>
@@ -92,22 +93,15 @@ const locations = Array.from(new Set(tickets.map((t: any) => t.sale_location).fi
 
 <script>
   import { formatSiteDate } from "@/lib/locale";
+  import {
+    TICKET_STATUS_LABELS,
+    TICKET_STATUS_CLASSES,
+    getTicketActionLabel,
+    canConfirmPayment,
+  } from "@/lib/ticket-status";
 
-  const statusLabel: Record<string, string> = {
-    available: "Disponible",
-    assigned: "Asignado",
-    sold: "Vendido",
-    validated: "Validado",
-    cancelled: "Anulado",
-  };
-
-  const statusClass: Record<string, string> = {
-    available: "bg-slate-100 text-slate-700",
-    assigned: "bg-blue-100 text-blue-700",
-    sold: "bg-green-100 text-green-700",
-    validated: "bg-purple-100 text-purple-700",
-    cancelled: "bg-red-100 text-red-700",
-  };
+  const statusLabel = TICKET_STATUS_LABELS;
+  const statusClass = TICKET_STATUS_CLASSES;
 
   // Parse tickets data from server render
   const dataEl = document.getElementById("tickets-data");
@@ -137,10 +131,10 @@ const locations = Array.from(new Set(tickets.map((t: any) => t.sale_location).fi
 
     if (body) {
       body.innerHTML = filtered.map((ticket: any) => {
-        const canSell = ticket.status === "available" || ticket.status === "assigned";
-        const actionLink = canSell 
-          ? `<a class="text-primary font-bold hover:underline" href="/admin/sales?code=${ticket.ticket_code}">Vender</a>`
-          : `<span class="text-on-surface-variant opacity-40">-</span>`;
+        const actionText = getTicketActionLabel(ticket.status);
+        const actionLink = canConfirmPayment(ticket.status)
+          ? `<a class="text-primary font-bold hover:underline" href="/admin/sales?code=${ticket.ticket_code}">${actionText}</a>`
+          : `<span class="text-on-surface-variant">${actionText}</span>`;
 
         const soldDate = ticket.sold_at 
           ? formatSiteDate(ticket.sold_at)

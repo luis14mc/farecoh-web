@@ -235,7 +235,7 @@ export interface Database {
           order_id: string;
           ticket_codes: string[];
           total_amount: number;
-          status: TicketStatus;
+          reservation_status: TicketStatus;
         }[];
       };
       validate_ticket: {
@@ -248,6 +248,20 @@ export interface Database {
           status: TicketStatus | null;
           validated_at: string | null;
         }[];
+      };
+      confirm_ticket_payment: {
+        Args: {
+          p_ticket_code: string;
+          p_payment_method: string;
+          p_payment_reference: string;
+          p_seller_id: string;
+          p_sale_location: string;
+          p_confirmed_by: string;
+          p_buyer_name?: string | null;
+          p_buyer_phone?: string | null;
+          p_buyer_email?: string | null;
+        };
+        Returns: Database["public"]["Tables"]["tickets"]["Row"];
       };
       sell_physical_ticket: {
         Args: {

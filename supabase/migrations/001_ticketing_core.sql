@@ -422,7 +422,7 @@ RETURNS TABLE (
   order_id UUID,
   ticket_codes TEXT[],
   total_amount NUMERIC,
-  status TEXT
+  reservation_status TEXT
 )
 LANGUAGE plpgsql
 SECURITY DEFINER
@@ -439,31 +439,33 @@ BEGIN
     RAISE EXCEPTION 'La cantidad debe estar entre 1 y 10';
   END IF;
 
-  SELECT * INTO v_event
-  FROM public.events
-  WHERE slug = p_event_slug AND status = 'active'
-  FOR UPDATE;
+  SELECT e.*
+  INTO v_event
+  FROM public.events e
+  WHERE e.slug = p_event_slug
+    AND e.status = 'active'
+  FOR UPDATE OF e;
 
   IF NOT FOUND THEN
     RAISE EXCEPTION 'Evento no encontrado o inactivo';
   END IF;
 
   FOR v_ticket IN
-    SELECT id, ticket_code
-    FROM public.tickets
-    WHERE event_id = v_event.id
-      AND status = 'available'
-    ORDER BY ticket_code
-    FOR UPDATE SKIP LOCKED
+    SELECT t.id, t.ticket_code
+    FROM public.tickets t
+    WHERE t.event_id = v_event.id
+      AND t.status = 'available'
+    ORDER BY t.ticket_code
+    FOR UPDATE OF t SKIP LOCKED
     LIMIT p_quantity
   LOOP
-    UPDATE public.tickets
+    UPDATE public.tickets t
     SET
       status = 'reserved',
       buyer_name = trim(p_full_name),
       buyer_phone = trim(p_phone),
       buyer_email = nullif(lower(trim(p_email)), '')
-    WHERE id = v_ticket.id;
+    WHERE t.id = v_ticket.id;
 
     v_codes := array_append(v_codes, v_ticket.ticket_code);
     v_reserved := v_reserved + 1;

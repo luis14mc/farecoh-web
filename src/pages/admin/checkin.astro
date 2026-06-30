@@ -157,9 +157,9 @@ import AdminHeader from "@/components/admin/AdminHeader.astro";
     } else if (ticket.status === "validated") {
       showMessage("Boleto ya utilizado.", "error");
     } else if (ticket.status === "reserved") {
-      showMessage("Boleto reservado, pendiente de pago.", "warning");
+      showMessage("Boleto reservado, pago no confirmado", "warning");
     } else if (ticket.status === "available" || ticket.status === "assigned") {
-      showMessage("Boleto no vendido aún.", "warning");
+      showMessage("Boleto no vendido", "warning");
     } else if (ticket.status === "cancelled") {
       showMessage("Boleto anulado.", "error");
     }

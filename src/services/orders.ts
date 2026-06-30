@@ -30,6 +30,6 @@ export async function createTicketOrder(
     orderId: order.order_id,
     ticketCodes: order.ticket_codes,
     totalAmount: Number(order.total_amount),
-    status: order.status,
+    status: order.reservation_status,
   };
 }

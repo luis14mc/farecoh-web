@@ -48,7 +48,7 @@ test("admin report metrics reflect sales, reserved tickets, validations, and cap
 
 test("ticket state transitions only allow sold tickets to validate", () => {
   assert.equal(transitionTicketToValidated("sold"), "validated");
-  assert.equal(getValidationDenialReason("reserved"), "Boleto reservado, pendiente de pago");
+  assert.equal(getValidationDenialReason("reserved"), "Boleto reservado, pago no confirmado");
   assert.throws(() => transitionTicketToValidated("reserved"));
   assert.throws(() => transitionTicketToValidated("validated"));
 });
