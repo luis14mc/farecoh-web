@@ -26,16 +26,23 @@ SUPABASE_STORAGE_BUCKET=farecoh-private
 ## Base de datos
 
 1. Abre Supabase SQL Editor.
-2. Ejecuta `schema.sql`.
-3. Ejecuta `seed.sql`.
+2. Ejecuta `supabase/migrations/001_ticketing_core.sql`.
+3. Sigue la guía completa en `docs/database-setup.md`.
 4. Crea usuarios admin en Supabase Auth.
-5. Inserta el admin correspondiente en `public.admins` con el mismo `auth.users.id`.
+5. Inserta el perfil en `public.users` con el rol correspondiente.
 
 Ejemplo:
 
 ```sql
-insert into public.admins (id, email, full_name, role)
-values ('AUTH_USER_UUID', 'admin@farecoh.org', 'FARECOH Admin', 'super_admin');
+INSERT INTO public.users (auth_user_id, email, full_name, role_id, active)
+SELECT
+  'AUTH_USER_UUID',
+  'admin@farecoh.org',
+  'FARECOH Admin',
+  r.id,
+  true
+FROM public.roles r
+WHERE r.name = 'super_admin';
 ```
 
 ## Evento inicial

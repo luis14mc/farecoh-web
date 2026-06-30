@@ -44,8 +44,8 @@ const ticket = getPrintableTicketTokenMap().find((item) => item.qr_token === tok
     const statusCopy = {
       available: { label: "válido", detail: "Boleto emitido, todavía no vendido.", className: "bg-blue-100 text-blue-800" },
       assigned: { label: "válido", detail: "Boleto asignado a punto físico, todavía no pagado.", className: "bg-blue-100 text-blue-800" },
-      reserved: { label: "válido", detail: "Boleto reservado, pendiente de pago.", className: "bg-yellow-100 text-yellow-800" },
-      paid: { label: "pagado", detail: "Boleto vendido/pagado. Debe validarse en acceso.", className: "bg-green-100 text-green-800" },
+      reserved: { label: "reservado", detail: "Boleto reservado, pendiente de pago.", className: "bg-yellow-100 text-yellow-800" },
+      sold: { label: "vendido", detail: "Boleto vendido. Debe validarse en acceso.", className: "bg-green-100 text-green-800" },
       validated: { label: "validado", detail: "Este boleto ya fue utilizado para ingresar.", className: "bg-red-100 text-red-800" },
       cancelled: { label: "anulado", detail: "Este boleto fue anulado.", className: "bg-red-100 text-red-800" },
     };

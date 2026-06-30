@@ -1,42 +1,46 @@
 # RBAC Admin - FARECOH
 
-## Tabla staff_profiles
+El esquema canónico vive en `supabase/migrations/001_ticketing_core.sql`. Ejecuta ese archivo antes de configurar usuarios admin (ver `docs/database-setup.md`).
 
-```sql
-id uuid primary key
-user_id uuid references auth.users(id)
-email text unique
-full_name text
-role text
-active boolean default true
-created_at timestamp default now()
-```
+## Tablas RBAC
 
-Roles validos:
+**roles**
 
 - `super_admin`
 - `event_manager`
 - `seller`
 - `checkin_operator`
 
+**users**
+
+```sql
+id uuid primary key
+auth_user_id uuid references auth.users(id)
+email text unique
+full_name text
+role_id uuid references roles(id)
+active boolean default true
+created_at timestamptz default now()
+```
+
 ## Mapa de permisos
 
 | Ruta | Roles permitidos |
 | --- | --- |
 | `/admin` | `super_admin`, `event_manager` |
-| `/admin/usuarios` | `super_admin` |
-| `/admin/boletos` | `super_admin`, `event_manager`, `seller` |
-| `/admin/lotes` | `super_admin`, `event_manager` |
-| `/admin/ventas` | `super_admin`, `event_manager`, `seller` |
+| `/admin/users` | `super_admin` |
+| `/admin/tickets` | `super_admin`, `event_manager`, `seller` |
+| `/admin/batches` | `super_admin`, `event_manager` |
+| `/admin/sales` | `super_admin`, `event_manager`, `seller` |
 | `/admin/checkin` | `super_admin`, `event_manager`, `checkin_operator` |
-| `/admin/reportes` | `super_admin`, `event_manager` |
-| `/admin/vendedores` | `super_admin`, `event_manager` |
+| `/admin/reports` | `super_admin`, `event_manager` |
+| `/admin/vendors` | `super_admin`, `event_manager` |
 
 ## Reglas
 
-- El modulo `/admin/usuarios` solo lo ve y accede `super_admin`.
+- El módulo `/admin/users` solo lo ve y accede `super_admin`.
 - Ocultar links no es suficiente: `src/middleware.ts` valida cada ruta antes de renderizar.
-- Los roles se consultan desde Supabase en `staff_profiles`.
+- Los roles se consultan desde `public.users` + `public.roles`.
 - No se guardan roles en `localStorage`.
 - No se permite editar el propio rol desde frontend.
 
@@ -47,34 +51,55 @@ Roles validos:
 3. Ejecutar:
 
 ```sql
-insert into public.staff_profiles (user_id, email, full_name, role, active)
-values ('AUTH_USER_UUID', 'admin@farecoh.org', 'FARECOH Admin', 'super_admin', true);
+INSERT INTO public.users (auth_user_id, email, full_name, role_id, active)
+SELECT
+  'AUTH_USER_UUID',
+  'admin@farecoh.org',
+  'FARECOH Admin',
+  r.id,
+  true
+FROM public.roles r
+WHERE r.name = 'super_admin';
 ```
 
 ## Crear seller
 
 ```sql
-insert into public.staff_profiles (user_id, email, full_name, role, active)
-values ('AUTH_USER_UUID', 'seller@farecoh.org', 'Nombre Vendedor', 'seller', true);
+INSERT INTO public.users (auth_user_id, email, full_name, role_id, active)
+SELECT
+  'AUTH_USER_UUID',
+  'seller@farecoh.org',
+  'Nombre Vendedor',
+  r.id,
+  true
+FROM public.roles r
+WHERE r.name = 'seller';
 ```
 
 ## Crear checkin_operator
 
 ```sql
-insert into public.staff_profiles (user_id, email, full_name, role, active)
-values ('AUTH_USER_UUID', 'checkin@farecoh.org', 'Operador Check-in', 'checkin_operator', true);
+INSERT INTO public.users (auth_user_id, email, full_name, role_id, active)
+SELECT
+  'AUTH_USER_UUID',
+  'checkin@farecoh.org',
+  'Operador Check-in',
+  r.id,
+  true
+FROM public.roles r
+WHERE r.name = 'checkin_operator';
 ```
 
 ## Revocar acceso
 
 ```sql
-update public.staff_profiles
-set active = false
-where email = 'usuario@farecoh.org';
+UPDATE public.users
+SET active = false
+WHERE email = 'usuario@farecoh.org';
 ```
 
 ## Probar acceso directo
 
-- Iniciar sesion como `seller` e intentar `/admin/usuarios`: debe redirigir a `/admin/ventas`.
-- Iniciar sesion como `checkin_operator` e intentar `/admin/ventas`: debe redirigir a `/admin/checkin`.
-- Entrar sin sesion a `/admin`: debe redirigir a `/admin/login`.
+- Iniciar sesión como `seller` e intentar `/admin/users`: debe redirigir a `/admin/sales`.
+- Iniciar sesión como `checkin_operator` e intentar `/admin/sales`: debe redirigir a `/admin/checkin`.
+- Entrar sin sesión a `/admin`: debe redirigir a `/admin/login`.

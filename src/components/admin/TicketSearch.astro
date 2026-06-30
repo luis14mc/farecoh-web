@@ -130,7 +130,7 @@ import { SITE_LOCALE } from "@/lib/locale";
       // Query ticket by code
       const { data, error } = await supabase
         .from("tickets")
-        .select("*, customer:customers(*)")
+        .select("*")
         .eq("ticket_code", query)
         .single();
 
@@ -148,10 +148,12 @@ import { SITE_LOCALE } from "@/lib/locale";
       if (resName) resName.innerText = data.buyer_name || "Invitado";
       if (resPhone) resPhone.innerText = data.buyer_phone || "Sin teléfono";
       
-      let statusStr = "Pendiente";
-      if (data.status === "paid") statusStr = "Pagado";
+      let statusStr = "Disponible";
+      if (data.status === "sold") statusStr = "Vendido";
+      else if (data.status === "reserved") statusStr = "Reservado";
       else if (data.status === "validated") statusStr = "Validado";
       else if (data.status === "cancelled") statusStr = "Cancelado";
+      else if (data.status === "assigned") statusStr = "Asignado";
       if (resStatus) resStatus.innerText = statusStr;
 
       // Badges
@@ -160,12 +162,15 @@ import { SITE_LOCALE } from "@/lib/locale";
         if (data.status === "validated") {
           resBadge.innerText = "Ingresado";
           resBadge.classList.add("bg-blue-100", "text-blue-700");
-        } else if (data.status === "paid") {
+        } else if (data.status === "sold") {
           resBadge.innerText = "Listo";
           resBadge.classList.add("bg-green-100", "text-green-700");
-        } else if (data.status === "pending") {
-          resBadge.innerText = "Pendiente Pago";
+        } else if (data.status === "reserved") {
+          resBadge.innerText = "Reservado";
           resBadge.classList.add("bg-yellow-100", "text-yellow-700");
+        } else if (data.status === "available" || data.status === "assigned") {
+          resBadge.innerText = "No vendido";
+          resBadge.classList.add("bg-gray-100", "text-gray-700");
         } else {
           resBadge.innerText = "Cancelado";
           resBadge.classList.add("bg-red-100", "text-red-700");
@@ -193,6 +198,10 @@ import { SITE_LOCALE } from "@/lib/locale";
           validateBtn.disabled = true;
           validateBtn.innerText = "Boleto Cancelado";
           validateBtn.className = "w-full py-3 bg-red-400 text-white rounded font-bold cursor-not-allowed flex items-center justify-center gap-2";
+        } else if (data.status !== "sold") {
+          validateBtn.disabled = true;
+          validateBtn.innerText = "Boleto no vendido";
+          validateBtn.className = "w-full py-3 bg-gray-400 text-white rounded font-bold cursor-not-allowed flex items-center justify-center gap-2";
         } else {
           validateBtn.disabled = false;
           validateBtn.innerHTML = `<span class="material-symbols-outlined">how_to_reg</span> Validar ingreso`;
@@ -222,16 +231,19 @@ import { SITE_LOCALE } from "@/lib/locale";
     validateBtn.innerHTML = `<span class="material-symbols-outlined animate-spin">sync</span> Validando...`;
 
     try {
-      const now = new Date().toISOString();
-      const { error } = await supabase
-        .from("tickets")
-        .update({
-          status: "validated",
-          validated_at: now
-        })
-        .eq("id", activeTicket.id);
+      const { data, error } = await supabase.rpc("validate_ticket", {
+        p_ticket_code: activeTicket.ticket_code,
+        p_validated_by: "admin-dashboard",
+      });
 
       if (error) throw error;
+
+      const result = data?.[0];
+      if (!result?.ok) {
+        throw new Error(result?.message || "No se pudo validar el boleto.");
+      }
+
+      const now = result.validated_at || new Date().toISOString();
 
       // Show success animation
       validateBtn.innerHTML = `<span class="material-symbols-outlined">check_circle</span> Acceso Concedido`;

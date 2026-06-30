@@ -1,7 +1,14 @@
-export type PhysicalTicketStatus = "available" | "assigned" | "reserved" | "paid" | "sold" | "validated" | "cancelled" | "pending";
+export type PhysicalTicketStatus =
+  | "available"
+  | "assigned"
+  | "reserved"
+  | "sold"
+  | "validated"
+  | "cancelled";
 
 export interface TicketBatch {
   id: string;
+  event_id: string;
   name: string;
   start_code: string;
   end_code: string;
@@ -14,8 +21,8 @@ export interface TicketBatch {
 
 export interface PhysicalTicket {
   id: string;
+  event_id: string;
   batch_id: string | null;
-  event_slug: string;
   ticket_code: string;
   status: PhysicalTicketStatus;
   buyer_name: string | null;
@@ -28,7 +35,6 @@ export interface PhysicalTicket {
   payment_reference: string | null;
   sold_at: string | null;
   validated_at: string | null;
-  notes: string | null;
   created_at: string;
 }
 
@@ -41,7 +47,6 @@ export interface PhysicalSaleInput {
   sale_location: string;
   payment_method: string;
   payment_reference?: string;
-  notes?: string;
 }
 
 export interface TicketBatchAssignmentInput {

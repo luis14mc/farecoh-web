@@ -5,13 +5,10 @@ export type TicketCode = `PF-${string}`;
 export interface TicketRecord {
   id: string;
   eventId: string;
-  orderId: string;
-  customerId: string;
   ticketCode: TicketCode;
   status: TicketStatus;
   qrToken: string;
-  ticketUrl: string | null;
-  issuedAt: string;
+  soldAt: string | null;
   validatedAt: string | null;
 }
 

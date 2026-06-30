@@ -24,14 +24,14 @@ test("ticket generation rejects invalid sequences", () => {
   assert.throws(() => formatTicketCode(1.5));
 });
 
-test("admin report metrics reflect sales, pending tickets, validations, and capacity", () => {
+test("admin report metrics reflect sales, reserved tickets, validations, and capacity", () => {
   const metrics = calculateAdminReportMetrics({
     capacity: 10,
     ticketPrice: 500,
     tickets: [
-      { status: "paid" },
+      { status: "sold" },
       { status: "validated", validated_at: "2026-08-08T20:15:00Z" },
-      { status: "pending" },
+      { status: "reserved" },
       { status: "cancelled" },
     ],
   });
@@ -46,10 +46,10 @@ test("admin report metrics reflect sales, pending tickets, validations, and capa
   });
 });
 
-test("ticket state transitions only allow paid tickets to validate", () => {
-  assert.equal(transitionTicketToValidated("paid"), "validated");
-  assert.equal(getValidationDenialReason("pending"), "Boleto pendiente de pago");
-  assert.throws(() => transitionTicketToValidated("pending"));
+test("ticket state transitions only allow sold tickets to validate", () => {
+  assert.equal(transitionTicketToValidated("sold"), "validated");
+  assert.equal(getValidationDenialReason("reserved"), "Boleto reservado, pendiente de pago");
+  assert.throws(() => transitionTicketToValidated("reserved"));
   assert.throws(() => transitionTicketToValidated("validated"));
 });
 
@@ -82,9 +82,9 @@ test("seller report metrics aggregate sales, tickets, and revenue by seller", ()
       },
     ],
     tickets: [
-      { seller_id: "seller-1", seller_name: "María López", status: "paid" },
+      { seller_id: "seller-1", seller_name: "María López", status: "sold" },
       { seller_id: "seller-1", seller_name: "María López", status: "validated" },
-      { seller_id: "seller-2", seller_name: "Escuela Nacional de Música", status: "paid" },
+      { seller_id: "seller-2", seller_name: "Escuela Nacional de Música", status: "sold" },
       { seller_id: null, seller_name: null, status: "available" },
     ],
   });

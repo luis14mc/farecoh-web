@@ -1,4 +1,4 @@
-import type { EventStatus } from "./database";
+export type EventStatus = "draft" | "active" | "sold_out" | "completed" | "cancelled";
 
 export interface EventSummary {
   id: string;

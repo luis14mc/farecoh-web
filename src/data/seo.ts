@@ -74,7 +74,7 @@ export function musicEventJsonLd() {
     "@type": "MusicEvent",
     name: pinkFloydEvent.name,
     description: eventPage.hero.body,
-    startDate: "2026-08-29T20:00:00-06:00",
+    startDate: "2026-08-08T20:00:00-06:00",
     eventStatus: "https://schema.org/EventScheduled",
     eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
     image: [absoluteUrl("/images/evento/hero.webp"), absoluteUrl("/images/evento/106.webp")],

@@ -13,7 +13,7 @@ export function calculateSellerReports(params: {
   ticketPrice: number;
 }): SellerReportRow[] {
   const { tickets, sellers, ticketPrice } = params;
-  const soldStatuses = new Set(["paid", "sold", "validated"]);
+  const soldStatuses = new Set(["sold", "validated"]);
 
   const rows = new Map<string, SellerReportRow>();
 

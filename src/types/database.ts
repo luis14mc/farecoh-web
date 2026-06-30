@@ -1,8 +1,12 @@
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
-export type EventStatus = "draft" | "active" | "sold_out" | "completed" | "cancelled";
-export type OrderStatus = "pending" | "paid" | "cancelled" | "refunded";
-export type TicketStatus = "available" | "assigned" | "reserved" | "paid" | "sold" | "validated" | "cancelled" | "pending";
+export type TicketStatus =
+  | "available"
+  | "assigned"
+  | "reserved"
+  | "sold"
+  | "validated"
+  | "cancelled";
 export type AdminRole = "super_admin" | "event_manager" | "seller" | "checkin_operator";
 export type StaffRole = AdminRole;
 export type SellerType = "vendor" | "physical_point";
@@ -17,77 +21,37 @@ export interface Database {
           slug: string;
           title: string;
           description: string | null;
-          location: string;
-          city: string;
           event_date: string;
           event_time: string;
+          location: string;
+          city: string | null;
           ticket_price: number;
           capacity: number;
-          status: EventStatus;
+          status: string;
           created_at: string;
-          updated_at: string;
         };
         Insert: {
           slug: string;
           title: string;
-          location: string;
           event_date: string;
           event_time: string;
+          location: string;
           ticket_price: number;
           capacity: number;
           description?: string | null;
-          city?: string;
-          status?: EventStatus;
+          city?: string | null;
+          status?: string;
         };
         Update: Partial<Database["public"]["Tables"]["events"]["Row"]>;
-      };
-      customers: {
-        Row: {
-          id: string;
-          full_name: string;
-          email: string | null;
-          phone: string;
-          created_at: string;
-        };
-        Insert: { full_name: string; phone: string; email?: string | null };
-        Update: Partial<Database["public"]["Tables"]["customers"]["Row"]>;
-      };
-      orders: {
-        Row: {
-          id: string;
-          event_id: string;
-          customer_id: string;
-          total_amount: number;
-          quantity: number;
-          payment_reference: string | null;
-          payment_method: string | null;
-          status: OrderStatus;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          event_id: string;
-          customer_id: string;
-          total_amount: number;
-          quantity: number;
-          payment_reference?: string | null;
-          payment_method?: string | null;
-          status?: OrderStatus;
-        };
-        Update: Partial<Database["public"]["Tables"]["orders"]["Row"]>;
       };
       tickets: {
         Row: {
           id: string;
-          event_id: string | null;
-          order_id: string | null;
-          customer_id: string | null;
+          event_id: string;
           batch_id: string | null;
-          event_slug: string;
           ticket_code: string;
+          qr_token: string;
           status: TicketStatus;
-          qr_token: string | null;
-          qr_url: string | null;
           buyer_name: string | null;
           buyer_phone: string | null;
           buyer_email: string | null;
@@ -96,24 +60,16 @@ export interface Database {
           sale_location: string | null;
           payment_method: string | null;
           payment_reference: string | null;
-          payment_amount: number | null;
-          issued_at: string;
           sold_at: string | null;
           validated_at: string | null;
-          notes: string | null;
           created_at: string;
-          updated_at: string;
         };
         Insert: {
+          event_id: string;
           ticket_code: string;
           status?: TicketStatus;
-          event_id?: string | null;
-          order_id?: string | null;
-          customer_id?: string | null;
           batch_id?: string | null;
-          event_slug?: string;
-          qr_token?: string | null;
-          qr_url?: string | null;
+          qr_token?: string;
           buyer_name?: string | null;
           buyer_phone?: string | null;
           buyer_email?: string | null;
@@ -122,8 +78,6 @@ export interface Database {
           sale_location?: string | null;
           payment_method?: string | null;
           payment_reference?: string | null;
-          payment_amount?: number | null;
-          notes?: string | null;
         };
         Update: Partial<Database["public"]["Tables"]["tickets"]["Row"]>;
       };
@@ -131,17 +85,17 @@ export interface Database {
         Row: {
           id: string;
           name: string;
-          phone: string;
-          email: string;
+          phone: string | null;
+          email: string | null;
           type: SellerType;
           active: boolean;
           created_at: string;
         };
         Insert: {
           name: string;
-          phone: string;
-          email: string;
           type: SellerType;
+          phone?: string | null;
+          email?: string | null;
           active?: boolean;
         };
         Update: Partial<Database["public"]["Tables"]["sellers"]["Row"]>;
@@ -149,6 +103,7 @@ export interface Database {
       ticket_batches: {
         Row: {
           id: string;
+          event_id: string;
           name: string;
           start_code: string;
           end_code: string;
@@ -159,6 +114,7 @@ export interface Database {
           created_at: string;
         };
         Insert: {
+          event_id: string;
           name: string;
           start_code: string;
           end_code: string;
@@ -175,6 +131,7 @@ export interface Database {
           ticket_id: string;
           amount: number;
           payment_method: string;
+          seller_id: string | null;
           seller_name: string;
           sales_point: string;
           created_at: string;
@@ -185,6 +142,7 @@ export interface Database {
           payment_method: string;
           seller_name: string;
           sales_point: string;
+          seller_id?: string | null;
         };
         Update: Partial<Database["public"]["Tables"]["sales"]["Row"]>;
       };
@@ -239,15 +197,15 @@ export interface Database {
           id: string;
           action: string;
           entity: string;
-          entity_id: string;
+          entity_id: string | null;
           performed_by: string;
           created_at: string;
         };
         Insert: {
           action: string;
           entity: string;
-          entity_id: string;
           performed_by: string;
+          entity_id?: string | null;
         };
         Update: never;
       };
@@ -261,6 +219,10 @@ export interface Database {
         Args: Record<string, never>;
         Returns: boolean;
       };
+      create_initial_ticket_inventory: {
+        Args: Record<string, never>;
+        Returns: number;
+      };
       create_ticket_order: {
         Args: {
           p_event_slug: string;
@@ -269,14 +231,15 @@ export interface Database {
           p_phone: string;
           p_quantity: number;
         };
-        Returns: { order_id: string; customer_id: string; ticket_codes: string[]; total_amount: number }[];
-      };
-      mark_order_paid: {
-        Args: { p_order_id: string; p_payment_reference: string; p_payment_method: string; p_user_id?: string | null };
-        Returns: undefined;
+        Returns: {
+          order_id: string;
+          ticket_codes: string[];
+          total_amount: number;
+          status: TicketStatus;
+        }[];
       };
       validate_ticket: {
-        Args: { p_ticket_code: string; p_checked_by?: string | null; p_device_info?: string | null };
+        Args: { p_ticket_code: string; p_validated_by: string };
         Returns: {
           ok: boolean;
           message: string;
@@ -286,13 +249,9 @@ export interface Database {
           validated_at: string | null;
         }[];
       };
-      assign_ticket_range: {
-        Args: { p_start_code: string; p_end_code: string; p_seller_id: string; p_location: string };
-        Returns: number;
-      };
       sell_physical_ticket: {
         Args: {
-          p_code: string;
+          p_ticket_code: string;
           p_buyer_name: string;
           p_buyer_phone: string;
           p_buyer_email: string;
@@ -300,12 +259,7 @@ export interface Database {
           p_sale_location: string;
           p_payment_method: string;
           p_payment_reference?: string | null;
-          p_notes?: string | null;
         };
-        Returns: Database["public"]["Tables"]["tickets"]["Row"];
-      };
-      validate_physical_ticket: {
-        Args: { p_code: string };
         Returns: Database["public"]["Tables"]["tickets"]["Row"];
       };
       get_public_ticket_status: {

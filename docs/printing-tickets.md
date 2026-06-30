@@ -14,14 +14,13 @@ El QR no valida ingreso automáticamente. Solo abre `/t/{qr_token}` para consult
 
 ## Preparar Supabase
 
-Ejecutar en este orden:
+Ejecuta la migración canónica:
 
 ```sql
-supabase/schema-ticketing.sql
-supabase/seed-tickets.sql
+supabase/migrations/001_ticketing_core.sql
 ```
 
-El seed crea `LOTE GENERAL 001` y los 500 tickets asociados.
+Esto crea el evento `pink-floyd` y el inventario `PF-000001` … `PF-000500` mediante `create_initial_ticket_inventory()`.
 
 ## Variables necesarias
 

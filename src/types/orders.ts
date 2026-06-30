@@ -1,4 +1,4 @@
-import type { OrderStatus } from "./database";
+import type { TicketStatus } from "./database";
 
 export interface TicketOrderRequest {
   eventSlug: string;
@@ -10,14 +10,7 @@ export interface TicketOrderRequest {
 
 export interface TicketOrderResult {
   orderId: string;
-  customerId: string;
   ticketCodes: string[];
   totalAmount: number;
-  status: OrderStatus;
-}
-
-export interface PaymentConfirmationRequest {
-  orderId: string;
-  paymentReference: string;
-  paymentMethod: string;
+  status: TicketStatus;
 }

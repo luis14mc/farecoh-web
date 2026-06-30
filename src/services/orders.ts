@@ -23,14 +23,13 @@ export async function createTicketOrder(
 
   const order = data?.[0];
   if (!order) {
-    throw new Error("No se pudo crear la orden de boletos.");
+    throw new Error("No se pudo crear la reservación de boletos.");
   }
 
   return {
     orderId: order.order_id,
-    customerId: order.customer_id,
     ticketCodes: order.ticket_codes,
     totalAmount: Number(order.total_amount),
-    status: "pending",
+    status: order.status,
   };
 }

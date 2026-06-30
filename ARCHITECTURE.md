@@ -11,109 +11,88 @@ La plataforma queda preparada para operar eventos culturales de FARECOH con un p
 - `src/lib`: integración base y validaciones compartidas.
 - `src/services`: lógica de aplicación reusable para órdenes, códigos, check-in y reportes.
 - `src/types`: contratos TypeScript entre UI, servicios y base de datos.
-- `schema.sql`: modelo PostgreSQL/Supabase con RLS, funciones transaccionales y auditoría.
-- `seed.sql`: evento inicial listo para ambiente Supabase.
+- `supabase/migrations/001_ticketing_core.sql`: modelo PostgreSQL/Supabase canónico con RLS, RPCs transaccionales y auditoría.
+- `docs/database-setup.md`: pasos de ejecución y verificación en Supabase.
 - `tests`: pruebas de reglas críticas de ticketing.
 
 ## Modelo ER
 
 ```mermaid
 erDiagram
-  events ||--o{ orders : receives
+  roles ||--o{ users : assigns
+  events ||--o{ ticket_batches : groups
   events ||--o{ tickets : issues
-  events ||--o{ checkin_operators : tracks
-  customers ||--o{ orders : places
-  customers ||--o{ tickets : owns
-  orders ||--o{ tickets : contains
-  tickets ||--o| checkin_operators : validates
-  admins ||--o{ checkin_operators : performs
-  admins ||--o{ audit_logs : writes
+  ticket_batches ||--o{ tickets : contains
+  sellers ||--o{ ticket_batches : receives
+  sellers ||--o{ tickets : sells
+  tickets ||--o| sales : records
+  tickets ||--o| checkins : validates
+  users ||--o{ audit_logs : performs
 
   events {
     uuid id PK
     text slug UK
     text title
     date event_date
-    time event_time
+    text event_time
     numeric ticket_price
     int capacity
-    event_status status
-  }
-
-  customers {
-    uuid id PK
-    text full_name
-    text email UK
-    text phone
-  }
-
-  orders {
-    uuid id PK
-    uuid event_id FK
-    uuid customer_id FK
-    int quantity
-    numeric total_amount
-    order_status status
+    text status
   }
 
   tickets {
     uuid id PK
     uuid event_id FK
-    uuid order_id FK
-    uuid customer_id FK
+    uuid batch_id FK
     text ticket_code UK
-    text qr_token UK
-    ticket_status status
+    uuid qr_token UK
+    text status
+    timestamptz sold_at
     timestamptz validated_at
   }
 
-  checkin_operators {
+  sales {
     uuid id PK
-    uuid ticket_id UK
-    uuid event_id FK
-    uuid checked_by FK
-    timestamptz checked_at
+    uuid ticket_id FK
+    numeric amount
+    uuid seller_id FK
   }
 
-  admins {
+  checkins {
     uuid id PK
-    text email UK
-    admin_role role
+    uuid ticket_id FK
+    text validated_by
+    timestamptz validated_at
+  }
+
+  users {
+    uuid id PK
+    uuid auth_user_id FK
+    uuid role_id FK
     boolean active
-  }
-
-  audit_logs {
-    uuid id PK
-    uuid actor_id FK
-    text action
-    text entity
-    jsonb old_value
-    jsonb new_value
   }
 ```
 
 ## Reglas críticas
 
-- Todo evento público se consulta por `event_slug`.
-- Los boletos usan formato `PF-000001` mediante secuencia de PostgreSQL.
-- La generación real de órdenes debe ejecutarse en backend o función RPC, no desde cliente público.
-- El check-in usa `validate_ticket`, bloquea la fila con `for update` e impide doble validación.
-- `checkin_operators.ticket_id` es `unique`, segunda barrera contra duplicados.
-- RLS permite lectura pública solo de eventos activos; datos transaccionales quedan para admins o funciones `security definer`.
-- `audit_logs` registra creación de órdenes y validaciones.
+- Todo evento público se consulta por `slug`.
+- Los boletos usan formato `PF-000001` … `PF-000500` para Pink Floyd.
+- La reserva pública usa RPC `create_ticket_order` y deja boletos en `reserved`.
+- La venta física usa RPC `sell_physical_ticket` y deja boletos en `sold`.
+- El check-in usa RPC `validate_ticket`, bloquea la fila con `FOR UPDATE` e impide doble validación.
+- RLS restringe escrituras directas; operaciones sensibles pasan por RPCs `SECURITY DEFINER`.
+- `audit_logs` registra reservas, ventas y validaciones.
 
 ## Seguridad
 
 - Supabase Auth maneja administradores.
-- `admins` referencia `auth.users`.
-- Las políticas usan `public.is_admin()`.
-- El formulario público debe llamar un endpoint server-side con rate limiting y validación Zod.
+- `users` referencia `auth.users` y `roles`.
+- Las políticas usan `public.get_auth_user_role()` e `public.is_admin()`.
+- El formulario público reserva vía RPC anon; venta y check-in requieren sesión staff.
 - Nunca exponer `service_role` al navegador.
 
 ## Próximas fases
 
-1. Crear endpoints Astro server-side para reserva y check-in.
-2. Sustituir el mock local por RPCs Supabase.
-3. Añadir login admin con Supabase Auth.
-4. Añadir QR real por `qr_token` y página/endpoint de verificación.
-5. Añadir exportación CSV/PDF para reportes.
+1. Exportación CSV/PDF para reportes.
+2. Panel de lotes (`ticket_batches`) conectado al inventario físico.
+3. Notificaciones de confirmación de reserva por correo.

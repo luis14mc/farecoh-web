@@ -6,12 +6,11 @@ import { normalizeTicketCode } from "./ticket-code";
 export async function validateTicketCheckin(
   supabase: SupabaseClient<Database>,
   ticketCode: string,
-  options: { checkedBy?: string | null; deviceInfo?: string | null } = {},
+  options: { validatedBy?: string | null } = {},
 ): Promise<TicketValidationResult> {
   const { data, error } = await supabase.rpc("validate_ticket", {
     p_ticket_code: normalizeTicketCode(ticketCode),
-    p_checked_by: options.checkedBy ?? null,
-    p_device_info: options.deviceInfo ?? null,
+    p_validated_by: options.validatedBy ?? "system",
   });
 
   if (error) {

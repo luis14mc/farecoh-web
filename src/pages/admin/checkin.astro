@@ -30,11 +30,9 @@ import AdminHeader from "@/components/admin/AdminHeader.astro";
     available: "Disponible",
     assigned: "Asignado",
     reserved: "Reservado",
-    paid: "Pagado",
     sold: "Vendido",
     validated: "Validado",
     cancelled: "Anulado",
-    pending: "Pendiente",
   };
 
   let activeTicket: any = null;
@@ -113,7 +111,7 @@ import AdminHeader from "@/components/admin/AdminHeader.astro";
       </div>
     `;
 
-    if (ticket.status === "paid" || ticket.status === "sold") {
+    if (ticket.status === "sold") {
       button.classList.remove("hidden");
     } else {
       button.classList.add("hidden");
@@ -154,10 +152,12 @@ import AdminHeader from "@/components/admin/AdminHeader.astro";
     activeTicket = ticket;
     renderTicket(ticket);
 
-    if (ticket.status === "paid" || ticket.status === "sold") {
-      showMessage("Boleto pagado. Puede validar ingreso.", "success");
+    if (ticket.status === "sold") {
+      showMessage("Boleto vendido. Puede validar ingreso.", "success");
     } else if (ticket.status === "validated") {
       showMessage("Boleto ya utilizado.", "error");
+    } else if (ticket.status === "reserved") {
+      showMessage("Boleto reservado, pendiente de pago.", "warning");
     } else if (ticket.status === "available" || ticket.status === "assigned") {
       showMessage("Boleto no vendido aún.", "warning");
     } else if (ticket.status === "cancelled") {
@@ -170,8 +170,9 @@ import AdminHeader from "@/components/admin/AdminHeader.astro";
 
     showMessage("Validando boleto...", "info");
 
-    const { data, error } = await supabase.rpc("validate_physical_ticket", {
-      p_code: activeTicket.ticket_code,
+    const { data, error } = await supabase.rpc("validate_ticket", {
+      p_ticket_code: activeTicket.ticket_code,
+      p_validated_by: "admin-checkin",
     });
 
     if (error) {
@@ -179,11 +180,19 @@ import AdminHeader from "@/components/admin/AdminHeader.astro";
       return;
     }
 
-    if (data) {
-      activeTicket = data;
-      showMessage("Ingreso validado correctamente.", "success");
-      renderTicket(activeTicket);
+    const result = data?.[0];
+    if (!result?.ok) {
+      showMessage(result?.message || "No se pudo validar el boleto.", "error");
+      return;
     }
+
+    activeTicket = {
+      ...activeTicket,
+      status: "validated",
+      validated_at: result.validated_at,
+    };
+    showMessage("Ingreso validado correctamente.", "success");
+    renderTicket(activeTicket);
   }
 
   document.getElementById("search-ticket")?.addEventListener("click", searchTicket);

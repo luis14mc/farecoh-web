@@ -12,7 +12,7 @@
 export const pinkFloydEvent: EventData = {
   id: "pink-floyd",
   name: "Tributo a Pink Floyd",
-  date: "29 de agosto de 2026",
+  date: "8 de agosto de 2026",
   time: "8:00 p. m.",
   venue: "Escuela Nacional de Música, Tegucigalpa",
   city: "Tegucigalpa",
