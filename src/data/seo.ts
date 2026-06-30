@@ -11,7 +11,7 @@ export const seoPages = {
     description: truncateDescription(
       `${site.fullName.es}. ${homeHero.subtitle} Conoce el tributo a Pink Floyd y apoya programas artísticos en Honduras.`,
     ),
-    image: "/images/farecoh-hero-orchestra.png",
+    image: "/images/farecoh-hero-orchestra.webp",
     path: "/",
   },
   event: {

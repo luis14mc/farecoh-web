@@ -13,7 +13,8 @@
         "generate:ticket-assets": "node --experimental-strip-types scripts/generate-ticket-assets.ts",
         "export:canva-tickets": "node --experimental-strip-types scripts/export-canva-tickets.ts",
         "generate:print-tickets": "node --experimental-strip-types scripts/generate-print-tickets.ts",
-        "optimize:foundation-photos": "node --experimental-strip-types scripts/optimize-foundation-photos.ts"
+        "optimize:foundation-photos": "node --experimental-strip-types scripts/optimize-foundation-photos.ts",
+        "optimize:site-images": "node --experimental-strip-types scripts/optimize-site-images.ts"
     },
     "dependencies": {
         "@astrojs/react": "^6.0.0",

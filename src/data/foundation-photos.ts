@@ -1,7 +1,7 @@
 /** WebP assets optimized from public/images/fotografias/ */
 export const foundationPhotos = {
   hero: {
-    src: "/images/farecoh-hero-orchestra.png",
+    src: "/images/farecoh-hero-orchestra.webp",
     alt: "Orquesta juvenil profesional en un escenario moderno con iluminación azul institucional",
   },
   about: {
