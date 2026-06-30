@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import { access, readFile } from "node:fs/promises";
+import path from "node:path";
 import test from "node:test";
 import { checkRateLimit, clearRateLimitBuckets } from "../src/lib/rate-limit.ts";
 import { sanitizeText } from "../src/lib/security.ts";
@@ -14,6 +16,18 @@ import {
 import { getValidationDenialReason, transitionTicketToValidated } from "../src/services/ticket-state.ts";
 
 import { getPublicTicketStatusMessage } from "../src/lib/public-ticket-status.ts";
+
+test("ticket template PNG exists and maps to public URL /templates/ticket-pink-floyd.png", async () => {
+  const relativePath = "public/templates/ticket-pink-floyd.png";
+  const publicPath = "/templates/ticket-pink-floyd.png";
+
+  const diskPath = path.join(process.cwd(), relativePath);
+  await access(diskPath);
+  const bytes = await readFile(diskPath);
+  assert.ok(bytes.byteLength > 10_000, "template PNG should be non-trivial");
+  assert.equal(bytes[0], 0x89);
+  assert.equal(publicPath, `/templates/${path.basename(diskPath)}`);
+});
 
 test("canva export URL helpers use public site base", () => {
   const token = "7b3f4a2e-1c9d-4b8a-9f0e-123456789abc";

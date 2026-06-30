@@ -4,7 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from "pdf-lib";
 import QRCode from "qrcode";
 import sharp from "sharp";
-import { buildCanvaTicketUrl, PINK_FLOYD_CANVA_EVENT_SLUG } from "@/lib/canva-export";
+import { buildCanvaTicketUrl, getCanvaSiteUrl, PINK_FLOYD_CANVA_EVENT_SLUG } from "@/lib/canva-export";
 import {
   CODE_FONT_SIZE,
   CODE_X,
@@ -15,6 +15,8 @@ import {
   QR_SIZE,
   QR_X,
   QR_Y,
+  TICKET_TEMPLATE_FILENAME,
+  TICKET_TEMPLATE_PUBLIC_PATH,
   TICKET_TEMPLATE_RELATIVE_PATH,
 } from "@/lib/ticket-print-config";
 import { isTicketCode, normalizeTicketCode, parseTicketSequence } from "@/services/ticket-code";
@@ -37,7 +39,63 @@ export {
 
 export const TICKET_TEMPLATE_PATH = path.join(process.cwd(), TICKET_TEMPLATE_RELATIVE_PATH);
 
-const CODE_COLOR = rgb(0.93, 0.91, 0.98);
+export function resolveTicketTemplateUrl(): string {
+  const vercelUrl = typeof process !== "undefined" ? process.env.VERCEL_URL?.replace(/\/$/, "") : undefined;
+  if (vercelUrl) {
+    return `https://${vercelUrl}${TICKET_TEMPLATE_PUBLIC_PATH}`;
+  }
+  return `${getCanvaSiteUrl()}${TICKET_TEMPLATE_PUBLIC_PATH}`;
+}
+
+async function readTemplateFromFilesystem(): Promise<Buffer | null> {
+  const candidates = [
+    TICKET_TEMPLATE_PATH,
+    path.join(process.cwd(), TICKET_TEMPLATE_PUBLIC_PATH.replace(/^\//, "")),
+  ];
+
+  for (const candidate of candidates) {
+    try {
+      await access(candidate);
+      return readFile(candidate);
+    } catch {
+      // try next path
+    }
+  }
+
+  return null;
+}
+
+export async function loadTicketTemplateBytes(): Promise<Buffer> {
+  const fromDisk = await readTemplateFromFilesystem();
+  if (fromDisk) {
+    return fromDisk;
+  }
+
+  const templateUrl = resolveTicketTemplateUrl();
+  const response = await fetch(templateUrl, { cache: "no-store" });
+  if (!response.ok) {
+    throw new Error(
+      `Plantilla no encontrada. Verifique ${TICKET_TEMPLATE_PUBLIC_PATH} (${response.status} desde ${templateUrl}).`,
+    );
+  }
+
+  return Buffer.from(await response.arrayBuffer());
+}
+
+export async function ensureTicketTemplateExists(): Promise<void> {
+  const fromDisk = await readTemplateFromFilesystem();
+  if (fromDisk) {
+    return;
+  }
+
+  const templateUrl = resolveTicketTemplateUrl();
+  const response = await fetch(templateUrl, { method: "HEAD", cache: "no-store" });
+  if (!response.ok) {
+    throw new Error(
+      `Plantilla no encontrada. Coloque el PNG de Canva en public/templates/${TICKET_TEMPLATE_FILENAME}.`,
+    );
+  }
+}
 
 export interface TicketPrintRow {
   ticket_code: string;
@@ -85,15 +143,7 @@ export function filterTicketsByRange(tickets: TicketPrintRow[], fromCode: string
     .sort((a, b) => a.ticket_code.localeCompare(b.ticket_code));
 }
 
-export async function ensureTicketTemplateExists(): Promise<void> {
-  try {
-    await access(TICKET_TEMPLATE_PATH);
-  } catch {
-    throw new Error(
-      "Plantilla no encontrada. Coloque el PNG de Canva en public/templates/ticket-pink-floyd.png.",
-    );
-  }
-}
+const CODE_COLOR = rgb(0.93, 0.91, 0.98);
 
 export async function loadPinkFloydPrintTickets(
   supabase: SupabaseClient,
@@ -166,7 +216,7 @@ function drawTicketCode(page: PDFPage, font: PDFFont, pageHeight: number, ticket
 export async function buildTicketPrintPdf(tickets: TicketPrintRow[]): Promise<Uint8Array> {
   await ensureTicketTemplateExists();
 
-  const templateBytes = await readFile(TICKET_TEMPLATE_PATH);
+  const templateBytes = await loadTicketTemplateBytes();
   const normalizedTemplate = await sharp(templateBytes).png().toBuffer();
   const metadata = await sharp(normalizedTemplate).metadata();
   const pageWidth = metadata.width;

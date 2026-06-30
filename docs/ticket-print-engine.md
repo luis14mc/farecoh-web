@@ -83,6 +83,15 @@ Edit constants in `src/lib/ticket-print-config.ts`:
 
 Coordinates use the template image’s pixel space (same as the PNG dimensions). PDF page size matches the template automatically.
 
+**Paths**
+
+| Context | Path |
+|---------|------|
+| File on disk (repo) | `public/templates/ticket-pink-floyd.png` |
+| Public URL (browser / Vercel) | `/templates/ticket-pink-floyd.png` |
+
+The print API reads from disk locally and falls back to the public URL in Vercel serverless (where `public/` is not on the filesystem).
+
 Workflow to tune placement:
 
 1. Generate a test PDF from `/admin/printing` or `pnpm generate:print-tickets --test`

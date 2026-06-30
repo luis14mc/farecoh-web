@@ -1,6 +1,9 @@
 import { formatTicketCode } from "@/services/ticket-code";
 
-export const TICKET_TEMPLATE_RELATIVE_PATH = "public/templates/ticket-pink-floyd.png";
+export const TICKET_TEMPLATE_FILENAME = "ticket-pink-floyd.png";
+export const TICKET_TEMPLATE_RELATIVE_PATH = `public/templates/${TICKET_TEMPLATE_FILENAME}`;
+/** Public URL path served from `public/templates/` (not `/public/templates/`). */
+export const TICKET_TEMPLATE_PUBLIC_PATH = `/templates/${TICKET_TEMPLATE_FILENAME}`;
 
 /** Horizontal center of the ticket code box (pixels, top-left origin). */
 export const CODE_X = 1180;

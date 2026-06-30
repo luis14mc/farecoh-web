@@ -10,6 +10,7 @@ import {
   FULL_PRINT_FROM,
   FULL_PRINT_TO,
   MAX_PRINT_TICKETS_PER_REQUEST,
+  TICKET_TEMPLATE_PUBLIC_PATH,
 } from "@/lib/ticket-print-config";
 
 interface PrintingPanelProps {
@@ -100,8 +101,9 @@ export function PrintingPanel({ eventName }: PrintingPanelProps) {
         <CardHeader>
           <CardTitle className="text-base">Plantilla</CardTitle>
           <CardDescription>
-            El fondo se toma de <code className="text-xs">public/templates/ticket-pink-floyd.png</code>. Cada página
-            incluye el código y un QR a <code className="text-xs">https://www.farecoh.org/t/&#123;qr_token&#125;</code>.
+            El fondo se toma de <code className="text-xs">{TICKET_TEMPLATE_PUBLIC_PATH}</code> (archivo en{" "}
+            <code className="text-xs">public{TICKET_TEMPLATE_PUBLIC_PATH}</code>). Cada página incluye el código y un QR
+            a <code className="text-xs">https://www.farecoh.org/t/&#123;qr_token&#125;</code>.
           </CardDescription>
         </CardHeader>
       </Card>
