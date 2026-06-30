@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Loader2, Search, UserCheck } from "lucide-react";
+import { Camera, Loader2, Search, UserCheck } from "lucide-react";
 import { formatSiteDateTime } from "@/lib/locale";
 import { parseCheckinInput, type CheckinInputKind } from "@/lib/qr-input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { CheckinQrScanner } from "@/components/admin/react/CheckinQrScanner";
 import { TicketStatusBadge } from "@/components/admin/react/TicketStatusBadge";
 import { supabase } from "@/lib/supabase";
 
@@ -38,6 +39,7 @@ export function CheckinPanel() {
   const [ticket, setTicket] = useState<TicketRecord | null>(null);
   const [searchKind, setSearchKind] = useState<CheckinInputKind | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [scannerOpen, setScannerOpen] = useState(false);
 
   function setTicketStatusMessage(status: string) {
     if (status === "sold") setMessage({ text: "Boleto vendido. Puede validar ingreso.", variant: "success" });
@@ -48,8 +50,13 @@ export function CheckinPanel() {
     else if (status === "cancelled") setMessage({ text: "Boleto anulado.", variant: "destructive" });
   }
 
-  async function searchTicket() {
-    const parsed = parseCheckinInput(code);
+  async function searchTicket(rawInput?: string) {
+    const input = (rawInput ?? code).trim();
+    if (rawInput !== undefined) {
+      setCode(input);
+    }
+
+    const parsed = parseCheckinInput(input);
     setTicket(null);
     setSearchKind(null);
 
@@ -116,6 +123,10 @@ export function CheckinPanel() {
     setMessage({ text: "Ingreso validado correctamente.", variant: "success" });
   }
 
+  function handleQrScan(value: string) {
+    void searchTicket(value);
+  }
+
   return (
     <>
       <Card>
@@ -138,10 +149,16 @@ export function CheckinPanel() {
                 onKeyDown={(e) => e.key === "Enter" && void searchTicket()}
               />
             </div>
-            <Button type="button" className="w-full sm:mt-7 sm:w-auto sm:shrink-0" onClick={() => void searchTicket()} disabled={loading}>
-              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
-              Buscar
-            </Button>
+            <div className="flex w-full flex-col gap-2 sm:mt-7 sm:w-auto sm:shrink-0">
+              <Button type="button" variant="outline" className="w-full" onClick={() => setScannerOpen(true)}>
+                <Camera className="h-4 w-4" />
+                Escanear QR
+              </Button>
+              <Button type="button" className="w-full" onClick={() => void searchTicket()} disabled={loading}>
+                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+                Buscar
+              </Button>
+            </div>
           </div>
 
           {message && (
@@ -196,6 +213,8 @@ export function CheckinPanel() {
           )}
         </CardContent>
       </Card>
+
+      <CheckinQrScanner open={scannerOpen} onOpenChange={setScannerOpen} onScan={handleQrScan} />
 
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <DialogContent className="max-w-md">

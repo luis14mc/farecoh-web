@@ -5,10 +5,11 @@ import { DashboardStats, ProgressChartCard } from "@/components/admin/react/Dash
 import { RecentCheckinsTable, RecentReservationsTable } from "@/components/admin/react/DashboardTables";
 import { SalesHistoryTable } from "@/components/admin/react/SalesHistoryTable";
 import { TicketSearchQuick } from "@/components/admin/react/TicketSearchQuick";
-import { supabase } from "@/lib/supabase";
+import { createSupabaseServerClient, getPublicSupabaseConfig, isAuthConfigured, type UserProfile } from "@/lib/auth";
 import { formatSiteCurrency, formatSiteDate, formatSiteNumber } from "@/lib/locale";
-import { getPublicSupabaseConfig, isAuthConfigured, type UserProfile } from "@/lib/auth";
 import { getPinkFloydEventFallback } from "@/lib/events";
+
+const supabase = createSupabaseServerClient(Astro);
 
 const staffProfile = Astro.locals.staffProfile as UserProfile | undefined;
 const authConfigured = isAuthConfigured(getPublicSupabaseConfig());
