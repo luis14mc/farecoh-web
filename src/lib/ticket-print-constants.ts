@@ -8,10 +8,10 @@ export const CODE_MASK_WIDTH = 300;
 export const CODE_MASK_HEIGHT = 58;
 
 /** Top-left X of the QR target square inside the lower purple QR frame (pixels, top-left origin). */
-export const QR_X = 1600;
+export const QR_X = 1607;
 /** Top-left Y of the QR target square inside the lower purple QR frame (pixels, top-left origin). */
-export const QR_Y = 380;
-export const QR_SIZE = 220;
+export const QR_Y = 445;
+export const QR_SIZE = 205;
 export const QR_PADDING = 4;
 export const QR_RENDER_SCALE = 4;
 
