@@ -1,120 +1,147 @@
 ---
 import AdminLayout from "@/layouts/AdminLayout.astro";
-import PageHeader from "@/components/admin/ui/PageHeader.astro";
-import AdminPage from "@/components/admin/ui/AdminPage.astro";
-import Card from "@/components/admin/ui/Card.astro";
-import StatsCard from "@/components/admin/StatsCard.astro";
-import TicketSearch from "@/components/admin/TicketSearch.astro";
-import SalesTable from "@/components/admin/SalesTable.astro";
-import RecentReservations from "@/components/admin/RecentReservations.astro";
-import RecentCheckins from "@/components/admin/RecentCheckins.astro";
-import SalesByPoint from "@/components/admin/SalesByPoint.astro";
+import { AdminPageHeader } from "@/components/admin/react/AdminPageHeader";
+import { DashboardStats, ProgressChartCard } from "@/components/admin/react/DashboardStats";
+import { RecentCheckinsTable, RecentReservationsTable } from "@/components/admin/react/DashboardTables";
+import { SalesHistoryTable } from "@/components/admin/react/SalesHistoryTable";
+import { TicketSearchQuick } from "@/components/admin/react/TicketSearchQuick";
 import { supabase } from "@/lib/supabase";
-import { formatSiteCurrency } from "@/lib/locale";
+import { formatSiteCurrency, formatSiteDate, formatSiteNumber, SITE_LOCALE } from "@/lib/locale";
+import { getPublicSupabaseConfig, isAuthConfigured, type UserProfile } from "@/lib/auth";
+import { getPinkFloydEventFallback } from "@/lib/events";
+
+const staffProfile = Astro.locals.staffProfile as UserProfile | undefined;
+const authConfigured = isAuthConfigured(getPublicSupabaseConfig());
+const currentDate = formatSiteDate(new Date(), { month: "short", day: "numeric", year: "numeric" });
+const CAPACITY = getPinkFloydEventFallback().total_tickets;
 
 const { data: sales = [] } = await supabase
   .from("sales")
-  .select("amount, seller_name, created_at")
-  .order("created_at", { ascending: true });
+  .select("amount, seller_name, created_at, payment_method, sales_point, ticket:tickets(ticket_code, buyer_name, buyer_phone, buyer_email)")
+  .order("created_at", { ascending: false });
 
 const salesByDayMap: Record<string, number> = {};
-sales?.forEach((sale: any) => {
-  const dayStr = new Date(sale.created_at).toLocaleDateString("es-HN", {
-    day: "numeric",
-    month: "short",
-  });
+sales?.forEach((sale: { created_at: string; amount: number | string }) => {
+  const dayStr = new Date(sale.created_at).toLocaleDateString("es-HN", { day: "numeric", month: "short" });
   salesByDayMap[dayStr] = (salesByDayMap[dayStr] || 0) + Number(sale.amount);
 });
 const salesByDay = Object.entries(salesByDayMap).slice(-7);
-const maxDaySales = Math.max(...salesByDay.map(([_, amt]) => amt), 1);
+const maxDaySales = Math.max(...salesByDay.map(([, amt]) => amt), 1);
 
 const salesBySellerMap: Record<string, number> = {};
-sales?.forEach((sale: any) => {
+sales?.forEach((sale: { seller_name: string; amount: number | string }) => {
   const seller = sale.seller_name || "Desconocido";
   salesBySellerMap[seller] = (salesBySellerMap[seller] || 0) + Number(sale.amount);
 });
 const salesBySeller = Object.entries(salesBySellerMap)
   .sort((a, b) => b[1] - a[1])
   .slice(0, 5);
-const maxSellerSales = Math.max(...salesBySeller.map(([_, amt]) => amt), 1);
+const maxSellerSales = Math.max(...salesBySeller.map(([, amt]) => amt), 1);
+
+const { data: pointSales = [] } = await supabase.from("sales").select("sales_point, amount");
+const salesByPointMap: Record<string, number> = {};
+pointSales?.forEach((sale: { sales_point: string | null; amount: number | string }) => {
+  const point = sale.sales_point || "Sin punto";
+  salesByPointMap[point] = (salesByPointMap[point] || 0) + Number(sale.amount);
+});
+const salesByPoint = Object.entries(salesByPointMap)
+  .sort((a, b) => b[1] - a[1])
+  .slice(0, 5);
+const maxPointSales = Math.max(...salesByPoint.map(([, amt]) => amt), 1);
+
+const { data: tickets = [] } = await supabase.from("tickets").select("status");
+const countByStatus = (status: string) => tickets.filter((t: { status: string }) => t.status === status).length;
+
+const { data: revenueSales = [] } = await supabase.from("sales").select("amount");
+const totalRevenue = revenueSales.reduce((sum: number, s: { amount: number | string }) => sum + Number(s.amount), 0);
+
+const kpis = [
+  { label: "Capacidad", value: formatSiteNumber(CAPACITY), tone: "slate" as const },
+  { label: "Disponibles", value: formatSiteNumber(countByStatus("available")), tone: "slate" as const },
+  { label: "Asignados", value: formatSiteNumber(countByStatus("assigned")), tone: "blue" as const },
+  { label: "Reservados", value: formatSiteNumber(countByStatus("reserved")), tone: "amber" as const },
+  { label: "Vendidos", value: formatSiteNumber(countByStatus("sold")), tone: "green" as const },
+  { label: "Validados", value: formatSiteNumber(countByStatus("validated")), tone: "purple" as const },
+  { label: "Anulados", value: formatSiteNumber(countByStatus("cancelled")), tone: "red" as const },
+];
+
+const { data: reservations = [] } = await supabase
+  .from("tickets")
+  .select("ticket_code, buyer_name, buyer_phone")
+  .eq("status", "reserved")
+  .order("ticket_code", { ascending: false })
+  .limit(8);
+
+const { data: checkins = [] } = await supabase
+  .from("checkins")
+  .select("validated_by, validated_at, ticket:tickets(ticket_code, buyer_name)")
+  .order("validated_at", { ascending: false })
+  .limit(8);
 ---
 
-<AdminLayout
-  title="Panel administrativo | FARECOH"
-  description="Panel de administración de boletería de FARECOH"
-  active="dashboard"
->
-  <PageHeader title="Panel de control" section="Dashboard" description="Resumen operativo del evento Pink Floyd." />
+<AdminLayout title="Panel administrativo | FARECOH" description="Panel de administración de boletería de FARECOH" active="dashboard">
+  <AdminPageHeader
+    client:load
+    title="Panel de control"
+    section="Dashboard"
+    description="Resumen operativo del evento Pink Floyd."
+    currentDate={currentDate}
+    staffProfile={staffProfile}
+    authConfigured={authConfigured}
+  />
 
-  <AdminPage>
-    <StatsCard />
+  <div class="mx-auto w-full max-w-7xl space-y-6 px-4 py-6 pb-24 md:px-8 md:py-8 md:pb-8">
+    <DashboardStats client:load kpis={kpis} revenue={formatSiteCurrency(totalRevenue)} />
 
     <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-      <Card>
-        <h3 class="text-sm font-semibold text-on-surface">Ventas por día</h3>
-        <p class="mt-1 text-xs text-on-surface-variant">Tendencia de recaudación diaria</p>
-        {salesByDay.length > 0 ? (
-          <div class="mt-5 space-y-4">
-            {salesByDay.map(([day, amount]) => {
-              const pct = (amount / maxDaySales) * 100;
-              return (
-                <div class="space-y-1.5">
-                  <div class="flex justify-between text-sm">
-                    <span class="font-medium">{day}</span>
-                    <span class="font-semibold text-primary">{formatSiteCurrency(amount)}</span>
-                  </div>
-                  <div class="h-2 w-full overflow-hidden rounded-full bg-surface-container-low">
-                    <div class="h-full rounded-full bg-primary transition-all" style={`width: ${pct}%`}></div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          <p class="py-8 text-sm text-on-surface-variant">No hay registros de ventas recientes.</p>
-        )}
-      </Card>
-
-      <Card>
-        <h3 class="text-sm font-semibold text-on-surface">Ventas por vendedor</h3>
-        <p class="mt-1 text-xs text-on-surface-variant">Top vendedores de boletería física</p>
-        {salesBySeller.length > 0 ? (
-          <div class="mt-5 space-y-4">
-            {salesBySeller.map(([seller, amount]) => {
-              const pct = (amount / maxSellerSales) * 100;
-              return (
-                <div class="space-y-1.5">
-                  <div class="flex justify-between gap-3 text-sm">
-                    <span class="truncate font-medium">{seller}</span>
-                    <span class="shrink-0 font-semibold text-secondary">{formatSiteCurrency(amount)}</span>
-                  </div>
-                  <div class="h-2 w-full overflow-hidden rounded-full bg-surface-container-low">
-                    <div class="h-full rounded-full bg-secondary-container transition-all" style={`width: ${pct}%`}></div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          <p class="py-8 text-sm text-on-surface-variant">No hay registros de vendedores activos.</p>
-        )}
-      </Card>
-
-      <SalesByPoint />
+      <ProgressChartCard
+        client:load
+        title="Ventas por día"
+        description="Tendencia de recaudación diaria"
+        items={salesByDay.map(([day, amount]) => ({
+          label: day,
+          value: formatSiteCurrency(amount),
+          pct: (amount / maxDaySales) * 100,
+        }))}
+        valueClassName="text-primary"
+        barClassName="bg-primary"
+      />
+      <ProgressChartCard
+        client:load
+        title="Ventas por vendedor"
+        description="Top vendedores de boletería física"
+        items={salesBySeller.map(([seller, amount]) => ({
+          label: seller,
+          value: formatSiteCurrency(amount),
+          pct: (amount / maxSellerSales) * 100,
+        }))}
+        barClassName="bg-blue-500"
+      />
+      <ProgressChartCard
+        client:load
+        title="Ventas por punto"
+        description="Recaudación por punto de venta"
+        items={salesByPoint.map(([point, amount]) => ({
+          label: point,
+          value: formatSiteCurrency(amount),
+          pct: (amount / maxPointSales) * 100,
+        }))}
+        barClassName="bg-blue-400"
+      />
     </div>
 
     <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
-      <RecentReservations />
-      <RecentCheckins />
+      <RecentReservationsTable client:load reservations={reservations ?? []} />
+      <RecentCheckinsTable client:load checkins={checkins ?? []} />
     </div>
 
     <div class="grid grid-cols-1 items-start gap-4 lg:grid-cols-3">
       <section class="lg:col-span-1">
-        <TicketSearch />
+        <TicketSearchQuick client:load siteLocale={SITE_LOCALE} />
       </section>
       <section class="lg:col-span-2">
-        <SalesTable />
+        <SalesHistoryTable client:load sales={sales ?? []} />
       </section>
     </div>
-  </AdminPage>
+  </div>
 </AdminLayout>

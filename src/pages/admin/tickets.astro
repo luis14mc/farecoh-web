@@ -1,155 +1,36 @@
 ---
 import AdminLayout from "@/layouts/AdminLayout.astro";
-import PageHeader from "@/components/admin/ui/PageHeader.astro";
-import AdminPage from "@/components/admin/ui/AdminPage.astro";
-import Card from "@/components/admin/ui/Card.astro";
-import FormField from "@/components/admin/ui/FormField.astro";
-import Input from "@/components/admin/ui/Input.astro";
-import Select from "@/components/admin/ui/Select.astro";
-import Button from "@/components/admin/ui/Button.astro";
-import Table from "@/components/admin/ui/Table.astro";
+import { AdminPageHeader } from "@/components/admin/react/AdminPageHeader";
+import { TicketsInventoryTable } from "@/components/admin/react/TicketsInventoryTable";
 import { supabase } from "@/lib/supabase";
+import { getPublicSupabaseConfig, isAuthConfigured, type UserProfile } from "@/lib/auth";
+import { formatSiteDate } from "@/lib/locale";
+
+const staffProfile = Astro.locals.staffProfile as UserProfile | undefined;
+const authConfigured = isAuthConfigured(getPublicSupabaseConfig());
+const currentDate = formatSiteDate(new Date(), { month: "short", day: "numeric", year: "numeric" });
 
 const { data: tickets = [] } = await supabase
   .from("tickets")
-  .select("*")
+  .select("ticket_code, status, buyer_name, buyer_phone, seller_name, sale_location, sold_at")
   .order("ticket_code", { ascending: true });
 
-const sellers = Array.from(new Set(tickets.map((t: any) => t.seller_name).filter(Boolean)));
-const locations = Array.from(new Set(tickets.map((t: any) => t.sale_location).filter(Boolean)));
+const sellers = Array.from(new Set(tickets.map((t) => t.seller_name).filter(Boolean))) as string[];
+const locations = Array.from(new Set(tickets.map((t) => t.sale_location).filter(Boolean))) as string[];
 ---
 
 <AdminLayout title="Boletos | FARECOH" description="Administración de boletos físicos" active="tickets">
-  <PageHeader
+  <AdminPageHeader
+    client:load
     title="Boletos"
     section="Inventario"
     description="Consulte, filtre y gestione el estado de los 500 boletos del evento."
+    currentDate={currentDate}
+    staffProfile={staffProfile}
+    authConfigured={authConfigured}
   />
 
-  <AdminPage>
-    <Card padding={false}>
-      <div class="grid grid-cols-1 gap-4 border-b border-outline-variant bg-surface-container-low p-4 md:grid-cols-2 xl:grid-cols-4">
-        <FormField label="Código" htmlFor="code-filter">
-          <Input id="code-filter" placeholder="PF-000001" mono />
-        </FormField>
-        <FormField label="Estado" htmlFor="status-filter">
-          <Select id="status-filter">
-            <option value="all">Todos</option>
-            <option value="available">Disponible</option>
-            <option value="assigned">Asignado</option>
-            <option value="reserved">Reservado</option>
-            <option value="sold">Vendido</option>
-            <option value="validated">Validado</option>
-            <option value="cancelled">Anulado</option>
-          </Select>
-        </FormField>
-        <FormField label="Vendedor" htmlFor="seller-filter">
-          <Select id="seller-filter">
-            <option value="all">Todos</option>
-            {sellers.map((seller: any) => (
-              <option value={seller}>{seller}</option>
-            ))}
-          </Select>
-        </FormField>
-        <FormField label="Punto de venta" htmlFor="location-filter">
-          <Select id="location-filter">
-            <option value="all">Todos</option>
-            {locations.map((loc: any) => (
-              <option value={loc}>{loc}</option>
-            ))}
-          </Select>
-        </FormField>
-      </div>
-
-      <div id="tickets-data" data-tickets={JSON.stringify(tickets)} class="hidden"></div>
-
-      <Table minWidth="980px" class="border-0 rounded-none">
-        <thead class="border-b border-outline-variant bg-surface-container-low">
-          <tr>
-            <th class="h-11 px-4 text-left text-xs font-medium uppercase tracking-wide text-on-surface-variant">Código</th>
-            <th class="h-11 px-4 text-left text-xs font-medium uppercase tracking-wide text-on-surface-variant">Estado</th>
-            <th class="h-11 px-4 text-left text-xs font-medium uppercase tracking-wide text-on-surface-variant">Comprador</th>
-            <th class="h-11 px-4 text-left text-xs font-medium uppercase tracking-wide text-on-surface-variant">Teléfono</th>
-            <th class="h-11 px-4 text-left text-xs font-medium uppercase tracking-wide text-on-surface-variant">Vendedor</th>
-            <th class="h-11 px-4 text-left text-xs font-medium uppercase tracking-wide text-on-surface-variant">Punto</th>
-            <th class="h-11 px-4 text-left text-xs font-medium uppercase tracking-wide text-on-surface-variant">Fecha venta</th>
-            <th class="h-11 px-4 text-right text-xs font-medium uppercase tracking-wide text-on-surface-variant">Acción</th>
-          </tr>
-        </thead>
-        <tbody id="tickets-body" class="divide-y divide-outline-variant"></tbody>
-      </Table>
-
-      <div class="flex flex-col gap-3 border-t border-outline-variant bg-surface-container-low p-4 sm:flex-row sm:items-center sm:justify-between">
-        <span id="results-count" class="text-sm text-on-surface-variant">Cargando boletos...</span>
-        <Button href="/admin/sales" size="sm" class="w-full sm:w-auto">Registrar venta</Button>
-      </div>
-    </Card>
-  </AdminPage>
+  <div class="mx-auto w-full max-w-7xl space-y-6 px-4 py-6 pb-24 md:px-8 md:py-8 md:pb-8">
+    <TicketsInventoryTable client:load tickets={tickets} sellers={sellers} locations={locations} />
+  </div>
 </AdminLayout>
-
-<script>
-  import { formatSiteDate } from "@/lib/locale";
-  import { TICKET_STATUS_LABELS, TICKET_STATUS_CLASSES, getTicketActionLabel, canConfirmPayment } from "@/lib/ticket-status";
-
-  const dataEl = document.getElementById("tickets-data");
-  const allTickets = dataEl ? JSON.parse(dataEl.getAttribute("data-tickets") || "[]") : [];
-
-  const codeInput = document.getElementById("code-filter") as HTMLInputElement | null;
-  const statusSelect = document.getElementById("status-filter") as HTMLSelectElement | null;
-  const sellerSelect = document.getElementById("seller-filter") as HTMLSelectElement | null;
-  const locationSelect = document.getElementById("location-filter") as HTMLSelectElement | null;
-  const body = document.getElementById("tickets-body");
-  const countLabel = document.getElementById("results-count");
-
-  function render() {
-    const codeFilter = codeInput?.value.trim().toLowerCase() || "";
-    const statusFilter = statusSelect?.value || "all";
-    const sellerFilter = sellerSelect?.value || "all";
-    const locationFilter = locationSelect?.value || "all";
-
-    const filtered = allTickets.filter((ticket: any) => {
-      const matchesCode = !codeFilter || ticket.ticket_code.toLowerCase().includes(codeFilter);
-      const matchesStatus = statusFilter === "all" || ticket.status === statusFilter;
-      const matchesSeller = sellerFilter === "all" || ticket.seller_name === sellerFilter;
-      const matchesLocation = locationFilter === "all" || ticket.sale_location === locationFilter;
-      return matchesCode && matchesStatus && matchesSeller && matchesLocation;
-    });
-
-    if (body) {
-      body.innerHTML = filtered
-        .map((ticket: any) => {
-          const actionText = getTicketActionLabel(ticket.status);
-          const actionCell = canConfirmPayment(ticket.status)
-            ? `<a class="text-sm font-semibold text-primary hover:underline" href="/admin/sales?code=${ticket.ticket_code}">${actionText}</a>`
-            : `<span class="text-sm text-on-surface-variant">${actionText}</span>`;
-          const soldDate = ticket.sold_at ? formatSiteDate(ticket.sold_at) : "-";
-          const badgeClass = TICKET_STATUS_CLASSES[ticket.status as keyof typeof TICKET_STATUS_CLASSES] || TICKET_STATUS_CLASSES.available;
-
-          return `
-            <tr class="hover:bg-surface-container-low/70">
-              <td class="px-4 py-3 font-mono text-sm font-semibold text-primary">${ticket.ticket_code}</td>
-              <td class="px-4 py-3"><span class="inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${badgeClass}">${TICKET_STATUS_LABELS[ticket.status as keyof typeof TICKET_STATUS_LABELS] || ticket.status}</span></td>
-              <td class="px-4 py-3 text-sm font-medium">${ticket.buyer_name || "-"}</td>
-              <td class="px-4 py-3 text-sm text-on-surface-variant">${ticket.buyer_phone || "-"}</td>
-              <td class="px-4 py-3 text-sm text-on-surface-variant">${ticket.seller_name || "-"}</td>
-              <td class="px-4 py-3 text-sm text-on-surface-variant">${ticket.sale_location || "-"}</td>
-              <td class="px-4 py-3 text-sm text-on-surface-variant">${soldDate}</td>
-              <td class="px-4 py-3 text-right">${actionCell}</td>
-            </tr>
-          `;
-        })
-        .join("");
-    }
-
-    if (countLabel) {
-      countLabel.textContent = `Mostrando ${filtered.length} de ${allTickets.length} boletos`;
-    }
-  }
-
-  [codeInput, statusSelect, sellerSelect, locationSelect].forEach((el) => {
-    el?.addEventListener("input", render);
-    el?.addEventListener("change", render);
-  });
-
-  render();
-</script>

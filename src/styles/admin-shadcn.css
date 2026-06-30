@@ -1,0 +1,12 @@
+/* Admin shell — neutral dashboard background + shadcn border-radius fix */
+.admin-shell {
+  background-color: hsl(240 4.8% 95.9%);
+  color: hsl(240 10% 3.9%);
+}
+
+/* Restore shadcn border-radius inside admin (global.css sets border-radius: 0 on *) */
+.admin-shell *,
+.admin-shell *::before,
+.admin-shell *::after {
+  border-radius: revert-layer;
+}

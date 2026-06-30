@@ -1,192 +1,27 @@
 ---
 import AdminLayout from "@/layouts/AdminLayout.astro";
-import PageHeader from "@/components/admin/ui/PageHeader.astro";
-import AdminPage from "@/components/admin/ui/AdminPage.astro";
-import Card from "@/components/admin/ui/Card.astro";
-import Input from "@/components/admin/ui/Input.astro";
-import Button from "@/components/admin/ui/Button.astro";
+import { AdminPageHeader } from "@/components/admin/react/AdminPageHeader";
+import { CheckinPanel } from "@/components/admin/react/CheckinPanel";
+import { getPublicSupabaseConfig, isAuthConfigured, type UserProfile } from "@/lib/auth";
+import { formatSiteDate } from "@/lib/locale";
+
+const staffProfile = Astro.locals.staffProfile as UserProfile | undefined;
+const authConfigured = isAuthConfigured(getPublicSupabaseConfig());
+const currentDate = formatSiteDate(new Date(), { month: "short", day: "numeric", year: "numeric" });
 ---
 
 <AdminLayout title="Control de acceso | FARECOH" description="Validación de ingreso de boletos físicos" active="checkin">
-  <PageHeader
+  <AdminPageHeader
+    client:load
     title="Control de acceso"
     section="Check-in"
     description="Busque el código impreso del boleto físico para validar ingreso."
+    currentDate={currentDate}
+    staffProfile={staffProfile}
+    authConfigured={authConfigured}
   />
 
-  <AdminPage class="max-w-2xl">
-    <Card>
-      <h2 class="text-lg font-semibold text-on-surface">Validar ingreso</h2>
-      <p class="mt-1 text-sm text-on-surface-variant">Ingrese el código PF-000001 y confirme el estado antes de validar.</p>
-
-      <div class="mt-6 flex flex-col gap-3 sm:flex-row">
-        <Input id="checkin-code" placeholder="PF-000001" mono class="min-w-0 flex-1" />
-        <Button id="search-ticket" type="button" fullWidthMobile class="sm:shrink-0">
-          <span class="material-symbols-outlined text-base">search</span>
-          Buscar
-        </Button>
-      </div>
-
-      <div id="checkin-message" class="mt-5 hidden rounded-lg border px-4 py-3 text-sm" role="alert"></div>
-      <div id="ticket-result" class="mt-5 hidden rounded-md border border-outline-variant bg-surface-container-low p-4"></div>
-
-      <Button id="validate-ticket" type="button" variant="secondary" fullWidthMobile class="mt-5 hidden w-full">
-        <span class="material-symbols-outlined text-base">how_to_reg</span>
-        Validar ingreso
-      </Button>
-    </Card>
-  </AdminPage>
+  <div class="mx-auto w-full max-w-2xl space-y-6 px-4 py-6 pb-24 md:px-8 md:py-8 md:pb-8">
+    <CheckinPanel client:load />
+  </div>
 </AdminLayout>
-
-<script>
-  import { supabase } from "@/lib/supabase";
-  import { TICKET_STATUS_LABELS } from "@/lib/ticket-status";
-
-  let activeTicket: any = null;
-
-  function showMessage(text: string, type: "error" | "warning" | "success" | "info") {
-    const node = document.getElementById("checkin-message");
-    if (!node) return;
-    const classes = {
-      error: "border-red-200 bg-red-50 text-red-800",
-      warning: "border-amber-200 bg-amber-50 text-amber-900",
-      success: "border-green-200 bg-green-50 text-green-800",
-      info: "border-blue-200 bg-blue-50 text-blue-800",
-    };
-    node.textContent = text;
-    node.className = `mt-5 rounded-lg border px-4 py-3 text-sm ${classes[type] || classes.info}`;
-    node.classList.remove("hidden");
-  }
-
-  function formatDate(isoString: string | null) {
-    if (!isoString) return "-";
-    return new Date(isoString).toLocaleString("es-HN", {
-      dateStyle: "medium",
-      timeStyle: "short",
-    });
-  }
-
-  function renderTicket(ticket: any) {
-    const result = document.getElementById("ticket-result");
-    const button = document.getElementById("validate-ticket");
-    if (!result || !button) return;
-
-    if (!ticket) {
-      result.classList.add("hidden");
-      button.classList.add("hidden");
-      return;
-    }
-
-    result.classList.remove("hidden");
-    result.innerHTML = `
-      <div class="space-y-4">
-        <div class="flex items-start justify-between gap-4">
-          <div>
-            <p class="text-xs font-medium uppercase tracking-wide text-primary">Boleto</p>
-            <h3 class="font-mono text-xl font-semibold text-on-surface">${ticket.ticket_code}</h3>
-          </div>
-          <span class="inline-flex rounded-full border px-2.5 py-0.5 text-xs font-semibold ${getStatusBadgeClass(ticket.status)}">
-            ${TICKET_STATUS_LABELS[ticket.status as keyof typeof TICKET_STATUS_LABELS] || ticket.status}
-          </span>
-        </div>
-        <dl class="grid gap-3 sm:grid-cols-2">
-          <div><dt class="text-xs text-on-surface-variant">Comprador</dt><dd class="text-sm font-medium">${ticket.buyer_name || "-"}</dd></div>
-          <div><dt class="text-xs text-on-surface-variant">Teléfono</dt><dd class="text-sm">${ticket.buyer_phone || "-"}</dd></div>
-          <div><dt class="text-xs text-on-surface-variant">Vendedor</dt><dd class="text-sm">${ticket.seller_name || "-"}</dd></div>
-          <div><dt class="text-xs text-on-surface-variant">Punto</dt><dd class="text-sm">${ticket.sale_location || "-"}</dd></div>
-          <div><dt class="text-xs text-on-surface-variant">Venta</dt><dd class="text-sm">${formatDate(ticket.sold_at)}</dd></div>
-          <div><dt class="text-xs text-on-surface-variant">Validación</dt><dd class="text-sm">${formatDate(ticket.validated_at)}</dd></div>
-        </dl>
-      </div>
-    `;
-
-    button.classList.toggle("hidden", ticket.status !== "sold");
-  }
-
-  function getStatusBadgeClass(status: string) {
-    const map: Record<string, string> = {
-      available: "bg-zinc-100 text-zinc-700 border-zinc-200",
-      assigned: "bg-blue-100 text-blue-700 border-blue-200",
-      reserved: "bg-amber-100 text-amber-800 border-amber-200",
-      sold: "bg-green-100 text-green-700 border-green-200",
-      validated: "bg-purple-100 text-purple-700 border-purple-200",
-      cancelled: "bg-red-100 text-red-700 border-red-200",
-    };
-    return map[status] || map.available;
-  }
-
-  async function searchTicket() {
-    const codeEl = document.getElementById("checkin-code") as HTMLInputElement | null;
-    const ticketCode = (codeEl?.value || "").trim().toUpperCase();
-    activeTicket = null;
-
-    if (!ticketCode) {
-      showMessage("Ingrese un código de boleto.", "warning");
-      renderTicket(null);
-      return;
-    }
-
-    if (!/^PF-\d{6}$/.test(ticketCode)) {
-      showMessage("Formato inválido. Use PF-000001.", "error");
-      renderTicket(null);
-      return;
-    }
-
-    showMessage("Buscando boleto...", "info");
-
-    const { data: ticket, error } = await supabase.from("tickets").select("*").eq("ticket_code", ticketCode).single();
-
-    if (error || !ticket) {
-      showMessage("Boleto inexistente.", "error");
-      renderTicket(null);
-      return;
-    }
-
-    activeTicket = ticket;
-    renderTicket(ticket);
-
-    if (ticket.status === "sold") {
-      showMessage("Boleto vendido. Puede validar ingreso.", "success");
-    } else if (ticket.status === "validated") {
-      showMessage("Boleto ya utilizado.", "error");
-    } else if (ticket.status === "reserved") {
-      showMessage("Boleto reservado, pago no confirmado", "warning");
-    } else if (ticket.status === "available" || ticket.status === "assigned") {
-      showMessage("Boleto no vendido", "warning");
-    } else if (ticket.status === "cancelled") {
-      showMessage("Boleto anulado.", "error");
-    }
-  }
-
-  async function validateTicket() {
-    if (!activeTicket) return;
-
-    showMessage("Validando boleto...", "info");
-
-    const { data, error } = await supabase.rpc("validate_ticket", {
-      p_ticket_code: activeTicket.ticket_code,
-      p_validated_by: "admin-checkin",
-    });
-
-    if (error) {
-      showMessage("Error al validar: " + error.message, "error");
-      return;
-    }
-
-    const result = data?.[0];
-    if (!result?.ok) {
-      showMessage(result?.message || "No se pudo validar el boleto.", "error");
-      return;
-    }
-
-    activeTicket = { ...activeTicket, status: "validated", validated_at: result.validated_at };
-    showMessage("Ingreso validado correctamente.", "success");
-    renderTicket(activeTicket);
-  }
-
-  document.getElementById("search-ticket")?.addEventListener("click", searchTicket);
-  document.getElementById("validate-ticket")?.addEventListener("click", validateTicket);
-  document.getElementById("checkin-code")?.addEventListener("keydown", (event) => {
-    if (event.key === "Enter") searchTicket();
-  });
-</script>

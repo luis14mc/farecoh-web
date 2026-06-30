@@ -1,20 +1,16 @@
 ---
 import AdminLayout from "@/layouts/AdminLayout.astro";
-import PageHeader from "@/components/admin/ui/PageHeader.astro";
-import AdminPage from "@/components/admin/ui/AdminPage.astro";
-import Card from "@/components/admin/ui/Card.astro";
-import FormField from "@/components/admin/ui/FormField.astro";
-import Input from "@/components/admin/ui/Input.astro";
-import Select from "@/components/admin/ui/Select.astro";
-import Button from "@/components/admin/ui/Button.astro";
-import Alert from "@/components/admin/ui/Alert.astro";
-import Table from "@/components/admin/ui/Table.astro";
-import EmptyState from "@/components/admin/ui/EmptyState.astro";
+import { AdminPageHeader } from "@/components/admin/react/AdminPageHeader";
+import { SalesFormPanel } from "@/components/admin/react/SalesFormPanel";
 import { createSupabaseServerClient } from "@/lib/auth";
 import { confirmTicketPayment } from "@/services/ticket-payment";
+import { getPublicSupabaseConfig, isAuthConfigured, type UserProfile } from "@/lib/auth";
+import { formatSiteDate } from "@/lib/locale";
 
 const supabase = createSupabaseServerClient(Astro);
-const staffProfile = Astro.locals.staffProfile;
+const staffProfile = Astro.locals.staffProfile as UserProfile | undefined;
+const authConfigured = isAuthConfigured(getPublicSupabaseConfig());
+const currentDate = formatSiteDate(new Date(), { month: "short", day: "numeric", year: "numeric" });
 let formMessage = "";
 let formError = false;
 
@@ -76,256 +72,31 @@ const { data: sellers = [] } = await supabase
 
 const { data: recentSales = [] } = await supabase
   .from("tickets")
-  .select("*")
+  .select("ticket_code, buyer_name, seller_name, sale_location, sold_at")
   .eq("status", "sold")
   .order("sold_at", { ascending: false })
   .limit(10);
 ---
 
 <AdminLayout title="Ventas | FARECOH" description="Registro de venta física de boletos" active="sales">
-  <PageHeader
+  <AdminPageHeader
+    client:load
     title="Ventas"
     section="Operaciones"
     description="Confirme pagos de reservas web o registre ventas presenciales."
+    currentDate={currentDate}
+    staffProfile={staffProfile}
+    authConfigured={authConfigured}
   />
 
-  <AdminPage>
-    <section class="grid gap-4 lg:grid-cols-3">
-      <Card class="lg:col-span-1">
-        <h2 class="text-lg font-semibold text-on-surface">Confirmar pago / registrar venta</h2>
-        <p class="mt-1 text-sm text-on-surface-variant">Reservas web o venta presencial.</p>
-
-        <form id="sale-form" method="POST" class="mt-6 space-y-4">
-          <FormField label="Código boleto" htmlFor="code-input" required>
-            <Input id="code-input" name="code" required placeholder="PF-000001" mono />
-          </FormField>
-
-          <Alert id="ticket-status-banner" variant="info" hidden />
-
-          <FormField label="Nombre comprador" htmlFor="buyer-name-input" required>
-            <Input id="buyer-name-input" name="buyer_name" required />
-          </FormField>
-
-          <FormField label="Teléfono" htmlFor="buyer-phone-input" required>
-            <Input id="buyer-phone-input" name="buyer_phone" required type="tel" autocomplete="tel" />
-          </FormField>
-
-          <FormField label="Correo" htmlFor="buyer-email-input" hint="Opcional">
-            <Input id="buyer-email-input" name="buyer_email" type="email" autocomplete="email" />
-          </FormField>
-
-          <FormField label="Vendedor" htmlFor="seller-select" required>
-            <Select id="seller-select" name="seller_id" required>
-              <option value="">Seleccione un vendedor</option>
-              {sellers.map((seller) => (
-                <option value={seller.id}>
-                  {seller.name} ({seller.type === "vendor" ? "Vendedor" : "Punto físico"})
-                </option>
-              ))}
-            </Select>
-            <p class="text-xs text-on-surface-variant">
-              <a href="/admin/vendors" class="font-medium text-primary hover:underline">Registrar vendedor</a>
-            </p>
-          </FormField>
-
-          <FormField label="Punto de venta" htmlFor="sale-location" required>
-            <Input id="sale-location" name="sale_location" required placeholder="Escuela Nacional de Música" />
-          </FormField>
-
-          <FormField label="Método de pago" htmlFor="payment-method" required>
-            <Select id="payment-method" name="payment_method" required>
-              <option value="">Seleccione</option>
-              <option value="Efectivo">Efectivo</option>
-              <option value="Transferencia">Transferencia</option>
-              <option value="POS">POS</option>
-              <option value="Cortesía">Cortesía</option>
-            </Select>
-          </FormField>
-
-          <FormField label="Referencia" htmlFor="payment-reference" hint="Opcional">
-            <Input id="payment-reference" name="payment_reference" />
-          </FormField>
-
-          <Button id="submit-btn" type="submit" fullWidthMobile class="mt-2 w-full">
-            Registrar venta
-          </Button>
-
-          {formMessage && (
-            <Alert variant={formError ? "error" : "success"} id="sale-message">
-              {formMessage}
-            </Alert>
-          )}
-        </form>
-      </Card>
-
-      <div class="space-y-4 lg:col-span-2">
-        <Card>
-          <h3 class="text-base font-semibold text-on-surface">Estado del boleto</h3>
-          <div
-            id="ticket-preview"
-            class="mt-4 rounded-md border border-outline-variant bg-surface-container-low p-4 text-sm text-on-surface-variant"
-          >
-            Ingrese un código para consultar.
-          </div>
-        </Card>
-
-        <Card padding={false}>
-          <div class="border-b border-outline-variant px-6 py-4">
-            <h3 class="text-base font-semibold text-on-surface">Últimas ventas</h3>
-            <p class="mt-1 text-sm text-on-surface-variant">Precio unitario: L {ticketPrice}</p>
-          </div>
-
-          {recentSales.length ? (
-            <Table minWidth="760px">
-              <thead class="border-b border-outline-variant bg-surface-container-low">
-                <tr>
-                  <th class="h-11 px-4 text-left text-xs font-medium uppercase tracking-wide text-on-surface-variant">Código</th>
-                  <th class="h-11 px-4 text-left text-xs font-medium uppercase tracking-wide text-on-surface-variant">Comprador</th>
-                  <th class="h-11 px-4 text-left text-xs font-medium uppercase tracking-wide text-on-surface-variant">Vendedor</th>
-                  <th class="h-11 px-4 text-left text-xs font-medium uppercase tracking-wide text-on-surface-variant">Punto</th>
-                  <th class="h-11 px-4 text-left text-xs font-medium uppercase tracking-wide text-on-surface-variant">Fecha</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-outline-variant">
-                {recentSales.map((ticket: any) => (
-                  <tr class="hover:bg-surface-container-low/70">
-                    <td class="px-4 py-3 font-mono text-sm font-semibold text-primary">{ticket.ticket_code}</td>
-                    <td class="px-4 py-3 text-sm">{ticket.buyer_name}</td>
-                    <td class="px-4 py-3 text-sm">{ticket.seller_name}</td>
-                    <td class="px-4 py-3 text-sm">{ticket.sale_location}</td>
-                    <td class="px-4 py-3 text-sm text-on-surface-variant">
-                      {ticket.sold_at
-                        ? new Date(ticket.sold_at).toLocaleDateString("es-HN", {
-                            day: "2-digit",
-                            month: "short",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })
-                        : "-"}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </Table>
-          ) : (
-            <EmptyState
-              icon="receipt_long"
-              title="Sin ventas registradas"
-              description="Las ventas confirmadas aparecerán aquí."
-            />
-          )}
-        </Card>
-      </div>
-    </section>
-  </AdminPage>
+  <div class="mx-auto w-full max-w-7xl space-y-6 px-4 py-6 pb-24 md:px-8 md:py-8 md:pb-8">
+    <SalesFormPanel
+      client:load
+      sellers={sellers}
+      recentSales={recentSales}
+      ticketPrice={ticketPrice}
+      formMessage={formMessage || undefined}
+      formError={formError}
+    />
+  </div>
 </AdminLayout>
-
-<script>
-  import { supabase } from "@/lib/supabase";
-  import { TICKET_STATUS_LABELS, getTicketActionLabel, canConfirmPayment } from "@/lib/ticket-status";
-
-  const preview = document.getElementById("ticket-preview");
-  const input = document.getElementById("code-input") as HTMLInputElement | null;
-  const submitBtn = document.getElementById("submit-btn") as HTMLButtonElement | null;
-  const statusBanner = document.getElementById("ticket-status-banner");
-  const buyerNameInput = document.getElementById("buyer-name-input") as HTMLInputElement | null;
-  const buyerPhoneInput = document.getElementById("buyer-phone-input") as HTMLInputElement | null;
-  const buyerEmailInput = document.getElementById("buyer-email-input") as HTMLInputElement | null;
-
-  const initialCode = new URLSearchParams(window.location.search).get("code");
-  if (initialCode && input) {
-    input.value = initialCode;
-    renderPreview(initialCode);
-  }
-
-  function setBuyerFields(ticket: Record<string, string | null>, readonly: boolean) {
-    if (buyerNameInput) {
-      buyerNameInput.value = ticket.buyer_name || "";
-      buyerNameInput.readOnly = readonly;
-      buyerNameInput.classList.toggle("bg-surface-container-low", readonly);
-    }
-    if (buyerPhoneInput) {
-      buyerPhoneInput.value = ticket.buyer_phone || "";
-      buyerPhoneInput.readOnly = readonly;
-      buyerPhoneInput.classList.toggle("bg-surface-container-low", readonly);
-    }
-    if (buyerEmailInput) {
-      buyerEmailInput.value = ticket.buyer_email || "";
-      buyerEmailInput.readOnly = readonly;
-      buyerEmailInput.classList.toggle("bg-surface-container-low", readonly);
-    }
-  }
-
-  function updateFormForStatus(status: string) {
-    const actionLabel = getTicketActionLabel(status);
-    if (submitBtn) {
-      submitBtn.disabled = !canConfirmPayment(status);
-      submitBtn.textContent = actionLabel;
-    }
-
-    if (statusBanner) {
-      statusBanner.classList.remove("hidden");
-      statusBanner.className = statusBanner.className.replace(/border-\S+|bg-\S+|text-\S+/g, "").trim();
-      if (canConfirmPayment(status)) {
-        statusBanner.classList.add("rounded-lg", "border", "border-green-200", "bg-green-50", "px-4", "py-3", "text-sm", "text-green-800");
-        statusBanner.textContent = `Estado: ${TICKET_STATUS_LABELS[status as keyof typeof TICKET_STATUS_LABELS] || status}. Puede ${actionLabel.toLowerCase()}.`;
-      } else {
-        statusBanner.classList.add("rounded-lg", "border", "border-red-200", "bg-red-50", "px-4", "py-3", "text-sm", "text-red-800");
-        statusBanner.textContent = `Estado: ${TICKET_STATUS_LABELS[status as keyof typeof TICKET_STATUS_LABELS] || status}. ${actionLabel}.`;
-      }
-    }
-  }
-
-  async function renderPreview(code: string) {
-    if (!preview) return;
-    const cleanCode = code.trim().toUpperCase();
-
-    if (!cleanCode) {
-      preview.textContent = "Ingrese un código para consultar.";
-      statusBanner?.classList.add("hidden");
-      if (submitBtn) {
-        submitBtn.disabled = false;
-        submitBtn.textContent = "Registrar venta";
-      }
-      return;
-    }
-
-    if (!/^PF-\d{6}$/.test(cleanCode)) {
-      preview.innerHTML = `<span class="font-medium text-red-700">Formato inválido. Use PF-000001.</span>`;
-      return;
-    }
-
-    preview.innerHTML = `<div class="flex items-center gap-2"><span class="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent"></span> Consultando...</div>`;
-
-    const { data: ticket, error } = await supabase.from("tickets").select("*").eq("ticket_code", cleanCode).single();
-
-    if (error || !ticket) {
-      preview.innerHTML = `<span class="font-medium text-red-700">Boleto inexistente.</span>`;
-      if (submitBtn) submitBtn.disabled = true;
-      return;
-    }
-
-    const soldDate = ticket.sold_at
-      ? new Date(ticket.sold_at).toLocaleString("es-HN", { dateStyle: "short", timeStyle: "short" })
-      : "-";
-
-    preview.innerHTML = `
-      <div class="grid gap-3 sm:grid-cols-2">
-        <p><span class="text-on-surface-variant">Código:</span> <strong>${ticket.ticket_code}</strong></p>
-        <p><span class="text-on-surface-variant">Estado:</span> <strong class="text-primary">${TICKET_STATUS_LABELS[ticket.status as keyof typeof TICKET_STATUS_LABELS] || ticket.status}</strong></p>
-        <p><span class="text-on-surface-variant">Vendedor:</span> ${ticket.seller_name || "-"}</p>
-        <p><span class="text-on-surface-variant">Punto:</span> ${ticket.sale_location || "-"}</p>
-        <p><span class="text-on-surface-variant">Comprador:</span> ${ticket.buyer_name || "-"}</p>
-        <p><span class="text-on-surface-variant">Vendido:</span> ${soldDate}</p>
-      </div>
-    `;
-
-    const hasBuyer = Boolean(ticket.buyer_name && ticket.buyer_phone);
-    setBuyerFields(ticket, ticket.status === "reserved" && hasBuyer);
-    updateFormForStatus(ticket.status);
-  }
-
-  input?.addEventListener("input", (e) => {
-    renderPreview((e.target as HTMLInputElement).value);
-  });
-</script>

@@ -1,4 +1,5 @@
 /// <reference types="astro/client" />
+/// <reference types="@astrojs/react/client" />
 
 import type { UserProfile } from "@/lib/auth";
 

@@ -1,11 +1,12 @@
 ---
 import "../styles/global.css";
-import AdminSidebar from "@/components/admin/AdminSidebar.astro";
-import MobileAdminNav from "@/components/admin/ui/MobileAdminNav.astro";
-import { getPublicSupabaseConfig, isAuthConfigured } from "@/lib/auth";
+import "../styles/admin-shadcn.css";
+import { AdminShell } from "@/components/admin/react/AdminShell";
+import { getPublicSupabaseConfig, isAuthConfigured, type UserProfile } from "@/lib/auth";
 import { SITE_LANG } from "@/lib/locale";
 import { ROBOTS_NOINDEX } from "@/lib/seo";
-import type { AdminNavKey } from "@/lib/admin-nav";
+import { ADMIN_NAV_ITEMS, type AdminNavKey } from "@/lib/admin-nav";
+import { canAccessRoute } from "@/lib/rbac";
 
 interface Props {
   title: string;
@@ -16,6 +17,11 @@ interface Props {
 const { title, description, active = "dashboard" } = Astro.props;
 const { supabaseUrl, supabaseAnonKey } = getPublicSupabaseConfig();
 const authConfigured = isAuthConfigured({ supabaseUrl, supabaseAnonKey });
+const staffProfile = Astro.locals.staffProfile as UserProfile | undefined;
+
+const navItems = ADMIN_NAV_ITEMS.filter(
+  (item) => staffProfile && canAccessRoute(staffProfile.role, item.href),
+);
 ---
 
 <!doctype html>
@@ -29,31 +35,18 @@ const authConfigured = isAuthConfigured({ supabaseUrl, supabaseAnonKey });
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,0&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <title>{title}</title>
   </head>
-  <body class="min-h-screen bg-zinc-50 text-on-surface antialiased">
-    <MobileAdminNav active={active} />
-    <AdminSidebar active={active} />
-
-    <div class="md:pl-64">
-      <main class="min-h-screen pt-14 md:pt-0">
-        <slot />
-      </main>
-    </div>
+  <body class="antialiased" style="font-family: Inter, ui-sans-serif, system-ui, sans-serif;">
+    <AdminShell
+      client:load
+      active={active}
+      navItems={navItems}
+      staffProfile={staffProfile}
+      authConfigured={authConfigured}
+    >
+      <slot />
+    </AdminShell>
   </body>
 </html>
-
-<script define:vars={{ authConfigured }}>
-  import { createSupabaseBrowserClient } from "@/lib/auth";
-
-  const supabase = authConfigured ? createSupabaseBrowserClient() : null;
-
-  document.querySelectorAll("[data-admin-logout]").forEach((button) => {
-    button.addEventListener("click", async () => {
-      if (supabase) await supabase.auth.signOut();
-      window.location.assign("/admin/login");
-    });
-  });
-</script>
