@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Loader2, Search, UserCheck } from "lucide-react";
-import { formatSiteDate } from "@/lib/locale";
+import { formatSiteDateTime } from "@/lib/locale";
 import { parseCheckinInput, type CheckinInputKind } from "@/lib/qr-input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -178,11 +178,11 @@ export function CheckinPanel() {
                 </div>
                 <div>
                   <dt className="text-xs text-muted-foreground">Venta</dt>
-                  <dd>{ticket.sold_at ? formatSiteDate(ticket.sold_at, { dateStyle: "medium", timeStyle: "short" }) : "-"}</dd>
+                  <dd>{ticket.sold_at ? formatSiteDateTime(ticket.sold_at, { dateStyle: "medium", timeStyle: "short" }) : "-"}</dd>
                 </div>
                 <div>
                   <dt className="text-xs text-muted-foreground">Validación</dt>
-                  <dd>{ticket.validated_at ? formatSiteDate(ticket.validated_at, { dateStyle: "medium", timeStyle: "short" }) : "-"}</dd>
+                  <dd>{ticket.validated_at ? formatSiteDateTime(ticket.validated_at, { dateStyle: "medium", timeStyle: "short" }) : "-"}</dd>
                 </div>
               </dl>
 
