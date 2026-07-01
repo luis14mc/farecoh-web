@@ -1,0 +1,31 @@
+---
+import AdminLayout from "@/layouts/AdminLayout.astro";
+import { AdminPageHeader } from "@/components/admin/react/AdminPageHeader";
+import { PrintCalibrationPanel } from "@/components/admin/react/PrintCalibrationPanel";
+import { getPublicSupabaseConfig, isAuthConfigured, type UserProfile } from "@/lib/auth";
+import { formatSiteDate } from "@/lib/locale";
+
+const staffProfile = Astro.locals.staffProfile as UserProfile | undefined;
+const authConfigured = isAuthConfigured(getPublicSupabaseConfig());
+const currentDate = formatSiteDate(new Date(), { month: "short", day: "numeric", year: "numeric" });
+---
+
+<AdminLayout
+  title="Calibración de impresión | FARECOH"
+  description="Calibración visual de QR y código para boletos físicos"
+  active="printing"
+>
+  <AdminPageHeader
+    client:load
+    title="Calibración de impresión"
+    section="Operaciones"
+    description="Alinee matemáticamente el QR y el código con la plantilla física antes de generar PDFs finales."
+    currentDate={currentDate}
+    staffProfile={staffProfile}
+    authConfigured={authConfigured}
+  />
+
+  <div class="mx-auto w-full max-w-7xl space-y-6 px-4 py-6 pb-24 md:px-8 md:py-8 md:pb-8">
+    <PrintCalibrationPanel client:load />
+  </div>
+</AdminLayout>

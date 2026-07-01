@@ -1,18 +1,10 @@
-import { formatTicketCode } from "@/services/ticket-code";
+import { formatTicketCode } from "../services/ticket-code.ts";
 
 export {
   CODE_FONT_SIZE,
-  CODE_MASK_HEIGHT,
-  CODE_MASK_WIDTH,
-  CODE_X,
-  CODE_Y,
   MAX_PRINT_TICKETS_PER_REQUEST,
-  QR_PADDING,
   QR_RENDER_SCALE,
-  QR_SIZE,
-  QR_X,
-  QR_Y,
-} from "@/lib/ticket-print-constants";
+} from "./ticket-print-constants.ts";
 
 export const TICKET_TEMPLATE_FILENAME = "ticket-pink-floyd.png";
 export const TICKET_TEMPLATE_RELATIVE_PATH = `public/templates/${TICKET_TEMPLATE_FILENAME}`;
@@ -25,7 +17,13 @@ export const FULL_PRINT_FROM = formatTicketCode(1);
 export const FULL_PRINT_TO = formatTicketCode(500);
 
 export function isDebugPrintLayout(): boolean {
-  const fromProcess = typeof process !== "undefined" ? process.env.DEBUG_PRINT_LAYOUT : undefined;
-  const fromMeta = typeof import.meta !== "undefined" ? import.meta.env?.DEBUG_PRINT_LAYOUT : undefined;
+  const fromProcess =
+    typeof process !== "undefined"
+      ? (process.env.DEBUG_LAYOUT ?? process.env.DEBUG_PRINT_LAYOUT)
+      : undefined;
+  const fromMeta =
+    typeof import.meta !== "undefined"
+      ? (import.meta.env?.DEBUG_LAYOUT ?? import.meta.env?.DEBUG_PRINT_LAYOUT)
+      : undefined;
   return fromProcess === "true" || fromMeta === "true";
 }

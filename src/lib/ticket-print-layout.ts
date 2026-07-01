@@ -1,55 +1,92 @@
 import type { PDFPage } from "pdf-lib";
 import { rgb } from "pdf-lib";
-import {
-  CODE_FONT_SIZE,
-  CODE_MASK_HEIGHT,
-  CODE_MASK_WIDTH,
-  CODE_X,
-  CODE_Y,
-  QR_SIZE,
-  QR_X,
-  QR_Y,
-} from "./ticket-print-constants.ts";
+import { CODE_FONT_SIZE } from "./ticket-print-constants.ts";
+import { QR_HEIGHT_POINTS, QR_WIDTH_POINTS } from "./ticket-print-measurements.ts";
+import type { TicketPrintLayout, TicketTemplateDimensions } from "../types/ticket-print-layout.ts";
 
 /** Convert top-left Y to pdf-lib bottom-left Y for a box top edge. */
 export function topLeftYToPdf(pageHeight: number, top: number, boxHeight: number): number {
   return pageHeight - top - boxHeight;
 }
 
-export function codeTextBaselineY(pageHeight: number): number {
-  return pageHeight - CODE_Y - CODE_FONT_SIZE * 0.32;
-}
+export function layoutCenterToPagePoint(
+  layout: TicketPrintLayout,
+  template: TicketTemplateDimensions,
+  target: "qr" | "code",
+) {
+  const xPercent = target === "qr" ? layout.qrCenterXPercent : layout.codeCenterXPercent;
+  const yPercent = target === "qr" ? layout.qrCenterYPercent : layout.codeCenterYPercent;
 
-export function codeMaskRect(pageHeight: number) {
   return {
-    x: CODE_X - CODE_MASK_WIDTH / 2,
-    y: topLeftYToPdf(pageHeight, CODE_Y - CODE_MASK_HEIGHT / 2, CODE_MASK_HEIGHT),
-    width: CODE_MASK_WIDTH,
-    height: CODE_MASK_HEIGHT,
+    x: template.width * xPercent,
+    yFromTop: template.height * yPercent,
+    y: template.height - template.height * yPercent,
   };
 }
 
-export function qrImageRect(pageHeight: number) {
+export function codeTextBaselineY(
+  layout: TicketPrintLayout,
+  template: TicketTemplateDimensions,
+): number {
+  const center = layoutCenterToPagePoint(layout, template, "code");
+  return center.y - CODE_FONT_SIZE * 0.34;
+}
+
+export function qrImageRect(layout: TicketPrintLayout, template: TicketTemplateDimensions) {
+  const center = layoutCenterToPagePoint(layout, template, "qr");
+
   return {
-    x: QR_X,
-    y: topLeftYToPdf(pageHeight, QR_Y, QR_SIZE),
-    width: QR_SIZE,
-    height: QR_SIZE,
+    x: center.x - QR_WIDTH_POINTS / 2,
+    y: center.y - QR_HEIGHT_POINTS / 2,
+    width: QR_WIDTH_POINTS,
+    height: QR_HEIGHT_POINTS,
   };
 }
 
-export function drawPrintLayoutDebugBoxes(page: PDFPage, pageHeight: number): void {
-  const codeRect = codeMaskRect(pageHeight);
+function drawCross(page: PDFPage, x: number, y: number, color: ReturnType<typeof rgb>): void {
+  const size = 18;
+  page.drawLine({
+    start: { x: x - size, y },
+    end: { x: x + size, y },
+    color,
+    thickness: 2,
+  });
+  page.drawLine({
+    start: { x, y: y - size },
+    end: { x, y: y + size },
+    color,
+    thickness: 2,
+  });
+}
+
+export function drawPrintLayoutDebugBoxes(
+  page: PDFPage,
+  layout: TicketPrintLayout,
+  template: TicketTemplateDimensions,
+): void {
+  const qrCenter = layoutCenterToPagePoint(layout, template, "qr");
+  const codeCenter = layoutCenterToPagePoint(layout, template, "code");
+  const qrRect = qrImageRect(layout, template);
+
+  drawCross(page, qrCenter.x, qrCenter.y, rgb(1, 0, 0));
+  drawCross(page, codeCenter.x, codeCenter.y, rgb(0, 0.72, 0.18));
+
   page.drawRectangle({
-    ...codeRect,
-    borderColor: rgb(0.2, 0.45, 1),
+    ...qrRect,
+    borderColor: rgb(0.1, 0.35, 1),
     borderWidth: 2,
   });
 
-  const qrRect = qrImageRect(pageHeight);
-  page.drawRectangle({
-    ...qrRect,
-    borderColor: rgb(1, 0.2, 0.2),
-    borderWidth: 2,
+  page.drawText("QR center", {
+    x: qrCenter.x + 24,
+    y: qrCenter.y + 6,
+    size: 20,
+    color: rgb(1, 0, 0),
+  });
+  page.drawText("Code center", {
+    x: codeCenter.x + 24,
+    y: codeCenter.y + 6,
+    size: 20,
+    color: rgb(0, 0.72, 0.18),
   });
 }

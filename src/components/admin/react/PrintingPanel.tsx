@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { FileDown, Printer } from "lucide-react";
+import { Crosshair, FileDown, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -86,6 +86,12 @@ export function PrintingPanel({ eventName }: PrintingPanelProps) {
               <a href={fullPrintUrl}>
                 <FileDown className="h-4 w-4" />
                 Generar PDF completo
+              </a>
+            </Button>
+            <Button asChild variant="outline">
+              <a href="/admin/printing/calibration">
+                <Crosshair className="h-4 w-4" />
+                Calibrar layout
               </a>
             </Button>
           </div>

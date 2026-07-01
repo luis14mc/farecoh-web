@@ -1,21 +1,32 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import {
-  CODE_X,
-  QR_SIZE,
-  QR_X,
-  QR_Y,
-} from "../src/lib/ticket-print-constants.ts";
-import { qrImageRect } from "../src/lib/ticket-print-layout.ts";
+import { QR_HEIGHT_POINTS, QR_WIDTH_POINTS } from "../src/lib/ticket-print-measurements.ts";
+import { layoutCenterToPagePoint, qrImageRect } from "../src/lib/ticket-print-layout.ts";
+import type { TicketPrintLayout } from "../src/types/ticket-print-layout.ts";
 
-test("ticket print layout targets right stub on 2000x800 template", () => {
-  const pageHeight = 800;
-  const qrRect = qrImageRect(pageHeight);
+const template = { width: 2000, height: 800 };
+const layout: TicketPrintLayout = {
+  qrCenterXPercent: 0.855,
+  qrCenterYPercent: 0.475,
+  codeCenterXPercent: 0.855,
+  codeCenterYPercent: 0.185,
+  updatedAt: null,
+};
 
-  assert.ok(CODE_X > 1500, "code should be on right stub, not donation area");
-  assert.ok(QR_X > 1500, "QR should be on right stub");
-  assert.ok(QR_Y + QR_SIZE < pageHeight, "QR must fit inside template height");
-  assert.ok(qrRect.y >= 0, "QR pdf-lib Y must be on-page");
-  assert.equal(qrRect.width, QR_SIZE);
-  assert.equal(qrRect.height, QR_SIZE);
+test("ticket print layout uses calibrated percentages and physical QR points", () => {
+  const qrCenter = layoutCenterToPagePoint(layout, template, "qr");
+  const codeCenter = layoutCenterToPagePoint(layout, template, "code");
+  const qrRect = qrImageRect(layout, template);
+
+  assert.equal(qrCenter.x, template.width * layout.qrCenterXPercent);
+  assert.equal(qrCenter.yFromTop, template.height * layout.qrCenterYPercent);
+  assert.equal(codeCenter.x, template.width * layout.codeCenterXPercent);
+  assert.equal(codeCenter.yFromTop, template.height * layout.codeCenterYPercent);
+
+  assert.equal(Number(QR_WIDTH_POINTS.toFixed(2)), 70.86);
+  assert.equal(Number(QR_HEIGHT_POINTS.toFixed(2)), 68.03);
+  assert.equal(qrRect.width, QR_WIDTH_POINTS);
+  assert.equal(qrRect.height, QR_HEIGHT_POINTS);
+  assert.equal(qrRect.x + qrRect.width / 2, qrCenter.x);
+  assert.equal(qrRect.y + qrRect.height / 2, qrCenter.y);
 });
