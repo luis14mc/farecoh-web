@@ -6,10 +6,10 @@ import type { TicketPrintLayout } from "../src/types/ticket-print-layout.ts";
 
 const template = { width: 2000, height: 800 };
 const layout: TicketPrintLayout = {
-  qrCenterXPercent: 0.855,
-  qrCenterYPercent: 0.475,
+  qrCenterXPercent: 0.859,
+  qrCenterYPercent: 0.729,
   codeCenterXPercent: 0.855,
-  codeCenterYPercent: 0.185,
+  codeCenterYPercent: 0.4825,
   updatedAt: null,
 };
 
@@ -23,8 +23,8 @@ test("ticket print layout uses calibrated percentages and physical QR points", (
   assert.equal(codeCenter.x, template.width * layout.codeCenterXPercent);
   assert.equal(codeCenter.yFromTop, template.height * layout.codeCenterYPercent);
 
-  assert.equal(Number(QR_WIDTH_POINTS.toFixed(2)), 70.86);
-  assert.equal(Number(QR_HEIGHT_POINTS.toFixed(2)), 68.03);
+  assert.equal(Number(QR_WIDTH_POINTS.toFixed(2)), 295.28);
+  assert.equal(Number(QR_HEIGHT_POINTS.toFixed(2)), 283.46);
   assert.equal(qrRect.width, QR_WIDTH_POINTS);
   assert.equal(qrRect.height, QR_HEIGHT_POINTS);
   assert.equal(qrRect.x + qrRect.width / 2, qrCenter.x);

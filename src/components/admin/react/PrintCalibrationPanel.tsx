@@ -21,10 +21,10 @@ const FINE_STEP_PERCENT = 0.00025;
 
 const defaultTemplate: TicketTemplateDimensions = { width: 1, height: 1 };
 const defaultLayout: TicketPrintLayout = {
-  qrCenterXPercent: 0.855,
-  qrCenterYPercent: 0.475,
+  qrCenterXPercent: 0.859,
+  qrCenterYPercent: 0.729,
   codeCenterXPercent: 0.855,
-  codeCenterYPercent: 0.185,
+  codeCenterYPercent: 0.4825,
   updatedAt: null,
 };
 
@@ -37,7 +37,7 @@ function formatPercent(value: number): string {
 }
 
 function formatPoint(value: number): string {
-  return `${value.toFixed(2)} pt`;
+  return `${value.toFixed(2)} px`;
 }
 
 function buildCalibrationPdfUrl(layout: TicketPrintLayout): string {
@@ -85,12 +85,12 @@ export function PrintCalibrationPanel() {
         if (cancelled) return;
         setTemplate(state.template);
         setLayout(state.layout);
-        setStatus({ type: "idle", message: "Ajuste los centros y guarde cuando coincidan con la plantilla fÃ­sica." });
+        setStatus({ type: "idle", message: "Ajuste los centros y guarde cuando coincidan con la plantilla física." });
       } catch (error) {
         if (cancelled) return;
         setStatus({
           type: "error",
-          message: error instanceof Error ? error.message : "No se pudo cargar la calibraciÃ³n.",
+          message: error instanceof Error ? error.message : "No se pudo cargar la calibración.",
         });
       }
     }
@@ -123,7 +123,7 @@ export function PrintCalibrationPanel() {
   }
 
   async function saveLayout() {
-    setStatus({ type: "loading", message: "Guardando ticket_layout.json..." });
+    setStatus({ type: "loading", message: "Guardando calibración..." });
 
     try {
       const response = await fetch("/api/print/layout", {
@@ -135,7 +135,7 @@ export function PrintCalibrationPanel() {
       const state = (await response.json()) as TicketPrintLayoutState;
       setTemplate(state.template);
       setLayout(state.layout);
-      setStatus({ type: "success", message: "Layout guardado en ticket_layout.json." });
+      setStatus({ type: "success", message: "Calibración guardada correctamente." });
     } catch (error) {
       setStatus({
         type: "error",
@@ -150,10 +150,10 @@ export function PrintCalibrationPanel() {
         <CardHeader>
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-primary">CalibraciÃ³n de impresiÃ³n</p>
-              <CardTitle>Plantilla fÃ­sica Pink Floyd</CardTitle>
+              <p className="text-xs font-semibold uppercase tracking-wide text-primary">Calibración de impresión</p>
+              <CardTitle>Plantilla física Pink Floyd</CardTitle>
               <CardDescription>
-                Mueva los centros por porcentaje. El QR final mide {formatPoint(QR_WIDTH_POINTS)} x {formatPoint(QR_HEIGHT_POINTS)}.
+                Mueva los centros por porcentaje. El QR final mide {formatPoint(QR_WIDTH_POINTS)} x {formatPoint(QR_HEIGHT_POINTS)} en la plantilla.
               </CardDescription>
             </div>
             <Badge variant="outline">
@@ -173,8 +173,8 @@ export function PrintCalibrationPanel() {
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Template</CardTitle>
-            <CardDescription>Overlay: cruz roja = centro QR, rectÃ¡ngulo azul = tamaÃ±o QR, cruz verde = centro cÃ³digo.</CardDescription>
+            <CardTitle className="text-base">Plantilla</CardTitle>
+            <CardDescription>Cruz roja: centro QR. Rectángulo azul: tamaño QR. Cruz verde: centro del código.</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="overflow-auto rounded-lg border border-border bg-muted/30 p-3">
@@ -215,17 +215,17 @@ export function PrintCalibrationPanel() {
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Current coordinates</CardTitle>
+              <CardTitle className="text-base">Coordenadas actuales</CardTitle>
               <CardDescription>Valores guardados como porcentaje de ancho/alto de la plantilla.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4 text-sm">
               <div className="rounded-md border border-border p-3">
-                <p className="font-semibold text-red-700">QR center</p>
+                <p className="font-semibold text-red-700">Centro QR</p>
                 <p>X: {formatPercent(layout.qrCenterXPercent)}</p>
                 <p>Y: {formatPercent(layout.qrCenterYPercent)}</p>
               </div>
               <div className="rounded-md border border-border p-3">
-                <p className="font-semibold text-emerald-700">Code center</p>
+                <p className="font-semibold text-emerald-700">Centro del código</p>
                 <p>X: {formatPercent(layout.codeCenterXPercent)}</p>
                 <p>Y: {formatPercent(layout.codeCenterYPercent)}</p>
               </div>
@@ -239,13 +239,13 @@ export function PrintCalibrationPanel() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Move {target === "qr" ? "QR" : "Code"}</CardTitle>
+              <CardTitle className="text-base">Mover {target === "qr" ? "QR" : "código"}</CardTitle>
               <CardDescription>Use ajuste fino para movimientos de 0.025%.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-2">
-                <Button type="button" variant={target === "qr" ? "default" : "outline"} onClick={() => setTarget("qr")}>Move QR</Button>
-                <Button type="button" variant={target === "code" ? "default" : "outline"} onClick={() => setTarget("code")}>Move Code</Button>
+                <Button type="button" variant={target === "qr" ? "default" : "outline"} onClick={() => setTarget("qr")}>Mover QR</Button>
+                <Button type="button" variant={target === "code" ? "default" : "outline"} onClick={() => setTarget("code")}>Mover código</Button>
               </div>
 
               <Button type="button" variant={fineMode ? "secondary" : "outline"} className="w-full" onClick={() => setFineMode((value) => !value)}>
@@ -272,12 +272,12 @@ export function PrintCalibrationPanel() {
               <div className="flex flex-col gap-2">
                 <Button type="button" onClick={saveLayout} disabled={status.type === "loading"}>
                   <Save className="h-4 w-4" />
-                  Save Layout
+                  Guardar calibración
                 </Button>
                 <Button asChild variant="secondary">
                   <a href={calibrationPdfUrl}>
                     <FileDown className="h-4 w-4" />
-                    Descargar PDF calibraciÃ³n
+                    Descargar PDF calibración
                   </a>
                 </Button>
               </div>

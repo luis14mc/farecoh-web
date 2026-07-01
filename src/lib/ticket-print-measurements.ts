@@ -1,3 +1,4 @@
-export const CM_TO_PDF_POINTS = 28.346;
-export const QR_WIDTH_POINTS = 2.5 * CM_TO_PDF_POINTS;
-export const QR_HEIGHT_POINTS = 2.4 * CM_TO_PDF_POINTS;
+export const TEMPLATE_DPI = 300;
+export const CM_TO_TEMPLATE_PIXELS = TEMPLATE_DPI / 2.54;
+export const QR_WIDTH_POINTS = 2.5 * CM_TO_TEMPLATE_PIXELS;
+export const QR_HEIGHT_POINTS = 2.4 * CM_TO_TEMPLATE_PIXELS;
