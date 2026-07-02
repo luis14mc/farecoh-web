@@ -7,6 +7,7 @@ import { formatSiteDate } from "@/lib/locale";
 import { confirmTicketPayment } from "@/services/ticket-payment";
 import { cancelTicketReservation } from "@/services/ticket-reservation";
 import { getSiteStartOfTodayIso } from "@/services/reservation-stats";
+import { loadConvertedReservationsToday, loadReservedTickets } from "@/services/reservation-queries";
 
 const supabase = createSupabaseServerClient(Astro);
 const staffProfile = Astro.locals.staffProfile as UserProfile | undefined;
@@ -17,6 +18,8 @@ let formMessage = "";
 let formError = false;
 let cancelMessage = "";
 let cancelError = false;
+let pageError = "";
+let migrationWarning = "";
 
 function normalizeTicketCode(ticketCode: string): string {
   return ticketCode.trim().toUpperCase();
@@ -91,27 +94,30 @@ if (Astro.request.method === "POST") {
   }
 }
 
-const { data: reservations = [] } = await supabase
-  .from("tickets")
-  .select(
-    "ticket_code, qr_token, buyer_name, buyer_phone, buyer_email, created_at, reserved_at, payment_method, payment_reference",
-  )
-  .eq("status", "reserved")
-  .order("reserved_at", { ascending: false, nullsFirst: false })
-  .order("created_at", { ascending: false });
+let reservations: Awaited<ReturnType<typeof loadReservedTickets>>["rows"] = [];
+let sellers: { id: string; name: string; type: string }[] = [];
+let convertedToSoldToday = 0;
 
-const { data: sellers = [] } = await supabase
-  .from("sellers")
-  .select("id, name, type")
-  .eq("active", true)
-  .order("name", { ascending: true });
+try {
+  const loaded = await loadReservedTickets(supabase);
+  reservations = loaded.rows;
+  migrationWarning = loaded.warning ?? "";
 
-const startOfToday = getSiteStartOfTodayIso();
-const { count: convertedToSoldToday = 0 } = await supabase
-  .from("audit_logs")
-  .select("id", { count: "exact", head: true })
-  .eq("action", "ticket.payment_confirmed")
-  .gte("created_at", startOfToday);
+  const sellersResult = await supabase
+    .from("sellers")
+    .select("id, name, type")
+    .eq("active", true)
+    .order("name", { ascending: true });
+
+  if (sellersResult.error) {
+    throw new Error(sellersResult.error.message);
+  }
+
+  sellers = sellersResult.data ?? [];
+  convertedToSoldToday = await loadConvertedReservationsToday(supabase, getSiteStartOfTodayIso());
+} catch (err: unknown) {
+  pageError = err instanceof Error ? err.message : "No se pudieron cargar las reservas.";
+}
 ---
 
 <AdminLayout title="Reservas | FARECOH" description="Seguimiento de reservas pendientes de pago" active="reservations">
@@ -126,15 +132,29 @@ const { count: convertedToSoldToday = 0 } = await supabase
   />
 
   <div class="mx-auto w-full max-w-7xl space-y-6 px-4 py-6 pb-28 md:px-8 md:py-8 md:pb-8">
-    <ReservationsPanel
-      client:load
-      reservations={reservations}
-      sellers={sellers}
-      convertedToSoldToday={convertedToSoldToday ?? 0}
-      formMessage={formMessage || undefined}
-      formError={formError}
-      cancelMessage={cancelMessage || undefined}
-      cancelError={cancelError}
-    />
+    {pageError && (
+      <div class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800" role="alert">
+        Error al cargar reservas: {pageError}
+      </div>
+    )}
+
+    {migrationWarning && (
+      <div class="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900" role="status">
+        {migrationWarning}
+      </div>
+    )}
+
+    {!pageError && (
+      <ReservationsPanel
+        client:load
+        reservations={reservations}
+        sellers={sellers}
+        convertedToSoldToday={convertedToSoldToday}
+        formMessage={formMessage || undefined}
+        formError={formError}
+        cancelMessage={cancelMessage || undefined}
+        cancelError={cancelError}
+      />
+    )}
   </div>
 </AdminLayout>
