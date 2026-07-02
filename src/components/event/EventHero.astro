@@ -18,7 +18,7 @@ const titleAccent = titleMatch?.[2] ?? "";
 const venueBadge = venue.split(",")[0]?.trim() || venue;
 ---
 
-<section class="event-v2-hero relative flex min-h-screen min-h-[800px] items-end overflow-hidden bg-black">
+<section class="event-v2-hero relative flex items-end overflow-hidden bg-black">
   <div class="absolute inset-0 z-0">
     <div class="parallax-layer h-full w-full" data-parallax data-parallax-speed="0.3" data-parallax-scale="1.08">
       <img
@@ -34,8 +34,8 @@ const venueBadge = venue.split(",")[0]?.trim() || venue;
     <div class="event-v2-hero-scrim absolute inset-0 bg-black/45" aria-hidden="true"></div>
   </div>
 
-  <div class="landing-shell event-v2-hero-content relative z-10 w-full pb-20 pt-28 md:pb-20">
-    <div class="max-w-3xl space-y-4">
+  <div class="landing-shell event-v2-hero-content relative z-10 w-full">
+    <div class="max-w-3xl space-y-3 md:space-y-4">
       <span class="event-v2-badge">{venueBadge}</span>
 
       <h1 class="event-v2-display uppercase italic text-white">
@@ -51,7 +51,7 @@ const venueBadge = venue.split(",")[0]?.trim() || venue;
 
       <p class="body-lg max-w-xl font-light text-white/90">{eventPage.hero.tagline}</p>
 
-      <ul class="flex flex-wrap gap-x-8 gap-y-3 pt-2" role="list">
+      <ul class="event-v2-meta-list" role="list">
         <li class="flex items-center gap-3 text-white">
           <span class="material-symbols-outlined text-concert-orange" aria-hidden="true">calendar_month</span>
           <span class="label-caps">{date}</span>
@@ -66,8 +66,8 @@ const venueBadge = venue.split(",")[0]?.trim() || venue;
         </li>
       </ul>
 
-      <div class="pt-6">
-        <a href="/eventos/pink-floyd/boletos" class="event-rock-button group inline-flex items-center gap-6 px-10 py-5">
+      <div class="event-v2-actions pt-2 md:pt-4">
+        <a href="/eventos/pink-floyd/boletos" class="event-rock-button group inline-flex items-center justify-center gap-4 px-8 py-4 sm:gap-6 sm:px-10 sm:py-5">
           <span class="label-caps tracking-widest">{eventPage.hero.ctaPrimary}</span>
           <ArrowRight size={20} stroke-width={2} class="transition-transform group-hover:translate-x-1" aria-hidden="true" />
         </a>
