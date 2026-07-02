@@ -10,7 +10,7 @@ export function ResponsiveScrollArea({
   minWidth?: string;
 }) {
   return (
-    <div className={cn("-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0", className)}>
+    <div className={cn("overflow-x-auto overscroll-x-contain", className)}>
       <div style={{ minWidth }}>{children}</div>
     </div>
   );

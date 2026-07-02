@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   Clock,
-  ExternalLink,
+  Eye,
   MessageCircle,
   Search,
   ShieldCheck,
   Trash2,
   XCircle,
 } from "lucide-react";
+import { AdminTicketViewDialog } from "@/components/admin/react/AdminTicketViewDialog";
 import { formatSiteDate, formatSiteDateTime, formatSiteNumber } from "@/lib/locale";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -97,7 +98,9 @@ export function ReservationsPanel({
   const [paymentFilter, setPaymentFilter] = useState("all");
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [cancelOpen, setCancelOpen] = useState(false);
+  const [viewOpen, setViewOpen] = useState(false);
   const [activeTicket, setActiveTicket] = useState<ReservationTicketRow | null>(null);
+  const [viewTicket, setViewTicket] = useState<ReservationTicketRow | null>(null);
   const [confirmCode, setConfirmCode] = useState("");
   const [buyerName, setBuyerName] = useState("");
   const [buyerPhone, setBuyerPhone] = useState("");
@@ -152,6 +155,11 @@ export function ReservationsPanel({
     setActiveTicket(ticket);
     setCancelReason("");
     setCancelOpen(true);
+  }
+
+  function openTicketView(ticket: ReservationTicketRow) {
+    setViewTicket(ticket);
+    setViewOpen(true);
   }
 
   return (
@@ -237,7 +245,7 @@ export function ReservationsPanel({
             <p className="py-12 text-center text-sm text-muted-foreground">No hay reservas que coincidan con los filtros.</p>
           ) : (
             <>
-              <div className="hidden xl:block">
+              <div className="hidden lg:block">
                 <ResponsiveScrollArea minWidth="1120px">
                   <Table>
                     <TableHeader>
@@ -284,11 +292,9 @@ export function ReservationsPanel({
                                     </a>
                                   </Button>
                                 ) : null}
-                                <Button asChild size="sm" variant="outline">
-                                  <a href={`/t/${ticket.qr_token}`} target="_blank" rel="noreferrer">
-                                    <ExternalLink className="h-4 w-4" />
-                                    Ver boleto
-                                  </a>
+                                <Button type="button" size="sm" variant="outline" onClick={() => openTicketView(ticket)}>
+                                  <Eye className="h-4 w-4" />
+                                  Ver boleto
                                 </Button>
                                 <Button type="button" size="sm" variant="destructive" onClick={() => openCancelModal(ticket)}>
                                   <Trash2 className="h-4 w-4" />
@@ -304,7 +310,7 @@ export function ReservationsPanel({
                 </ResponsiveScrollArea>
               </div>
 
-              <div className="divide-y xl:hidden">
+              <div className="divide-y lg:hidden">
                 {filtered.map((ticket) => {
                   const reservedAt = resolveReservationTimestamp(ticket.reserved_at, ticket.created_at);
                   const whatsappUrl = ticket.buyer_phone
@@ -344,27 +350,31 @@ export function ReservationsPanel({
                         <p className="text-xs text-muted-foreground">Referencia: {ticket.payment_reference}</p>
                       ) : null}
 
-                      <div className="grid grid-cols-2 gap-2">
-                        <Button type="button" size="sm" className="col-span-2" onClick={() => openConfirmModal(ticket)}>
+                      <div className="flex flex-col gap-2">
+                        <Button type="button" size="sm" className="w-full" onClick={() => openConfirmModal(ticket)}>
+                          <ShieldCheck className="h-4 w-4" />
                           Confirmar pago
                         </Button>
-                        {whatsappUrl ? (
-                          <Button asChild size="sm" variant="outline">
-                            <a href={whatsappUrl} target="_blank" rel="noreferrer">
-                              Contactar
-                            </a>
-                          </Button>
-                        ) : (
-                          <Button size="sm" variant="outline" disabled>
-                            Sin teléfono
-                          </Button>
-                        )}
-                        <Button asChild size="sm" variant="outline">
-                          <a href={`/t/${ticket.qr_token}`} target="_blank" rel="noreferrer">
+                        <div className="grid grid-cols-2 gap-2">
+                          {whatsappUrl ? (
+                            <Button asChild size="sm" variant="outline" className="w-full">
+                              <a href={whatsappUrl} target="_blank" rel="noreferrer">
+                                <MessageCircle className="h-4 w-4" />
+                                Contactar
+                              </a>
+                            </Button>
+                          ) : (
+                            <Button size="sm" variant="outline" className="w-full" disabled>
+                              Sin teléfono
+                            </Button>
+                          )}
+                          <Button type="button" size="sm" variant="outline" className="w-full" onClick={() => openTicketView(ticket)}>
+                            <Eye className="h-4 w-4" />
                             Ver boleto
-                          </a>
-                        </Button>
-                        <Button type="button" size="sm" variant="destructive" className="col-span-2" onClick={() => openCancelModal(ticket)}>
+                          </Button>
+                        </div>
+                        <Button type="button" size="sm" variant="destructive" className="w-full" onClick={() => openCancelModal(ticket)}>
+                          <Trash2 className="h-4 w-4" />
                           Cancelar reserva
                         </Button>
                       </div>
@@ -409,6 +419,20 @@ export function ReservationsPanel({
           </form>
         </DialogContent>
       </Dialog>
+
+      <AdminTicketViewDialog
+        open={viewOpen}
+        onOpenChange={setViewOpen}
+        ticketCode={viewTicket?.ticket_code}
+        initialTicket={
+          viewTicket
+            ? {
+                ...viewTicket,
+                status: "reserved",
+              }
+            : null
+        }
+      />
 
       <Dialog open={cancelOpen} onOpenChange={setCancelOpen}>
         <DialogContent className="max-w-md">

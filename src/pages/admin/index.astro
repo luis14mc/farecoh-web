@@ -1,5 +1,6 @@
 ---
 import AdminLayout from "@/layouts/AdminLayout.astro";
+import AdminPage from "@/components/admin/ui/AdminPage.astro";
 import { AdminPageHeader } from "@/components/admin/react/AdminPageHeader";
 import { DashboardStats, ProgressChartCard } from "@/components/admin/react/DashboardStats";
 import { RecentCheckinsTable, RecentReservationsTable } from "@/components/admin/react/DashboardTables";
@@ -98,18 +99,18 @@ const { data: checkins = [] } = await supabase
     authConfigured={authConfigured}
   />
 
-  <div class="mx-auto w-full max-w-7xl space-y-6 px-4 py-6 pb-24 md:px-8 md:py-8 md:pb-8">
+  <AdminPage>
     <a
       href="/admin/reservations"
       class="block rounded-xl border border-amber-200 bg-amber-50 p-5 transition hover:border-amber-300 hover:bg-amber-100/80"
     >
-      <div class="flex items-center justify-between gap-4">
+      <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p class="text-sm font-medium text-amber-900/70">Reservas pendientes</p>
           <p class="mt-1 text-3xl font-bold text-amber-950">{formatSiteNumber(pendingReservations)}</p>
           <p class="mt-2 text-sm text-amber-900/80">Seguimiento, confirmación de pago y contacto con compradores.</p>
         </div>
-        <span class="rounded-full bg-amber-200/80 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-amber-950">
+        <span class="self-start rounded-full bg-amber-200/80 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-amber-950 sm:self-center">
           Gestionar
         </span>
       </div>
@@ -167,5 +168,5 @@ const { data: checkins = [] } = await supabase
         <SalesHistoryTable client:load sales={sales ?? []} />
       </section>
     </div>
-  </div>
+  </AdminPage>
 </AdminLayout>

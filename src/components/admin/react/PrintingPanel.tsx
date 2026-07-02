@@ -75,20 +75,20 @@ export function PrintingPanel({ eventName }: PrintingPanelProps) {
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-2">
-            <Button asChild>
+          <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+            <Button asChild className="w-full sm:w-auto">
               <a href={rangePrintUrl}>
                 <Printer className="h-4 w-4" />
                 Generar PDF de prueba
               </a>
             </Button>
-            <Button asChild variant="secondary">
+            <Button asChild variant="secondary" className="w-full sm:w-auto">
               <a href={fullPrintUrl}>
                 <FileDown className="h-4 w-4" />
                 Generar PDF completo
               </a>
             </Button>
-            <Button asChild variant="outline">
+            <Button asChild variant="outline" className="w-full sm:w-auto">
               <a href="/admin/printing/calibration">
                 <Crosshair className="h-4 w-4" />
                 Calibrar layout

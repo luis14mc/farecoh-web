@@ -1,5 +1,6 @@
 ---
 import AdminLayout from "@/layouts/AdminLayout.astro";
+import AdminPage from "@/components/admin/ui/AdminPage.astro";
 import { AdminPageHeader } from "@/components/admin/react/AdminPageHeader";
 import { CheckinPanel } from "@/components/admin/react/CheckinPanel";
 import { getPublicSupabaseConfig, isAuthConfigured, type UserProfile } from "@/lib/auth";
@@ -21,7 +22,7 @@ const currentDate = formatSiteDate(new Date(), { month: "short", day: "numeric",
     authConfigured={authConfigured}
   />
 
-  <div class="mx-auto w-full max-w-2xl space-y-6 px-4 py-6 pb-24 md:px-8 md:py-8 md:pb-8">
+  <AdminPage narrow>
     <CheckinPanel client:load />
-  </div>
+  </AdminPage>
 </AdminLayout>

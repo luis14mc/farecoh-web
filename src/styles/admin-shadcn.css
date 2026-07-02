@@ -2,6 +2,11 @@
 .admin-shell {
   background-color: hsl(240 4.8% 95.9%);
   color: hsl(240 10% 3.9%);
+  --admin-mobile-top: calc(3.5rem + env(safe-area-inset-top, 0px));
+}
+
+.admin-shell main {
+  overflow-x: clip;
 }
 
 /* Restore shadcn border-radius inside admin (global.css sets border-radius: 0 on *) */
@@ -9,4 +14,13 @@
 .admin-shell *::before,
 .admin-shell *::after {
   border-radius: revert-layer;
+}
+
+.admin-mobile-header {
+  height: var(--admin-mobile-top);
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+.admin-page-content {
+  min-width: 0;
 }

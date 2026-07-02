@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Filter, Plus } from "lucide-react";
 import { formatSiteDate } from "@/lib/locale";
 import { buildTicketQrUrl } from "@/lib/ticket-qr-url";
+import { AdminTicketViewDialog, type AdminTicketPreview } from "@/components/admin/react/AdminTicketViewDialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -10,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ResponsiveScrollArea } from "@/components/admin/react/ResponsiveScrollArea";
+import { AdminMobileActionBar } from "@/components/admin/react/AdminMobileActionBar";
 import { CopyTextButton } from "@/components/admin/react/CopyTextButton";
 import { TicketStatusBadge } from "@/components/admin/react/TicketStatusBadge";
 import { getTicketActionHref, getTicketActionLabel } from "@/lib/ticket-status";
@@ -119,6 +121,13 @@ export function TicketsInventoryTable({ tickets, sellers, locations }: TicketsIn
   const [statusFilter, setStatusFilter] = useState("all");
   const [sellerFilter, setSellerFilter] = useState("all");
   const [locationFilter, setLocationFilter] = useState("all");
+  const [viewOpen, setViewOpen] = useState(false);
+  const [viewTicket, setViewTicket] = useState<AdminTicketPreview | null>(null);
+
+  function openTicketView(ticket: TicketRow) {
+    setViewTicket(ticket);
+    setViewOpen(true);
+  }
 
   const filtered = useMemo(() => {
     const q = codeFilter.trim().toLowerCase();
@@ -210,14 +219,14 @@ export function TicketsInventoryTable({ tickets, sellers, locations }: TicketsIn
                           <TableCell>
                             <div className="flex flex-wrap items-center gap-2">
                               <CopyTextButton value={qrUrl} label="URL" />
-                              <a
-                                className="text-xs font-semibold text-primary hover:underline"
-                                href={`/t/${ticket.qr_token}`}
-                                target="_blank"
-                                rel="noreferrer"
+                              <Button
+                                type="button"
+                                variant="link"
+                                className="h-auto p-0 text-xs font-semibold"
+                                onClick={() => openTicketView(ticket)}
                               >
                                 Ver
-                              </a>
+                              </Button>
                             </div>
                           </TableCell>
                           <TableCell className="font-medium">{ticket.buyer_name || "-"}</TableCell>
@@ -258,10 +267,8 @@ export function TicketsInventoryTable({ tickets, sellers, locations }: TicketsIn
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
                       <CopyTextButton value={qrUrl} label="Copiar QR URL" className="h-8" />
-                      <Button asChild variant="outline" size="sm" className="h-8">
-                        <a href={`/t/${ticket.qr_token}`} target="_blank" rel="noreferrer">
-                          Ver consulta
-                        </a>
+                      <Button type="button" variant="outline" size="sm" className="h-8" onClick={() => openTicketView(ticket)}>
+                        Ver boleto
                       </Button>
                     </div>
                     <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
@@ -295,14 +302,16 @@ export function TicketsInventoryTable({ tickets, sellers, locations }: TicketsIn
         </Button>
       </CardFooter>
 
-      <div className="fixed bottom-4 left-4 right-4 z-30 lg:hidden">
-        <Button asChild className="h-12 w-full shadow-lg">
+      <AdminTicketViewDialog open={viewOpen} onOpenChange={setViewOpen} ticketCode={viewTicket?.ticket_code} initialTicket={viewTicket} />
+
+      <AdminMobileActionBar>
+        <Button asChild className="h-12 w-full">
           <a href="/admin/sales">
             <Plus className="h-4 w-4" />
             Registrar venta
           </a>
         </Button>
-      </div>
+      </AdminMobileActionBar>
     </Card>
   );
 }

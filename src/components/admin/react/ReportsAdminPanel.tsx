@@ -37,7 +37,7 @@ export function ReportsAdminPanel({ eventName, metrics, reportRows }: ReportsAdm
             <CardTitle>{eventName}</CardTitle>
             <CardDescription>Reportes de ventas físicas por vendedor y estado general del lote.</CardDescription>
           </div>
-          <Button asChild variant="outline">
+          <Button asChild variant="outline" className="w-full sm:w-auto">
             <a href="/admin/vendors">
               <Users className="h-4 w-4" />
               Gestionar vendedores
@@ -118,32 +118,56 @@ export function ReportsAdminPanel({ eventName, metrics, reportRows }: ReportsAdm
               Aún no hay ventas registradas por vendedor.
             </p>
           ) : (
-            <ResponsiveScrollArea minWidth="760px">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Vendedor</TableHead>
-                    <TableHead>Tipo</TableHead>
-                    <TableHead>Ventas</TableHead>
-                    <TableHead>Boletos vendidos</TableHead>
-                    <TableHead>Ingresos</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {reportRows.map((row) => (
-                    <TableRow key={row.sellerName}>
-                      <TableCell className="font-medium">{row.sellerName}</TableCell>
-                      <TableCell>
-                        {SELLER_TYPE_LABELS[row.type as SellerType] ?? row.type}
-                      </TableCell>
-                      <TableCell>{row.salesCount}</TableCell>
-                      <TableCell>{row.ticketsSold}</TableCell>
-                      <TableCell className="font-semibold text-primary">{formatSiteCurrency(row.revenue)}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </ResponsiveScrollArea>
+            <>
+              <div className="hidden md:block">
+                <ResponsiveScrollArea minWidth="760px">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Vendedor</TableHead>
+                        <TableHead>Tipo</TableHead>
+                        <TableHead>Ventas</TableHead>
+                        <TableHead>Boletos vendidos</TableHead>
+                        <TableHead>Ingresos</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {reportRows.map((row) => (
+                        <TableRow key={row.sellerName}>
+                          <TableCell className="font-medium">{row.sellerName}</TableCell>
+                          <TableCell>
+                            {SELLER_TYPE_LABELS[row.type as SellerType] ?? row.type}
+                          </TableCell>
+                          <TableCell>{row.salesCount}</TableCell>
+                          <TableCell>{row.ticketsSold}</TableCell>
+                          <TableCell className="font-semibold text-primary">{formatSiteCurrency(row.revenue)}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </ResponsiveScrollArea>
+              </div>
+
+              <div className="divide-y md:hidden">
+                {reportRows.map((row) => (
+                  <article key={row.sellerName} className="space-y-2 p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="font-semibold">{row.sellerName}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {SELLER_TYPE_LABELS[row.type as SellerType] ?? row.type}
+                        </p>
+                      </div>
+                      <p className="shrink-0 font-semibold text-primary">{formatSiteCurrency(row.revenue)}</p>
+                    </div>
+                    <div className="flex gap-4 text-sm text-muted-foreground">
+                      <span>{row.salesCount} ventas</span>
+                      <span>{row.ticketsSold} boletos</span>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </>
           )}
         </CardContent>
       </Card>

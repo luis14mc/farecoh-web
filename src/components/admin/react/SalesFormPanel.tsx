@@ -14,6 +14,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SaleFormFields, getSaleSubmitState } from "@/components/admin/react/SaleFormFields";
+import { AdminMobileActionBar } from "@/components/admin/react/AdminMobileActionBar";
+import { AdminTicketViewDialog, type AdminTicketPreview } from "@/components/admin/react/AdminTicketViewDialog";
 import { ResponsiveScrollArea } from "@/components/admin/react/ResponsiveScrollArea";
 import { SalesMetricsPanel, type SalesMetric } from "@/components/admin/react/SalesMetricsPanel";
 import { TicketStatusBadge } from "@/components/admin/react/TicketStatusBadge";
@@ -52,6 +54,7 @@ export function SalesFormPanel({
   formError,
 }: SalesFormPanelProps) {
   const [modalOpen, setModalOpen] = useState(false);
+  const [viewOpen, setViewOpen] = useState(false);
   const [code, setCode] = useState("");
   const [preview, setPreview] = useState<Record<string, string | null> | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
@@ -123,11 +126,11 @@ export function SalesFormPanel({
       <SalesMetricsPanel metrics={metrics} />
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
+        <div className="min-w-0">
           <h2 className="text-lg font-semibold">Ventas del evento</h2>
           <p className="text-sm text-muted-foreground">Precio unitario: L {ticketPrice}</p>
         </div>
-        <Button className="w-full sm:w-auto" onClick={openSaleModal}>
+        <Button className="hidden w-full sm:inline-flex sm:w-auto" onClick={openSaleModal}>
           <Plus className="h-4 w-4" />
           Registrar venta
         </Button>
@@ -182,9 +185,14 @@ export function SalesFormPanel({
                   <dd>{preview.buyer_phone || "-"}</dd>
                 </div>
               </dl>
-              <Button type="button" className="mt-4 w-full sm:w-auto" onClick={openSaleModal} disabled={submitDisabled}>
-                {submitLabel}
-              </Button>
+              <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+                <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => setViewOpen(true)}>
+                  Ver boleto
+                </Button>
+                <Button type="button" className="w-full sm:w-auto" onClick={openSaleModal} disabled={submitDisabled}>
+                  {submitLabel}
+                </Button>
+              </div>
             </div>
           )}
         </CardContent>
@@ -282,12 +290,19 @@ export function SalesFormPanel({
         </DialogContent>
       </Dialog>
 
-      <div className="fixed bottom-4 left-4 right-4 z-30 md:hidden">
-        <Button className="h-12 w-full shadow-lg" onClick={openSaleModal}>
+      <AdminTicketViewDialog
+        open={viewOpen}
+        onOpenChange={setViewOpen}
+        ticketCode={preview?.ticket_code as string | undefined}
+        initialTicket={preview as AdminTicketPreview | null}
+      />
+
+      <AdminMobileActionBar>
+        <Button className="h-12 w-full" onClick={openSaleModal}>
           <Plus className="h-4 w-4" />
           Registrar venta
         </Button>
-      </div>
+      </AdminMobileActionBar>
     </section>
   );
 }

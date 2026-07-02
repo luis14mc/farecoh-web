@@ -177,8 +177,8 @@ export function PrintCalibrationPanel() {
             <CardDescription>Cruz roja: centro QR. Rectángulo azul: tamaño QR. Cruz verde: centro del código.</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="overflow-auto rounded-lg border border-border bg-muted/30 p-3">
-              <div className="relative mx-auto w-full min-w-[720px]" style={{ aspectRatio: `${template.width} / ${template.height}` }}>
+            <div className="overflow-x-auto overscroll-x-contain rounded-lg border border-border bg-muted/30 p-3">
+              <div className="relative mx-auto w-full max-w-full min-w-[280px] sm:min-w-[480px] lg:min-w-[720px]" style={{ aspectRatio: `${template.width} / ${template.height}` }}>
                 <img
                   src={TICKET_TEMPLATE_PUBLIC_PATH}
                   alt="Plantilla de boleto Pink Floyd"

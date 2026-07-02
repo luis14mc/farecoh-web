@@ -150,56 +150,98 @@ export function VendorsAdminPanel({ sellers, formMessage, formError }: VendorsAd
           {filtered.length === 0 ? (
             <p className="px-6 py-10 text-center text-sm text-muted-foreground">No hay vendedores registrados.</p>
           ) : (
-            <ResponsiveScrollArea minWidth="720px">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Nombre</TableHead>
-                    <TableHead>Contacto</TableHead>
-                    <TableHead>Tipo</TableHead>
-                    <TableHead>Estado</TableHead>
-                    <TableHead className="text-right">Acciones</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filtered.map((seller) => (
-                    <TableRow key={seller.id}>
-                      <TableCell className="font-medium">{seller.name}</TableCell>
-                      <TableCell>
-                        <p>{seller.phone}</p>
-                        <p className="text-xs text-muted-foreground">{seller.email}</p>
-                      </TableCell>
-                      <TableCell>{SELLER_TYPE_LABELS[seller.type]}</TableCell>
-                      <TableCell>
-                        <Badge variant={seller.active ? "default" : "secondary"}>
-                          {seller.active ? "Activo" : "Inactivo"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex flex-wrap justify-end gap-2">
-                          <Button type="button" variant="outline" size="sm" onClick={() => startEdit(seller)}>
-                            <Pencil className="h-3.5 w-3.5" />
-                            Editar
-                          </Button>
-                          <form method="POST" className="inline">
-                            <input type="hidden" name="seller_id" value={seller.id} />
-                            <input type="hidden" name="action" value={seller.active ? "deactivate" : "activate"} />
-                            <Button
-                              type="submit"
-                              variant="outline"
-                              size="sm"
-                              className={seller.active ? "text-destructive hover:text-destructive" : ""}
-                            >
-                              {seller.active ? "Desactivar" : "Reactivar"}
-                            </Button>
-                          </form>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </ResponsiveScrollArea>
+            <>
+              <div className="hidden lg:block">
+                <ResponsiveScrollArea minWidth="720px">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Nombre</TableHead>
+                        <TableHead>Contacto</TableHead>
+                        <TableHead>Tipo</TableHead>
+                        <TableHead>Estado</TableHead>
+                        <TableHead className="text-right">Acciones</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filtered.map((seller) => (
+                        <TableRow key={seller.id}>
+                          <TableCell className="font-medium">{seller.name}</TableCell>
+                          <TableCell>
+                            <p>{seller.phone}</p>
+                            <p className="text-xs text-muted-foreground">{seller.email}</p>
+                          </TableCell>
+                          <TableCell>{SELLER_TYPE_LABELS[seller.type]}</TableCell>
+                          <TableCell>
+                            <Badge variant={seller.active ? "default" : "secondary"}>
+                              {seller.active ? "Activo" : "Inactivo"}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex flex-wrap justify-end gap-2">
+                              <Button type="button" variant="outline" size="sm" onClick={() => startEdit(seller)}>
+                                <Pencil className="h-3.5 w-3.5" />
+                                Editar
+                              </Button>
+                              <form method="POST" className="inline">
+                                <input type="hidden" name="seller_id" value={seller.id} />
+                                <input type="hidden" name="action" value={seller.active ? "deactivate" : "activate"} />
+                                <Button
+                                  type="submit"
+                                  variant="outline"
+                                  size="sm"
+                                  className={seller.active ? "text-destructive hover:text-destructive" : ""}
+                                >
+                                  {seller.active ? "Desactivar" : "Reactivar"}
+                                </Button>
+                              </form>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </ResponsiveScrollArea>
+              </div>
+
+              <div className="divide-y lg:hidden">
+                {filtered.map((seller) => (
+                  <article key={seller.id} className="space-y-3 p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="font-semibold">{seller.name}</p>
+                        <p className="text-sm text-muted-foreground">{SELLER_TYPE_LABELS[seller.type]}</p>
+                      </div>
+                      <Badge variant={seller.active ? "default" : "secondary"}>
+                        {seller.active ? "Activo" : "Inactivo"}
+                      </Badge>
+                    </div>
+                    <div className="space-y-1 text-sm">
+                      <p>{seller.phone}</p>
+                      <p className="break-all text-muted-foreground">{seller.email}</p>
+                    </div>
+                    <div className="flex flex-col gap-2 sm:flex-row">
+                      <Button type="button" variant="outline" size="sm" className="w-full sm:flex-1" onClick={() => startEdit(seller)}>
+                        <Pencil className="h-3.5 w-3.5" />
+                        Editar
+                      </Button>
+                      <form method="POST" className="w-full sm:flex-1">
+                        <input type="hidden" name="seller_id" value={seller.id} />
+                        <input type="hidden" name="action" value={seller.active ? "deactivate" : "activate"} />
+                        <Button
+                          type="submit"
+                          variant="outline"
+                          size="sm"
+                          className={`w-full ${seller.active ? "text-destructive hover:text-destructive" : ""}`}
+                        >
+                          {seller.active ? "Desactivar" : "Reactivar"}
+                        </Button>
+                      </form>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </>
           )}
         </CardContent>
       </Card>

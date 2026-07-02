@@ -93,7 +93,7 @@ export function AdminShell({ active, navItems, staffProfile, authConfigured }: A
 
   return (
     <>
-      <header className="fixed inset-x-0 top-0 z-40 flex h-14 items-center justify-between border-b bg-background px-4 md:hidden">
+      <header className="admin-mobile-header fixed inset-x-0 top-0 z-40 flex items-center justify-between border-b bg-background px-4 md:hidden">
         <Button variant="outline" size="icon" onClick={() => setMobileOpen(true)} aria-label="Abrir menú">
           <Menu className="h-5 w-5" />
         </Button>

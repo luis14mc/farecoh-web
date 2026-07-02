@@ -16,6 +16,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { NativeSelect } from "@/components/admin/react/NativeSelect";
+import { AdminMobileActionBar } from "@/components/admin/react/AdminMobileActionBar";
 import { ResponsiveScrollArea } from "@/components/admin/react/ResponsiveScrollArea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
@@ -328,12 +329,12 @@ export function UsersAdminPanel({
             </DialogContent>
           </Dialog>
 
-          <div className="fixed bottom-4 left-4 right-4 z-30 lg:hidden">
-            <Button className="h-12 w-full shadow-lg" onClick={openCreate}>
+          <AdminMobileActionBar>
+            <Button className="h-12 w-full" onClick={openCreate}>
               <Plus className="h-4 w-4" />
               Nuevo usuario
             </Button>
-          </div>
+          </AdminMobileActionBar>
         </>
       )}
     </section>

@@ -1,5 +1,6 @@
 ---
 import AdminLayout from "@/layouts/AdminLayout.astro";
+import AdminPage from "@/components/admin/ui/AdminPage.astro";
 import { AdminPageHeader } from "@/components/admin/react/AdminPageHeader";
 import { BatchesAdminPanel } from "@/components/admin/react/BatchesAdminPanel";
 import { createSupabaseServerClient, getPublicSupabaseConfig, isAuthConfigured, type UserProfile } from "@/lib/auth";
@@ -179,7 +180,7 @@ const rangeEnd = formatTicketCode(event.total_tickets);
     authConfigured={authConfigured}
   />
 
-  <div class="mx-auto w-full max-w-7xl space-y-6 px-4 py-6 pb-24 md:px-8 md:py-8 md:pb-8">
+  <AdminPage>
     <BatchesAdminPanel
       client:load
       lotLabel="LOTE GENERAL 001"
@@ -191,5 +192,5 @@ const rangeEnd = formatTicketCode(event.total_tickets);
       formMessage={formMessage}
       formError={formError}
     />
-  </div>
+  </AdminPage>
 </AdminLayout>

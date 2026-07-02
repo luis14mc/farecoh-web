@@ -1,5 +1,6 @@
 ---
 import AdminLayout from "@/layouts/AdminLayout.astro";
+import AdminPage from "@/components/admin/ui/AdminPage.astro";
 import { AdminPageHeader } from "@/components/admin/react/AdminPageHeader";
 import { UsersAdminPanel } from "@/components/admin/react/UsersAdminPanel";
 import { createSupabaseServerClient, ROLE_LABELS, type StaffRole, getPublicSupabaseConfig, isAuthConfigured, type UserProfile } from "@/lib/auth";
@@ -159,7 +160,7 @@ const users = (staffProfiles ?? []).map((profile) => ({
     authConfigured={authConfigured}
   />
 
-  <div class="mx-auto w-full max-w-7xl space-y-6 px-4 py-6 pb-28 md:px-8 md:py-8 md:pb-8">
+  <AdminPage mobileFab>
     <UsersAdminPanel
       client:load
       users={users}
@@ -169,5 +170,5 @@ const users = (staffProfiles ?? []).map((profile) => ({
       formError={formError}
       lastFormAction={lastFormAction || undefined}
     />
-  </div>
+  </AdminPage>
 </AdminLayout>

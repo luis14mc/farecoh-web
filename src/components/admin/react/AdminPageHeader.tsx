@@ -29,7 +29,7 @@ export function AdminPageHeader({
   authConfigured,
 }: AdminPageHeaderProps) {
   return (
-    <header className="sticky top-14 z-20 border-b bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/80 md:top-0">
+    <header className="sticky top-[var(--admin-mobile-top)] z-20 border-b bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/80 md:top-0">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 px-4 py-4 md:flex-row md:items-center md:justify-between md:px-8 md:py-5">
         <div className="min-w-0">
           <nav aria-label="Breadcrumb" className="mb-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
@@ -55,7 +55,7 @@ export function AdminPageHeader({
               {ROLE_LABELS[staffProfile.role]}
             </Badge>
           )}
-          <span className="hidden items-center gap-1.5 text-xs text-muted-foreground lg:inline-flex">
+          <span className="hidden items-center gap-1.5 text-xs text-muted-foreground sm:inline-flex">
             <Calendar className="h-4 w-4" />
             {currentDate}
           </span>
@@ -71,7 +71,7 @@ export function AdminPageHeader({
 
 export function AdminPageContent({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={`mx-auto w-full max-w-7xl space-y-6 px-4 py-6 pb-24 md:px-8 md:py-8 md:pb-8 ${className ?? ""}`}>
+    <div className={`admin-page-content mx-auto w-full max-w-7xl space-y-6 px-4 py-6 pb-24 md:px-8 md:py-8 md:pb-8 ${className ?? ""}`}>
       {children}
     </div>
   );

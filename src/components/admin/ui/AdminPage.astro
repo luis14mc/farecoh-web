@@ -1,11 +1,17 @@
 ---
 interface Props {
   class?: string;
+  /** Extra bottom padding when a panel renders a fixed mobile action bar */
+  mobileFab?: boolean;
+  /** Narrow single-column layout (check-in) */
+  narrow?: boolean;
 }
 
-const { class: className = "" } = Astro.props;
+const { class: className = "", mobileFab = false, narrow = false } = Astro.props;
+const widthClass = narrow ? "max-w-2xl" : "max-w-7xl";
+const padClass = mobileFab ? "pb-28 md:pb-8" : "pb-24 md:pb-8";
 ---
 
-<div class={`mx-auto w-full max-w-container-max space-y-6 px-4 py-6 pb-24 md:px-8 md:py-8 md:pb-8 ${className}`}>
+<div class={`admin-page-content mx-auto w-full ${widthClass} space-y-6 px-4 py-6 ${padClass} md:px-8 md:py-8 ${className}`}>
   <slot />
 </div>

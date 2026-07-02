@@ -1,5 +1,6 @@
 ---
 import AdminLayout from "@/layouts/AdminLayout.astro";
+import AdminPage from "@/components/admin/ui/AdminPage.astro";
 import { AdminPageHeader } from "@/components/admin/react/AdminPageHeader";
 import { TicketsInventoryTable } from "@/components/admin/react/TicketsInventoryTable";
 import { supabase } from "@/lib/supabase";
@@ -30,7 +31,7 @@ const locations = Array.from(new Set(tickets.map((t) => t.sale_location).filter(
     authConfigured={authConfigured}
   />
 
-  <div class="mx-auto w-full max-w-7xl space-y-6 px-4 py-6 pb-28 md:px-8 md:py-8 md:pb-8">
+  <AdminPage mobileFab>
     <TicketsInventoryTable client:load tickets={tickets} sellers={sellers} locations={locations} />
-  </div>
+  </AdminPage>
 </AdminLayout>

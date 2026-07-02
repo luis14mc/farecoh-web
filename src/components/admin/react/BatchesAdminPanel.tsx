@@ -151,7 +151,7 @@ export function BatchesAdminPanel({
                   {batches.map((batch) => (
                     <div key={batch.id} className="rounded-lg border bg-muted/20 p-4">
                       <p className="font-semibold">{batch.name}</p>
-                      <p className="mt-1 text-sm text-muted-foreground">
+                      <p className="mt-1 break-words text-sm text-muted-foreground">
                         Rango:{" "}
                         <span className="font-mono font-medium text-foreground">
                           {batch.start_code} – {batch.end_code}
