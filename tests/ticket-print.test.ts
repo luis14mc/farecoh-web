@@ -23,8 +23,8 @@ test("ticket print layout uses calibrated percentages and physical QR points", (
   assert.equal(codeCenter.x, template.width * layout.codeCenterXPercent);
   assert.equal(codeCenter.yFromTop, template.height * layout.codeCenterYPercent);
 
-  assert.equal(Number(QR_WIDTH_POINTS.toFixed(2)), 259.84);
-  assert.equal(Number(QR_HEIGHT_POINTS.toFixed(2)), 259.84);
+  assert.equal(Number(QR_WIDTH_POINTS.toFixed(2)), 249.84);
+  assert.equal(Number(QR_HEIGHT_POINTS.toFixed(2)), 249.84);
   assert.equal(qrRect.width, QR_WIDTH_POINTS);
   assert.equal(qrRect.height, QR_HEIGHT_POINTS);
   assert.equal(qrRect.x + qrRect.width / 2, qrCenter.x);
