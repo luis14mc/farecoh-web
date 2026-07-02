@@ -80,7 +80,7 @@ Edit constants in `src/lib/ticket-print-constants.ts`:
 | `QR_Y` | Top edge of QR square inside purple frame (px) |
 | `QR_SIZE` | QR square draw size (px) |
 
-Right stub on the 2000×800 template: code overlays the static `PF-0001` box; QR sits in the purple corner frame below it. Do not place code over the left-side donation area.
+Right stub on the 2000×800 template: code overlays the static `PF-0001` box; QR sits in the purple corner frame below it (2.2 cm × 2.2 cm in Canva ≈ 260 px at 300 DPI). Do not place code over the left-side donation area.
 
 Set `DEBUG_PRINT_LAYOUT=true` to draw a blue box on the code mask and a red box on the QR square while tuning.
 

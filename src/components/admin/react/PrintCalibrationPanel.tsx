@@ -153,7 +153,7 @@ export function PrintCalibrationPanel() {
               <p className="text-xs font-semibold uppercase tracking-wide text-primary">Calibración de impresión</p>
               <CardTitle>Plantilla física Pink Floyd</CardTitle>
               <CardDescription>
-                Mueva los centros por porcentaje. El QR final mide {formatPoint(QR_WIDTH_POINTS)} x {formatPoint(QR_HEIGHT_POINTS)} en la plantilla.
+                Mueva los centros por porcentaje. El QR final mide {formatPoint(QR_WIDTH_POINTS)} x {formatPoint(QR_HEIGHT_POINTS)} (2.2 cm × 2.2 cm en Canva) en la plantilla.
               </CardDescription>
             </div>
             <Badge variant="outline">
