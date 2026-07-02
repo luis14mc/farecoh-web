@@ -19,7 +19,7 @@ import { eventPage } from "@/data/event-page";
     <div class="grid grid-cols-2 gap-4 md:grid-cols-4">
       <article class="group relative col-span-2 h-[350px] overflow-hidden border border-white/10">
         <img
-          class="event-v2-bw h-full w-full object-cover opacity-70 transition-transform duration-700 group-hover:scale-110"
+          class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
           src={musicalDirector.image}
           alt={musicalDirector.imageAlt}
           loading="eager"
@@ -29,7 +29,7 @@ import { eventPage } from "@/data/event-page";
           data-lineup-photo
           data-fallback={lineupPhotoFallback}
         />
-        <div class="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" aria-hidden="true"></div>
+        <div class="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/10" aria-hidden="true"></div>
         <div class="absolute bottom-0 left-0 p-8">
           <p class="headline-md font-bold uppercase italic text-white">{musicalDirector.name}</p>
           <p class="label-caps mt-1 text-concert-orange">{eventPage.lineup.directorBadge}</p>
@@ -38,9 +38,23 @@ import { eventPage } from "@/data/event-page";
 
       {
         ensembleMembers.map((member) => (
-          <article class="group relative flex min-h-[160px] flex-col justify-end border border-white/5 bg-black p-6 transition-colors hover:border-concert-orange/50">
-            <p class="label-caps font-bold text-white">{member.name}</p>
-            <p class="caption mt-1 uppercase tracking-tighter text-white/50">{member.role}</p>
+          <article class="group relative min-h-[220px] overflow-hidden border border-white/10 transition-colors hover:border-concert-orange/50">
+            <img
+              class="absolute inset-0 h-full w-full object-cover object-top transition-transform duration-700 group-hover:scale-110"
+              src={member.image}
+              alt={member.imageAlt}
+              loading="lazy"
+              decoding="async"
+              width="480"
+              height="640"
+              data-lineup-photo
+              data-fallback={lineupPhotoFallback}
+            />
+            <div class="absolute inset-0 bg-gradient-to-t from-black via-black/55 to-black/15" aria-hidden="true"></div>
+            <div class="relative flex min-h-[220px] flex-col justify-end p-5">
+              <p class="label-caps font-bold text-white">{member.name}</p>
+              <p class="caption mt-1 uppercase tracking-tighter text-white/75">{member.role}</p>
+            </div>
           </article>
         ))
       }

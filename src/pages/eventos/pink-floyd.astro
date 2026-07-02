@@ -18,11 +18,11 @@ const compactDate = formatSiteDate(event.date, {
   .replace(/\./g, "")
   .toUpperCase();
 
-const compactTime = `${formatSiteTime(event.date, {
-  hour: "2-digit",
+const compactTime = formatSiteTime(event.date, {
+  hour: "numeric",
   minute: "2-digit",
-  hour12: false,
-})} H`;
+  hour12: true,
+});
 
 const formattedPrice = formatSiteCurrency(event.ticket_price);
 ---

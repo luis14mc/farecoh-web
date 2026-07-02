@@ -2083,7 +2083,40 @@ article:hover .landing-program-index,
 }
 
 .event-v2-hero-gradient {
-  background: linear-gradient(to top, #000000 0%, rgba(0, 0, 0, 0.4) 50%, rgba(0, 0, 0, 0.1) 100%);
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.98) 0%,
+    rgba(0, 0, 0, 0.88) 28%,
+    rgba(0, 0, 0, 0.62) 52%,
+    rgba(0, 0, 0, 0.35) 78%,
+    rgba(0, 0, 0, 0.18) 100%
+  );
+}
+
+.event-v2-featured-home {
+  min-height: min(88vh, 920px);
+}
+
+@media (min-width: 1024px) {
+  .event-v2-featured-home {
+    min-height: min(82vh, 880px);
+  }
+}
+
+.event-v2-featured-home .event-v2-display {
+  font-size: clamp(2.35rem, 6vw, 3.75rem);
+}
+
+.event-v2-hero-content {
+  text-shadow: 0 2px 28px rgba(0, 0, 0, 0.85);
+}
+
+.event-v2-hero-content h1,
+.event-v2-hero-content .event-v2-badge,
+.event-v2-hero-content .label-caps,
+.event-v2-hero-content .body-lg {
+  position: relative;
+  z-index: 1;
 }
 
 .event-prism-accent {

@@ -31,9 +31,10 @@ const venueBadge = venue.split(",")[0]?.trim() || venue;
       />
     </div>
     <div class="event-v2-hero-gradient absolute inset-0" aria-hidden="true"></div>
+    <div class="event-v2-hero-scrim absolute inset-0 bg-black/45" aria-hidden="true"></div>
   </div>
 
-  <div class="landing-shell relative z-10 w-full pb-20 pt-28 md:pb-20">
+  <div class="landing-shell event-v2-hero-content relative z-10 w-full pb-20 pt-28 md:pb-20">
     <div class="max-w-3xl space-y-4">
       <span class="event-v2-badge">{venueBadge}</span>
 
@@ -48,7 +49,7 @@ const venueBadge = venue.split(",")[0]?.trim() || venue;
         )}
       </h1>
 
-      <p class="body-lg max-w-xl font-light text-white/70">{eventPage.hero.tagline}</p>
+      <p class="body-lg max-w-xl font-light text-white/90">{eventPage.hero.tagline}</p>
 
       <ul class="flex flex-wrap gap-x-8 gap-y-3 pt-2" role="list">
         <li class="flex items-center gap-3 text-white">

@@ -1,101 +1,123 @@
 ---
-import { getPinkFloydEvent } from "@/lib/events";
+import ArrowRight from "@lucide/astro/icons/arrow-right";
 import { homeFeaturedEvent } from "@/data/home";
-import LandingButton from "@/components/landing/LandingButton.astro";
-import { formatSiteCurrency } from "@/lib/locale";
+import { eventPage } from "@/data/event-page";
+import { getPinkFloydEvent } from "@/lib/events";
+import { formatSiteCurrency, formatSiteDate, formatSiteTime } from "@/lib/locale";
 
-const pinkFloydEvent = await getPinkFloydEvent();
+const event = await getPinkFloydEvent();
+
+const compactDate = formatSiteDate(event.date, {
+  day: "2-digit",
+  month: "short",
+  year: "numeric",
+})
+  .replace(/\./g, "")
+  .toUpperCase();
+
+const displayTime = formatSiteTime(event.date, {
+  hour: "numeric",
+  minute: "2-digit",
+  hour12: true,
+});
+
+const formattedPrice = formatSiteCurrency(event.ticket_price);
+const venueBadge = event.venue.split(",")[0]?.trim() || event.venue;
+
+const titleMatch = event.name.match(/^(Tributo a)\s+(.+)$/i);
+const titleLead = titleMatch?.[1] ?? event.name;
+const titleAccent = titleMatch?.[2] ?? "";
 ---
 
-<section class="concert-bridge concert-bridge--full reveal-section" aria-labelledby="featured-event-title">
-  <div class="concert-bridge__glow" aria-hidden="true"></div>
-  <div class="concert-grain" aria-hidden="true"></div>
-
-  <div class="landing-shell relative z-10 mb-4">
-    <div class="concert-bridge__intro">
-      <span class="concert-bridge__index" aria-hidden="true">02</span>
-      <p class="landing-eyebrow text-brand-700">Del impacto social a la experiencia en vivo</p>
+<section
+  class="reveal-section event-v2-featured-home relative overflow-hidden bg-black"
+  aria-labelledby="featured-event-title"
+>
+  <div class="absolute inset-0 z-0">
+    <div class="parallax-layer h-full w-full" data-parallax data-parallax-speed="0.28" data-parallax-scale="1.08">
+      <img
+        class="event-v2-bw h-full w-full object-cover"
+        src={eventPage.hero.image}
+        alt={eventPage.hero.imageAlt}
+        loading="lazy"
+        width="1600"
+        height="1067"
+      />
     </div>
+    <div class="event-v2-hero-gradient absolute inset-0" aria-hidden="true"></div>
+    <div class="event-v2-hero-scrim absolute inset-0 bg-black/45" aria-hidden="true"></div>
   </div>
 
-  <div class="concert-bridge__card relative z-10">
-    <span class="concert-bridge__year" aria-hidden="true">2026</span>
+  <div class="landing-shell event-v2-hero-content relative z-10 py-16 md:py-24">
+    <div class="grid grid-cols-1 items-end gap-12 lg:grid-cols-12 lg:gap-16">
+      <div class="space-y-5 lg:col-span-7">
+        <span class="event-v2-badge">{venueBadge}</span>
 
-    <div class="concert-bridge__grid grid grid-cols-1 lg:grid-cols-2">
-      <div class="concert-bridge__content order-2 space-y-stack-md lg:order-1">
-        <div class="flex flex-wrap items-center gap-3">
-          <span class="concert-accent-bar" aria-hidden="true"></span>
-          <span class="concert-badge">{homeFeaturedEvent.badge}</span>
-        </div>
-
-        <h2 id="featured-event-title" class="display text-white">
-          <span class="concert-bridge__title-line">{pinkFloydEvent.name}</span>
+        <h2 id="featured-event-title" class="event-v2-display uppercase italic text-white">
+          {titleAccent ? (
+            <>
+              {titleLead}{" "}
+              <span class="text-concert-orange">{titleAccent}</span>
+            </>
+          ) : (
+            event.name
+          )}
         </h2>
-        <p class="subtitle-lg font-semibold text-concert-amber">{homeFeaturedEvent.subtitle}</p>
-        <p class="landing-body max-w-2xl text-white/85">{homeFeaturedEvent.body}</p>
 
-        <dl class="grid max-w-2xl grid-cols-1 gap-3 sm:grid-cols-2" aria-label="Detalles del evento">
-          <div class="concert-detail-chip">
-            <span class="material-symbols-outlined" aria-hidden="true">calendar_today</span>
-            <div>
-              <dt class="text-caption font-caption uppercase tracking-wider text-white/55">Fecha</dt>
-              <dd class="body-md text-white">{pinkFloydEvent.dateDisplay}</dd>
-            </div>
-          </div>
-          <div class="concert-detail-chip">
-            <span class="material-symbols-outlined" aria-hidden="true">schedule</span>
-            <div>
-              <dt class="text-caption font-caption uppercase tracking-wider text-white/55">Hora</dt>
-              <dd class="body-md text-white">{pinkFloydEvent.time}</dd>
-            </div>
-          </div>
-          <div class="concert-detail-chip sm:col-span-2">
-            <span class="material-symbols-outlined" aria-hidden="true">location_on</span>
-            <div>
-              <dt class="text-caption font-caption uppercase tracking-wider text-white/55">Lugar</dt>
-              <dd class="body-md text-white">{pinkFloydEvent.venue}, {pinkFloydEvent.city}</dd>
-            </div>
-          </div>
-        </dl>
+        <p class="body-lg max-w-2xl font-light text-white/90">{eventPage.hero.tagline}</p>
 
-        <div class="concert-ticket-stub" aria-label={`Aporte solidario ${formatSiteCurrency(pinkFloydEvent.ticket_price)}`}>
-          <span class="concert-ticket-stub__perforation" aria-hidden="true"></span>
-          <div class="concert-ticket-stub__body">
-            <p class="concert-ticket-stub__label">Aporte solidario</p>
-            <p class="concert-ticket-stub__price">{formatSiteCurrency(pinkFloydEvent.ticket_price)}</p>
-          </div>
-          <span class="concert-ticket-stub__code" aria-hidden="true">PF-2026</span>
-        </div>
+        <ul class="flex flex-wrap gap-x-8 gap-y-3 pt-1" role="list">
+          <li class="flex items-center gap-3 text-white">
+            <span class="material-symbols-outlined text-concert-orange" aria-hidden="true">calendar_month</span>
+            <span class="label-caps">{compactDate}</span>
+          </li>
+          <li class="flex items-center gap-3 text-white">
+            <span class="material-symbols-outlined text-concert-orange" aria-hidden="true">schedule</span>
+            <span class="label-caps">{displayTime}</span>
+          </li>
+          <li class="flex items-center gap-3 text-white">
+            <span class="material-symbols-outlined text-concert-orange" aria-hidden="true">payments</span>
+            <span class="label-caps">{formattedPrice}</span>
+          </li>
+        </ul>
 
-        <div class="flex flex-col gap-4 pt-2 sm:flex-row sm:flex-wrap">
-          <LandingButton href="/eventos/pink-floyd" variant="concert-primary">
+        <div class="flex flex-col gap-4 pt-4 sm:flex-row sm:flex-wrap">
+          <a href="/eventos/pink-floyd/boletos" class="event-rock-button group inline-flex items-center justify-center gap-4 px-8 py-4 sm:px-10 sm:py-5">
+            <span class="label-caps tracking-widest">{homeFeaturedEvent.ctaTickets}</span>
+            <ArrowRight size={20} stroke-width={2} class="transition-transform group-hover:translate-x-1" aria-hidden="true" />
+          </a>
+          <a
+            href="/eventos/pink-floyd"
+            class="inline-flex items-center justify-center border border-white/25 px-8 py-4 text-center label-caps tracking-widest text-white transition hover:border-concert-orange hover:text-concert-orange sm:px-10 sm:py-5"
+          >
             {homeFeaturedEvent.ctaEvent}
-          </LandingButton>
-          <LandingButton href="/eventos/pink-floyd/boletos" variant="concert-secondary">
-            {homeFeaturedEvent.ctaTickets}
-          </LandingButton>
+          </a>
         </div>
       </div>
 
-      <div class="concert-bridge__image-wrap editorial-image editorial-image--parallax order-1 lg:order-2">
-        <div class="concert-frame" aria-hidden="true">
-          <span class="concert-frame__corner concert-frame__corner--tl"></span>
-          <span class="concert-frame__corner concert-frame__corner--tr"></span>
-          <span class="concert-frame__corner concert-frame__corner--bl"></span>
-          <span class="concert-frame__corner concert-frame__corner--br"></span>
+      <div class="lg:col-span-5">
+        <div class="overflow-hidden border border-white/10 bg-black/20">
+          <div class="relative aspect-[4/3]">
+            <img
+              class="h-full w-full object-cover"
+              src={eventPage.experience.image}
+              alt={eventPage.experience.imageAlt}
+              loading="lazy"
+              width="1200"
+              height="675"
+            />
+            <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" aria-hidden="true"></div>
+            <div class="absolute bottom-0 left-0 p-5 md:p-6">
+              <p class="label-caps text-concert-orange">{eventPage.experience.titleLead}</p>
+              <p class="headline-md uppercase italic text-white">
+                {eventPage.experience.titleAccent}
+              </p>
+            </div>
+          </div>
         </div>
-        <div class="parallax-layer" data-parallax data-parallax-speed="0.22" data-parallax-scale="1.1">
-          <img
-            class="h-full w-full object-cover object-center"
-            src={homeFeaturedEvent.image}
-            alt={homeFeaturedEvent.imageAlt}
-            loading="lazy"
-            width="1600"
-            height="1067"
-          />
-        </div>
-        <div class="concert-bridge__image-beam" aria-hidden="true"></div>
       </div>
     </div>
   </div>
+
+  <div class="event-prism-accent relative z-10" aria-hidden="true"></div>
 </section>

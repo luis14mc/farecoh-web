@@ -111,14 +111,8 @@ export const homeGallery = {
 } as const;
 
 export const homeFeaturedEvent = {
-  badge: "Evento destacado",
-  title: "Tributo a Pink Floyd",
-  subtitle: "Una noche. Una experiencia. Un viaje inolvidable.",
-  body: "Una experiencia audiovisual creada para celebrar la música de Pink Floyd y apoyar los programas educativos y artísticos de FARECOH.",
   ctaEvent: "Ver evento",
-  ctaTickets: "Reservar boletos",
-  image: foundationPhotos.featuredEvent.src,
-  imageAlt: foundationPhotos.featuredEvent.alt,
+  ctaTickets: "Reservar boleto",
 } as const;
 
 export const homeQuote = {
