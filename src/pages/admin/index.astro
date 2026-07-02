@@ -66,6 +66,8 @@ const kpis = [
   { label: "Anulados", value: formatSiteNumber(countByStatus("cancelled")), tone: "red" as const },
 ];
 
+const pendingReservations = countByStatus("reserved");
+
 const { data: reservations = [] } = await supabase
   .from("tickets")
   .select("ticket_code, buyer_name, buyer_phone")
@@ -92,6 +94,22 @@ const { data: checkins = [] } = await supabase
   />
 
   <div class="mx-auto w-full max-w-7xl space-y-6 px-4 py-6 pb-24 md:px-8 md:py-8 md:pb-8">
+    <a
+      href="/admin/reservations"
+      class="block rounded-xl border border-amber-200 bg-amber-50 p-5 transition hover:border-amber-300 hover:bg-amber-100/80"
+    >
+      <div class="flex items-center justify-between gap-4">
+        <div>
+          <p class="text-sm font-medium text-amber-900/70">Reservas pendientes</p>
+          <p class="mt-1 text-3xl font-bold text-amber-950">{formatSiteNumber(pendingReservations)}</p>
+          <p class="mt-2 text-sm text-amber-900/80">Seguimiento, confirmación de pago y contacto con compradores.</p>
+        </div>
+        <span class="rounded-full bg-amber-200/80 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-amber-950">
+          Gestionar
+        </span>
+      </div>
+    </a>
+
     <DashboardStats client:load kpis={kpis} revenue={formatSiteCurrency(totalRevenue)} />
 
     <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">

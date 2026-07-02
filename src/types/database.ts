@@ -62,6 +62,7 @@ export interface Database {
           payment_reference: string | null;
           sold_at: string | null;
           validated_at: string | null;
+          reserved_at: string | null;
           created_at: string;
         };
         Insert: {
@@ -209,6 +210,31 @@ export interface Database {
         };
         Update: never;
       };
+      reservation_notifications: {
+        Row: {
+          id: string;
+          ticket_codes: string[];
+          buyer_name: string;
+          buyer_phone: string | null;
+          buyer_email: string | null;
+          channel: string;
+          recipient: string;
+          status: string;
+          error_message: string | null;
+          created_at: string;
+        };
+        Insert: {
+          ticket_codes: string[];
+          buyer_name: string;
+          buyer_phone?: string | null;
+          buyer_email?: string | null;
+          channel?: string;
+          recipient: string;
+          status: string;
+          error_message?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["reservation_notifications"]["Row"]>;
+      };
     };
     Functions: {
       get_auth_user_role: {
@@ -260,6 +286,14 @@ export interface Database {
           p_buyer_name?: string | null;
           p_buyer_phone?: string | null;
           p_buyer_email?: string | null;
+        };
+        Returns: Database["public"]["Tables"]["tickets"]["Row"];
+      };
+      cancel_ticket_reservation: {
+        Args: {
+          p_ticket_code: string;
+          p_cancelled_by: string;
+          p_reason: string;
         };
         Returns: Database["public"]["Tables"]["tickets"]["Row"];
       };

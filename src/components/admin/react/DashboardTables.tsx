@@ -28,8 +28,15 @@ export function RecentReservationsTable({ reservations }: { reservations: Reserv
   return (
     <Card>
       <CardHeader className="border-b">
-        <CardTitle className="text-base">Reservas recientes</CardTitle>
-        <CardDescription>Boletos reservados desde el formulario público</CardDescription>
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <CardTitle className="text-base">Reservas recientes</CardTitle>
+            <CardDescription>Boletos reservados desde el formulario público</CardDescription>
+          </div>
+          <a href="/admin/reservations" className="text-sm font-semibold text-primary hover:underline">
+            Ver todas
+          </a>
+        </div>
       </CardHeader>
       <CardContent className="p-0">
         <div className="hidden sm:block">
@@ -46,7 +53,11 @@ export function RecentReservationsTable({ reservations }: { reservations: Reserv
               <TableBody>
                 {reservations.map((ticket) => (
                   <TableRow key={ticket.ticket_code}>
-                    <TableCell className="font-mono font-semibold">{ticket.ticket_code}</TableCell>
+                    <TableCell className="font-mono font-semibold">
+                      <a href={`/admin/reservations?code=${ticket.ticket_code}`} className="hover:underline">
+                        {ticket.ticket_code}
+                      </a>
+                    </TableCell>
                     <TableCell>{ticket.buyer_name || "-"}</TableCell>
                     <TableCell className="text-muted-foreground">{ticket.buyer_phone || "-"}</TableCell>
                     <TableCell>
@@ -63,7 +74,9 @@ export function RecentReservationsTable({ reservations }: { reservations: Reserv
           {reservations.map((ticket) => (
             <article key={ticket.ticket_code} className="flex items-start justify-between gap-3 p-4">
               <div>
-                <p className="font-mono font-semibold">{ticket.ticket_code}</p>
+                <a href={`/admin/reservations?code=${ticket.ticket_code}`} className="font-mono font-semibold hover:underline">
+                  {ticket.ticket_code}
+                </a>
                 <p className="mt-1 text-sm">{ticket.buyer_name || "-"}</p>
                 <p className="text-xs text-muted-foreground">{ticket.buyer_phone || "-"}</p>
               </div>

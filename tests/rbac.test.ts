@@ -22,8 +22,8 @@ test("super_admin can access all protected admin routes", () => {
   }
 });
 
-test("seller can access sales and tickets only", () => {
-  const allowed = new Set(["/admin/sales", "/admin/tickets", "/admin/no-autorizado"]);
+test("seller can access sales, reservations, and tickets only", () => {
+  const allowed = new Set(["/admin/sales", "/admin/reservations", "/admin/tickets", "/admin/no-autorizado"]);
   for (const route of Object.keys(routePermissions)) {
     assert.equal(canAccessRoute("seller", route), allowed.has(route), route);
   }

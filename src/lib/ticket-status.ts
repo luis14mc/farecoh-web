@@ -52,3 +52,15 @@ export function getTicketActionLabel(status: string): string {
 export function canConfirmPayment(status: string): boolean {
   return status === "available" || status === "assigned" || status === "reserved";
 }
+
+export function getTicketActionHref(status: string, ticketCode: string): string | null {
+  if (status === "reserved") {
+    return `/admin/reservations?code=${encodeURIComponent(ticketCode)}`;
+  }
+
+  if (canConfirmPayment(status)) {
+    return `/admin/sales?code=${encodeURIComponent(ticketCode)}`;
+  }
+
+  return null;
+}

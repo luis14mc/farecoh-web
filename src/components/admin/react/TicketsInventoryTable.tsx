@@ -12,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ResponsiveScrollArea } from "@/components/admin/react/ResponsiveScrollArea";
 import { CopyTextButton } from "@/components/admin/react/CopyTextButton";
 import { TicketStatusBadge } from "@/components/admin/react/TicketStatusBadge";
-import { canConfirmPayment, getTicketActionLabel } from "@/lib/ticket-status";
+import { getTicketActionHref, getTicketActionLabel } from "@/lib/ticket-status";
 
 interface TicketRow {
   ticket_code: string;
@@ -199,6 +199,7 @@ export function TicketsInventoryTable({ tickets, sellers, locations }: TicketsIn
                   <TableBody>
                     {filtered.map((ticket) => {
                       const actionText = getTicketActionLabel(ticket.status);
+                      const actionHref = getTicketActionHref(ticket.status, ticket.ticket_code);
                       const qrUrl = buildTicketQrUrl(ticket.qr_token);
                       return (
                         <TableRow key={ticket.ticket_code}>
@@ -225,8 +226,8 @@ export function TicketsInventoryTable({ tickets, sellers, locations }: TicketsIn
                             {ticket.validated_at ? formatSiteDate(ticket.validated_at) : "-"}
                           </TableCell>
                           <TableCell className="text-right">
-                            {canConfirmPayment(ticket.status) ? (
-                              <a className="text-sm font-semibold text-primary hover:underline" href={`/admin/sales?code=${ticket.ticket_code}`}>
+                            {actionHref ? (
+                              <a className="text-sm font-semibold text-primary hover:underline" href={actionHref}>
                                 {actionText}
                               </a>
                             ) : (
@@ -244,6 +245,7 @@ export function TicketsInventoryTable({ tickets, sellers, locations }: TicketsIn
             <div className="divide-y lg:hidden">
               {filtered.map((ticket) => {
                 const actionText = getTicketActionLabel(ticket.status);
+                const actionHref = getTicketActionHref(ticket.status, ticket.ticket_code);
                 const qrUrl = buildTicketQrUrl(ticket.qr_token);
                 return (
                   <article key={ticket.ticket_code} className="space-y-3 p-4">
@@ -266,9 +268,9 @@ export function TicketsInventoryTable({ tickets, sellers, locations }: TicketsIn
                       <span>Venta: {ticket.sold_at ? formatSiteDate(ticket.sold_at) : "-"}</span>
                       <span className="text-right">Validación: {ticket.validated_at ? formatSiteDate(ticket.validated_at) : "-"}</span>
                     </div>
-                    {canConfirmPayment(ticket.status) ? (
+                    {actionHref ? (
                       <Button asChild size="sm" className="w-full">
-                        <a href={`/admin/sales?code=${ticket.ticket_code}`}>{actionText}</a>
+                        <a href={actionHref}>{actionText}</a>
                       </Button>
                     ) : (
                       <p className="text-center text-xs text-muted-foreground">{actionText}</p>

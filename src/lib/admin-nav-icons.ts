@@ -1,5 +1,6 @@
 import {
   BarChart3,
+  Bookmark,
   CreditCard,
   LayoutDashboard,
   LogOut,
@@ -18,6 +19,7 @@ export const ADMIN_NAV_ICONS: Record<AdminNavKey, LucideIcon> = {
   dashboard: LayoutDashboard,
   users: Shield,
   sales: CreditCard,
+  reservations: Bookmark,
   tickets: Ticket,
   batches: Package,
   checkin: ScanLine,

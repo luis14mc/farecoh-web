@@ -128,8 +128,6 @@ const eventSchedule = `${event.dateDisplay} · ${event.time}`;
 </div>
 
 <script>
-  import { supabase } from "@/lib/supabase";
-
   const form = document.getElementById("ticket-form") as HTMLFormElement | null;
   const submitBtn = document.getElementById("submit-btn") as HTMLButtonElement | null;
   
@@ -186,23 +184,30 @@ const eventSchedule = `${event.dateDisplay} · ${event.time}`;
       submitBtn.innerHTML = `<span class="material-symbols-outlined animate-spin">sync</span> Procesando...`;
 
       try {
-        const { data, error } = await supabase.rpc("create_ticket_order", {
-          p_event_slug: "pink-floyd",
-          p_full_name: name,
-          p_email: email,
-          p_phone: phone,
-          p_quantity: qty,
+        const response = await fetch("/api/tickets/reserve", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            eventSlug: "pink-floyd",
+            fullName: name,
+            email,
+            phone,
+            quantity: qty,
+          }),
         });
 
-        if (error) throw error;
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(typeof payload.error === "string" ? payload.error : "No se pudo crear la orden.");
+        }
 
-        const order = data?.[0];
-        if (!order) throw new Error("No se pudo crear la orden.");
+        const ticketCodes = Array.isArray(payload.ticketCodes) ? payload.ticketCodes : [];
+        if (!ticketCodes.length) throw new Error("No se pudo crear la orden.");
 
         if (summaryName) summaryName.innerText = name;
         if (summaryQty) summaryQty.innerText = `${qty} boleto(s)`;
         if (summaryCodes) {
-          summaryCodes.innerHTML = order.ticket_codes
+          summaryCodes.innerHTML = ticketCodes
             .map((code: string) => `
               <div class="rounded border border-concert-orange/25 bg-concert-orange/10 p-2 text-center font-mono text-body-md font-bold text-concert-amber">
                 ${code}

@@ -2,6 +2,7 @@ export type AdminNavKey =
   | "dashboard"
   | "users"
   | "sales"
+  | "reservations"
   | "tickets"
   | "batches"
   | "checkin"
@@ -20,6 +21,7 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
   { label: "Panel", href: "/admin", icon: "dashboard", key: "dashboard" },
   { label: "Usuarios", href: "/admin/users", icon: "admin_panel_settings", key: "users" },
   { label: "Ventas", href: "/admin/sales", icon: "payments", key: "sales" },
+  { label: "Reservas", href: "/admin/reservations", icon: "reservations", key: "reservations" },
   { label: "Boletos", href: "/admin/tickets", icon: "confirmation_number", key: "tickets" },
   { label: "Lotes", href: "/admin/batches", icon: "inventory_2", key: "batches" },
   { label: "Acceso", href: "/admin/checkin", icon: "qr_code_scanner", key: "checkin" },

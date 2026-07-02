@@ -16,6 +16,8 @@ Recommended order:
 4. `supabase/migrations/20260629_status_cleanup.sql`
 5. `supabase/migrations/20260629_confirm_payment_rpc.sql`
 6. `supabase/migrations/20260629_validate_ticket_rpc.sql`
+7. `supabase/migrations/20260630_reservation_notifications.sql` (WhatsApp notification audit log)
+8. `supabase/migrations/20260630_reservation_workflow.sql` (reservation follow-up: `reserved_at`, cancel RPC)
 
 ## Prerequisites
 

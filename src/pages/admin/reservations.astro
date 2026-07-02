@@ -1,0 +1,140 @@
+---
+import AdminLayout from "@/layouts/AdminLayout.astro";
+import { AdminPageHeader } from "@/components/admin/react/AdminPageHeader";
+import { ReservationsPanel } from "@/components/admin/react/ReservationsPanel";
+import { createSupabaseServerClient, getPublicSupabaseConfig, isAuthConfigured, type UserProfile } from "@/lib/auth";
+import { formatSiteDate } from "@/lib/locale";
+import { confirmTicketPayment } from "@/services/ticket-payment";
+import { cancelTicketReservation } from "@/services/ticket-reservation";
+import { getSiteStartOfTodayIso } from "@/services/reservation-stats";
+
+const supabase = createSupabaseServerClient(Astro);
+const staffProfile = Astro.locals.staffProfile as UserProfile | undefined;
+const authConfigured = isAuthConfigured(getPublicSupabaseConfig());
+const currentDate = formatSiteDate(new Date(), { month: "short", day: "numeric", year: "numeric" });
+
+let formMessage = "";
+let formError = false;
+let cancelMessage = "";
+let cancelError = false;
+
+function normalizeTicketCode(ticketCode: string): string {
+  return ticketCode.trim().toUpperCase();
+}
+
+if (Astro.request.method === "POST") {
+  const data = await Astro.request.formData();
+  const action = String(data.get("action") || "");
+
+  if (action === "confirm_payment") {
+    try {
+      const ticketCode = normalizeTicketCode(String(data.get("code") || ""));
+      const buyerName = String(data.get("buyer_name") || "").trim();
+      const buyerPhone = String(data.get("buyer_phone") || "").trim();
+      const buyerEmail = String(data.get("buyer_email") || "").trim().toLowerCase() || "";
+      const sellerId = String(data.get("seller_id") || "");
+      const saleLocation = String(data.get("sale_location") || "").trim();
+      const paymentMethod = String(data.get("payment_method") || "");
+      const paymentReference = String(data.get("payment_reference") || "").trim() || undefined;
+
+      if (!ticketCode || !sellerId || !saleLocation || !paymentMethod) {
+        throw new Error("Complete todos los campos obligatorios.");
+      }
+
+      const result = await confirmTicketPayment(supabase, {
+        ticket_code: ticketCode,
+        buyer_name: buyerName,
+        buyer_phone: buyerPhone,
+        buyer_email: buyerEmail,
+        seller_id: sellerId,
+        sale_location: saleLocation,
+        payment_method: paymentMethod,
+        payment_reference: paymentReference,
+        confirmed_by: staffProfile?.email ?? staffProfile?.full_name ?? "admin-reservations",
+      });
+
+      if (!result.ok || !result.ticket) {
+        throw new Error(result.message);
+      }
+
+      formMessage = result.message;
+    } catch (err: unknown) {
+      formError = true;
+      formMessage = err instanceof Error ? err.message : "Error al confirmar el pago.";
+    }
+  }
+
+  if (action === "cancel_reservation") {
+    try {
+      const ticketCode = normalizeTicketCode(String(data.get("ticket_code") || ""));
+      const reason = String(data.get("reason") || "").trim();
+
+      if (!ticketCode || !reason) {
+        throw new Error("Indique el boleto y el motivo de cancelación.");
+      }
+
+      const result = await cancelTicketReservation(supabase, {
+        ticket_code: ticketCode,
+        cancelled_by: staffProfile?.email ?? staffProfile?.full_name ?? "admin-reservations",
+        reason,
+      });
+
+      if (!result.ok) {
+        throw new Error(result.message);
+      }
+
+      cancelMessage = `Reserva ${result.ticket_code} cancelada. El boleto volvió a disponible.`;
+    } catch (err: unknown) {
+      cancelError = true;
+      cancelMessage = err instanceof Error ? err.message : "Error al cancelar la reserva.";
+    }
+  }
+}
+
+const { data: reservations = [] } = await supabase
+  .from("tickets")
+  .select(
+    "ticket_code, qr_token, buyer_name, buyer_phone, buyer_email, created_at, reserved_at, payment_method, payment_reference",
+  )
+  .eq("status", "reserved")
+  .order("reserved_at", { ascending: false, nullsFirst: false })
+  .order("created_at", { ascending: false });
+
+const { data: sellers = [] } = await supabase
+  .from("sellers")
+  .select("id, name, type")
+  .eq("active", true)
+  .order("name", { ascending: true });
+
+const startOfToday = getSiteStartOfTodayIso();
+const { count: convertedToSoldToday = 0 } = await supabase
+  .from("audit_logs")
+  .select("id", { count: "exact", head: true })
+  .eq("action", "ticket.payment_confirmed")
+  .gte("created_at", startOfToday);
+---
+
+<AdminLayout title="Reservas | FARECOH" description="Seguimiento de reservas pendientes de pago" active="reservations">
+  <AdminPageHeader
+    client:load
+    title="Reservas"
+    section="Operaciones"
+    description="Gestione reservas web: confirme pagos, contacte compradores o libere boletos."
+    currentDate={currentDate}
+    staffProfile={staffProfile}
+    authConfigured={authConfigured}
+  />
+
+  <div class="mx-auto w-full max-w-7xl space-y-6 px-4 py-6 pb-28 md:px-8 md:py-8 md:pb-8">
+    <ReservationsPanel
+      client:load
+      reservations={reservations}
+      sellers={sellers}
+      convertedToSoldToday={convertedToSoldToday ?? 0}
+      formMessage={formMessage || undefined}
+      formError={formError}
+      cancelMessage={cancelMessage || undefined}
+      cancelError={cancelError}
+    />
+  </div>
+</AdminLayout>
