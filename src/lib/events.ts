@@ -1,6 +1,12 @@
 import { supabase } from "@/lib/supabase";
 import { PINK_FLOYD_EVENT_SLUG } from "@/types/events";
-import { SITE_LOCALE } from "@/lib/locale";
+import {
+  buildEventStartIso,
+  formatEventDateDisplay,
+  formatEventCompactDate,
+} from "@/lib/event-schedule";
+
+export { formatEventCompactDate, formatEventDateDisplay, buildEventStartIso };
 
 export interface EventData {
   id: string;
@@ -11,7 +17,10 @@ export interface EventData {
   date: string;
   /** Spanish display string for UI copy. */
   dateDisplay: string;
+  /** Display time from DB (`events.event_time`). */
   time: string;
+  /** ISO 8601 start datetime for structured data. */
+  startsAtIso: string;
   venue: string;
   city: string;
   ticket_price: number;
@@ -30,6 +39,7 @@ const PINK_FLOYD_FALLBACK: EventData = {
   date: PINK_FLOYD_EVENT_ISO,
   dateDisplay: "29 de agosto de 2026",
   time: "8:00 p. m.",
+  startsAtIso: PINK_FLOYD_EVENT_ISO_JSON_LD,
   venue: "Escuela Nacional de Música, Tegucigalpa",
   city: "Tegucigalpa",
   ticket_price: 500,
@@ -51,14 +61,6 @@ type EventRow = {
   created_at: string;
 };
 
-export function formatEventDateDisplay(value: string): string {
-  return new Date(value).toLocaleDateString(SITE_LOCALE, {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
-}
-
 function mapEventRow(row: EventRow): EventData {
   const city = row.city ?? PINK_FLOYD_FALLBACK.city;
   const venue = row.location.includes(city) ? row.location : `${row.location}, ${city}`;
@@ -71,6 +73,7 @@ function mapEventRow(row: EventRow): EventData {
     date: row.event_date,
     dateDisplay: formatEventDateDisplay(row.event_date),
     time: row.event_time,
+    startsAtIso: buildEventStartIso(row.event_date, row.event_time),
     venue,
     city,
     ticket_price: Number(row.ticket_price),

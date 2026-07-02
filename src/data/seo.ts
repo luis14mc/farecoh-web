@@ -3,7 +3,7 @@ import { pinkFloydEvent } from "@/data/event";
 import { homeHero } from "@/data/home";
 import { eventPage } from "@/data/event-page";
 import { absoluteUrl, truncateDescription } from "@/lib/seo";
-import { PINK_FLOYD_EVENT_ISO_JSON_LD } from "@/lib/events";
+import type { EventData } from "@/lib/events";
 
 export const seoPages = {
   home: {
@@ -69,22 +69,22 @@ export function webSiteJsonLd() {
   };
 }
 
-export function musicEventJsonLd() {
+export function musicEventJsonLd(event: EventData = pinkFloydEvent) {
   return {
     "@context": "https://schema.org",
     "@type": "MusicEvent",
-    name: pinkFloydEvent.name,
+    name: event.name,
     description: eventPage.hero.tagline,
-    startDate: PINK_FLOYD_EVENT_ISO_JSON_LD,
+    startDate: event.startsAtIso,
     eventStatus: "https://schema.org/EventScheduled",
     eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
     image: [absoluteUrl("/images/evento/hero.webp"), absoluteUrl("/images/evento/106.webp")],
     location: {
       "@type": "Place",
-      name: pinkFloydEvent.venue,
+      name: event.venue,
       address: {
         "@type": "PostalAddress",
-        addressLocality: pinkFloydEvent.city,
+        addressLocality: event.city,
         addressCountry: "HN",
       },
     },
@@ -96,7 +96,7 @@ export function musicEventJsonLd() {
     offers: {
       "@type": "Offer",
       url: absoluteUrl("/eventos/pink-floyd/boletos"),
-      price: String(pinkFloydEvent.ticket_price),
+      price: String(event.ticket_price),
       priceCurrency: "HNL",
       availability: "https://schema.org/InStock",
       validFrom: "2026-01-01",

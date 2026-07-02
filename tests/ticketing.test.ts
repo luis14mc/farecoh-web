@@ -4,6 +4,7 @@ import path from "node:path";
 import test from "node:test";
 import { checkRateLimit, clearRateLimitBuckets } from "../src/lib/rate-limit.ts";
 import { sanitizeText } from "../src/lib/security.ts";
+import { buildEventStartIso, formatEventCompactDate } from "../src/lib/event-schedule.ts";
 import { calculateAdminReportMetrics, countTicketsSold, resolveGrossRevenue } from "../src/services/admin-stats.ts";
 import { calculateSellerReports } from "../src/services/seller-stats.ts";
 import { formatTicketCode, isTicketCode, normalizeTicketCode, parseTicketSequence } from "../src/services/ticket-code.ts";
@@ -185,6 +186,17 @@ test("seller report metrics prefer sales table when available", () => {
   assert.equal(maria?.salesCount, 2);
   assert.equal(maria?.ticketsSold, 2);
   assert.equal(maria?.revenue, 1000);
+});
+
+test("buildEventStartIso combines DB event_date and event_time", () => {
+  assert.equal(buildEventStartIso("2026-08-29", "8:00 p. m."), "2026-08-29T20:00:00-06:00");
+  assert.equal(buildEventStartIso("2026-09-15", "19:30"), "2026-09-15T19:30:00-06:00");
+});
+
+test("formatEventCompactDate formats DB event_date for hero labels", () => {
+  const formatted = formatEventCompactDate("2026-08-29");
+  assert.match(formatted, /29/);
+  assert.match(formatted, /2026/);
 });
 
 test("resolveGrossRevenue prefers sales table and falls back to ticket counts", () => {

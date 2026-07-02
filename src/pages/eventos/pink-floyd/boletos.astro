@@ -2,6 +2,18 @@
 import Layout from "../../../layouts/Layout.astro";
 import TicketForm from "@/components/tickets/TicketForm.astro";
 import { seoPages, breadcrumbJsonLd } from "@/data/seo";
+import { eventPage } from "@/data/event-page";
+import { formatEventCompactDate, getPinkFloydEvent } from "@/lib/events";
+import { formatSiteCurrency } from "@/lib/locale";
+
+const event = await getPinkFloydEvent();
+const compactDate = formatEventCompactDate(event.date);
+const formattedPrice = formatSiteCurrency(event.ticket_price);
+const venueBadge = event.venue.split(",")[0]?.trim() || event.venue;
+
+const titleMatch = event.name.match(/^(Tributo a)\s+(.+)$/i);
+const titleLead = titleMatch?.[1] ?? event.name;
+const titleAccent = titleMatch?.[2] ?? "";
 ---
 
 <Layout
@@ -13,13 +25,74 @@ import { seoPages, breadcrumbJsonLd } from "@/data/seo";
   variant="concert"
   jsonLd={breadcrumbJsonLd([
     { name: "Inicio", path: "/" },
-    { name: "Tributo a Pink Floyd", path: "/eventos/pink-floyd" },
+    { name: event.name, path: "/eventos/pink-floyd" },
     { name: "Reservar boletos", path: seoPages.tickets.path },
   ])}
 >
-  <div class="concert-page-bg">
-    <div class="concert-ticket-shell flex items-start justify-center">
-      <TicketForm />
+  <section class="event-v2-tickets-page relative min-h-screen overflow-hidden bg-black">
+    <div class="absolute inset-0 z-0">
+      <img
+        class="event-v2-bw h-full w-full object-cover"
+        src={eventPage.hero.image}
+        alt={eventPage.hero.imageAlt}
+        loading="eager"
+        width="1600"
+        height="1067"
+      />
+      <div class="event-v2-hero-gradient absolute inset-0" aria-hidden="true"></div>
+      <div class="event-v2-hero-scrim absolute inset-0 bg-black/55" aria-hidden="true"></div>
     </div>
-  </div>
+
+    <div class="landing-shell event-v2-tickets-shell relative z-10">
+      <div class="event-v2-tickets-grid">
+        <header class="event-v2-tickets-intro event-v2-hero-content">
+          <span class="event-v2-badge">{venueBadge}</span>
+
+          <h1 class="event-v2-display uppercase italic text-white">
+            {titleAccent ? (
+              <>
+                {titleLead}{" "}
+                <span class="text-concert-orange">{titleAccent}</span>
+              </>
+            ) : (
+              event.name
+            )}
+          </h1>
+
+          <p class="body-lg max-w-xl font-light text-white/90">{eventPage.hero.tagline}</p>
+
+          <ul class="flex flex-wrap gap-x-8 gap-y-3 pt-2" role="list">
+            <li class="flex items-center gap-3 text-white">
+              <span class="material-symbols-outlined text-concert-orange" aria-hidden="true">calendar_month</span>
+              <span class="label-caps">{compactDate}</span>
+            </li>
+            <li class="flex items-center gap-3 text-white">
+              <span class="material-symbols-outlined text-concert-orange" aria-hidden="true">schedule</span>
+              <span class="label-caps">{event.time}</span>
+            </li>
+            <li class="flex items-center gap-3 text-white">
+              <span class="material-symbols-outlined text-concert-orange" aria-hidden="true">payments</span>
+              <span class="label-caps">{formattedPrice}</span>
+            </li>
+          </ul>
+
+          <p class="body-md max-w-lg text-white/55">
+            Complete sus datos para reservar. Recibirá códigos de boleto en estado <strong class="text-white/80">pendiente de pago</strong>.
+          </p>
+
+          <a
+            href="/eventos/pink-floyd"
+            class="inline-flex items-center gap-2 label-caps text-white/70 transition hover:text-concert-orange"
+          >
+            <span class="material-symbols-outlined text-base" aria-hidden="true">arrow_back</span>
+            Volver al evento
+          </a>
+        </header>
+
+        <TicketForm event={event} />
+      </div>
+    </div>
+
+    <div class="event-prism-accent relative z-10" aria-hidden="true"></div>
+  </section>
 </Layout>

@@ -2,25 +2,12 @@
 import ArrowRight from "@lucide/astro/icons/arrow-right";
 import { homeFeaturedEvent } from "@/data/home";
 import { eventPage } from "@/data/event-page";
-import { getPinkFloydEvent } from "@/lib/events";
-import { formatSiteCurrency, formatSiteDate, formatSiteTime } from "@/lib/locale";
+import { formatEventCompactDate, getPinkFloydEvent } from "@/lib/events";
+import { formatSiteCurrency } from "@/lib/locale";
 
 const event = await getPinkFloydEvent();
 
-const compactDate = formatSiteDate(event.date, {
-  day: "2-digit",
-  month: "short",
-  year: "numeric",
-})
-  .replace(/\./g, "")
-  .toUpperCase();
-
-const displayTime = formatSiteTime(event.date, {
-  hour: "numeric",
-  minute: "2-digit",
-  hour12: true,
-});
-
+const compactDate = formatEventCompactDate(event.date);
 const formattedPrice = formatSiteCurrency(event.ticket_price);
 const venueBadge = event.venue.split(",")[0]?.trim() || event.venue;
 
@@ -73,7 +60,7 @@ const titleAccent = titleMatch?.[2] ?? "";
           </li>
           <li class="flex items-center gap-3 text-white">
             <span class="material-symbols-outlined text-concert-orange" aria-hidden="true">schedule</span>
-            <span class="label-caps">{displayTime}</span>
+            <span class="label-caps">{event.time}</span>
           </li>
           <li class="flex items-center gap-3 text-white">
             <span class="material-symbols-outlined text-concert-orange" aria-hidden="true">payments</span>

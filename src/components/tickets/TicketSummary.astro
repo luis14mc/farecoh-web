@@ -9,10 +9,14 @@ const { price } = Astro.props;
 const formattedPrice = formatSiteCurrency(price);
 ---
 
-<div class="concert-summary-box">
-  <p class="text-caption font-caption font-bold uppercase text-white/55">Total a aportar</p>
-  <p class="text-body-lg font-body-lg text-white/70">{formattedPrice} c/u</p>
-  <p class="event-cta-price mt-2" id="total-price">{formattedPrice}</p>
+<div class="event-v2-tickets-summary">
+  <div class="flex items-end justify-between gap-4">
+    <div>
+      <p class="caption uppercase tracking-wider text-white/50">Total a aportar</p>
+      <p class="body-md mt-1 text-white/65">{formattedPrice} c/u</p>
+    </div>
+    <p class="event-v2-cta-price text-concert-orange" id="total-price">{formattedPrice}</p>
+  </div>
 </div>
 
 <script define:vars={{ ticketPrice: price }}>

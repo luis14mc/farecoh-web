@@ -16,45 +16,47 @@ import { eventPage } from "@/data/event-page";
       <div class="event-prism-accent mb-2 hidden w-32 md:block" aria-hidden="true"></div>
     </header>
 
-    <div class="grid grid-cols-2 gap-4 md:grid-cols-4">
-      <article class="group relative col-span-2 h-[350px] overflow-hidden border border-white/10">
-        <img
-          class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
-          src={musicalDirector.image}
-          alt={musicalDirector.imageAlt}
-          loading="eager"
-          fetchpriority="high"
-          width="960"
-          height="640"
-          data-lineup-photo
-          data-fallback={lineupPhotoFallback}
-        />
-        <div class="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/10" aria-hidden="true"></div>
-        <div class="absolute bottom-0 left-0 p-8">
-          <p class="headline-md font-bold uppercase italic text-white">{musicalDirector.name}</p>
-          <p class="label-caps mt-1 text-concert-orange">{eventPage.lineup.directorBadge}</p>
-        </div>
+    <div class="event-v2-lineup-grid">
+      <article class="event-v2-lineup-director group">
+        <figure class="event-v2-lineup-figure">
+          <img
+            class="event-v2-lineup-photo event-v2-lineup-photo--director"
+            src={musicalDirector.image}
+            alt={musicalDirector.imageAlt}
+            loading="eager"
+            fetchpriority="high"
+            width="960"
+            height="640"
+            data-lineup-photo
+            data-fallback={lineupPhotoFallback}
+          />
+          <figcaption class="event-v2-lineup-caption event-v2-lineup-caption--director">
+            <p class="headline-md font-bold uppercase italic text-white">{musicalDirector.name}</p>
+            <p class="label-caps mt-1 text-concert-orange">{eventPage.lineup.directorBadge}</p>
+          </figcaption>
+        </figure>
       </article>
 
       {
         ensembleMembers.map((member) => (
-          <article class="group relative min-h-[220px] overflow-hidden border border-white/10 transition-colors hover:border-concert-orange/50">
-            <img
-              class="absolute inset-0 h-full w-full object-cover object-top transition-transform duration-700 group-hover:scale-110"
-              src={member.image}
-              alt={member.imageAlt}
-              loading="lazy"
-              decoding="async"
-              width="480"
-              height="640"
-              data-lineup-photo
-              data-fallback={lineupPhotoFallback}
-            />
-            <div class="absolute inset-0 bg-gradient-to-t from-black via-black/55 to-black/15" aria-hidden="true"></div>
-            <div class="relative flex min-h-[220px] flex-col justify-end p-5">
-              <p class="label-caps font-bold text-white">{member.name}</p>
-              <p class="caption mt-1 uppercase tracking-tighter text-white/75">{member.role}</p>
-            </div>
+          <article class="event-v2-lineup-member group">
+            <figure class="event-v2-lineup-figure">
+              <img
+                class="event-v2-lineup-photo"
+                src={member.image}
+                alt={member.imageAlt}
+                loading="lazy"
+                decoding="async"
+                width="480"
+                height="640"
+                data-lineup-photo
+                data-fallback={lineupPhotoFallback}
+              />
+              <figcaption class="event-v2-lineup-caption">
+                <p class="event-v2-lineup-name">{member.name}</p>
+                <p class="event-v2-lineup-role">{member.role}</p>
+              </figcaption>
+            </figure>
           </article>
         ))
       }

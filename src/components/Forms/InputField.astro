@@ -11,6 +11,7 @@ interface Props {
   max?: string | number;
   icon?: string;
   containerClass?: string;
+  variant?: "default" | "concert";
 }
 
 const {
@@ -25,16 +26,27 @@ const {
   max,
   icon,
   containerClass = "w-full",
+  variant = "default",
 } = Astro.props;
+
+const labelClass =
+  variant === "concert"
+    ? "label-caps mb-2 block font-bold text-white/65"
+    : "text-label-md font-label-md text-on-surface-variant block mb-2 font-bold uppercase tracking-wider";
+
+const inputClass =
+  variant === "concert"
+    ? `event-v2-tickets-input w-full px-4 py-3 ${icon ? "pl-10" : ""}`
+    : `w-full px-4 py-3 bg-surface border border-[rgba(69,65,66,0.2)] focus:border-primary focus:border-2 focus:ring-0 outline-none transition-all text-on-surface ${icon ? "pl-10" : ""}`;
 ---
 
 <div class={containerClass}>
-  <label for={id} class="text-label-md font-label-md text-on-surface-variant block mb-2 font-bold uppercase tracking-wider">
-    {label} {required && <span class="text-error">*</span>}
+  <label for={id} class={labelClass}>
+    {label} {required && <span class={variant === "concert" ? "text-concert-orange" : "text-error"}>*</span>}
   </label>
   <div class="relative">
     {icon && (
-      <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">
+      <span class={`material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 ${variant === "concert" ? "text-white/40" : "text-outline"}`}>
         {icon}
       </span>
     )}
@@ -47,7 +59,7 @@ const {
       value={value}
       min={min}
       max={max}
-      class={`w-full px-4 py-3 bg-surface border border-[rgba(69,65,66,0.2)] focus:border-primary focus:border-2 focus:ring-0 outline-none transition-all text-on-surface ${icon ? 'pl-10' : ''}`}
+      class={inputClass}
     />
   </div>
 </div>
