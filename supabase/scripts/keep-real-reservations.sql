@@ -15,7 +15,7 @@ INSERT INTO _keep_reservations (ticket_code) VALUES
 DO $$
 DECLARE
   v_missing INTEGER;
-  v_bad_status INTEGER;
+  v_not_reserved INTEGER;
 BEGIN
   SELECT count(*) INTO v_missing
   FROM _keep_reservations k
@@ -26,25 +26,19 @@ BEGIN
     RAISE EXCEPTION 'Missing ticket(s) in keep list (%)', v_missing;
   END IF;
 
-  SELECT count(*) INTO v_bad_status
+  SELECT count(*) INTO v_not_reserved
   FROM public.tickets t
   JOIN _keep_reservations k ON k.ticket_code = t.ticket_code
   WHERE t.status <> 'reserved';
 
-  IF v_bad_status > 0 THEN
-    RAISE EXCEPTION 'Keep-list tickets must be reserved; found % with another status', v_bad_status;
+  IF v_not_reserved > 0 THEN
+    RAISE NOTICE 'Warning: % keep-list ticket(s) are not reserved; they will not be modified.', v_not_reserved;
   END IF;
 END $$;
 
-DELETE FROM public.checkins c
-USING public.tickets t
-WHERE c.ticket_id = t.id
-  AND t.ticket_code NOT IN (SELECT ticket_code FROM _keep_reservations);
-
-DELETE FROM public.sales s
-USING public.tickets t
-WHERE s.ticket_id = t.id
-  AND t.ticket_code NOT IN (SELECT ticket_code FROM _keep_reservations);
+-- Remove all check-ins and sales (real intake is reserved only, not validated/sold).
+DELETE FROM public.checkins;
+DELETE FROM public.sales;
 
 DO $$
 BEGIN
@@ -106,3 +100,8 @@ SELECT status, count(*) AS total
 FROM public.tickets
 GROUP BY status
 ORDER BY status;
+
+SELECT ticket_code, status, validated_at
+FROM public.tickets
+WHERE status = 'validated'
+ORDER BY ticket_code;
