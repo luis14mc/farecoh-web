@@ -5,12 +5,26 @@ import EventInfo from "@/components/event/EventInfo.astro";
 import ArtistLineup from "@/components/event/ArtistLineup.astro";
 import EventCTA from "@/components/event/EventCTA.astro";
 import { getPinkFloydEvent } from "@/lib/events";
-import { eventPage } from "@/data/event-page";
 import { seoPages, musicEventJsonLd, breadcrumbJsonLd } from "@/data/seo";
+import { formatSiteCurrency, formatSiteDate, formatSiteTime } from "@/lib/locale";
 
 const event = await getPinkFloydEvent();
 
-const eventDate = event.dateDisplay;
+const compactDate = formatSiteDate(event.date, {
+  day: "2-digit",
+  month: "short",
+  year: "numeric",
+})
+  .replace(/\./g, "")
+  .toUpperCase();
+
+const compactTime = `${formatSiteTime(event.date, {
+  hour: "2-digit",
+  minute: "2-digit",
+  hour12: false,
+})} H`;
+
+const formattedPrice = formatSiteCurrency(event.ticket_price);
 ---
 
 <Layout
@@ -31,16 +45,15 @@ const eventDate = event.dateDisplay;
 >
   <EventHero
     name={event.name}
-    tagline={eventPage.hero.tagline}
     venue={event.venue}
-    city={event.city}
-    date={eventDate}
-    time={event.time}
+    date={compactDate}
+    time={compactTime}
+    price={formattedPrice}
   />
 
   <EventInfo />
   <ArtistLineup />
-  <EventCTA price={event.ticket_price} />
+  <EventCTA price={formattedPrice} />
 </Layout>
 
 <script>
@@ -61,7 +74,7 @@ const eventDate = event.dateDisplay;
           observer.unobserve(entry.target);
         });
       },
-      { threshold: 0.08, rootMargin: "0px 0px -40px 0px" }
+      { threshold: 0.08, rootMargin: "0px 0px -40px 0px" },
     );
 
     document.querySelectorAll(".reveal-section").forEach((section, index) => {

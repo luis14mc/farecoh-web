@@ -1,19 +1,25 @@
 ---
-import {
-  musicalDirector,
-  ensembleMembers,
-  ensembleOnStageCount,
-  lineupPhotoFallback,
-} from "@/data/artists";
+import { musicalDirector, ensembleMembers, lineupPhotoFallback } from "@/data/artists";
 import { eventPage } from "@/data/event-page";
 ---
 
-<section class="reveal-section lineup-section" id="lineup-stage" aria-labelledby="lineup-heading">
-  <div class="landing-shell lineup-section__shell">
-    <article class="lineup-director" aria-label="Dirección musical">
-      <figure class="lineup-director__figure">
+<section class="reveal-section event-v2-section bg-[#080808]" id="lineup-stage" aria-labelledby="lineup-heading">
+  <div class="landing-shell">
+    <header class="mb-12 flex items-end justify-between border-b border-white/10 pb-4">
+      <div>
+        <h2 id="lineup-heading" class="headline-lg uppercase tracking-tighter text-white">
+          {eventPage.lineup.titleLead}{" "}
+          <span class="text-concert-orange">{eventPage.lineup.titleAccent}</span>
+        </h2>
+        <p class="label-caps mt-2 tracking-widest text-concert-orange">{eventPage.lineup.subtitle}</p>
+      </div>
+      <div class="event-prism-accent mb-2 hidden w-32 md:block" aria-hidden="true"></div>
+    </header>
+
+    <div class="grid grid-cols-2 gap-4 md:grid-cols-4">
+      <article class="group relative col-span-2 h-[350px] overflow-hidden border border-white/10">
         <img
-          class="lineup-director__img"
+          class="event-v2-bw h-full w-full object-cover opacity-70 transition-transform duration-700 group-hover:scale-110"
           src={musicalDirector.image}
           alt={musicalDirector.imageAlt}
           loading="eager"
@@ -23,130 +29,35 @@ import { eventPage } from "@/data/event-page";
           data-lineup-photo
           data-fallback={lineupPhotoFallback}
         />
-      </figure>
-
-      <div class="lineup-director__panel">
-        <div class="lineup-director__prism" aria-hidden="true">
-          <span class="lineup-director__prism-triangle"></span>
-          <span class="lineup-director__prism-beam"></span>
+        <div class="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" aria-hidden="true"></div>
+        <div class="absolute bottom-0 left-0 p-8">
+          <p class="headline-md font-bold uppercase italic text-white">{musicalDirector.name}</p>
+          <p class="label-caps mt-1 text-concert-orange">{eventPage.lineup.directorBadge}</p>
         </div>
+      </article>
 
-        <p class="lineup-director__badge">{eventPage.lineup.directorBadge}</p>
-        <h2 class="lineup-director__name">{musicalDirector.name}</h2>
-        <p class="lineup-director__role">{musicalDirector.role}</p>
-        {musicalDirector.description && (
-          <p class="lineup-director__note">{musicalDirector.description}</p>
-        )}
-        <p class="lineup-director__count">
-          {ensembleOnStageCount} {eventPage.lineup.onStageLabel}
-        </p>
-      </div>
-    </article>
-
-    <div class="lineup-ensemble">
-      <header class="lineup-ensemble__header">
-        <div class="lineup-ensemble__intro">
-          <h2 id="lineup-heading" class="lineup-ensemble__title">{eventPage.lineup.label}</h2>
-          <p class="lineup-ensemble__subtitle">{eventPage.lineup.subtitle}</p>
-        </div>
-        <p class="lineup-ensemble__meta" aria-hidden="true">
-          {ensembleOnStageCount + 1} artistas
-        </p>
-      </header>
-
-      <ul class="lineup-ensemble__grid" role="list">
-        {ensembleMembers.map((member) => (
-          <li class="lineup-card">
-            <figure class="lineup-card__figure">
-              <img
-                class="lineup-card__img"
-                src={member.image}
-                alt={member.imageAlt}
-                loading="lazy"
-                decoding="async"
-                width="480"
-                height="640"
-                data-lineup-photo
-                data-fallback={lineupPhotoFallback}
-              />
-              <figcaption class="lineup-card__caption">
-                <h3 class="lineup-card__name">{member.name}</h3>
-                <p class="lineup-card__role">{member.role}</p>
-              </figcaption>
-            </figure>
-          </li>
-        ))}
-      </ul>
+      {
+        ensembleMembers.map((member) => (
+          <article class="group relative flex min-h-[160px] flex-col justify-end border border-white/5 bg-black p-6 transition-colors hover:border-concert-orange/50">
+            <p class="label-caps font-bold text-white">{member.name}</p>
+            <p class="caption mt-1 uppercase tracking-tighter text-white/50">{member.role}</p>
+          </article>
+        ))
+      }
     </div>
-
-    <footer class="lineup-footer" aria-label="Marca del tributo">
-      <span class="material-symbols-outlined lineup-footer__icon" aria-hidden="true">graphic_eq</span>
-      <p class="lineup-footer__label">{eventPage.lineup.footer}</p>
-    </footer>
   </div>
 </section>
 
 <script>
-  import { animate, stagger } from "@motionone/dom";
-
-  function initLineupPhotos() {
-    document.querySelectorAll<HTMLImageElement>("[data-lineup-photo]").forEach((img) => {
-      img.addEventListener(
-        "error",
-        () => {
-          const fallback = img.dataset.fallback;
-          if (!fallback || img.src.endsWith(fallback)) return;
-          img.src = fallback;
-        },
-        { once: true },
-      );
-    });
-  }
-
-  function initLineupStage() {
-    const section = document.getElementById("lineup-stage");
-    if (!section) return;
-
-    initLineupPhotos();
-
-    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (prefersReducedMotion) return;
-
-    const playEntrance = () => {
-      if (!section.classList.contains("is-visible")) return;
-
-      const director = section.querySelector(".lineup-director");
-      const cards = section.querySelectorAll(".lineup-card");
-
-      if (director) {
-        animate(
-          director,
-          { opacity: [0, 1], transform: ["translateY(20px)", "translateY(0)"] },
-          { duration: 0.6, easing: [0.22, 1, 0.36, 1] },
-        );
-      }
-
-      if (cards.length) {
-        animate(
-          Array.from(cards),
-          { opacity: [0, 1], transform: ["translateY(12px)", "translateY(0)"] },
-          { duration: 0.45, delay: stagger(0.04, { start: 0.15 }), easing: "ease-out" },
-        );
-      }
-    };
-
-    if (section.classList.contains("is-visible")) {
-      playEntrance();
-      return;
-    }
-
-    const observer = new MutationObserver(playEntrance);
-    observer.observe(section, { attributes: true, attributeFilter: ["class"] });
-  }
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", initLineupStage);
-  } else {
-    initLineupStage();
-  }
+  document.querySelectorAll<HTMLImageElement>("[data-lineup-photo]").forEach((img) => {
+    img.addEventListener(
+      "error",
+      () => {
+        const fallback = img.dataset.fallback;
+        if (!fallback || img.src.endsWith(fallback)) return;
+        img.src = fallback;
+      },
+      { once: true },
+    );
+  });
 </script>

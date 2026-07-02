@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SaleFormFields, getSaleSubmitState } from "@/components/admin/react/SaleFormFields";
 import { ResponsiveScrollArea } from "@/components/admin/react/ResponsiveScrollArea";
+import { SalesMetricsPanel, type SalesMetric } from "@/components/admin/react/SalesMetricsPanel";
 import { TicketStatusBadge } from "@/components/admin/react/TicketStatusBadge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/lib/supabase";
@@ -37,6 +38,7 @@ interface SalesFormPanelProps {
   sellers: Seller[];
   recentSales: RecentSale[];
   ticketPrice: number;
+  metrics: SalesMetric[];
   formMessage?: string;
   formError?: boolean;
 }
@@ -45,6 +47,7 @@ export function SalesFormPanel({
   sellers,
   recentSales,
   ticketPrice,
+  metrics,
   formMessage,
   formError,
 }: SalesFormPanelProps) {
@@ -117,6 +120,8 @@ export function SalesFormPanel({
 
   return (
     <section className="space-y-4">
+      <SalesMetricsPanel metrics={metrics} />
+
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-lg font-semibold">Ventas del evento</h2>

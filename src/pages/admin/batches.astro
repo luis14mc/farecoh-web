@@ -6,6 +6,7 @@ import { createSupabaseServerClient, getPublicSupabaseConfig, isAuthConfigured, 
 import { getPinkFloydEventFallback } from "@/lib/events";
 import { formatSiteDate } from "@/lib/locale";
 import { formatTicketCode, parseTicketSequence } from "@/services/ticket-code";
+import { countTicketsByStatus, countTicketsSold } from "@/services/admin-stats";
 
 const supabase = createSupabaseServerClient(Astro);
 const staffProfile = Astro.locals.staffProfile as UserProfile | undefined;
@@ -154,12 +155,12 @@ const { data: batches = [] } = await supabase
   .order("created_at", { ascending: false });
 
 const stats = {
-  available: tickets.filter((t) => t.status === "available").length,
-  assigned: tickets.filter((t) => t.status === "assigned").length,
-  reserved: tickets.filter((t) => t.status === "reserved").length,
-  sold: tickets.filter((t) => t.status === "sold").length,
-  validated: tickets.filter((t) => t.status === "validated").length,
-  cancelled: tickets.filter((t) => t.status === "cancelled").length,
+  available: countTicketsByStatus(tickets, "available"),
+  assigned: countTicketsByStatus(tickets, "assigned"),
+  reserved: countTicketsByStatus(tickets, "reserved"),
+  sold: countTicketsSold(tickets),
+  validated: countTicketsByStatus(tickets, "validated"),
+  cancelled: countTicketsByStatus(tickets, "cancelled"),
   total: tickets.length,
 };
 

@@ -4,7 +4,7 @@ import path from "node:path";
 import test from "node:test";
 import { checkRateLimit, clearRateLimitBuckets } from "../src/lib/rate-limit.ts";
 import { sanitizeText } from "../src/lib/security.ts";
-import { calculateAdminReportMetrics } from "../src/services/admin-stats.ts";
+import { calculateAdminReportMetrics, countTicketsSold, resolveGrossRevenue } from "../src/services/admin-stats.ts";
 import { calculateSellerReports } from "../src/services/seller-stats.ts";
 import { formatTicketCode, isTicketCode, normalizeTicketCode, parseTicketSequence } from "../src/services/ticket-code.ts";
 import { parseCheckinInput } from "../src/lib/qr-input.ts";
@@ -147,6 +147,64 @@ test("seller report metrics aggregate sales, tickets, and revenue by seller", ()
   assert.equal(maria?.revenue, 1000);
   assert.equal(school?.salesCount, 1);
   assert.equal(school?.revenue, 500);
+});
+
+test("countTicketsSold includes sold and validated tickets", () => {
+  assert.equal(
+    countTicketsSold([
+      { status: "sold" },
+      { status: "validated" },
+      { status: "reserved" },
+    ]),
+    2,
+  );
+});
+
+test("seller report metrics prefer sales table when available", () => {
+  const reports = calculateSellerReports({
+    ticketPrice: 500,
+    sellers: [
+      {
+        id: "seller-1",
+        name: "María López",
+        phone: "+504 9999-0001",
+        email: "maria@farecoh.org",
+        type: "vendor",
+        active: true,
+        created_at: "2026-01-01T00:00:00.000Z",
+      },
+    ],
+    tickets: [{ seller_id: null, seller_name: null, status: "sold" }],
+    sales: [
+      { seller_id: "seller-1", seller_name: "María López", amount: 500 },
+      { seller_id: "seller-1", seller_name: "María López", amount: 500 },
+    ],
+  });
+
+  const maria = reports.find((row) => row.sellerId === "seller-1");
+  assert.equal(maria?.salesCount, 2);
+  assert.equal(maria?.ticketsSold, 2);
+  assert.equal(maria?.revenue, 1000);
+});
+
+test("resolveGrossRevenue prefers sales table and falls back to ticket counts", () => {
+  assert.equal(
+    resolveGrossRevenue({
+      salesAmounts: [500, 500],
+      ticketsSold: 3,
+      ticketPrice: 500,
+    }),
+    1000,
+  );
+
+  assert.equal(
+    resolveGrossRevenue({
+      salesAmounts: [],
+      ticketsSold: 4,
+      ticketPrice: 500,
+    }),
+    2000,
+  );
 });
 
 test("rate limiter blocks repeated requests inside the same window", () => {

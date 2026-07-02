@@ -5,7 +5,13 @@ import { SalesFormPanel } from "@/components/admin/react/SalesFormPanel";
 import { createSupabaseServerClient } from "@/lib/auth";
 import { confirmTicketPayment } from "@/services/ticket-payment";
 import { getPublicSupabaseConfig, isAuthConfigured, type UserProfile } from "@/lib/auth";
-import { formatSiteDate } from "@/lib/locale";
+import { formatSiteCurrency, formatSiteDate, formatSiteNumber } from "@/lib/locale";
+import {
+  calculateAdminReportMetrics,
+  countSalesOnDate,
+  countTicketsSoldOnDate,
+  resolveGrossRevenue,
+} from "@/services/admin-stats";
 
 const supabase = createSupabaseServerClient(Astro);
 const staffProfile = Astro.locals.staffProfile as UserProfile | undefined;
@@ -16,10 +22,11 @@ let formError = false;
 
 const { data: event } = await supabase
   .from("events")
-  .select("ticket_price")
+  .select("ticket_price, capacity")
   .eq("slug", "pink-floyd")
   .single();
 const ticketPrice = event?.ticket_price || 500.0;
+const capacity = event?.capacity || 500;
 
 function normalizeTicketCode(ticketCode: string): string {
   return ticketCode.trim().toUpperCase();
@@ -64,18 +71,105 @@ if (Astro.request.method === "POST") {
   }
 }
 
-const { data: sellers = [] } = await supabase
+const { data: sellersData } = await supabase
   .from("sellers")
   .select("*")
   .eq("active", true)
   .order("name", { ascending: true });
+const sellers = sellersData ?? [];
 
-const { data: recentSales = [] } = await supabase
+const { data: ticketsData } = await supabase
   .from("tickets")
-  .select("ticket_code, buyer_name, seller_name, sale_location, sold_at")
-  .eq("status", "sold")
-  .order("sold_at", { ascending: false })
-  .limit(10);
+  .select("status, validated_at, sold_at");
+const tickets = ticketsData ?? [];
+
+const { data: salesData } = await supabase
+  .from("sales")
+  .select("amount, created_at, seller_name, sales_point, ticket:tickets(ticket_code, buyer_name)")
+  .order("created_at", { ascending: false });
+const sales = salesData ?? [];
+
+const metricsData = calculateAdminReportMetrics({
+  capacity,
+  ticketPrice,
+  tickets: tickets.map((ticket) => ({
+    status: ticket.status,
+    validated_at: ticket.validated_at,
+  })),
+});
+
+const grossRevenue = resolveGrossRevenue({
+  salesAmounts: sales.map((row) => row.amount),
+  ticketsSold: metricsData.ticketsSold,
+  ticketPrice,
+});
+
+const salesToday = countSalesOnDate(sales);
+const ticketsSoldToday = countTicketsSoldOnDate(tickets);
+const todaySalesCount = salesToday > 0 ? salesToday : ticketsSoldToday;
+
+const salesMetrics = [
+  {
+    label: "Boletos vendidos",
+    value: formatSiteNumber(metricsData.ticketsSold),
+    hint: `${formatSiteNumber(metricsData.remainingCapacity)} disponibles`,
+    tone: "green" as const,
+  },
+  {
+    label: "Reservados pendientes",
+    value: formatSiteNumber(metricsData.ticketsPending),
+    hint: "Esperando confirmación de pago",
+    tone: "amber" as const,
+  },
+  {
+    label: "Recaudación total",
+    value: formatSiteCurrency(grossRevenue),
+    hint: `Precio unitario ${formatSiteCurrency(ticketPrice)}`,
+    tone: "primary" as const,
+  },
+  {
+    label: "Validados en acceso",
+    value: formatSiteNumber(metricsData.ticketsValidated),
+    hint: `${metricsData.checkinRate}% del total vendido`,
+    tone: "purple" as const,
+  },
+  {
+    label: "Ventas hoy",
+    value: formatSiteNumber(todaySalesCount),
+    hint: currentDate,
+    tone: "blue" as const,
+  },
+];
+
+type RecentSaleRow = {
+  ticket_code: string;
+  buyer_name: string | null;
+  seller_name: string | null;
+  sale_location: string | null;
+  sold_at: string | null;
+};
+
+let recentSales: RecentSaleRow[] = sales
+  .map((row) => ({
+    ticket_code: row.ticket?.ticket_code ?? "-",
+    buyer_name: row.ticket?.buyer_name ?? null,
+    seller_name: row.seller_name,
+    sale_location: row.sales_point,
+    sold_at: row.created_at,
+  }))
+  .slice(0, 10);
+
+if (recentSales.length === 0) {
+  const { data: ticketSalesData } = await supabase
+    .from("tickets")
+    .select("ticket_code, buyer_name, seller_name, sale_location, sold_at")
+    .in("status", ["sold", "validated"])
+    .not("sold_at", "is", null)
+    .order("sold_at", { ascending: false })
+    .limit(10);
+
+  recentSales = ticketSalesData ?? [];
+}
 ---
 
 <AdminLayout title="Ventas | FARECOH" description="Registro de venta física de boletos" active="sales">
@@ -95,6 +189,7 @@ const { data: recentSales = [] } = await supabase
       sellers={sellers}
       recentSales={recentSales}
       ticketPrice={ticketPrice}
+      metrics={salesMetrics}
       formMessage={formMessage || undefined}
       formError={formError}
     />

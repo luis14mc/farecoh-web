@@ -2,16 +2,13 @@
 import { supabase } from "@/lib/supabase";
 import { formatSiteCurrency, formatSiteNumber } from "@/lib/locale";
 import { getPinkFloydEventFallback } from "@/lib/events";
+import { countTicketsByStatus, countTicketsSold } from "@/services/admin-stats";
 import StatCard from "@/components/admin/ui/StatCard.astro";
 
 const CAPACITY = getPinkFloydEventFallback().total_tickets;
 
-const { data: tickets = [] } = await supabase
-  .from("tickets")
-  .select("status");
-
-const countByStatus = (status: string) =>
-  tickets.filter((t: { status: string }) => t.status === status).length;
+const { data: ticketsData } = await supabase.from("tickets").select("status");
+const tickets = ticketsData ?? [];
 
 const { data: sales = [] } = await supabase
   .from("sales")
@@ -21,12 +18,12 @@ const totalRevenue = sales.reduce((sum: number, s: { amount: number | string }) 
 
 const kpis = [
   { label: "Capacidad", value: formatSiteNumber(CAPACITY), icon: "stadium", tone: "slate" as const },
-  { label: "Disponibles", value: formatSiteNumber(countByStatus("available")), icon: "event_seat", tone: "slate" as const },
-  { label: "Asignados", value: formatSiteNumber(countByStatus("assigned")), icon: "local_shipping", tone: "blue" as const },
-  { label: "Reservados", value: formatSiteNumber(countByStatus("reserved")), icon: "schedule", tone: "amber" as const },
-  { label: "Vendidos", value: formatSiteNumber(countByStatus("sold")), icon: "check_circle", tone: "green" as const },
-  { label: "Validados", value: formatSiteNumber(countByStatus("validated")), icon: "qr_code_scanner", tone: "purple" as const },
-  { label: "Anulados", value: formatSiteNumber(countByStatus("cancelled")), icon: "block", tone: "red" as const },
+  { label: "Disponibles", value: formatSiteNumber(countTicketsByStatus(tickets, "available")), icon: "event_seat", tone: "slate" as const },
+  { label: "Asignados", value: formatSiteNumber(countTicketsByStatus(tickets, "assigned")), icon: "local_shipping", tone: "blue" as const },
+  { label: "Reservados", value: formatSiteNumber(countTicketsByStatus(tickets, "reserved")), icon: "schedule", tone: "amber" as const },
+  { label: "Vendidos", value: formatSiteNumber(countTicketsSold(tickets)), icon: "check_circle", tone: "green" as const },
+  { label: "Validados", value: formatSiteNumber(countTicketsByStatus(tickets, "validated")), icon: "qr_code_scanner", tone: "purple" as const },
+  { label: "Anulados", value: formatSiteNumber(countTicketsByStatus(tickets, "cancelled")), icon: "block", tone: "red" as const },
 ];
 ---
 

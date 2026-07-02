@@ -8,6 +8,7 @@ import { TicketSearchQuick } from "@/components/admin/react/TicketSearchQuick";
 import { createSupabaseServerClient, getPublicSupabaseConfig, isAuthConfigured, type UserProfile } from "@/lib/auth";
 import { formatSiteCurrency, formatSiteDate, formatSiteNumber } from "@/lib/locale";
 import { getPinkFloydEventFallback } from "@/lib/events";
+import { countTicketsByStatus, countTicketsSold, resolveGrossRevenue } from "@/services/admin-stats";
 
 const supabase = createSupabaseServerClient(Astro);
 
@@ -50,23 +51,27 @@ const salesByPoint = Object.entries(salesByPointMap)
   .slice(0, 5);
 const maxPointSales = Math.max(...salesByPoint.map(([, amt]) => amt), 1);
 
-const { data: tickets = [] } = await supabase.from("tickets").select("status");
-const countByStatus = (status: string) => tickets.filter((t: { status: string }) => t.status === status).length;
+const { data: ticketsData } = await supabase.from("tickets").select("status");
+const tickets = ticketsData ?? [];
 
 const { data: revenueSales = [] } = await supabase.from("sales").select("amount");
-const totalRevenue = revenueSales.reduce((sum: number, s: { amount: number | string }) => sum + Number(s.amount), 0);
+const totalRevenue = resolveGrossRevenue({
+  salesAmounts: revenueSales.map((sale) => sale.amount),
+  ticketsSold: countTicketsSold(tickets),
+  ticketPrice: getPinkFloydEventFallback().ticket_price,
+});
 
 const kpis = [
   { label: "Capacidad", value: formatSiteNumber(CAPACITY), tone: "slate" as const },
-  { label: "Disponibles", value: formatSiteNumber(countByStatus("available")), tone: "slate" as const },
-  { label: "Asignados", value: formatSiteNumber(countByStatus("assigned")), tone: "blue" as const },
-  { label: "Reservados", value: formatSiteNumber(countByStatus("reserved")), tone: "amber" as const },
-  { label: "Vendidos", value: formatSiteNumber(countByStatus("sold")), tone: "green" as const },
-  { label: "Validados", value: formatSiteNumber(countByStatus("validated")), tone: "purple" as const },
-  { label: "Anulados", value: formatSiteNumber(countByStatus("cancelled")), tone: "red" as const },
+  { label: "Disponibles", value: formatSiteNumber(countTicketsByStatus(tickets, "available")), tone: "slate" as const },
+  { label: "Asignados", value: formatSiteNumber(countTicketsByStatus(tickets, "assigned")), tone: "blue" as const },
+  { label: "Reservados", value: formatSiteNumber(countTicketsByStatus(tickets, "reserved")), tone: "amber" as const },
+  { label: "Vendidos", value: formatSiteNumber(countTicketsSold(tickets)), tone: "green" as const },
+  { label: "Validados", value: formatSiteNumber(countTicketsByStatus(tickets, "validated")), tone: "purple" as const },
+  { label: "Anulados", value: formatSiteNumber(countTicketsByStatus(tickets, "cancelled")), tone: "red" as const },
 ];
 
-const pendingReservations = countByStatus("reserved");
+const pendingReservations = countTicketsByStatus(tickets, "reserved");
 
 const { data: reservations = [] } = await supabase
   .from("tickets")

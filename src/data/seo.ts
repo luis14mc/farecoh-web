@@ -17,7 +17,7 @@ export const seoPages = {
   event: {
     title: `${pinkFloydEvent.name} | Concierto benéfico FARECOH`,
     description: truncateDescription(
-      `${eventPage.hero.body} ${pinkFloydEvent.dateDisplay}, ${pinkFloydEvent.venue}, ${pinkFloydEvent.city}.`,
+      `${eventPage.hero.tagline} ${pinkFloydEvent.dateDisplay}, ${pinkFloydEvent.venue}, ${pinkFloydEvent.city}.`,
     ),
     image: "/images/evento/hero.webp",
     path: "/eventos/pink-floyd",
@@ -74,7 +74,7 @@ export function musicEventJsonLd() {
     "@context": "https://schema.org",
     "@type": "MusicEvent",
     name: pinkFloydEvent.name,
-    description: eventPage.hero.body,
+    description: eventPage.hero.tagline,
     startDate: PINK_FLOYD_EVENT_ISO_JSON_LD,
     eventStatus: "https://schema.org/EventScheduled",
     eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",

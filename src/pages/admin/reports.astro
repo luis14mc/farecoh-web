@@ -5,7 +5,7 @@ import { ReportsAdminPanel } from "@/components/admin/react/ReportsAdminPanel";
 import { createSupabaseServerClient, getPublicSupabaseConfig, isAuthConfigured, type UserProfile } from "@/lib/auth";
 import { getPinkFloydEvent } from "@/lib/events";
 import { formatSiteCurrency, formatSiteDate, formatSiteNumber } from "@/lib/locale";
-import { calculateAdminReportMetrics } from "@/services/admin-stats";
+import { calculateAdminReportMetrics, resolveGrossRevenue } from "@/services/admin-stats";
 import { calculateSellerReports } from "@/services/seller-stats";
 
 const supabase = createSupabaseServerClient(Astro);
@@ -16,9 +16,13 @@ const currentDate = formatSiteDate(new Date(), { month: "short", day: "numeric",
 const event = await getPinkFloydEvent();
 const ticketPrice = event.ticket_price;
 
-const { data: tickets = [] } = await supabase.from("tickets").select("status, seller_id, seller_name, validated_at");
-const { data: sellers = [] } = await supabase.from("sellers").select("*");
-const { data: sales = [] } = await supabase.from("sales").select("amount");
+const { data: ticketsData } = await supabase.from("tickets").select("status, seller_id, seller_name, validated_at");
+const { data: sellersData } = await supabase.from("sellers").select("*");
+const { data: salesData } = await supabase.from("sales").select("amount, seller_id, seller_name");
+
+const tickets = ticketsData ?? [];
+const sellers = sellersData ?? [];
+const sales = salesData ?? [];
 
 const metricsData = calculateAdminReportMetrics({
   capacity: event.total_tickets,
@@ -26,15 +30,24 @@ const metricsData = calculateAdminReportMetrics({
   tickets: tickets.map((t) => ({ status: t.status, validated_at: t.validated_at })),
 });
 
-const grossRevenue = sales.reduce((sum, row) => sum + Number(row.amount), 0);
+const grossRevenue = resolveGrossRevenue({
+  salesAmounts: sales.map((row) => row.amount),
+  ticketsSold: metricsData.ticketsSold,
+  ticketPrice,
+});
 
 const sellerReports = calculateSellerReports({
   ticketPrice,
-  sellers: sellers ?? [],
+  sellers,
   tickets: tickets.map((t) => ({
     seller_id: t.seller_id,
     seller_name: t.seller_name,
     status: t.status,
+  })),
+  sales: sales.map((row) => ({
+    seller_id: row.seller_id,
+    seller_name: row.seller_name,
+    amount: row.amount,
   })),
 });
 

@@ -1,41 +1,38 @@
-import { homeFeaturedEvent } from "@/data/home";
 import { foundationPhotos } from "@/data/foundation-photos";
 
 export const eventPage = {
   hero: {
-    badge: "Evento con propósito",
-    tagline: homeFeaturedEvent.subtitle,
-    body: homeFeaturedEvent.body,
+    tagline:
+      "Una noche. Una experiencia. Un viaje sensorial a través de los sonidos que redefinieron el rock progresivo.",
     image: foundationPhotos.eventHero.src,
     imageAlt: foundationPhotos.eventHero.alt,
-    ctaPrimary: "Reservar boletos",
-    ctaSecondary: "Conocer la causa",
+    ctaPrimary: "Reservar boleto",
   },
   experience: {
-    label: "La experiencia",
-    title: "Inmersión sensorial",
-    body: "Una experiencia audiovisual inspirada en la música de Pink Floyd, creada para apoyar la educación artística y musical a través de FARECOH.",
+    titleLead: "Inmersión",
+    titleAccent: "Sensorial",
+    body: "Una experiencia audiovisual cruda y cinematográfica inspirada en el legado de Pink Floyd, diseñada para elevar el estándar de la educación artística en Honduras.",
     bodySecondary:
-      "Reviva los clásicos con una puesta en escena que fusiona la rigurosidad académica con la psicodelia británica, en un entorno diseñado para la apreciación sonora pura.",
-    image: "/images/evento/106.webp",
+      "Reviva los clásicos en un entorno institucional transformado en un templo de experimentación sonora y visual. Una producción de alto impacto para audífonos y almas exigentes.",
+    image: foundationPhotos.eventExperience.src,
     imageAlt: foundationPhotos.eventExperience.alt,
   },
   purpose: {
-    label: "Arte con propósito",
-    title: "Cada boleto genera oportunidades",
-    body: "Tu aporte apoya programas artísticos y educativos de FARECOH. Cada boleto es una inversión directa en el futuro de los músicos y artistas de nuestra región.",
-    highlight: "Un concierto puede durar unas horas. Su impacto puede transformar una vida para siempre.",
+    title: "Arte con Propósito Real",
+    quote: "En conjunto, tu asistencia financia la próxima generación de virtuosos.",
+    body: "Cada boleto es una inversión directa en becas y equipamiento para los estudiantes de FARECOH. El rock no solo suena, transforma realidades.",
   },
   lineup: {
-    label: "Elenco",
-    subtitle: "Cada integrante aporta su talento al tributo",
-    footer: "Pink Floyd sinfónico — tributo",
-    directorBadge: "Dirección musical",
-    onStageLabel: "músicos en escena",
+    titleLead: "Lineup del",
+    titleAccent: "Tour",
+    subtitle: "Élite Musical Académica",
+    directorBadge: "Director Musical",
   },
   cta: {
-    title: "Asegura tu lugar en el viaje",
-    body: "Cupos limitados para garantizar la calidad de la experiencia acústica y el impacto social de tu aporte.",
-    button: "Reservar boletos",
+    titleLead: "Únete al",
+    titleAccent: "Lado Oscuro",
+    titleTail: "de la Luna",
+    body: "Cupos limitados. La acústica perfecta requiere exclusividad.",
+    button: "Comprar ahora",
   },
 } as const;

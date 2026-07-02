@@ -2076,3 +2076,94 @@ article:hover .landing-program-index,
     transform: none;
   }
 }
+
+/* Event page v2 — Pink Floyd landing */
+.event-v2-bw {
+  filter: grayscale(100%) contrast(150%);
+}
+
+.event-v2-hero-gradient {
+  background: linear-gradient(to top, #000000 0%, rgba(0, 0, 0, 0.4) 50%, rgba(0, 0, 0, 0.1) 100%);
+}
+
+.event-prism-accent {
+  height: 2px;
+  width: 100%;
+  background: linear-gradient(
+    90deg,
+    #ff0000 0%,
+    #ff7f00 16%,
+    #ffff00 33%,
+    #00ff00 50%,
+    #0000ff 66%,
+    #4b0082 83%,
+    #8b00ff 100%
+  );
+}
+
+.event-rock-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #ff6b00 0%, #d45900 100%);
+  color: #000;
+  font-weight: 700;
+  box-shadow: 0 4px 20px rgba(255, 107, 0, 0.3);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.event-rock-button:hover {
+  box-shadow: 0 6px 25px rgba(255, 107, 0, 0.5);
+  transform: translateY(-2px);
+}
+
+.event-rock-button:active {
+  transform: scale(0.98);
+}
+
+.event-v2-display {
+  font-size: clamp(2.75rem, 8vw, 4rem);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+
+.event-v2-badge {
+  display: inline-block;
+  border-left: 2px solid var(--color-concert-orange);
+  background: rgba(255, 255, 255, 0.1);
+  padding: 0.25rem 1rem;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--color-concert-orange);
+}
+
+.event-v2-section {
+  padding-block: var(--spacing-section-mobile);
+  padding-inline: var(--spacing-margin-mobile);
+}
+
+@media (min-width: 768px) {
+  .event-v2-section {
+    padding-block: var(--spacing-section-gap);
+    padding-inline: var(--spacing-margin);
+  }
+}
+
+.event-v2-cta-price {
+  font-size: clamp(2.5rem, 6vw, 4rem);
+  font-weight: 900;
+  letter-spacing: -0.04em;
+}
+
+.caption {
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.universe-concert {
+  background: #000;
+}

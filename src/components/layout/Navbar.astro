@@ -18,7 +18,7 @@ const ticketsHref = "/eventos/pink-floyd/boletos";
 
 const headerClass =
   variant === "concert"
-    ? "fixed top-0 left-0 z-[100] w-full border-b border-concert-orange/20 bg-concert-deep/90 py-4 backdrop-blur-md transition-all duration-300"
+    ? "fixed top-0 left-0 z-[100] w-full border-b border-white/5 bg-black/90 py-4 backdrop-blur-md transition-all duration-300"
     : variant === "dark"
       ? "fixed top-0 left-0 z-[100] w-full border-b border-outline/10 bg-on-background/90 py-4 backdrop-blur-md transition-all duration-300"
       : "fixed top-0 left-0 z-[100] w-full border-b border-outline-variant bg-surface/90 py-4 backdrop-blur-md transition-all duration-300";
@@ -41,7 +41,7 @@ const logoTheme = variant === "light" ? "color" : "white";
 
 const ctaClass =
   variant === "concert"
-    ? "hidden lg:inline-flex bg-gradient-to-r from-concert-orange to-concert-orange-mid px-6 py-2 text-label-md font-label-md text-white transition-all hover:from-concert-orange-mid hover:to-concert-amber hover:text-concert-deep active:scale-95 whitespace-nowrap shadow-[0_0_20px_rgba(255,77,0,0.35)]"
+    ? "event-rock-button hidden px-6 py-2 text-label-md font-label-md uppercase whitespace-nowrap lg:inline-flex"
     : "hidden lg:inline-flex bg-primary-container px-6 py-2 text-label-md font-label-md text-on-primary-container transition-all hover:bg-primary active:scale-95 whitespace-nowrap";
 
 const mobileMenuClass =
@@ -96,7 +96,7 @@ const menuIconClass =
               </a>
             ))}
             <a
-              class={`mt-2 px-4 py-3 text-center text-label-md font-label-md ${variant === "concert" ? "bg-gradient-to-r from-concert-orange to-concert-orange-mid text-white" : "bg-primary-container text-on-primary-container"}`}
+              class={`mt-2 px-4 py-3 text-center text-label-md font-label-md uppercase ${variant === "concert" ? "event-rock-button" : "bg-primary-container text-on-primary-container"}`}
               href={ticketsHref}
               data-mobile-nav-link
             >

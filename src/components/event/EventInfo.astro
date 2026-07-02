@@ -1,42 +1,45 @@
 ---
-import HeartHandshake from "@lucide/astro/icons/heart-handshake";
 import { eventPage } from "@/data/event-page";
 ---
 
-<section class="reveal-section event-section">
-  <div class="landing-shell grid grid-cols-1 items-center gap-gutter lg:grid-cols-12">
-    <div class="event-copy-panel border-l-4 border-concert-orange pl-stack-md lg:col-span-6 lg:pr-stack-lg">
-      <p class="concert-eyebrow landing-eyebrow mb-3">{eventPage.experience.label}</p>
-      <h2 class="landing-headline mb-stack-md italic text-white">{eventPage.experience.title}</h2>
-      <p class="landing-body mb-stack-md text-white/88">{eventPage.experience.body}</p>
-      <p class="body-md text-white/65">{eventPage.experience.bodySecondary}</p>
+<section class="reveal-section event-v2-section border-b border-white/5 bg-black">
+  <div class="landing-shell grid grid-cols-1 items-center gap-20 md:grid-cols-2">
+    <div class="space-y-4">
+      <div class="mb-6 h-1 w-12 bg-concert-orange" aria-hidden="true"></div>
+      <h2 class="headline-lg uppercase tracking-tight text-white">
+        {eventPage.experience.titleLead}{" "}
+        <span class="text-concert-orange">{eventPage.experience.titleAccent}</span>
+      </h2>
+      <p class="body-lg leading-relaxed text-white/80">{eventPage.experience.body}</p>
+      <p class="body-md border-l-2 border-white/10 pl-6 leading-relaxed text-white/50">
+        {eventPage.experience.bodySecondary}
+      </p>
     </div>
-    <div class="relative lg:col-span-6 lg:-mr-6 lg:translate-y-2">
-      <div class="event-media-frame editorial-image aspect-video">
-        <div class="concert-frame" aria-hidden="true">
-          <span class="concert-frame__corner concert-frame__corner--tl"></span>
-          <span class="concert-frame__corner concert-frame__corner--tr"></span>
-          <span class="concert-frame__corner concert-frame__corner--bl"></span>
-          <span class="concert-frame__corner concert-frame__corner--br"></span>
-        </div>
-        <img src={eventPage.experience.image} alt={eventPage.experience.imageAlt} loading="lazy" width="1200" height="675" />
-        <div class="event-media-frame__glow" aria-hidden="true"></div>
-      </div>
+
+    <div class="group relative aspect-video overflow-hidden border border-white/10 bg-white/5">
+      <img
+        class="event-v2-bw h-full w-full object-cover opacity-60 transition-transform duration-1000 group-hover:scale-105"
+        src={eventPage.experience.image}
+        alt={eventPage.experience.imageAlt}
+        loading="lazy"
+        width="1200"
+        height="675"
+      />
+      <div class="absolute inset-0 bg-gradient-to-tr from-black/80 to-transparent" aria-hidden="true"></div>
     </div>
   </div>
 </section>
 
-<section id="proposito" class="reveal-section event-section event-section--muted">
-  <div class="landing-shell">
-    <div class="event-purpose-panel mx-auto max-w-4xl text-center md:text-left">
-      <div class="md:border-l-4 md:border-concert-orange md:pl-stack-lg">
-        <HeartHandshake size={40} stroke-width={1.5} class="mx-auto mb-4 text-concert-amber md:mx-0" aria-hidden="true" />
-        <p class="concert-eyebrow landing-eyebrow mb-3">{eventPage.purpose.label}</p>
-        <h2 class="landing-headline mb-stack-md text-white">{eventPage.purpose.title}</h2>
-        <p class="landing-body mb-stack-md text-white/85">{eventPage.purpose.body}</p>
-        <blockquote class="event-purpose-quote">{eventPage.purpose.highlight}</blockquote>
-        <div class="mx-auto mt-stack-md h-1 w-24 bg-gradient-to-r from-concert-orange to-concert-amber md:mx-0" aria-hidden="true"></div>
-      </div>
+<section id="proposito" class="reveal-section event-v2-section bg-black">
+  <div class="landing-shell relative z-10">
+    <div class="event-v2-cause space-y-4 border border-white/10 bg-gradient-to-b from-white/5 to-transparent p-12 text-center md:p-24">
+      <span class="material-symbols-outlined mb-4 block text-5xl text-concert-orange md:text-6xl" aria-hidden="true">
+        album
+      </span>
+      <h2 class="headline-lg uppercase tracking-tighter text-white">{eventPage.purpose.title}</h2>
+      <p class="body-lg mx-auto max-w-2xl font-light italic text-white/60">"{eventPage.purpose.quote}"</p>
+      <p class="body-md mx-auto max-w-xl text-white/40">{eventPage.purpose.body}</p>
+      <div class="mx-auto mt-8 h-px w-32 bg-white/20" aria-hidden="true"></div>
     </div>
   </div>
 </section>
