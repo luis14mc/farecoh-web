@@ -13,6 +13,8 @@
         "astro": "astro",
         "generate:ticket-assets": "node --experimental-strip-types scripts/generate-ticket-assets.ts",
         "export:canva-tickets": "node --experimental-strip-types scripts/export-canva-tickets.ts",
+        "keep-real-reservations": "node --experimental-strip-types scripts/keep-real-reservations.ts",
+        "keep-real-reservations:execute": "node --experimental-strip-types scripts/keep-real-reservations.ts --execute",
         "generate:print-tickets": "node --experimental-strip-types scripts/generate-print-tickets.ts",
         "test:print-layout-pdf": "node --experimental-strip-types scripts/test-print-layout-pdf.ts",
         "optimize:foundation-photos": "node --experimental-strip-types scripts/optimize-foundation-photos.ts",
