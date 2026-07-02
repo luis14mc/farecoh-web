@@ -1,8 +1,7 @@
 ---
-import "../../styles/global.css";
+import AdminAuthLayout from "@/layouts/AdminAuthLayout.astro";
 import { createSupabaseServerClient, getPublicSupabaseConfig, isAuthConfigured } from "@/lib/auth";
 import { requireAdminAccess, roleHomePath } from "@/lib/rbac";
-import { SITE_LANG } from "@/lib/locale";
 
 const { supabaseUrl, supabaseAnonKey } = getPublicSupabaseConfig();
 const authConfigured = isAuthConfigured({ supabaseUrl, supabaseAnonKey });
@@ -13,7 +12,6 @@ const safeRedirect =
     ? redirectParam
     : "/admin";
 
-// Guard: immediately redirect to /admin/login without preserving query params if URL contains password or email query params
 const emailParam = Astro.url.searchParams.get("email");
 const passwordParam = Astro.url.searchParams.get("password");
 if (emailParam || passwordParam) {
@@ -44,199 +42,190 @@ if (authConfigured && Astro.request.method === "GET") {
 }
 ---
 
-<!doctype html>
-<html lang={SITE_LANG} class="light">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="robots" content="noindex,nofollow" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <title>Acceso Administrativo | FARECOH</title>
-  </head>
-  <body class="min-h-screen bg-surface text-on-surface font-body-md text-body-md" data-supabase-url={supabaseUrl} data-supabase-anon-key={supabaseAnonKey} data-auth-configured={authConfigured ? "true" : "false"}>
-    <main class="flex min-h-screen items-center justify-center px-margin py-12">
-      <section class="w-full max-w-md rounded-lg border border-outline-variant bg-surface-container-lowest p-6 shadow-sm">
-        <p class="text-label-md font-label-md font-bold uppercase tracking-wider text-primary">Panel administrativo</p>
-        <h1 class="mt-2 text-headline-md font-headline-md text-on-surface">Iniciar sesión</h1>
-        <p class="mt-2 text-body-md font-body-md text-on-surface-variant">Use su cuenta autorizada de FARECOH.</p>
+<AdminAuthLayout
+  title="Acceso Administrativo | FARECOH"
+  supabaseUrl={supabaseUrl}
+  supabaseAnonKey={supabaseAnonKey}
+  authConfigured={authConfigured}
+>
+  <main class="flex min-h-screen items-center justify-center px-margin py-12">
+    <section class="w-full max-w-md rounded-lg border border-outline-variant bg-surface-container-lowest p-6 shadow-sm">
+      <p class="label-caps text-primary">Panel administrativo</p>
+      <h1 class="mt-2 headline-md text-on-surface">Iniciar sesión</h1>
+      <p class="mt-2 body-md text-on-surface-variant">Use su cuenta autorizada de FARECOH.</p>
 
-        {!authConfigured && (
-          <p class="mt-4 rounded bg-yellow-100 p-3 text-body-md text-yellow-800">
-            Supabase Auth no está configurado. Defina PUBLIC_SUPABASE_URL y PUBLIC_SUPABASE_ANON_KEY en Vercel y vuelva a desplegar.
-          </p>
-        )}
+      {!authConfigured && (
+        <p class="mt-4 rounded bg-yellow-100 p-3 body-md text-yellow-800">
+          Supabase Auth no está configurado. Defina PUBLIC_SUPABASE_URL y PUBLIC_SUPABASE_ANON_KEY en Vercel y vuelva a desplegar.
+        </p>
+      )}
 
-        {authError && (
-          <p class="mt-4 rounded bg-red-100 p-3 text-body-md text-red-700">{authError}</p>
-        )}
+      {authError && (
+        <p class="mt-4 rounded bg-red-100 p-3 body-md text-red-700">{authError}</p>
+      )}
 
-        <form id="login-form" onsubmit="event.preventDefault();" class="mt-6 space-y-4">
-          <label class="block">
-            <span class="text-caption font-caption font-bold uppercase text-on-surface-variant">Correo</span>
-            <input id="email" name="email" type="email" required autocomplete="email" disabled={!authConfigured} class="mt-2 w-full rounded border border-outline-variant bg-surface px-3 py-3 text-body-md outline-none focus:border-primary disabled:cursor-not-allowed disabled:opacity-60" />
-          </label>
-          <label class="block">
-            <span class="text-caption font-caption font-bold uppercase text-on-surface-variant">Contraseña</span>
-            <input id="password" name="password" type="password" required autocomplete="current-password" disabled={!authConfigured} class="mt-2 w-full rounded border border-outline-variant bg-surface px-3 py-3 text-body-md outline-none focus:border-primary disabled:cursor-not-allowed disabled:opacity-60" />
-          </label>
-          <button id="login-button" disabled={!authConfigured} class="w-full rounded bg-primary px-4 py-3 text-label-md font-label-md font-bold text-on-primary transition-colors hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-60" type="submit">
-            Entrar
-          </button>
-          <div class="mt-4 text-center">
-            <button id="toggle-recovery" class="text-caption font-bold text-primary hover:underline cursor-pointer" type="button">Olvidé mi contraseña</button>
-          </div>
-        </form>
+      <form id="login-form" onsubmit="event.preventDefault();" class="mt-6 space-y-4">
+        <label class="block">
+          <span class="label-caps text-on-surface-variant">Correo</span>
+          <input id="email" name="email" type="email" required autocomplete="email" disabled={!authConfigured} class="mt-2 w-full rounded border border-outline-variant bg-surface px-3 py-3 body-md outline-none focus:border-primary disabled:cursor-not-allowed disabled:opacity-60" />
+        </label>
+        <label class="block">
+          <span class="label-caps text-on-surface-variant">Contraseña</span>
+          <input id="password" name="password" type="password" required autocomplete="current-password" disabled={!authConfigured} class="mt-2 w-full rounded border border-outline-variant bg-surface px-3 py-3 body-md outline-none focus:border-primary disabled:cursor-not-allowed disabled:opacity-60" />
+        </label>
+        <button id="login-button" disabled={!authConfigured} class="w-full rounded bg-primary px-4 py-3 label-caps text-on-primary transition-colors hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-60" type="submit">
+          Entrar
+        </button>
+        <div class="mt-4 text-center">
+          <button id="toggle-recovery" class="label-caps text-primary hover:underline cursor-pointer" type="button">Olvidé mi contraseña</button>
+        </div>
+      </form>
 
-        <form id="recovery-form" onsubmit="event.preventDefault();" class="mt-6 space-y-4 hidden">
-          <label class="block">
-            <span class="text-caption font-caption font-bold uppercase text-on-surface-variant">Correo electrónico</span>
-            <input id="recovery-email" name="email" type="email" required autocomplete="email" disabled={!authConfigured} class="mt-2 w-full rounded border border-outline-variant bg-surface px-3 py-3 text-body-md outline-none focus:border-primary disabled:cursor-not-allowed disabled:opacity-60" />
-          </label>
-          <button id="recovery-button" disabled={!authConfigured} class="w-full rounded bg-primary px-4 py-3 text-label-md font-label-md font-bold text-on-primary transition-colors hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-60" type="submit">
-            Enviar correo de recuperación
-          </button>
-          <div class="mt-4 text-center">
-            <button id="toggle-login" class="text-caption font-bold text-primary hover:underline cursor-pointer" type="button">Volver a iniciar sesión</button>
-          </div>
-        </form>
+      <form id="recovery-form" onsubmit="event.preventDefault();" class="mt-6 space-y-4 hidden">
+        <label class="block">
+          <span class="label-caps text-on-surface-variant">Correo electrónico</span>
+          <input id="recovery-email" name="email" type="email" required autocomplete="email" disabled={!authConfigured} class="mt-2 w-full rounded border border-outline-variant bg-surface px-3 py-3 body-md outline-none focus:border-primary disabled:cursor-not-allowed disabled:opacity-60" />
+        </label>
+        <button id="recovery-button" disabled={!authConfigured} class="w-full rounded bg-primary px-4 py-3 label-caps text-on-primary transition-colors hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-60" type="submit">
+          Enviar correo de recuperación
+        </button>
+        <div class="mt-4 text-center">
+          <button id="toggle-login" class="label-caps text-primary hover:underline cursor-pointer" type="button">Volver a iniciar sesión</button>
+        </div>
+      </form>
 
-        <p id="login-message" class="mt-4 hidden rounded p-3 text-body-md font-body-md"></p>
-      </section>
-    </main>
+      <p id="login-message" class="mt-4 hidden rounded p-3 body-md"></p>
+    </section>
+  </main>
 
-    <script>
-      import { createSupabaseBrowserClient } from "@/lib/auth";
+  <script>
+    import { createSupabaseBrowserClient } from "@/lib/auth";
 
-      const isDev = import.meta.env.DEV;
+    const isDev = import.meta.env.DEV;
 
-      // Guard: immediately redirect to /admin/login without preserving query params if URL contains password or email query params
-      if (window.location.search) {
-        const params = new URLSearchParams(window.location.search);
-        if (params.has("email") || params.has("password")) {
-          window.location.assign("/admin/login");
-        }
+    if (window.location.search) {
+      const params = new URLSearchParams(window.location.search);
+      if (params.has("email") || params.has("password")) {
+        window.location.assign("/admin/login");
+      }
+    }
+
+    function getRedirectTarget(): string {
+      const param = new URLSearchParams(window.location.search).get("redirect");
+      if (param && param.startsWith("/admin") && !param.startsWith("//")) {
+        return param;
+      }
+      return "/admin";
+    }
+
+    const body = document.body;
+    const authConfigured = body.dataset.authConfigured === "true";
+
+    const loginForm = document.getElementById("login-form");
+    const loginButton = document.getElementById("login-button");
+    const recoveryForm = document.getElementById("recovery-form");
+    const recoveryButton = document.getElementById("recovery-button");
+    const toggleRecovery = document.getElementById("toggle-recovery");
+    const toggleLogin = document.getElementById("toggle-login");
+    const message = document.getElementById("login-message");
+    const emailInput = document.getElementById("email") as HTMLInputElement | null;
+    const passwordInput = document.getElementById("password") as HTMLInputElement | null;
+    const recoveryEmailInput = document.getElementById("recovery-email") as HTMLInputElement | null;
+    const supabase = authConfigured ? createSupabaseBrowserClient() : null;
+
+    function showMessage(text: string, type = "error") {
+      if (!message) return;
+      message.textContent = text;
+      message.className = `mt-4 rounded p-3 body-md ${type === "error" ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`;
+      message.classList.remove("hidden");
+    }
+
+    function hideMessage() {
+      message?.classList.add("hidden");
+    }
+
+    toggleRecovery?.addEventListener("click", () => {
+      loginForm?.classList.add("hidden");
+      recoveryForm?.classList.remove("hidden");
+      hideMessage();
+    });
+
+    toggleLogin?.addEventListener("click", () => {
+      recoveryForm?.classList.add("hidden");
+      loginForm?.classList.remove("hidden");
+      hideMessage();
+    });
+
+    loginForm?.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      if (!loginButton || !loginForm || !supabase || !emailInput || !passwordInput) {
+        showMessage("Autenticación no disponible. Configure Supabase en el entorno de despliegue.");
+        return;
       }
 
-      function getRedirectTarget(): string {
-        const param = new URLSearchParams(window.location.search).get("redirect");
-        if (param && param.startsWith("/admin") && !param.startsWith("//")) {
-          return param;
-        }
-        return "/admin";
+      const email = emailInput.value.trim();
+      let password = passwordInput.value;
+
+      loginButton.disabled = true;
+      loginButton.textContent = "Validando...";
+
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      password = "";
+      passwordInput.value = "";
+
+      if (error) {
+        showMessage("Credenciales inválidas.");
+        loginButton.disabled = false;
+        loginButton.textContent = "Entrar";
+        return;
       }
 
-      const body = document.body;
-      const authConfigured = body.dataset.authConfigured === "true";
-
-      const loginForm = document.getElementById("login-form");
-      const loginButton = document.getElementById("login-button");
-      const recoveryForm = document.getElementById("recovery-form");
-      const recoveryButton = document.getElementById("recovery-button");
-      const toggleRecovery = document.getElementById("toggle-recovery");
-      const toggleLogin = document.getElementById("toggle-login");
-      const message = document.getElementById("login-message");
-      const emailInput = document.getElementById("email") as HTMLInputElement | null;
-      const passwordInput = document.getElementById("password") as HTMLInputElement | null;
-      const recoveryEmailInput = document.getElementById("recovery-email") as HTMLInputElement | null;
-      const supabase = authConfigured ? createSupabaseBrowserClient() : null;
-
-      function showMessage(text: string, type = "error") {
-        if (!message) return;
-        message.textContent = text;
-        message.className = `mt-4 rounded p-3 text-body-md font-body-md ${type === "error" ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`;
-        message.classList.remove("hidden");
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) {
+        showMessage("No se pudo establecer la sesión. Intente de nuevo.");
+        loginButton.disabled = false;
+        loginButton.textContent = "Entrar";
+        return;
       }
 
-      function hideMessage() {
-        message?.classList.add("hidden");
+      const redirectTo = getRedirectTarget();
+
+      if (isDev) {
+        console.debug("[admin login] login success");
+        console.debug("[admin login] session exists", Boolean(sessionData.session));
+        console.debug("[admin login] redirect target", redirectTo);
       }
 
-      toggleRecovery?.addEventListener("click", () => {
-        loginForm?.classList.add("hidden");
-        recoveryForm?.classList.remove("hidden");
-        hideMessage();
+      window.location.assign(redirectTo);
+    });
+
+    recoveryForm?.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      if (!recoveryButton || !recoveryForm || !supabase || !recoveryEmailInput) {
+        showMessage("Autenticación no disponible.");
+        return;
+      }
+
+      const email = recoveryEmailInput.value.trim();
+
+      recoveryButton.disabled = true;
+      recoveryButton.textContent = "Enviando...";
+
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/admin/reset-password`,
       });
 
-      toggleLogin?.addEventListener("click", () => {
-        recoveryForm?.classList.add("hidden");
-        loginForm?.classList.remove("hidden");
-        hideMessage();
-      });
-
-      loginForm?.addEventListener("submit", async (event) => {
-        event.preventDefault();
-        if (!loginButton || !loginForm || !supabase || !emailInput || !passwordInput) {
-          showMessage("Autenticación no disponible. Configure Supabase en el entorno de despliegue.");
-          return;
-        }
-
-        let email = emailInput.value.trim();
-        let password = passwordInput.value;
-
-        loginButton.disabled = true;
-        loginButton.textContent = "Validando...";
-
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        password = "";
-        passwordInput.value = "";
-
-        if (error) {
-          showMessage("Credenciales inválidas.");
-          loginButton.disabled = false;
-          loginButton.textContent = "Entrar";
-          return;
-        }
-
-        const { data: sessionData } = await supabase.auth.getSession();
-        if (!sessionData.session) {
-          showMessage("No se pudo establecer la sesión. Intente de nuevo.");
-          loginButton.disabled = false;
-          loginButton.textContent = "Entrar";
-          return;
-        }
-
-        const redirectTo = getRedirectTarget();
-
-        if (isDev) {
-          console.debug("[admin login] login success");
-          console.debug("[admin login] session exists", Boolean(sessionData.session));
-          console.debug("[admin login] redirect target", redirectTo);
-        }
-
-        window.location.assign(redirectTo);
-      });
-
-      recoveryForm?.addEventListener("submit", async (event) => {
-        event.preventDefault();
-        if (!recoveryButton || !recoveryForm || !supabase || !recoveryEmailInput) {
-          showMessage("Autenticación no disponible.");
-          return;
-        }
-
-        const email = recoveryEmailInput.value.trim();
-
-        recoveryButton.disabled = true;
-        recoveryButton.textContent = "Enviando...";
-
-        const { error } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: `${window.location.origin}/admin/reset-password`
-        });
-
-        if (error) {
-          showMessage("Error al enviar correo de recuperación: " + error.message);
-          recoveryButton.disabled = false;
-          recoveryButton.textContent = "Enviar correo de recuperación";
-          return;
-        }
-
-        showMessage("Correo de recuperación enviado con éxito. Revise su bandeja de entrada.", "success");
-        (recoveryForm as HTMLFormElement).reset();
+      if (error) {
+        showMessage("Error al enviar correo de recuperación: " + error.message);
         recoveryButton.disabled = false;
         recoveryButton.textContent = "Enviar correo de recuperación";
-      });
-    </script>
-  </body>
-</html>
+        return;
+      }
+
+      showMessage("Correo de recuperación enviado con éxito. Revise su bandeja de entrada.", "success");
+      (recoveryForm as HTMLFormElement).reset();
+      recoveryButton.disabled = false;
+      recoveryButton.textContent = "Enviar correo de recuperación";
+    });
+  </script>
+</AdminAuthLayout>
