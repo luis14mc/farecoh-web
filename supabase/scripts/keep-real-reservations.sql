@@ -46,10 +46,20 @@ USING public.tickets t
 WHERE s.ticket_id = t.id
   AND t.ticket_code NOT IN (SELECT ticket_code FROM _keep_reservations);
 
-DELETE FROM public.reservation_notifications rn
-WHERE NOT (
-  rn.ticket_codes && (SELECT array_agg(ticket_code) FROM _keep_reservations)
-);
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM information_schema.tables
+    WHERE table_schema = 'public'
+      AND table_name = 'reservation_notifications'
+  ) THEN
+    DELETE FROM public.reservation_notifications rn
+    WHERE NOT (
+      rn.ticket_codes && (SELECT array_agg(ticket_code) FROM _keep_reservations)
+    );
+  END IF;
+END $$;
 
 UPDATE public.tickets t
 SET
@@ -64,16 +74,30 @@ SET
   payment_reference = NULL,
   sold_at = NULL,
   validated_at = NULL,
-  reserved_at = NULL,
   batch_id = NULL
 WHERE t.ticket_code NOT IN (SELECT ticket_code FROM _keep_reservations);
+
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'tickets'
+      AND column_name = 'reserved_at'
+  ) THEN
+    UPDATE public.tickets t
+    SET reserved_at = NULL
+    WHERE t.ticket_code NOT IN (SELECT ticket_code FROM _keep_reservations);
+  END IF;
+END $$;
 
 DELETE FROM public.audit_logs;
 
 COMMIT;
 
 -- Verify
-SELECT ticket_code, status, buyer_name, buyer_phone, buyer_email, reserved_at
+SELECT ticket_code, status, buyer_name, buyer_phone, buyer_email, created_at
 FROM public.tickets
 WHERE ticket_code IN ('PF-000003', 'PF-000004', 'PF-000005')
 ORDER BY ticket_code;
