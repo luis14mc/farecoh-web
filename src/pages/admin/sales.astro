@@ -187,6 +187,25 @@ if (recentSales.length === 0) {
   />
 
   <AdminPage mobileFab>
+    {deliveryCode && !formError && (
+      <section class="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 p-4 shadow-sm">
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p class="font-semibold text-emerald-900">Venta confirmada: {deliveryCode}</p>
+            <p class="mt-1 text-sm text-emerald-800">
+              Ya puede preparar el mensaje y los enlaces de los boletos para enviarlos al comprador.
+            </p>
+          </div>
+          <a
+            href={`/admin/delivery?code=${encodeURIComponent(deliveryCode)}`}
+            class="inline-flex h-10 items-center justify-center rounded-md bg-emerald-700 px-4 text-sm font-semibold text-white transition hover:bg-emerald-800"
+          >
+            Preparar envío por WhatsApp
+          </a>
+        </div>
+      </section>
+    )}
+
     <SalesFormPanel
       client:load
       sellers={sellers}
@@ -195,7 +214,6 @@ if (recentSales.length === 0) {
       metrics={salesMetrics}
       formMessage={formMessage || undefined}
       formError={formError}
-      deliveryCode={deliveryCode || undefined}
     />
   </AdminPage>
 </AdminLayout>
