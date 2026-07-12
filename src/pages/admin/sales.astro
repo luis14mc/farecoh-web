@@ -20,6 +20,7 @@ const authConfigured = isAuthConfigured(getPublicSupabaseConfig());
 const currentDate = formatSiteDate(new Date(), { month: "short", day: "numeric", year: "numeric" });
 let formMessage = "";
 let formError = false;
+let deliveryCode = "";
 
 const { data: event } = await supabase
   .from("events")
@@ -66,6 +67,7 @@ if (Astro.request.method === "POST") {
     }
 
     formMessage = result.message;
+    deliveryCode = result.ticket.ticket_code ?? ticketCode;
   } catch (err: unknown) {
     formError = true;
     formMessage = err instanceof Error ? err.message : "Error al registrar la venta.";
@@ -193,6 +195,7 @@ if (recentSales.length === 0) {
       metrics={salesMetrics}
       formMessage={formMessage || undefined}
       formError={formError}
+      deliveryCode={deliveryCode || undefined}
     />
   </AdminPage>
 </AdminLayout>
