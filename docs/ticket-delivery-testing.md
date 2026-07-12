@@ -47,6 +47,10 @@ For the first sold tickets:
 4. Confirm duplicate check-in protection still works.
 5. Confirm no migration or write request runs when opening the delivery page.
 
+## Preview deployment note
+
+The Vercel preview must be built from the latest branch head, after all delivery files exist. A partial deployment from an intermediate commit can fail to resolve `TicketDeliveryPanel`.
+
 ## Not included yet
 
 The branch does not yet generate PNG attachments or automatically send WhatsApp messages. Those steps should be added only after the grouped-delivery preview is approved.
