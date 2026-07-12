@@ -8,7 +8,8 @@ export type AdminNavKey =
   | "checkin"
   | "vendors"
   | "reports"
-  | "printing";
+  | "printing"
+  | "delivery";
 
 export interface AdminNavItem {
   label: string;
@@ -23,6 +24,7 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
   { label: "Ventas", href: "/admin/sales", icon: "payments", key: "sales" },
   { label: "Reservas", href: "/admin/reservations", icon: "reservations", key: "reservations" },
   { label: "Boletos", href: "/admin/tickets", icon: "confirmation_number", key: "tickets" },
+  { label: "Entregas", href: "/admin/delivery", icon: "send", key: "delivery" },
   { label: "Lotes", href: "/admin/batches", icon: "inventory_2", key: "batches" },
   { label: "Acceso", href: "/admin/checkin", icon: "qr_code_scanner", key: "checkin" },
   { label: "Vendedores", href: "/admin/vendors", icon: "group", key: "vendors" },
