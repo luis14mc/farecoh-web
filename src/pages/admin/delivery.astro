@@ -9,12 +9,29 @@ const supabase = createSupabaseServerClient(Astro);
 const staffProfile = Astro.locals.staffProfile as UserProfile | undefined;
 const authConfigured = isAuthConfigured(getPublicSupabaseConfig());
 const currentDate = formatSiteDate(new Date(), { month: "short", day: "numeric", year: "numeric" });
+const requestedCode = (Astro.url.searchParams.get("code") ?? "").trim().toUpperCase();
 
-const { data: tickets = [], error } = await supabase
+const { data: allTickets = [], error } = await supabase
   .from("tickets")
   .select("ticket_code, qr_token, status, buyer_name, buyer_phone, buyer_email, sold_at")
   .eq("status", "sold")
   .order("sold_at", { ascending: false });
+
+let tickets = allTickets;
+if (requestedCode) {
+  const target = allTickets.find((ticket) => ticket.ticket_code === requestedCode);
+  if (target) {
+    const phone = target.buyer_phone?.trim() ?? "";
+    const email = target.buyer_email?.trim().toLowerCase() ?? "";
+    const name = target.buyer_name?.trim() ?? "";
+
+    tickets = allTickets.filter((ticket) => {
+      if (phone) return ticket.buyer_phone?.trim() === phone;
+      if (email) return ticket.buyer_email?.trim().toLowerCase() === email;
+      return Boolean(name) && ticket.buyer_name?.trim() === name;
+    });
+  }
+}
 ---
 
 <AdminLayout title="Entregas | FARECOH" description="Preparación de boletos digitales y mensajes de WhatsApp" active="delivery">
@@ -29,6 +46,12 @@ const { data: tickets = [], error } = await supabase
   />
 
   <div class="mx-auto w-full max-w-7xl space-y-6 px-4 py-6 pb-28 md:px-8 md:py-8 md:pb-8">
+    {requestedCode && (
+      <div class="rounded-lg border border-primary/20 bg-primary/5 p-4 text-sm">
+        Preparando la entrega relacionada con <strong class="font-mono">{requestedCode}</strong>. Si el comprador tiene más boletos vendidos, se incluyen en el mismo mensaje.
+      </div>
+    )}
+
     {error ? (
       <div class="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
         No se pudieron cargar los boletos vendidos: {error.message}
