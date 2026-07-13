@@ -1,7 +1,8 @@
 import type { APIRoute } from "astro";
 import { createSupabaseServerClient } from "@/lib/auth";
 import { requireAdminAccess } from "@/lib/rbac";
-import { generateTicketImage } from "@/lib/ticket-delivery";
+import { generateDigitalTicketImage } from "@/lib/ticket-delivery";
+import { buildDigitalTicketFilename } from "@/lib/ticket-layouts/digital-ticket-layout";
 import JSZip from "jszip";
 
 export const POST: APIRoute = async (context) => {
@@ -47,8 +48,8 @@ export const POST: APIRoute = async (context) => {
     // Single ticket request
     if (validTickets.length === 1) {
       const ticket = validTickets[0];
-      const pngBuffer = await generateTicketImage(ticket.ticket_code, ticket.qr_token);
-      const filename = `farecoh-${ticket.ticket_code}.png`;
+      const pngBuffer = await generateDigitalTicketImage(ticket.ticket_code, ticket.qr_token);
+      const filename = buildDigitalTicketFilename(ticket.ticket_code);
 
       return new Response(pngBuffer, {
         status: 200,
@@ -64,8 +65,8 @@ export const POST: APIRoute = async (context) => {
     const zip = new JSZip();
 
     for (const ticket of validTickets) {
-      const pngBuffer = await generateTicketImage(ticket.ticket_code, ticket.qr_token);
-      zip.file(`farecoh-${ticket.ticket_code}.png`, pngBuffer);
+      const pngBuffer = await generateDigitalTicketImage(ticket.ticket_code, ticket.qr_token);
+      zip.file(buildDigitalTicketFilename(ticket.ticket_code), pngBuffer);
     }
 
     const zipBuffer = await zip.generateAsync({ type: "nodebuffer" });

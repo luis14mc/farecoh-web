@@ -1,14 +1,9 @@
 import type { APIRoute } from "astro";
 import { requireAdminAccess } from "@/lib/rbac";
 import { buildTicketCalibrationPdf } from "@/lib/ticket-print";
-import { sanitizeTicketPrintLayout } from "@/lib/ticket-print-layout-config";
-
-function numberParam(url: URL, key: string): number | undefined {
-  const value = url.searchParams.get(key);
-  if (value === null) return undefined;
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : undefined;
-}
+import { readTicketLayoutConfig } from "@/lib/ticket-layout-config";
+import { sanitizeTicketLayoutConfig } from "@/lib/ticket-image-compose";
+import { restorePhysicalTicketLayout } from "@/lib/ticket-layouts/physical-ticket-layout";
 
 export const GET: APIRoute = async (context) => {
   const access = await requireAdminAccess(context, "/admin/printing");
@@ -17,13 +12,30 @@ export const GET: APIRoute = async (context) => {
   }
 
   try {
-    const layout = sanitizeTicketPrintLayout({
-      qrCenterXPercent: numberParam(context.url, "qrCenterXPercent"),
-      qrCenterYPercent: numberParam(context.url, "qrCenterYPercent"),
-      codeCenterXPercent: numberParam(context.url, "codeCenterXPercent"),
-      codeCenterYPercent: numberParam(context.url, "codeCenterYPercent"),
-      updatedAt: null,
-    });
+    const { config: saved } = await readTicketLayoutConfig("physical");
+    const defaults = restorePhysicalTicketLayout();
+
+    const layout = sanitizeTicketLayoutConfig(
+      {
+        templateWidth: saved.templateWidth,
+        templateHeight: saved.templateHeight,
+        codeFontSize: Number(context.url.searchParams.get("codeFontSize")) || saved.codeFontSize,
+        codeBoxes: saved.codeBoxes.map((box, index) => ({
+          x: Number(context.url.searchParams.get(`code${index}X`)) || box.x,
+          y: Number(context.url.searchParams.get(`code${index}Y`)) || box.y,
+          width: Number(context.url.searchParams.get(`code${index}W`)) || box.width,
+          height: Number(context.url.searchParams.get(`code${index}H`)) || box.height,
+        })),
+        qrBoxes: saved.qrBoxes.map((box, index) => ({
+          x: Number(context.url.searchParams.get(`qr${index}X`)) || box.x,
+          y: Number(context.url.searchParams.get(`qr${index}Y`)) || box.y,
+          width: Number(context.url.searchParams.get(`qr${index}W`)) || box.width,
+          height: Number(context.url.searchParams.get(`qr${index}H`)) || box.height,
+        })),
+      },
+      defaults,
+    );
+
     const pdfBytes = await buildTicketCalibrationPdf(layout);
 
     return new Response(Buffer.from(pdfBytes), {

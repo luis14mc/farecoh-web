@@ -12,16 +12,15 @@ export const GET: APIRoute = async (context) => {
     return new Response("No autorizado.", { status: 403 });
   }
 
-  const { code } = context.params;
-  if (!code) {
+  const { ticketCode } = context.params;
+  if (!ticketCode) {
     return new Response("Código de boleto no especificado.", { status: 400 });
   }
 
   try {
-    const { ticket, error } = await fetchDeliverableTicketFromContext(context, code);
+    const { ticket, error } = await fetchDeliverableTicketFromContext(context, ticketCode);
     if (!ticket) {
-      const status = error === "Boleto no encontrado." ? 404 : 400;
-      return new Response(error ?? "Boleto no encontrado.", { status });
+      return new Response(error ?? "Boleto no encontrado.", { status: ticket ? 400 : 404 });
     }
 
     const pngBuffer = await generateDigitalTicketImage(ticket.ticket_code, ticket.qr_token);
@@ -39,7 +38,7 @@ export const GET: APIRoute = async (context) => {
       },
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Error inesperado generando la imagen del boleto.";
+    const message = error instanceof Error ? error.message : "Error inesperado generando la imagen digital.";
     return new Response(message, { status: 500 });
   }
 };

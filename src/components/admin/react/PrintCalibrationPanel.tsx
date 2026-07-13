@@ -1,14 +1,33 @@
-import { useEffect, useMemo, useState } from "react";
-import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, FileDown, Save } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  ArrowDown,
+  ArrowLeft,
+  ArrowRight,
+  ArrowUp,
+  Eye,
+  FileDown,
+  RotateCcw,
+  Save,
+  Sparkles,
+} from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { TICKET_TEMPLATE_PUBLIC_PATH } from "@/lib/ticket-print-config";
-import { QR_HEIGHT_POINTS, QR_WIDTH_POINTS } from "@/lib/ticket-print-measurements";
-import type { TicketPrintLayout, TicketPrintLayoutState, TicketTemplateDimensions } from "@/types/ticket-print-layout";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  DIGITAL_TICKET_TEMPLATE_PATH,
+  DEFAULT_DIGITAL_TICKET_LAYOUT,
+} from "@/lib/ticket-layouts/digital-ticket-layout";
+import {
+  PHYSICAL_TICKET_TEMPLATE_PATH,
+  DEFAULT_PHYSICAL_TICKET_LAYOUT,
+} from "@/lib/ticket-layouts/physical-ticket-layout";
+import type { OverlayBox, TicketLayoutConfig, TicketLayoutType } from "@/lib/ticket-layouts/types";
 
-type Target = "qr" | "code";
+type StepSize = 1 | 5 | 10;
 
 type Status =
   | { type: "idle"; message: string }
@@ -16,132 +35,198 @@ type Status =
   | { type: "success"; message: string }
   | { type: "error"; message: string };
 
-const STEP_PERCENT = 0.001;
-const FINE_STEP_PERCENT = 0.00025;
-
-const defaultTemplate: TicketTemplateDimensions = { width: 1, height: 1 };
-const defaultLayout: TicketPrintLayout = {
-  qrCenterXPercent: 0.859,
-  qrCenterYPercent: 0.729,
-  codeCenterXPercent: 0.855,
-  codeCenterYPercent: 0.4825,
-  updatedAt: null,
-};
-
-function clamp(value: number): number {
-  return Math.min(1, Math.max(0, value));
+interface LayoutStateResponse {
+  layoutType: TicketLayoutType;
+  templatePath: string;
+  config: TicketLayoutConfig;
+  template: { width: number; height: number };
+  canEdit: boolean;
+  updatedAt: string | null;
 }
 
-function formatPercent(value: number): string {
-  return `${(value * 100).toFixed(3)}%`;
+const TEST_TICKET_CODE = "PF-000001";
+
+const PHYSICAL_TARGETS = [
+  { id: "code0", label: "Código izquierdo", kind: "code" as const, index: 0 },
+  { id: "qr0", label: "QR izquierdo", kind: "qr" as const, index: 0 },
+  { id: "code1", label: "Código derecho", kind: "code" as const, index: 1 },
+  { id: "qr1", label: "QR derecho", kind: "qr" as const, index: 1 },
+];
+
+const DIGITAL_TARGETS = [
+  { id: "code0", label: "Número de boleto", kind: "code" as const, index: 0 },
+  { id: "qr0", label: "Código QR", kind: "qr" as const, index: 0 },
+];
+
+function overlayStyle(box: OverlayBox, template: { width: number; height: number }) {
+  return {
+    left: `${(box.x / template.width) * 100}%`,
+    top: `${(box.y / template.height) * 100}%`,
+    width: `${(box.width / template.width) * 100}%`,
+    height: `${(box.height / template.height) * 100}%`,
+  };
 }
 
-function formatPoint(value: number): string {
-  return `${value.toFixed(2)} px`;
+function getTargetBox(config: TicketLayoutConfig, kind: "code" | "qr", index: number): OverlayBox {
+  return kind === "code" ? config.codeBoxes[index] : config.qrBoxes[index];
 }
 
-function buildCalibrationPdfUrl(layout: TicketPrintLayout): string {
+function updateTargetBox(
+  config: TicketLayoutConfig,
+  kind: "code" | "qr",
+  index: number,
+  patch: Partial<OverlayBox>,
+): TicketLayoutConfig {
+  if (kind === "code") {
+    const codeBoxes = config.codeBoxes.map((box, i) => (i === index ? { ...box, ...patch } : box));
+    return { ...config, codeBoxes };
+  }
+  const qrBoxes = config.qrBoxes.map((box, i) => (i === index ? { ...box, ...patch } : box));
+  return { ...config, qrBoxes };
+}
+
+function buildCalibrationPdfUrl(config: TicketLayoutConfig): string {
   const params = new URLSearchParams({
-    qrCenterXPercent: String(layout.qrCenterXPercent),
-    qrCenterYPercent: String(layout.qrCenterYPercent),
-    codeCenterXPercent: String(layout.codeCenterXPercent),
-    codeCenterYPercent: String(layout.codeCenterYPercent),
+    codeFontSize: String(config.codeFontSize),
   });
-
+  config.codeBoxes.forEach((box, index) => {
+    params.set(`code${index}X`, String(box.x));
+    params.set(`code${index}Y`, String(box.y));
+    params.set(`code${index}W`, String(box.width));
+    params.set(`code${index}H`, String(box.height));
+  });
+  config.qrBoxes.forEach((box, index) => {
+    params.set(`qr${index}X`, String(box.x));
+    params.set(`qr${index}Y`, String(box.y));
+    params.set(`qr${index}W`, String(box.width));
+    params.set(`qr${index}H`, String(box.height));
+  });
   return `/api/print/calibration.pdf?${params.toString()}`;
 }
 
-function centerStyle(xPercent: number, yPercent: number) {
-  return {
-    left: `${xPercent * 100}%`,
-    top: `${yPercent * 100}%`,
-  };
+interface CalibrationTabProps {
+  layoutType: TicketLayoutType;
+  templatePath: string;
+  defaults: TicketLayoutConfig;
+  targets: typeof PHYSICAL_TARGETS;
+  title: string;
+  description: string;
 }
 
-function qrBoxStyle(layout: TicketPrintLayout, template: TicketTemplateDimensions) {
-  return {
-    left: `${layout.qrCenterXPercent * 100}%`,
-    top: `${layout.qrCenterYPercent * 100}%`,
-    width: `${(QR_WIDTH_POINTS / template.width) * 100}%`,
-    height: `${(QR_HEIGHT_POINTS / template.height) * 100}%`,
-  };
-}
+function CalibrationTab({
+  layoutType,
+  templatePath,
+  defaults,
+  targets,
+  title,
+  description,
+}: CalibrationTabProps) {
+  const [template, setTemplate] = useState(defaults);
+  const [config, setConfig] = useState<TicketLayoutConfig>(defaults);
+  const [selectedTarget, setSelectedTarget] = useState(targets[0].id);
+  const [step, setStep] = useState<StepSize>(5);
+  const [canEdit, setCanEdit] = useState(false);
+  const [previewKey, setPreviewKey] = useState(0);
+  const [status, setStatus] = useState<Status>({ type: "loading", message: "Cargando calibración..." });
 
-export function PrintCalibrationPanel() {
-  const [template, setTemplate] = useState<TicketTemplateDimensions>(defaultTemplate);
-  const [layout, setLayout] = useState<TicketPrintLayout>(defaultLayout);
-  const [target, setTarget] = useState<Target>("qr");
-  const [fineMode, setFineMode] = useState(false);
-  const [status, setStatus] = useState<Status>({ type: "loading", message: "Cargando plantilla y layout..." });
+  const activeTarget = targets.find((t) => t.id === selectedTarget) ?? targets[0];
+  const activeBox = getTargetBox(config, activeTarget.kind, activeTarget.index);
+
+  const loadLayout = useCallback(async () => {
+    setStatus({ type: "loading", message: "Cargando calibración..." });
+    try {
+      const response = await fetch(`/api/ticket-layouts/${layoutType}`, { cache: "no-store" });
+      if (!response.ok) throw new Error(await response.text());
+      const state = (await response.json()) as LayoutStateResponse;
+      setTemplate(state.template);
+      setConfig(state.config);
+      setCanEdit(state.canEdit);
+      setStatus({ type: "idle", message: "Ajuste las coordenadas en píxeles de la plantilla original." });
+    } catch (error) {
+      setStatus({
+        type: "error",
+        message: error instanceof Error ? error.message : "No se pudo cargar la calibración.",
+      });
+    }
+  }, [layoutType]);
 
   useEffect(() => {
-    let cancelled = false;
-
-    async function loadLayout() {
-      try {
-        const response = await fetch("/api/print/layout", { cache: "no-store" });
-        if (!response.ok) throw new Error(await response.text());
-        const state = (await response.json()) as TicketPrintLayoutState;
-        if (cancelled) return;
-        setTemplate(state.template);
-        setLayout(state.layout);
-        setStatus({ type: "idle", message: "Ajuste los centros y guarde cuando coincidan con la plantilla física." });
-      } catch (error) {
-        if (cancelled) return;
-        setStatus({
-          type: "error",
-          message: error instanceof Error ? error.message : "No se pudo cargar la calibración.",
-        });
-      }
-    }
-
     loadLayout();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  }, [loadLayout]);
 
-  const step = fineMode ? FINE_STEP_PERCENT : STEP_PERCENT;
-  const calibrationPdfUrl = useMemo(() => buildCalibrationPdfUrl(layout), [layout]);
+  const previewUrl = useMemo(
+    () => `/api/ticket-layouts/${layoutType}/preview?ticketCode=${TEST_TICKET_CODE}&v=${previewKey}`,
+    [layoutType, previewKey],
+  );
+
+  const calibrationPdfUrl = useMemo(
+    () => (layoutType === "physical" ? buildCalibrationPdfUrl(config) : null),
+    [layoutType, config],
+  );
+
+  function patchActiveBox(patch: Partial<OverlayBox>) {
+    setConfig((current) => updateTargetBox(current, activeTarget.kind, activeTarget.index, patch));
+  }
 
   function move(dx: number, dy: number) {
-    setLayout((current) => {
-      if (target === "qr") {
-        return {
-          ...current,
-          qrCenterXPercent: clamp(current.qrCenterXPercent + dx),
-          qrCenterYPercent: clamp(current.qrCenterYPercent + dy),
-        };
-      }
-
-      return {
-        ...current,
-        codeCenterXPercent: clamp(current.codeCenterXPercent + dx),
-        codeCenterYPercent: clamp(current.codeCenterYPercent + dy),
-      };
+    patchActiveBox({
+      x: Math.max(0, activeBox.x + dx),
+      y: Math.max(0, activeBox.y + dy),
     });
   }
 
   async function saveLayout() {
-    setStatus({ type: "loading", message: "Guardando calibración..." });
+    if (!canEdit) {
+      setStatus({ type: "error", message: "No tiene permiso para guardar la calibración." });
+      return;
+    }
 
+    setStatus({ type: "loading", message: "Guardando configuración..." });
     try {
-      const response = await fetch("/api/print/layout", {
+      const response = await fetch(`/api/ticket-layouts/${layoutType}`, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify(layout),
+        body: JSON.stringify({ config }),
       });
       if (!response.ok) throw new Error(await response.text());
-      const state = (await response.json()) as TicketPrintLayoutState;
+      const state = (await response.json()) as LayoutStateResponse;
+      setConfig(state.config);
       setTemplate(state.template);
-      setLayout(state.layout);
-      setStatus({ type: "success", message: "Calibración guardada correctamente." });
+      setStatus({ type: "success", message: "Configuración guardada correctamente." });
     } catch (error) {
       setStatus({
         type: "error",
-        message: error instanceof Error ? error.message : "No se pudo guardar el layout.",
+        message: error instanceof Error ? error.message : "No se pudo guardar la configuración.",
       });
     }
+  }
+
+  async function restoreDefaults() {
+    if (!canEdit) {
+      setStatus({ type: "error", message: "No tiene permiso para restaurar la calibración." });
+      return;
+    }
+
+    setStatus({ type: "loading", message: "Restaurando valores..." });
+    try {
+      const response = await fetch(`/api/ticket-layouts/${layoutType}`, { method: "DELETE" });
+      if (!response.ok) throw new Error(await response.text());
+      const state = (await response.json()) as LayoutStateResponse;
+      setConfig(state.config);
+      setTemplate(state.template);
+      setPreviewKey((value) => value + 1);
+      setStatus({ type: "success", message: "Valores restaurados." });
+    } catch (error) {
+      setStatus({
+        type: "error",
+        message: error instanceof Error ? error.message : "No se pudo restaurar la calibración.",
+      });
+    }
+  }
+
+  function refreshPreview() {
+    setPreviewKey((value) => value + 1);
+    setStatus({ type: "idle", message: "Vista previa actualizada." });
   }
 
   return (
@@ -150,14 +235,11 @@ export function PrintCalibrationPanel() {
         <CardHeader>
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-primary">Calibración de impresión</p>
-              <CardTitle>Plantilla física Pink Floyd</CardTitle>
-              <CardDescription>
-                Mueva los centros por porcentaje. El QR final mide {formatPoint(QR_WIDTH_POINTS)} x {formatPoint(QR_HEIGHT_POINTS)} (2.2 cm × 2.2 cm en Canva) en la plantilla.
-              </CardDescription>
+              <CardTitle>{title}</CardTitle>
+              <CardDescription>{description}</CardDescription>
             </div>
             <Badge variant="outline">
-              {template.width} x {template.height}
+              {template.width} × {template.height} px
             </Badge>
           </div>
         </CardHeader>
@@ -170,87 +252,162 @@ export function PrintCalibrationPanel() {
         </Alert>
       )}
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Plantilla</CardTitle>
-            <CardDescription>Cruz roja: centro QR. Rectángulo azul: tamaño QR. Cruz verde: centro del código.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto overscroll-x-contain rounded-lg border border-border bg-muted/30 p-3">
-              <div className="relative mx-auto w-full max-w-full min-w-[280px] sm:min-w-[480px] lg:min-w-[720px]" style={{ aspectRatio: `${template.width} / ${template.height}` }}>
-                <img
-                  src={TICKET_TEMPLATE_PUBLIC_PATH}
-                  alt="Plantilla de boleto Pink Floyd"
-                  className="absolute inset-0 h-full w-full select-none object-contain"
-                  draggable={false}
-                />
-
-                <div
-                  className="absolute -translate-x-1/2 -translate-y-1/2 border-2 border-blue-600 bg-blue-500/10"
-                  style={qrBoxStyle(layout, template)}
-                  aria-hidden="true"
-                />
-                <div
-                  className="absolute h-8 w-8 -translate-x-1/2 -translate-y-1/2"
-                  style={centerStyle(layout.qrCenterXPercent, layout.qrCenterYPercent)}
-                  aria-hidden="true"
-                >
-                  <span className="absolute left-0 top-1/2 h-0.5 w-8 -translate-y-1/2 bg-red-600" />
-                  <span className="absolute left-1/2 top-0 h-8 w-0.5 -translate-x-1/2 bg-red-600" />
-                </div>
-                <div
-                  className="absolute h-8 w-8 -translate-x-1/2 -translate-y-1/2"
-                  style={centerStyle(layout.codeCenterXPercent, layout.codeCenterYPercent)}
-                  aria-hidden="true"
-                >
-                  <span className="absolute left-0 top-1/2 h-0.5 w-8 -translate-y-1/2 bg-emerald-600" />
-                  <span className="absolute left-1/2 top-0 h-8 w-0.5 -translate-x-1/2 bg-emerald-600" />
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Coordenadas actuales</CardTitle>
-              <CardDescription>Valores guardados como porcentaje de ancho/alto de la plantilla.</CardDescription>
+              <CardTitle className="text-base">Plantilla</CardTitle>
+              <CardDescription>Rectángulos verdes: código. Rectángulos azules: QR.</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4 text-sm">
-              <div className="rounded-md border border-border p-3">
-                <p className="font-semibold text-red-700">Centro QR</p>
-                <p>X: {formatPercent(layout.qrCenterXPercent)}</p>
-                <p>Y: {formatPercent(layout.qrCenterYPercent)}</p>
-              </div>
-              <div className="rounded-md border border-border p-3">
-                <p className="font-semibold text-emerald-700">Centro del código</p>
-                <p>X: {formatPercent(layout.codeCenterXPercent)}</p>
-                <p>Y: {formatPercent(layout.codeCenterYPercent)}</p>
-              </div>
-              <div className="rounded-md border border-border p-3">
-                <p className="font-semibold">Template</p>
-                <p>width = {template.width}</p>
-                <p>height = {template.height}</p>
+            <CardContent>
+              <div className="overflow-x-auto overscroll-x-contain rounded-lg border border-border bg-muted/30 p-3">
+                <div
+                  className="relative mx-auto w-full max-w-full min-w-[280px] sm:min-w-[480px] lg:min-w-[640px]"
+                  style={{ aspectRatio: `${template.width} / ${template.height}` }}
+                >
+                  <img
+                    src={templatePath}
+                    alt={title}
+                    className="absolute inset-0 h-full w-full select-none object-contain"
+                    draggable={false}
+                  />
+                  {config.codeBoxes.map((box, index) => (
+                    <div
+                      key={`code-${index}`}
+                      className="absolute border-2 border-emerald-600 bg-emerald-500/10 pointer-events-none"
+                      style={overlayStyle(box, template)}
+                      aria-hidden="true"
+                    />
+                  ))}
+                  {config.qrBoxes.map((box, index) => (
+                    <div
+                      key={`qr-${index}`}
+                      className="absolute border-2 border-blue-600 bg-blue-500/10 pointer-events-none"
+                      style={overlayStyle(box, template)}
+                      aria-hidden="true"
+                    />
+                  ))}
+                </div>
               </div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Mover {target === "qr" ? "QR" : "código"}</CardTitle>
-              <CardDescription>Use ajuste fino para movimientos de 0.025%.</CardDescription>
+              <CardTitle className="text-base">Vista previa en vivo</CardTitle>
+              <CardDescription>Boleto de prueba: {TEST_TICKET_CODE}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto rounded-lg border border-border bg-muted/20 p-3">
+                <img
+                  src={previewUrl}
+                  alt={`Vista previa ${title}`}
+                  className="mx-auto max-h-[480px] w-auto object-contain"
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Elemento activo</CardTitle>
+            </CardHeader>
+            <CardContent className="grid grid-cols-2 gap-2">
+              {targets.map((target) => (
+                <Button
+                  key={target.id}
+                  type="button"
+                  size="sm"
+                  variant={selectedTarget === target.id ? "default" : "outline"}
+                  onClick={() => setSelectedTarget(target.id)}
+                >
+                  {target.label}
+                </Button>
+              ))}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Coordenadas (px)</CardTitle>
+              <CardDescription>{activeTarget.label}</CardDescription>
+            </CardHeader>
+            <CardContent className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label htmlFor={`${layoutType}-x`}>X</Label>
+                <Input
+                  id={`${layoutType}-x`}
+                  type="number"
+                  value={activeBox.x}
+                  onChange={(e) => patchActiveBox({ x: Number(e.target.value) || 0 })}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor={`${layoutType}-y`}>Y</Label>
+                <Input
+                  id={`${layoutType}-y`}
+                  type="number"
+                  value={activeBox.y}
+                  onChange={(e) => patchActiveBox({ y: Number(e.target.value) || 0 })}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor={`${layoutType}-w`}>Ancho</Label>
+                <Input
+                  id={`${layoutType}-w`}
+                  type="number"
+                  value={activeBox.width}
+                  onChange={(e) => patchActiveBox({ width: Math.max(1, Number(e.target.value) || 1) })}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor={`${layoutType}-h`}>Alto</Label>
+                <Input
+                  id={`${layoutType}-h`}
+                  type="number"
+                  value={activeBox.height}
+                  onChange={(e) => patchActiveBox({ height: Math.max(1, Number(e.target.value) || 1) })}
+                />
+              </div>
+              {activeTarget.kind === "code" && (
+                <div className="col-span-2 space-y-1">
+                  <Label htmlFor={`${layoutType}-font`}>Tamaño de fuente</Label>
+                  <Input
+                    id={`${layoutType}-font`}
+                    type="number"
+                    value={config.codeFontSize}
+                    onChange={(e) =>
+                      setConfig((current) => ({
+                        ...current,
+                        codeFontSize: Math.max(8, Number(e.target.value) || current.codeFontSize),
+                      }))
+                    }
+                  />
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Mover</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-2">
-                <Button type="button" variant={target === "qr" ? "default" : "outline"} onClick={() => setTarget("qr")}>Mover QR</Button>
-                <Button type="button" variant={target === "code" ? "default" : "outline"} onClick={() => setTarget("code")}>Mover código</Button>
+              <div className="grid grid-cols-3 gap-2">
+                {([1, 5, 10] as StepSize[]).map((value) => (
+                  <Button
+                    key={value}
+                    type="button"
+                    size="sm"
+                    variant={step === value ? "default" : "outline"}
+                    onClick={() => setStep(value)}
+                  >
+                    {value} px
+                  </Button>
+                ))}
               </div>
-
-              <Button type="button" variant={fineMode ? "secondary" : "outline"} className="w-full" onClick={() => setFineMode((value) => !value)}>
-                {fineMode ? "Ajuste fino activo" : "Activar ajuste fino"}
-              </Button>
 
               <div className="mx-auto grid w-40 grid-cols-3 gap-2">
                 <span />
@@ -270,21 +427,68 @@ export function PrintCalibrationPanel() {
               </div>
 
               <div className="flex flex-col gap-2">
-                <Button type="button" onClick={saveLayout} disabled={status.type === "loading"}>
+                <Button type="button" variant="secondary" onClick={refreshPreview}>
+                  <Eye className="h-4 w-4" />
+                  Vista previa
+                </Button>
+                <Button type="button" variant="outline" onClick={restoreDefaults} disabled={!canEdit}>
+                  <RotateCcw className="h-4 w-4" />
+                  Restaurar valores
+                </Button>
+                <Button type="button" onClick={saveLayout} disabled={!canEdit || status.type === "loading"}>
                   <Save className="h-4 w-4" />
-                  Guardar calibración
+                  Guardar configuración
                 </Button>
-                <Button asChild variant="secondary">
-                  <a href={calibrationPdfUrl}>
-                    <FileDown className="h-4 w-4" />
-                    Descargar PDF calibración
-                  </a>
+                <Button type="button" variant="secondary" onClick={() => window.open(previewUrl, "_blank")}>
+                  <Sparkles className="h-4 w-4" />
+                  Generar prueba
                 </Button>
+                {calibrationPdfUrl && (
+                  <Button asChild variant="outline">
+                    <a href={calibrationPdfUrl}>
+                      <FileDown className="h-4 w-4" />
+                      PDF calibración (físico)
+                    </a>
+                  </Button>
+                )}
               </div>
             </CardContent>
           </Card>
         </div>
       </div>
     </div>
+  );
+}
+
+export function PrintCalibrationPanel() {
+  return (
+    <Tabs defaultValue="physical" className="space-y-6">
+      <TabsList className="grid w-full max-w-md grid-cols-2">
+        <TabsTrigger value="physical">Boleto físico</TabsTrigger>
+        <TabsTrigger value="digital">Boleto digital</TabsTrigger>
+      </TabsList>
+
+      <TabsContent value="physical">
+        <CalibrationTab
+          layoutType="physical"
+          templatePath={PHYSICAL_TICKET_TEMPLATE_PATH}
+          defaults={DEFAULT_PHYSICAL_TICKET_LAYOUT}
+          targets={PHYSICAL_TARGETS}
+          title="Boleto físico"
+          description="Dos secciones desprendibles: el mismo código y el mismo QR en ambos lados."
+        />
+      </TabsContent>
+
+      <TabsContent value="digital">
+        <CalibrationTab
+          layoutType="digital"
+          templatePath={DIGITAL_TICKET_TEMPLATE_PATH}
+          defaults={DEFAULT_DIGITAL_TICKET_LAYOUT}
+          targets={DIGITAL_TARGETS}
+          title="Boleto digital"
+          description="Un número de boleto y un código QR sobre la plantilla digital."
+        />
+      </TabsContent>
+    </Tabs>
   );
 }

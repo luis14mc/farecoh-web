@@ -17,6 +17,7 @@
         "keep-real-reservations:execute": "node --experimental-strip-types scripts/keep-real-reservations.ts --execute",
         "generate:print-tickets": "node --experimental-strip-types scripts/generate-print-tickets.ts",
         "test:print-layout-pdf": "node --experimental-strip-types scripts/test-print-layout-pdf.ts",
+        "verify:ticket-immutability": "node --experimental-strip-types scripts/verify-ticket-immutability.ts",
         "optimize:foundation-photos": "node --experimental-strip-types scripts/optimize-foundation-photos.ts",
         "optimize:site-images": "node --experimental-strip-types scripts/optimize-site-images.ts"
     },

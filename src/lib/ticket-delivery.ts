@@ -1,7 +1,16 @@
-import sharp from "sharp";
-import QRCode from "qrcode";
-import { access, readFile } from "node:fs/promises";
-import path from "node:path";
+import { composeTicketPng, buildTicketQrUrl } from "./ticket-image-compose.ts";
+import {
+  buildDigitalTicketFilename,
+  restoreDigitalTicketLayout,
+} from "./ticket-layouts/digital-ticket-layout.ts";
+import {
+  readTicketLayoutConfig,
+  loadDigitalTemplateBytes,
+  loadPhysicalTemplateBytes,
+} from "./ticket-layout-config.ts";
+import { restorePhysicalTicketLayout } from "./ticket-layouts/physical-ticket-layout.ts";
+
+export { buildTicketQrUrl, buildDigitalTicketFilename };
 
 export function isPngBuffer(buffer: Buffer): boolean {
   return (
@@ -13,81 +22,54 @@ export function isPngBuffer(buffer: Buffer): boolean {
   );
 }
 
-async function readTemplateFromFilesystem(): Promise<Buffer | null> {
-  const candidates = [
-    path.join(process.cwd(), "public/templates/ticket-digital-pink-floyd.png"),
-    path.join(process.cwd(), "public", "templates", "ticket-digital-pink-floyd.png"),
-  ];
+export async function generateDigitalTicketImage(
+  ticketCode: string,
+  qrToken: string,
+): Promise<Buffer> {
+  const [{ config }, templateBuffer] = await Promise.all([
+    readTicketLayoutConfig("digital"),
+    loadDigitalTemplateBytes(),
+  ]);
 
-  for (const candidate of candidates) {
-    try {
-      await access(candidate);
-      return await readFile(candidate);
-    } catch {
-      // try next path
-    }
-  }
-  return null;
+  return composeTicketPng(templateBuffer, config, ticketCode, qrToken);
 }
 
-async function loadBundledTemplateBytes(): Promise<Buffer | null> {
-  try {
-    const { loadBundledDigitalTicketTemplateBytes } = await import("./ticket-delivery-bundle.ts");
-    return loadBundledDigitalTicketTemplateBytes();
-  } catch {
-    return null;
-  }
-}
+export async function generatePhysicalTicketImage(
+  ticketCode: string,
+  qrToken: string,
+): Promise<Buffer> {
+  const [{ config }, templateBuffer] = await Promise.all([
+    readTicketLayoutConfig("physical"),
+    loadPhysicalTemplateBytes(),
+  ]);
 
-export async function loadDigitalTemplateBytes(): Promise<Buffer> {
-  const fromDisk = await readTemplateFromFilesystem();
-  if (fromDisk) {
-    if (!isPngBuffer(fromDisk)) {
-      throw new Error("La plantilla digital en disco no es un PNG válido.");
-    }
-    return fromDisk;
-  }
-
-  const fromBundle = await loadBundledTemplateBytes();
-  if (fromBundle) {
-    if (!isPngBuffer(fromBundle)) {
-      throw new Error("La plantilla digital empaquetada no es un PNG válido.");
-    }
-    return fromBundle;
-  }
-
-  throw new Error("No se pudo cargar la plantilla digital (ni desde disco ni desde bundle).");
-}
-
-export async function generateTicketImage(ticketCode: string, qrToken: string): Promise<Buffer> {
-  const templateBuffer = await loadDigitalTemplateBytes();
-
-  // Generate QR code for the specific public verification URL (360x360 px)
-  const qrUrl = `https://www.farecoh.org/t/${qrToken}`;
-  const qrBuffer = await QRCode.toBuffer(qrUrl, {
-    type: "png",
-    width: 360,
-    margin: 1,
-    errorCorrectionLevel: "M",
-    color: { dark: "#000000", light: "#ffffff" }
+  return composeTicketPng(templateBuffer, config, ticketCode, qrToken, {
+    codeFill: "#EDE8FA",
+    codeFontWeight: 700,
   });
+}
 
-  // Generate SVG overlay for the ticket code text (centered vertically/horizontally)
-  const svgText = `
-    <svg width="400" height="80" viewBox="0 0 400 80" xmlns="http://www.w3.org/2000/svg">
-      <text x="200" y="52" font-family="'Montserrat', 'Helvetica', 'Arial', sans-serif" font-size="34" font-weight="900" fill="#FFFFFF" text-anchor="middle" letter-spacing="1.5px">${ticketCode}</text>
-    </svg>
-  `;
-  const svgTextBuffer = Buffer.from(svgText);
+/** @deprecated Use generateDigitalTicketImage */
+export async function generateTicketImage(ticketCode: string, qrToken: string): Promise<Buffer> {
+  return generateDigitalTicketImage(ticketCode, qrToken);
+}
 
-  // Composite the QR and the code text onto the template
-  const compositeBuffer = await sharp(templateBuffer)
-    .composite([
-      { input: qrBuffer, top: 910, left: 360 }, // Center X=360, Y=910
-      { input: svgTextBuffer, top: 1400, left: 340 } // Center X=340, Y=1400
-    ])
-    .png()
-    .toBuffer();
+export async function generateLayoutPreviewImage(
+  layoutType: "physical" | "digital",
+  ticketCode: string,
+  qrToken?: string,
+): Promise<Buffer> {
+  const token = qrToken ?? "preview-token-not-for-validation";
+  const templateBuffer =
+    layoutType === "physical" ? await loadPhysicalTemplateBytes() : await loadDigitalTemplateBytes();
+  const { config } = await readTicketLayoutConfig(layoutType);
 
-  return compositeBuffer;
+  return composeTicketPng(templateBuffer, config, ticketCode, token, {
+    codeFill: layoutType === "physical" ? "#EDE8FA" : "#FFFFFF",
+    codeFontWeight: layoutType === "physical" ? 700 : 900,
+  });
+}
+
+export function buildPhysicalTicketFilename(ticketCode: string): string {
+  return `farecoh-physical-${ticketCode}.png`;
 }

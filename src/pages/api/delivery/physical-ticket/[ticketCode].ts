@@ -2,8 +2,8 @@ import type { APIRoute } from "astro";
 import { requireAdminAccess } from "@/lib/rbac";
 import { fetchDeliverableTicketFromContext } from "@/lib/ticket-delivery-access";
 import {
-  buildDigitalTicketFilename,
-  generateDigitalTicketImage,
+  buildPhysicalTicketFilename,
+  generatePhysicalTicketImage,
 } from "@/lib/ticket-delivery";
 
 export const GET: APIRoute = async (context) => {
@@ -12,20 +12,19 @@ export const GET: APIRoute = async (context) => {
     return new Response("No autorizado.", { status: 403 });
   }
 
-  const { code } = context.params;
-  if (!code) {
+  const { ticketCode } = context.params;
+  if (!ticketCode) {
     return new Response("Código de boleto no especificado.", { status: 400 });
   }
 
   try {
-    const { ticket, error } = await fetchDeliverableTicketFromContext(context, code);
+    const { ticket, error } = await fetchDeliverableTicketFromContext(context, ticketCode);
     if (!ticket) {
-      const status = error === "Boleto no encontrado." ? 404 : 400;
-      return new Response(error ?? "Boleto no encontrado.", { status });
+      return new Response(error ?? "Boleto no encontrado.", { status: 404 });
     }
 
-    const pngBuffer = await generateDigitalTicketImage(ticket.ticket_code, ticket.qr_token);
-    const filename = buildDigitalTicketFilename(ticket.ticket_code);
+    const pngBuffer = await generatePhysicalTicketImage(ticket.ticket_code, ticket.qr_token);
+    const filename = buildPhysicalTicketFilename(ticket.ticket_code);
     const isDownload = context.url.searchParams.get("download") === "true";
 
     return new Response(pngBuffer, {
@@ -39,7 +38,7 @@ export const GET: APIRoute = async (context) => {
       },
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Error inesperado generando la imagen del boleto.";
+    const message = error instanceof Error ? error.message : "Error inesperado generando la imagen física.";
     return new Response(message, { status: 500 });
   }
 };

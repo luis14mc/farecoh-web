@@ -1,5 +1,6 @@
 import type { PDFPage } from "pdf-lib";
 import { rgb } from "pdf-lib";
+import type { OverlayBox, TicketLayoutConfig } from "./ticket-layouts/types.ts";
 import { CODE_FONT_SIZE } from "./ticket-print-constants.ts";
 import { QR_HEIGHT_POINTS, QR_WIDTH_POINTS } from "./ticket-print-measurements.ts";
 import type { TicketPrintLayout, TicketTemplateDimensions } from "../types/ticket-print-layout.ts";
@@ -41,6 +42,20 @@ export function qrImageRect(layout: TicketPrintLayout, template: TicketTemplateD
     width: QR_WIDTH_POINTS,
     height: QR_HEIGHT_POINTS,
   };
+}
+
+export function overlayBoxToPdfRect(pageHeight: number, box: OverlayBox) {
+  return {
+    x: box.x,
+    y: topLeftYToPdf(pageHeight, box.y, box.height),
+    width: box.width,
+    height: box.height,
+  };
+}
+
+export function codeTextBaselineInBox(pageHeight: number, box: OverlayBox, fontSize: number): number {
+  const rect = overlayBoxToPdfRect(pageHeight, box);
+  return rect.y + box.height / 2 - fontSize * 0.34;
 }
 
 function drawCross(page: PDFPage, x: number, y: number, color: ReturnType<typeof rgb>): void {
@@ -88,5 +103,43 @@ export function drawPrintLayoutDebugBoxes(
     y: codeCenter.y + 6,
     size: 20,
     color: rgb(0, 0.72, 0.18),
+  });
+}
+
+export function drawPhysicalLayoutDebugBoxes(
+  page: PDFPage,
+  layout: TicketLayoutConfig,
+  pageHeight: number,
+): void {
+  layout.qrBoxes.forEach((box, index) => {
+    const rect = overlayBoxToPdfRect(pageHeight, box);
+    page.drawRectangle({
+      ...rect,
+      borderColor: rgb(0.1, 0.35, 1),
+      borderWidth: 2,
+    });
+    drawCross(page, rect.x + rect.width / 2, rect.y + rect.height / 2, rgb(1, 0, 0));
+    page.drawText(`QR ${index + 1}`, {
+      x: rect.x + 4,
+      y: rect.y + rect.height + 8,
+      size: 16,
+      color: rgb(1, 0, 0),
+    });
+  });
+
+  layout.codeBoxes.forEach((box, index) => {
+    const rect = overlayBoxToPdfRect(pageHeight, box);
+    page.drawRectangle({
+      ...rect,
+      borderColor: rgb(0, 0.72, 0.18),
+      borderWidth: 2,
+    });
+    drawCross(page, rect.x + rect.width / 2, rect.y + rect.height / 2, rgb(0, 0.72, 0.18));
+    page.drawText(`Code ${index + 1}`, {
+      x: rect.x + 4,
+      y: rect.y + rect.height + 8,
+      size: 16,
+      color: rgb(0, 0.72, 0.18),
+    });
   });
 }
