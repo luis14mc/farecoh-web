@@ -1,6 +1,7 @@
 import sharp from "sharp";
 import QRCode from "qrcode";
 import { resolveDatabaseTicketCode } from "../services/ticket-code.ts";
+import { renderTicketCodeAsPath } from "./render-ticket-code.ts";
 import type { OverlayBox, TicketLayoutConfig } from "./ticket-layouts/types.ts";
 
 export const TICKET_QR_PUBLIC_BASE_URL = "https://www.farecoh.org";
@@ -152,41 +153,7 @@ function resolveCodeTextStyle(
   };
 }
 
-/** Text-only digital overlay — transparent background, no rects. */
-export function createDigitalTicketCodeOverlay(params: {
-  ticketCode: string;
-  width: number;
-  height: number;
-  fontSize: number;
-}): Buffer {
-  const width = Math.round(params.width);
-  const height = Math.round(params.height);
-  const fontSize = Math.round(params.fontSize);
-  const safeCode = escapeXml(params.ticketCode);
-
-  const baselineY = Math.round(height / 2 + fontSize * 0.34);
-
-  return Buffer.from(`
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="${width}"
-      height="${height}"
-      viewBox="0 0 ${width} ${height}"
-    >
-      <text
-        x="${Math.round(width / 2)}"
-        y="${baselineY}"
-        text-anchor="middle"
-        font-family="Arial, Helvetica, sans-serif"
-        font-size="${fontSize}"
-        font-weight="700"
-        fill="#000000"
-      >${safeCode}</text>
-    </svg>
-  `);
-}
-
-/** Same baseline positioning for physical and digital — only color/font differ. */
+/** Physical ticket overlay only — digital uses renderTicketCodeAsPath(). */
 export function buildCodeTextSvg(
   ticketCode: string,
   box: OverlayBox,
@@ -196,12 +163,7 @@ export function buildCodeTextSvg(
   const renderMode = options?.renderMode ?? "physical";
 
   if (renderMode === "digital") {
-    return createDigitalTicketCodeOverlay({
-      ticketCode,
-      width: box.width,
-      height: box.height,
-      fontSize,
-    });
+    throw new Error("Digital ticket codes must be rendered with renderTicketCodeAsPath().");
   }
 
   const style = resolveCodeTextStyle(renderMode, options);
@@ -245,26 +207,35 @@ async function composeDigitalTicketPng(
   const codeBox = layout.codeBoxes[0];
   const qrBox = layout.qrBoxes[0];
 
-  if (!codeBox || !qrBox) {
-    throw new Error("La calibración digital requiere cajas de QR y número de boleto.");
+  if (!codeBox) {
+    throw new Error("Digital ticket code box is missing.");
+  }
+
+  if (!qrBox) {
+    throw new Error("Digital ticket QR box is missing.");
+  }
+
+  if (!qrToken?.trim()) {
+    throw new Error(`Ticket ${ticketCode} has no stored QR token.`);
   }
 
   const renderedTicketCode = resolveDatabaseTicketCode(ticketCode);
   const fontSize = codeBox.fontSize ?? layout.codeFontSize;
 
-  console.info("[digital-ticket-code]", {
+  console.info("[digital-ticket-generation]", {
     requestedTicketCode: logContext?.requestedTicketCode,
     databaseTicketCode: logContext?.databaseTicketCode ?? ticketCode,
     renderedTicketCode,
     codeBox,
-    fontSize,
+    renderingMethod: "opentype-svg-path",
   });
 
-  const ticketCodeOverlay = createDigitalTicketCodeOverlay({
+  const ticketCodeOverlay = await renderTicketCodeAsPath({
     ticketCode: renderedTicketCode,
     width: codeBox.width,
     height: codeBox.height,
     fontSize,
+    fill: "#000000",
   });
 
   const qrUrl = buildTicketQrUrl(qrToken);

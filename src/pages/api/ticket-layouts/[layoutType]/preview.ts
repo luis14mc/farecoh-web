@@ -3,8 +3,7 @@ import { requireAdminAccess } from "@/lib/rbac";
 import { jsonLayoutError, resolveLayoutTypeParam } from "@/lib/ticket-layout-api";
 import { readTicketLayoutConfig } from "@/lib/ticket-layout-config";
 import { generateLayoutPreviewImage } from "@/lib/ticket-delivery";
-
-const TEST_TICKET_CODE = "PF-000001";
+import { CALIBRATION_PREVIEW_TICKET_CODE } from "@/lib/ticket-delivery-production";
 
 export const GET: APIRoute = async (context) => {
   const access = await requireAdminAccess(context, "/admin/printing");
@@ -19,7 +18,8 @@ export const GET: APIRoute = async (context) => {
 
   try {
     await readTicketLayoutConfig(layoutType);
-    const ticketCode = context.url.searchParams.get("ticketCode")?.toUpperCase() ?? TEST_TICKET_CODE;
+    const ticketCode =
+      context.url.searchParams.get("ticketCode")?.toUpperCase() ?? CALIBRATION_PREVIEW_TICKET_CODE;
     const pngBuffer = await generateLayoutPreviewImage(layoutType, ticketCode);
     const filename = `farecoh-${layoutType}-preview-${ticketCode}.png`;
 

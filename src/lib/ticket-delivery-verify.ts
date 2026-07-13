@@ -4,6 +4,10 @@ import { buildTicketQrUrl } from "./ticket-image-compose.ts";
 import { generateDigitalTicketImage } from "./ticket-delivery.ts";
 import { assertTicketIdentity, hashQrToken } from "./ticket-delivery-identity.ts";
 import type { DeliverableTicket } from "./ticket-delivery-access.ts";
+import {
+  assertStoredQrToken,
+  resolveProductionTicketCode,
+} from "./ticket-delivery-production.ts";
 import { normalizeTicketCode } from "../services/ticket-code.ts";
 
 export interface DigitalTicketIdentityReport {
@@ -87,13 +91,13 @@ export async function produceDigitalTicketPng(
   ticket: DeliverableTicket,
   requestedTicketCode?: string,
 ): Promise<Buffer> {
-  if (!ticket.qr_token?.trim()) {
-    throw new Error("El boleto no tiene qr_token almacenado.");
-  }
+  assertStoredQrToken(ticket);
 
-  if (requestedTicketCode) {
-    assertTicketIdentity(requestedTicketCode, ticket);
-  }
+  const renderedTicketCode = requestedTicketCode
+    ? resolveProductionTicketCode(ticket, requestedTicketCode)
+    : resolveProductionTicketCode(ticket, ticket.ticket_code);
+
+  assertTicketIdentity(renderedTicketCode, ticket);
 
   return generateDigitalTicketImage(ticket.ticket_code, ticket.qr_token, {
     requestedTicketCode,

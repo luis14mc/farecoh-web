@@ -21,6 +21,7 @@ import {
   DIGITAL_TICKET_TEMPLATE_PATH,
   DEFAULT_DIGITAL_TICKET_LAYOUT,
 } from "@/lib/ticket-layouts/digital-ticket-layout";
+import { CALIBRATION_PREVIEW_TICKET_CODE } from "@/lib/ticket-delivery-production";
 import {
   PHYSICAL_TICKET_TEMPLATE_PATH,
   DEFAULT_PHYSICAL_TICKET_LAYOUT,
@@ -56,7 +57,7 @@ async function readApiError(response: Response): Promise<string> {
   }
 }
 
-const TEST_TICKET_CODE = "PF-000001";
+const TEST_TICKET_CODE = CALIBRATION_PREVIEW_TICKET_CODE;
 
 const PHYSICAL_TARGETS = [
   { id: "code0", label: "Código izquierdo", kind: "code" as const, index: 0 },

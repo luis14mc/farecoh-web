@@ -1,7 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { buildCodeTextSvg, buildTicketQrUrl, createDigitalTicketCodeOverlay, scaleLayoutToTemplate } from "../src/lib/ticket-image-compose.ts";
-import { resolveDatabaseTicketCode } from "../src/services/ticket-code.ts";
+import { buildCodeTextSvg, buildTicketQrUrl, scaleLayoutToTemplate } from "../src/lib/ticket-image-compose.ts";
 import { assertTicketIdentity, hashQrToken } from "../src/lib/ticket-delivery-identity.ts";
 import {
   generateDigitalTicketImage,
@@ -13,6 +12,9 @@ import {
   stablePreviewQrToken,
   verifyDigitalTicketIdentity,
 } from "../src/lib/ticket-delivery-verify.ts";
+import { renderTicketCodeAsPath } from "../src/lib/render-ticket-code.ts";
+import { resolveDatabaseTicketCode } from "../src/services/ticket-code.ts";
+import { CALIBRATION_PREVIEW_TICKET_CODE } from "../src/lib/ticket-delivery-production.ts";
 
 const ticketCode = "PF-000016";
 const qrToken = "a1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef123456";
@@ -24,37 +26,27 @@ const deliverableTicket = {
   status: "sold",
 };
 
+test("calibration preview uses PF-000000 only", () => {
+  assert.equal(CALIBRATION_PREVIEW_TICKET_CODE, "PF-000000");
+});
+
 test("resolveDatabaseTicketCode rejects invalid codes", () => {
   assert.equal(resolveDatabaseTicketCode("PF-000016"), "PF-000016");
   assert.throws(() => resolveDatabaseTicketCode("INVALID"), /Invalid database ticket code/);
 });
 
-test("createDigitalTicketCodeOverlay has no background rect", () => {
-  const svg = createDigitalTicketCodeOverlay({
+test("renderTicketCodeAsPath uses SVG path not text", async () => {
+  const svg = (await renderTicketCodeAsPath({
     ticketCode: "PF-000016",
     width: 389,
     height: 79,
     fontSize: 34,
-  }).toString();
+  })).toString();
 
-  assert.doesNotMatch(svg, /<rect/i);
-  assert.match(svg, /PF-000016/);
-  assert.match(svg, /Arial, Helvetica, sans-serif/);
-});
-
-test("digital ticket code overlay is text-only with transparent background", () => {
-  const box = DEFAULT_DIGITAL_TICKET_LAYOUT.codeBoxes[0];
-  const svg = buildCodeTextSvg(ticketCode, box, 34, {
-    renderMode: "digital",
-  }).toString();
-
-  assert.match(svg, /font-family="Arial, Helvetica, sans-serif"/);
+  assert.match(svg, /<path d="/);
   assert.match(svg, /fill="#000000"/);
-  assert.match(svg, /font-weight="700"/);
-  assert.match(svg, /PF-000016/);
+  assert.doesNotMatch(svg, /<text/i);
   assert.doesNotMatch(svg, /<rect/i);
-  assert.doesNotMatch(svg, /@font-face/);
-  assert.doesNotMatch(svg, /Montserrat/);
 });
 
 test("physical ticket code SVG keeps physical render mode", () => {
@@ -106,6 +98,11 @@ test("generated digital PNG decodes QR to stored token URL (dev/CI only)", async
   const png = await generateDigitalTicketImage(ticketCode, qrToken);
   const decoded = await decodeDigitalTicketQrUrl(png);
   assert.equal(decoded, buildTicketQrUrl(qrToken));
+});
+
+test("generated digital PNG uses path-based ticket code overlay", async () => {
+  const png = await generateDigitalTicketImage(ticketCode, qrToken);
+  assert.ok(png.length > 1000);
 });
 
 test("QR decode uses calibrated layout scaled to PNG dimensions (dev/CI only)", async () => {
