@@ -22,3 +22,11 @@ export function normalizeTicketCode(ticketCode: string): string {
 export function isTicketCode(value: string): boolean {
   return /^PF-\d{6}$/.test(normalizeTicketCode(value));
 }
+
+export function resolveDatabaseTicketCode(ticketCode: string): string {
+  const normalized = String(ticketCode).trim().toUpperCase();
+  if (!/^PF-\d{6}$/.test(normalized)) {
+    throw new Error(`Invalid database ticket code: ${normalized}`);
+  }
+  return normalized;
+}

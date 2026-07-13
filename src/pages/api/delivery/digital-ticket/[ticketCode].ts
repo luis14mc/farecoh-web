@@ -23,7 +23,7 @@ export const GET: APIRoute = async (context) => {
       return new Response(lookup.error ?? "Boleto no encontrado.", { status });
     }
 
-    const pngBuffer = await produceDigitalTicketPng(lookup.ticket);
+    const pngBuffer = await produceDigitalTicketPng(lookup.ticket, ticketCode);
     const filename = buildDigitalTicketFilename(lookup.ticket.ticket_code);
     const isDownload = context.url.searchParams.get("download") === "true";
 

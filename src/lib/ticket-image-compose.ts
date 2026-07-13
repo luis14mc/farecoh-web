@@ -1,9 +1,6 @@
 import sharp from "sharp";
 import QRCode from "qrcode";
-import {
-  TICKET_CODE_FONT_FAMILY,
-  buildEmbeddedTicketCodeFontFace,
-} from "./ticket-code-font.ts";
+import { resolveDatabaseTicketCode } from "../services/ticket-code.ts";
 import type { OverlayBox, TicketLayoutConfig } from "./ticket-layouts/types.ts";
 
 export const TICKET_QR_PUBLIC_BASE_URL = "https://www.farecoh.org";
@@ -20,7 +17,7 @@ export interface CodeTextStyle {
 export const DIGITAL_CODE_TEXT_STYLE: CodeTextStyle = {
   fill: "#000000",
   fontWeight: 700,
-  fontFamily: TICKET_CODE_FONT_FAMILY,
+  fontFamily: "Arial, Helvetica, sans-serif",
 };
 
 export const PHYSICAL_CODE_TEXT_STYLE: CodeTextStyle = {
@@ -155,6 +152,40 @@ function resolveCodeTextStyle(
   };
 }
 
+/** Text-only digital overlay — transparent background, no rects. */
+export function createDigitalTicketCodeOverlay(params: {
+  ticketCode: string;
+  width: number;
+  height: number;
+  fontSize: number;
+}): Buffer {
+  const width = Math.round(params.width);
+  const height = Math.round(params.height);
+  const fontSize = Math.round(params.fontSize);
+  const safeCode = escapeXml(params.ticketCode);
+
+  const baselineY = Math.round(height / 2 + fontSize * 0.34);
+
+  return Buffer.from(`
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="${width}"
+      height="${height}"
+      viewBox="0 0 ${width} ${height}"
+    >
+      <text
+        x="${Math.round(width / 2)}"
+        y="${baselineY}"
+        text-anchor="middle"
+        font-family="Arial, Helvetica, sans-serif"
+        font-size="${fontSize}"
+        font-weight="700"
+        fill="#000000"
+      >${safeCode}</text>
+    </svg>
+  `);
+}
+
 /** Same baseline positioning for physical and digital — only color/font differ. */
 export function buildCodeTextSvg(
   ticketCode: string,
@@ -163,28 +194,21 @@ export function buildCodeTextSvg(
   options?: { fill?: string; fontWeight?: number; renderMode?: CodeTextRenderMode },
 ): Buffer {
   const renderMode = options?.renderMode ?? "physical";
+
+  if (renderMode === "digital") {
+    return createDigitalTicketCodeOverlay({
+      ticketCode,
+      width: box.width,
+      height: box.height,
+      fontSize,
+    });
+  }
+
   const style = resolveCodeTextStyle(renderMode, options);
   const safeCode = escapeXml(ticketCode);
   const centerX = box.width / 2;
   const centerY = box.height / 2 + fontSize * 0.35;
   const letterSpacingAttr = style.letterSpacing ? ` letter-spacing="${style.letterSpacing}"` : "";
-
-  if (renderMode === "digital") {
-    const fontFace = buildEmbeddedTicketCodeFontFace();
-    const svg = `<svg width="${box.width}" height="${box.height}" viewBox="0 0 ${box.width} ${box.height}" xmlns="http://www.w3.org/2000/svg">
-  <defs><style type="text/css"><![CDATA[${fontFace}]]></style></defs>
-  <text
-    x="${centerX}"
-    y="${centerY}"
-    font-family="${TICKET_CODE_FONT_FAMILY}"
-    font-size="${fontSize}"
-    font-weight="${style.fontWeight}"
-    fill="${style.fill}"
-    text-anchor="middle"${letterSpacingAttr}
-  >${safeCode}</text>
-</svg>`;
-    return Buffer.from(svg);
-  }
 
   const svg = `<svg width="${box.width}" height="${box.height}" viewBox="0 0 ${box.width} ${box.height}" xmlns="http://www.w3.org/2000/svg">
   <text
@@ -211,6 +235,54 @@ async function buildQrPng(qrUrl: string, size: number): Promise<Buffer> {
   });
 }
 
+async function composeDigitalTicketPng(
+  templateBuffer: Buffer,
+  layout: TicketLayoutConfig,
+  ticketCode: string,
+  qrToken: string,
+  logContext?: { requestedTicketCode?: string; databaseTicketCode?: string },
+): Promise<Buffer> {
+  const codeBox = layout.codeBoxes[0];
+  const qrBox = layout.qrBoxes[0];
+
+  if (!codeBox || !qrBox) {
+    throw new Error("La calibración digital requiere cajas de QR y número de boleto.");
+  }
+
+  const renderedTicketCode = resolveDatabaseTicketCode(ticketCode);
+  const fontSize = codeBox.fontSize ?? layout.codeFontSize;
+
+  console.info("[digital-ticket-code]", {
+    requestedTicketCode: logContext?.requestedTicketCode,
+    databaseTicketCode: logContext?.databaseTicketCode ?? ticketCode,
+    renderedTicketCode,
+    codeBox,
+    fontSize,
+  });
+
+  const ticketCodeOverlay = createDigitalTicketCodeOverlay({
+    ticketCode: renderedTicketCode,
+    width: codeBox.width,
+    height: codeBox.height,
+    fontSize,
+  });
+
+  const qrUrl = buildTicketQrUrl(qrToken);
+  const maxQrSize = Math.max(qrBox.width, qrBox.height);
+  const qrBase = await buildQrPng(qrUrl, maxQrSize);
+  const qrBuffer =
+    qrBox.width === maxQrSize && qrBox.height === maxQrSize
+      ? qrBase
+      : await sharp(qrBase).resize(qrBox.width, qrBox.height, { fit: "fill" }).png().toBuffer();
+
+  const compositeLayers: sharp.OverlayOptions[] = [
+    { input: qrBuffer, left: Math.round(qrBox.x), top: Math.round(qrBox.y) },
+    { input: ticketCodeOverlay, left: Math.round(codeBox.x), top: Math.round(codeBox.y) },
+  ];
+
+  return sharp(templateBuffer).composite(compositeLayers).png().toBuffer();
+}
+
 export async function composeTicketPng(
   templateBuffer: Buffer,
   layout: TicketLayoutConfig,
@@ -221,6 +293,8 @@ export async function composeTicketPng(
     codeFontWeight?: number;
     codeRenderMode?: CodeTextRenderMode;
     qrDark?: string;
+    requestedTicketCode?: string;
+    databaseTicketCode?: string;
   },
 ): Promise<Buffer> {
   const metadata = await sharp(templateBuffer).metadata();
@@ -229,9 +303,17 @@ export async function composeTicketPng(
   }
 
   const scaledLayout = scaleLayoutToTemplate(layout, metadata.width, metadata.height);
+  const renderMode = options?.codeRenderMode ?? "physical";
+
+  if (renderMode === "digital") {
+    return composeDigitalTicketPng(templateBuffer, scaledLayout, ticketCode, qrToken, {
+      requestedTicketCode: options?.requestedTicketCode,
+      databaseTicketCode: options?.databaseTicketCode,
+    });
+  }
+
   const qrUrl = buildTicketQrUrl(qrToken);
   const composites: sharp.OverlayOptions[] = [];
-  const renderMode = options?.codeRenderMode ?? "physical";
 
   if (scaledLayout.qrBoxes.length > 0) {
     const maxQrSize = Math.max(

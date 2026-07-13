@@ -83,13 +83,21 @@ export async function assertTicketIdentityUnchanged(
   );
 }
 
-export async function produceDigitalTicketPng(ticket: DeliverableTicket): Promise<Buffer> {
+export async function produceDigitalTicketPng(
+  ticket: DeliverableTicket,
+  requestedTicketCode?: string,
+): Promise<Buffer> {
   if (!ticket.qr_token?.trim()) {
     throw new Error("El boleto no tiene qr_token almacenado.");
   }
 
-  assertTicketIdentity(ticket.ticket_code, ticket);
-  return generateDigitalTicketImage(ticket.ticket_code, ticket.qr_token);
+  if (requestedTicketCode) {
+    assertTicketIdentity(requestedTicketCode, ticket);
+  }
+
+  return generateDigitalTicketImage(ticket.ticket_code, ticket.qr_token, {
+    requestedTicketCode,
+  });
 }
 
 export function identityReportToText(report: DigitalTicketIdentityReport): string {

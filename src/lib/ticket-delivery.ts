@@ -25,6 +25,7 @@ export function isPngBuffer(buffer: Buffer): boolean {
 export async function generateDigitalTicketImage(
   ticketCode: string,
   qrToken: string,
+  options?: { requestedTicketCode?: string },
 ): Promise<Buffer> {
   const [{ config }, templateBuffer] = await Promise.all([
     readTicketLayoutConfig("digital"),
@@ -35,6 +36,8 @@ export async function generateDigitalTicketImage(
     codeFill: "#000000",
     codeFontWeight: 700,
     codeRenderMode: "digital",
+    requestedTicketCode: options?.requestedTicketCode,
+    databaseTicketCode: ticketCode,
   });
 }
 

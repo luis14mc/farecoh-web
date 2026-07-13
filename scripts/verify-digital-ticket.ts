@@ -48,7 +48,7 @@ try {
   if (!report.ok) process.exit(1);
 
   const expectedQrUrl = buildTicketQrUrl(originalToken);
-  const pngBuffer = await produceDigitalTicketPng(before);
+  const pngBuffer = await produceDigitalTicketPng(before, ticketCode);
   const decodedUrl = await decodeDigitalTicketQrUrl(pngBuffer);
 
   if (decodedUrl !== expectedQrUrl) {

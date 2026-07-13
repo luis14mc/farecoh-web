@@ -37,7 +37,7 @@ export const POST: APIRoute = async (context) => {
         });
       }
 
-      const pngBuffer = await produceDigitalTicketPng(lookup.ticket);
+      const pngBuffer = await produceDigitalTicketPng(lookup.ticket, ticketCode);
       generatedTickets.push({ ticket_code: lookup.ticket.ticket_code, pngBuffer });
     }
 
