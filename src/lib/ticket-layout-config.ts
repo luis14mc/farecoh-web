@@ -1,7 +1,9 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
+import type { PostgrestError } from "@supabase/supabase-js";
 import type { UserProfile } from "./auth.ts";
+import { isMissingLayoutTableError, layoutTableMissingMessage } from "./ticket-layout-api.ts";
 import {
   DEFAULT_DIGITAL_TICKET_LAYOUT,
   DIGITAL_TICKET_TEMPLATE_FALLBACK,
@@ -13,9 +15,16 @@ import {
   PHYSICAL_TICKET_TEMPLATE_FILENAME,
   restorePhysicalTicketLayout,
 } from "./ticket-layouts/physical-ticket-layout.ts";
-import type { TicketLayoutConfig, TicketLayoutRecord, TicketLayoutType } from "./ticket-layouts/types.ts";
+import type {
+  OverlayBox,
+  StoredTicketLayoutPayload,
+  TicketLayoutConfig,
+  TicketLayoutRecord,
+  TicketLayoutSource,
+  TicketLayoutType,
+} from "./ticket-layouts/types.ts";
 import { sanitizeTicketLayoutConfig } from "./ticket-image-compose.ts";
-import { QR_HEIGHT_POINTS, QR_WIDTH_POINTS } from "./ticket-print-measurements.ts";
+import { QR_WIDTH_POINTS } from "./ticket-print-measurements.ts";
 import { readTicketPrintLayout } from "./ticket-print-layout-config.ts";
 import type { TicketPrintLayout } from "../types/ticket-print-layout.ts";
 
@@ -29,12 +38,100 @@ const LAYOUT_TEMPLATE_PATHS: Record<TicketLayoutType, string> = {
   digital: `/templates/${DIGITAL_TICKET_TEMPLATE_FILENAME}`,
 };
 
+export class TicketLayoutTableMissingError extends Error {
+  code = "MISSING_TABLE";
+
+  constructor() {
+    super(layoutTableMissingMessage());
+    this.name = "TicketLayoutTableMissingError";
+  }
+}
+
 export function canEditTicketLayouts(profile: UserProfile | null | undefined): boolean {
   return profile?.role === "super_admin" || profile?.role === "event_manager";
 }
 
 function layoutDefaults(type: TicketLayoutType): TicketLayoutConfig {
   return type === "physical" ? restorePhysicalTicketLayout() : restoreDigitalTicketLayout();
+}
+
+function asRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {};
+}
+
+function readCodeFontSize(payload: StoredTicketLayoutPayload, defaults: TicketLayoutConfig): number {
+  if (typeof payload.codeFontSize === "number" && Number.isFinite(payload.codeFontSize)) {
+    return payload.codeFontSize;
+  }
+
+  const firstBox = payload.codeBoxes?.[0];
+  if (typeof firstBox?.fontSize === "number" && Number.isFinite(firstBox.fontSize)) {
+    return firstBox.fontSize;
+  }
+
+  return defaults.codeFontSize;
+}
+
+function mergeStoredBoxes(
+  storedBoxes: OverlayBox[] | undefined,
+  normalizedBoxes: OverlayBox[],
+): OverlayBox[] {
+  return normalizedBoxes.map((box, index) => {
+    const stored = storedBoxes?.[index];
+    if (!stored) return box;
+    return {
+      ...box,
+      ...(stored.id ? { id: stored.id } : {}),
+      ...(typeof stored.fontSize === "number" ? { fontSize: stored.fontSize } : {}),
+    };
+  });
+}
+
+export function normalizeStoredLayoutConfig(
+  raw: unknown,
+  type: TicketLayoutType,
+): { config: TicketLayoutConfig; templatePath: string; storedConfig: StoredTicketLayoutPayload } {
+  const defaults = layoutDefaults(type);
+  const payload = asRecord(raw) as StoredTicketLayoutPayload;
+  const codeFontSize = readCodeFontSize(payload, defaults);
+
+  const config = sanitizeTicketLayoutConfig(
+    {
+      templateWidth: payload.templateWidth,
+      templateHeight: payload.templateHeight,
+      codeFontSize,
+      codeBoxes: payload.codeBoxes,
+      qrBoxes: payload.qrBoxes,
+    },
+    defaults,
+  );
+
+  const templatePath =
+    typeof payload.templatePath === "string" && payload.templatePath.trim()
+      ? payload.templatePath
+      : LAYOUT_TEMPLATE_PATHS[type];
+
+  const storedConfig: StoredTicketLayoutPayload = {
+    templatePath,
+    templateWidth: config.templateWidth,
+    templateHeight: config.templateHeight,
+    codeFontSize: config.codeFontSize,
+    codeBoxes: mergeStoredBoxes(payload.codeBoxes, config.codeBoxes),
+    qrBoxes: mergeStoredBoxes(payload.qrBoxes, config.qrBoxes),
+  };
+
+  return { config, templatePath, storedConfig };
+}
+
+export function parseLayoutRequestBody(
+  body: unknown,
+  type: TicketLayoutType,
+): { config: TicketLayoutConfig; templatePath: string; storedConfig: StoredTicketLayoutPayload } {
+  const root = asRecord(body);
+  const payload = root.config !== undefined ? asRecord(root.config) : root;
+  return normalizeStoredLayoutConfig(payload, type);
 }
 
 function legacyPercentToPhysicalConfig(legacy: TicketPrintLayout): TicketLayoutConfig {
@@ -62,7 +159,6 @@ function legacyPercentToPhysicalConfig(legacy: TicketPrintLayout): TicketLayoutC
   };
 
   const mirrorX = (centerX: number) => templateWidth - centerX;
-
   const leftCodeCenterX = mirrorX(rightCodeCenterX);
   const leftQrCenterX = mirrorX(rightQrCenterX);
 
@@ -112,30 +208,72 @@ async function getSupabaseAdmin() {
   }
 }
 
-export async function readTicketLayoutConfig(type: TicketLayoutType): Promise<TicketLayoutRecord> {
+function defaultRecord(type: TicketLayoutType, source: TicketLayoutSource): TicketLayoutRecord {
   const defaults = layoutDefaults(type);
+  return {
+    layoutType: type,
+    templatePath: LAYOUT_TEMPLATE_PATHS[type],
+    config: defaults,
+    updatedAt: null,
+    updatedBy: null,
+    source,
+  };
+}
 
-  try {
-    const supabase = await getSupabaseAdmin();
-    if (supabase) {
-      const { data, error } = await supabase
-        .from("ticket_layout_configs")
-        .select("layout_type, template_path, config, updated_at, updated_by")
-        .eq("layout_type", type)
-        .maybeSingle();
+async function queryLayoutRow(type: TicketLayoutType): Promise<{
+  data: {
+    layout_type: string;
+    template_path: string;
+    config: unknown;
+    updated_at: string;
+    updated_by: string | null;
+  } | null;
+  error: PostgrestError | null;
+  tableMissing: boolean;
+}> {
+  const supabase = await getSupabaseAdmin();
+  if (!supabase) {
+    return { data: null, error: null, tableMissing: false };
+  }
 
-      if (!error && data) {
-        return {
-          layoutType: type,
-          templatePath: data.template_path,
-          config: sanitizeTicketLayoutConfig(data.config, defaults),
-          updatedAt: data.updated_at,
-          updatedBy: data.updated_by,
-        };
-      }
-    }
-  } catch (error) {
-    console.warn(`No se pudo leer ticket_layout_configs (${type}).`, error);
+  const { data, error } = await supabase
+    .from("ticket_layout_configs")
+    .select("layout_type, template_path, config, updated_at, updated_by")
+    .eq("layout_type", type)
+    .maybeSingle();
+
+  if (error) {
+    return {
+      data: null,
+      error,
+      tableMissing: isMissingLayoutTableError(error),
+    };
+  }
+
+  return { data, error: null, tableMissing: false };
+}
+
+export async function readTicketLayoutConfig(type: TicketLayoutType): Promise<TicketLayoutRecord> {
+  const { data, error, tableMissing } = await queryLayoutRow(type);
+
+  if (tableMissing && error) {
+    throw new TicketLayoutTableMissingError();
+  }
+
+  if (error) {
+    throw error;
+  }
+
+  if (data) {
+    const normalized = normalizeStoredLayoutConfig(data.config, type);
+    return {
+      layoutType: type,
+      templatePath: data.template_path || normalized.templatePath,
+      config: normalized.config,
+      updatedAt: data.updated_at,
+      updatedBy: data.updated_by,
+      source: "database",
+    };
   }
 
   if (type === "physical") {
@@ -147,45 +285,43 @@ export async function readTicketLayoutConfig(type: TicketLayoutType): Promise<Ti
         config: legacy,
         updatedAt: null,
         updatedBy: null,
+        source: "legacy",
       };
     }
   }
 
-  return {
-    layoutType: type,
-    templatePath: LAYOUT_TEMPLATE_PATHS[type],
-    config: defaults,
-    updatedAt: null,
-    updatedBy: null,
-  };
+  return defaultRecord(type, "default");
 }
 
 export async function saveTicketLayoutConfig(
   type: TicketLayoutType,
-  configInput: unknown,
+  body: unknown,
   updatedBy: string,
 ): Promise<TicketLayoutRecord> {
-  const defaults = layoutDefaults(type);
-  const config = sanitizeTicketLayoutConfig(configInput, defaults);
+  const { config, templatePath, storedConfig } = parseLayoutRequestBody(body, type);
   const supabase = await getSupabaseAdmin();
 
   if (!supabase) {
     throw new Error("SUPABASE_SERVICE_ROLE_KEY es necesaria para guardar la calibración en producción.");
   }
 
-  const payload = {
-    layout_type: type,
-    template_path: LAYOUT_TEMPLATE_PATHS[type],
-    config,
-    updated_at: new Date().toISOString(),
-    updated_by: updatedBy,
-  };
+  const { error } = await supabase.from("ticket_layout_configs").upsert(
+    {
+      layout_type: type,
+      template_path: templatePath,
+      config: storedConfig,
+      updated_at: new Date().toISOString(),
+      updated_by: updatedBy,
+    },
+    { onConflict: "layout_type" },
+  );
 
-  const { error } = await supabase.from("ticket_layout_configs").upsert(payload, {
-    onConflict: "layout_type",
-  });
-
-  if (error) throw error;
+  if (error) {
+    if (isMissingLayoutTableError(error)) {
+      throw new TicketLayoutTableMissingError();
+    }
+    throw error;
+  }
 
   return readTicketLayoutConfig(type);
 }
@@ -247,4 +383,4 @@ export async function readTicketLayoutState(type: TicketLayoutType) {
   };
 }
 
-export { LAYOUT_DEFAULTS, QR_HEIGHT_POINTS, QR_WIDTH_POINTS };
+export { LAYOUT_DEFAULTS, LAYOUT_TEMPLATE_PATHS, QR_WIDTH_POINTS };

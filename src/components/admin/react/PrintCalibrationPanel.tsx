@@ -36,12 +36,24 @@ type Status =
   | { type: "error"; message: string };
 
 interface LayoutStateResponse {
+  ok?: boolean;
   layoutType: TicketLayoutType;
   templatePath: string;
   config: TicketLayoutConfig;
   template: { width: number; height: number };
   canEdit: boolean;
   updatedAt: string | null;
+  source?: "database" | "default" | "legacy";
+}
+
+async function readApiError(response: Response): Promise<string> {
+  const text = await response.text();
+  try {
+    const payload = JSON.parse(text) as { message?: string };
+    return payload.message ?? text;
+  } catch {
+    return text || `HTTP ${response.status}`;
+  }
 }
 
 const TEST_TICKET_CODE = "PF-000001";
@@ -136,12 +148,17 @@ function CalibrationTab({
     setStatus({ type: "loading", message: "Cargando calibración..." });
     try {
       const response = await fetch(`/api/ticket-layouts/${layoutType}`, { cache: "no-store" });
-      if (!response.ok) throw new Error(await response.text());
+      if (!response.ok) throw new Error(await readApiError(response));
       const state = (await response.json()) as LayoutStateResponse;
       setTemplate(state.template);
       setConfig(state.config);
-      setCanEdit(state.canEdit);
-      setStatus({ type: "idle", message: "Ajuste las coordenadas en píxeles de la plantilla original." });
+      setCanEdit(Boolean(state.canEdit));
+      const sourceLabel =
+        state.source === "database" ? "guardada" : state.source === "legacy" ? "legacy" : "predeterminada";
+      setStatus({
+        type: "idle",
+        message: `Configuración ${sourceLabel}. Ajuste las coordenadas en píxeles de la plantilla original.`,
+      });
     } catch (error) {
       setStatus({
         type: "error",
@@ -186,9 +203,16 @@ function CalibrationTab({
       const response = await fetch(`/api/ticket-layouts/${layoutType}`, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ config }),
+        body: JSON.stringify({
+          templatePath: layoutType === "physical" ? PHYSICAL_TICKET_TEMPLATE_PATH : DIGITAL_TICKET_TEMPLATE_PATH,
+          templateWidth: config.templateWidth,
+          templateHeight: config.templateHeight,
+          codeFontSize: config.codeFontSize,
+          codeBoxes: config.codeBoxes,
+          qrBoxes: config.qrBoxes,
+        }),
       });
-      if (!response.ok) throw new Error(await response.text());
+      if (!response.ok) throw new Error(await readApiError(response));
       const state = (await response.json()) as LayoutStateResponse;
       setConfig(state.config);
       setTemplate(state.template);
@@ -210,7 +234,7 @@ function CalibrationTab({
     setStatus({ type: "loading", message: "Restaurando valores..." });
     try {
       const response = await fetch(`/api/ticket-layouts/${layoutType}`, { method: "DELETE" });
-      if (!response.ok) throw new Error(await response.text());
+      if (!response.ok) throw new Error(await readApiError(response));
       const state = (await response.json()) as LayoutStateResponse;
       setConfig(state.config);
       setTemplate(state.template);

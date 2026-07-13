@@ -1,15 +1,10 @@
 import type { APIRoute } from "astro";
 import { requireAdminAccess } from "@/lib/rbac";
+import { jsonLayoutError, resolveLayoutTypeParam } from "@/lib/ticket-layout-api";
 import { readTicketLayoutConfig } from "@/lib/ticket-layout-config";
 import { generateLayoutPreviewImage } from "@/lib/ticket-delivery";
-import type { TicketLayoutType } from "@/lib/ticket-layouts/types";
 
 const TEST_TICKET_CODE = "PF-000001";
-
-function parseLayoutType(raw: string | undefined): TicketLayoutType | null {
-  if (raw === "physical" || raw === "digital") return raw;
-  return null;
-}
 
 export const GET: APIRoute = async (context) => {
   const access = await requireAdminAccess(context, "/admin/printing");
@@ -17,9 +12,9 @@ export const GET: APIRoute = async (context) => {
     return new Response("No autorizado.", { status: 403 });
   }
 
-  const layoutType = parseLayoutType(context.params.type);
+  const layoutType = resolveLayoutTypeParam(context.params);
   if (!layoutType) {
-    return new Response("Tipo de layout inválido.", { status: 400 });
+    return jsonLayoutError(new Error("layoutType must be 'physical' or 'digital'."), 400);
   }
 
   try {
@@ -37,7 +32,6 @@ export const GET: APIRoute = async (context) => {
       },
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "No se pudo generar la vista previa.";
-    return new Response(message, { status: 500 });
+    return jsonLayoutError(error);
   }
 };
