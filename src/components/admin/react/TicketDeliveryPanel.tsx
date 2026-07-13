@@ -1,249 +1,282 @@
-import { useMemo, useState } from "react";
-import { Copy, Download, ExternalLink, MessageCircle, Search } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState, useMemo } from "react";
+import { Search, Share2, Clipboard, MessageSquare, Download, ExternalLink, Info } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { formatSiteDate } from "@/lib/locale";
-import { buildTicketQrUrl } from "@/lib/ticket-qr-url";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
-interface SoldTicket {
+export interface TicketRow {
   ticket_code: string;
-  qr_token: string;
   status: string;
   buyer_name: string | null;
   buyer_phone: string | null;
   buyer_email: string | null;
   sold_at: string | null;
+  validated_at: string | null;
 }
 
-interface DeliveryGroup {
-  key: string;
-  buyerName: string;
-  buyerPhone: string;
-  buyerEmail: string;
-  soldAt: string | null;
-  tickets: SoldTicket[];
+interface TicketDeliveryPanelProps {
+  tickets: TicketRow[];
 }
 
-function normalizePhone(phone: string): string {
-  const digits = phone.replace(/\D/g, "");
-  if (!digits) return "";
-  if (digits.startsWith("504")) return digits;
-  return `504${digits}`;
-}
+export function TicketDeliveryPanel({ tickets }: TicketDeliveryPanelProps) {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [downloadingZipGroup, setDownloadingZipGroup] = useState<string | null>(null);
+  const [copiedGroup, setCopiedGroup] = useState<string | null>(null);
 
-function groupTickets(tickets: SoldTicket[]): DeliveryGroup[] {
-  const groups = new Map<string, DeliveryGroup>();
+  // Enforce sold or validated status for delivery
+  const eligibleTickets = useMemo(() => {
+    return tickets.filter((t) => t.status === "sold" || t.status === "validated");
+  }, [tickets]);
 
-  for (const ticket of tickets) {
-    const buyerPhone = ticket.buyer_phone?.trim() ?? "";
-    const buyerEmail = ticket.buyer_email?.trim().toLowerCase() ?? "";
-    const buyerName = ticket.buyer_name?.trim() || "Comprador sin nombre";
-    const key = buyerPhone || buyerEmail || `${buyerName}-${ticket.sold_at?.slice(0, 10) ?? "sin-fecha"}`;
+  // Group tickets in memory by buyer
+  const groupedOrders = useMemo(() => {
+    const groups: Record<string, {
+      buyerName: string;
+      buyerPhone: string;
+      buyerEmail: string;
+      tickets: TicketRow[];
+    }> = {};
 
-    const existing = groups.get(key);
-    if (existing) {
-      existing.tickets.push(ticket);
-      if (!existing.soldAt || (ticket.sold_at && ticket.sold_at < existing.soldAt)) {
-        existing.soldAt = ticket.sold_at;
+    eligibleTickets.forEach((ticket) => {
+      const name = (ticket.buyer_name || "Sin Nombre").trim();
+      const phone = (ticket.buyer_phone || "Sin Teléfono").trim();
+      const email = (ticket.buyer_email || "").trim();
+      const key = `${name.toLowerCase()}||${phone}`;
+
+      if (!groups[key]) {
+        groups[key] = {
+          buyerName: name,
+          buyerPhone: phone,
+          buyerEmail: email,
+          tickets: [],
+        };
       }
-      continue;
-    }
+      groups[key].tickets.push(ticket);
+    });
 
-    groups.set(key, {
+    return Object.entries(groups).map(([key, value]) => ({
       key,
-      buyerName,
-      buyerPhone,
-      buyerEmail,
-      soldAt: ticket.sold_at,
-      tickets: [ticket],
+      ...value,
+    }));
+  }, [eligibleTickets]);
+
+  // Search filter
+  const filteredOrders = useMemo(() => {
+    const q = searchQuery.toLowerCase().trim();
+    if (!q) return groupedOrders;
+
+    return groupedOrders.filter((order) => {
+      const matchName = order.buyerName.toLowerCase().includes(q);
+      const matchPhone = order.buyerPhone.includes(q);
+      const matchEmail = order.buyerEmail.toLowerCase().includes(q);
+      const matchTicket = order.tickets.some((t) => t.ticket_code.toLowerCase().includes(q));
+      return matchName || matchPhone || matchEmail || matchTicket;
     });
-  }
+  }, [groupedOrders, searchQuery]);
 
-  return Array.from(groups.values())
-    .map((group) => ({
-      ...group,
-      tickets: [...group.tickets].sort((a, b) => a.ticket_code.localeCompare(b.ticket_code)),
-    }))
-    .sort((a, b) => (b.soldAt ?? "").localeCompare(a.soldAt ?? ""));
-}
+  // Generate WhatsApp message body
+  const getWhatsAppMessage = (buyerName: string, ticketCodes: string[]) => {
+    const codesList = ticketCodes.map((code) => `- ${code}`).join("\n");
+    return `Hola ${buyerName} 👋\n\nTu compra para el Tributo a Pink Floyd ha sido confirmada.\n\nBoletos:\n${codesList}\n\nAdjuntamos tus boletos digitales.\n\nCada código QR es único y válido para un solo ingreso.\n\n⚠️ No compartas, reenvíes ni publiques estas imágenes.\nLa primera persona que utilice un QR válido podrá ingresar y el código quedará invalidado para cualquier intento posterior.\n\nConserva tus boletos en un lugar seguro y preséntalos el día del evento.`;
+  };
 
-function buildMessage(group: DeliveryGroup): string {
-  const lines = group.tickets.flatMap((ticket) => [
-    `🎫 ${ticket.ticket_code}`,
-    buildTicketQrUrl(ticket.qr_token),
-  ]);
+  // Open WhatsApp Link
+  const handleOpenWhatsApp = (phone: string, buyerName: string, ticketCodes: string[]) => {
+    const digits = phone.replace(/\D/g, "");
+    if (!digits) return;
+    const normalized = digits.startsWith("504") ? digits : `504${digits}`;
+    const text = getWhatsAppMessage(buyerName, ticketCodes);
+    const url = `https://wa.me/${normalized}?text=${encodeURIComponent(text)}`;
+    window.open(url, "_blank", "noreferrer");
+  };
 
-  return [
-    `Hola ${group.buyerName} 👋`,
-    "",
-    "Gracias por apoyar a FARECOH. Tu compra ha sido confirmada.",
-    "",
-    "Evento: Tributo a Pink Floyd",
-    "Fecha: 29 de agosto de 2026",
-    "Hora: 8:00 PM",
-    "Lugar: Escuela Nacional de Música",
-    "",
-    `Boletos confirmados (${group.tickets.length}):`,
-    ...lines,
-    "",
-    "Cada QR es único y válido para un solo ingreso.",
-    "Conserva este mensaje y presenta cada boleto en la entrada.",
-  ].join("\n");
-}
+  // Copy Message to Clipboard
+  const handleCopyMessage = async (buyerName: string, ticketCodes: string[], key: string) => {
+    const text = getWhatsAppMessage(buyerName, ticketCodes);
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedGroup(key);
+      setTimeout(() => setCopiedGroup(null), 2000);
+    } catch (err) {
+      alert("Error al copiar al portapapeles.");
+    }
+  };
 
-function downloadManifest(group: DeliveryGroup): void {
-  const content = buildMessage(group);
-  const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.download = `farecoh-${group.tickets[0]?.ticket_code ?? "boletos"}-${group.tickets.length}.txt`;
-  document.body.appendChild(anchor);
-  anchor.click();
-  anchor.remove();
-  URL.revokeObjectURL(url);
-}
+  // Download ZIP of all tickets in the group
+  const handleDownloadZip = async (buyerName: string, ticketCodes: string[], key: string) => {
+    try {
+      setDownloadingZipGroup(key);
+      const response = await fetch("/api/delivery/ticket-images", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ticketCodes }),
+      });
 
-export function TicketDeliveryPanel({ tickets }: { tickets: SoldTicket[] }) {
-  const [query, setQuery] = useState("");
-  const [copiedKey, setCopiedKey] = useState<string | null>(null);
-  const groups = useMemo(() => groupTickets(tickets), [tickets]);
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(text || "Error al descargar el ZIP.");
+      }
 
-  const filtered = useMemo(() => {
-    const clean = query.trim().toLowerCase();
-    if (!clean) return groups;
-    return groups.filter((group) => {
-      const haystack = [
-        group.buyerName,
-        group.buyerPhone,
-        group.buyerEmail,
-        ...group.tickets.map((ticket) => ticket.ticket_code),
-      ]
-        .join(" ")
-        .toLowerCase();
-      return haystack.includes(clean);
-    });
-  }, [groups, query]);
-
-  async function copyMessage(group: DeliveryGroup) {
-    await navigator.clipboard.writeText(buildMessage(group));
-    setCopiedKey(group.key);
-    window.setTimeout(() => setCopiedKey(null), 1800);
-  }
-
-  function openWhatsApp(group: DeliveryGroup) {
-    const phone = normalizePhone(group.buyerPhone);
-    const message = encodeURIComponent(buildMessage(group));
-    const target = phone ? `https://wa.me/${phone}?text=${message}` : `https://wa.me/?text=${message}`;
-    window.open(target, "_blank", "noopener,noreferrer");
-  }
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      const cleanName = buyerName.toLowerCase().replace(/[^a-z0-9]/g, "-").replace(/-+/g, "-");
+      a.download = `farecoh-pink-floyd-${cleanName}.zip`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err: any) {
+      alert(err.message || "Error al procesar la descarga de boletos.");
+    } finally {
+      setDownloadingZipGroup(null);
+    }
+  };
 
   return (
-    <section className="space-y-5">
-      <div className="grid gap-4 sm:grid-cols-3">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Compradores</CardDescription>
-            <CardTitle className="text-2xl">{groups.length}</CardTitle>
-          </CardHeader>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Boletos vendidos</CardDescription>
-            <CardTitle className="text-2xl">{tickets.length}</CardTitle>
-          </CardHeader>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>QR modificados</CardDescription>
-            <CardTitle className="text-2xl text-emerald-600">0</CardTitle>
-          </CardHeader>
-        </Card>
+    <div className="space-y-6">
+      {/* Informative Warning block */}
+      <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900 flex items-start gap-3">
+        <Info className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
+        <div>
+          <h4 className="font-bold mb-1">Instrucciones de Envío por WhatsApp</h4>
+          <p>
+            WhatsApp no permite adjuntar archivos automáticamente desde un enlace web.
+            Descargue las imágenes (individualmente o en ZIP) y adjúntelas manualmente al chat del comprador.
+          </p>
+        </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Preparar entrega</CardTitle>
-          <CardDescription>
-            Esta vista reutiliza los códigos y tokens existentes. No regenera ni modifica ningún QR.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="relative max-w-xl">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Buscar por comprador, teléfono, correo o boleto"
-              className="pl-9"
-            />
-          </div>
-        </CardContent>
-      </Card>
+      {/* Filter and stats */}
+      <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+        <div className="relative w-full sm:max-w-md">
+          <Search className="absolute left-3 top-2.5 h-4 w-4 text-on-surface-variant" />
+          <Input
+            placeholder="Buscar por comprador, teléfono o código..."
+            className="pl-9"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+        <div className="flex gap-2">
+          <Badge variant="outline" className="px-3 py-1.5 text-xs font-semibold">
+            Ventas Totales: {eligibleTickets.length} boletos
+          </Badge>
+          <Badge variant="secondary" className="px-3 py-1.5 text-xs font-semibold">
+            Grupos de Entrega: {groupedOrders.length} ordenes
+          </Badge>
+        </div>
+      </div>
 
-      {filtered.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center text-sm text-muted-foreground">
-            No hay ventas que coincidan con la búsqueda.
-          </CardContent>
-        </Card>
+      {/* Orders Grid */}
+      {filteredOrders.length === 0 ? (
+        <div className="text-center py-12 border rounded-lg border-outline-variant bg-surface-container-lowest">
+          <p className="text-on-surface-variant font-medium">No se encontraron órdenes elegibles para entrega.</p>
+        </div>
       ) : (
-        <div className="space-y-4">
-          {filtered.map((group) => (
-            <Card key={group.key}>
-              <CardHeader className="gap-3 sm:flex-row sm:items-start sm:justify-between">
-                <div>
-                  <CardTitle className="text-lg">{group.buyerName}</CardTitle>
-                  <CardDescription className="mt-1">
-                    {group.buyerPhone || "Sin teléfono"}
-                    {group.buyerEmail ? ` · ${group.buyerEmail}` : ""}
-                    {group.soldAt ? ` · ${formatSiteDate(group.soldAt)}` : ""}
-                  </CardDescription>
-                </div>
-                <Badge variant="outline">{group.tickets.length} boleto{group.tickets.length === 1 ? "" : "s"}</Badge>
-              </CardHeader>
-
-              <CardContent className="space-y-4">
-                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                  {group.tickets.map((ticket) => (
-                    <div key={ticket.ticket_code} className="rounded-lg border bg-muted/20 p-3">
-                      <div className="flex items-center justify-between gap-3">
-                        <span className="font-mono font-semibold">{ticket.ticket_code}</span>
-                        <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100">Vendido</Badge>
-                      </div>
-                      <div className="mt-3 flex flex-wrap gap-2">
-                        <Button asChild size="sm" variant="outline">
-                          <a href={`/t/${ticket.qr_token}`} target="_blank" rel="noreferrer">
-                            <ExternalLink className="h-4 w-4" />
-                            Ver boleto
-                          </a>
-                        </Button>
-                      </div>
+        <div className="grid grid-cols-1 gap-6">
+          {filteredOrders.map((order) => {
+            const ticketCodes = order.tickets.map((t) => t.ticket_code);
+            return (
+              <Card key={order.key} className="border-outline-variant bg-surface-container-lowest">
+                <CardHeader className="border-b border-outline-variant pb-4">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                      <CardTitle className="text-lg font-bold text-on-surface">
+                        {order.buyerName}
+                      </CardTitle>
+                      <CardDescription className="flex flex-wrap gap-x-4 gap-y-1 mt-1 text-sm text-on-surface-variant">
+                        <span>📞 {order.buyerPhone}</span>
+                        {order.buyerEmail && <span>✉️ {order.buyerEmail}</span>}
+                      </CardDescription>
                     </div>
-                  ))}
-                </div>
 
-                <div className="flex flex-col gap-2 border-t pt-4 sm:flex-row sm:flex-wrap">
-                  <Button onClick={() => openWhatsApp(group)} disabled={!group.buyerPhone}>
-                    <MessageCircle className="h-4 w-4" />
-                    Abrir WhatsApp
-                  </Button>
-                  <Button variant="outline" onClick={() => void copyMessage(group)}>
-                    <Copy className="h-4 w-4" />
-                    {copiedKey === group.key ? "Mensaje copiado" : "Copiar mensaje"}
-                  </Button>
-                  <Button variant="outline" onClick={() => downloadManifest(group)}>
-                    <Download className="h-4 w-4" />
-                    Descargar resumen
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                    {/* Group actions */}
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={downloadingZipGroup === order.key}
+                        onClick={() => handleDownloadZip(order.buyerName, ticketCodes, order.key)}
+                      >
+                        <Download className="mr-1.5 h-4 w-4" />
+                        {downloadingZipGroup === order.key ? "Generando ZIP..." : "Descargar ZIP"}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => handleCopyMessage(order.buyerName, ticketCodes, order.key)}
+                      >
+                        <Clipboard className="mr-1.5 h-4 w-4" />
+                        {copiedGroup === order.key ? "¡Copiado!" : "Copiar mensaje"}
+                      </Button>
+                      <Button
+                        size="sm"
+                        className="bg-green-600 hover:bg-green-700 text-white"
+                        onClick={() => handleOpenWhatsApp(order.buyerPhone, order.buyerName, ticketCodes)}
+                      >
+                        <MessageSquare className="mr-1.5 h-4 w-4" />
+                        Abrir WhatsApp
+                      </Button>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-4">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-3">
+                    Boletos en esta orden ({order.tickets.length})
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {order.tickets.map((ticket) => (
+                      <div
+                        key={ticket.ticket_code}
+                        className="flex items-center justify-between p-3 rounded-lg border border-outline-variant bg-surface-container-low"
+                      >
+                        <div className="flex flex-col gap-1">
+                          <span className="font-mono font-bold text-sm text-on-surface">
+                            {ticket.ticket_code}
+                          </span>
+                          <span className="text-xs text-on-surface-variant flex items-center gap-1">
+                            Estado: 
+                            <Badge
+                              variant={ticket.status === "validated" ? "default" : "secondary"}
+                              className="text-[10px] px-1 py-0"
+                            >
+                              {ticket.status === "validated" ? "Validado" : "Vendido"}
+                            </Badge>
+                          </span>
+                        </div>
+
+                        <div className="flex gap-1.5">
+                          <a
+                            href={`/api/delivery/ticket-image/${ticket.ticket_code}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center justify-center rounded-md p-1.5 text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors"
+                            title="Ver boleto en nueva pestaña"
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                          </a>
+                          <a
+                            href={`/api/delivery/ticket-image/${ticket.ticket_code}?download=true`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center justify-center rounded-md p-1.5 text-primary hover:bg-primary/10 transition-colors"
+                            title="Descargar imagen del boleto"
+                          >
+                            <Download className="h-4 w-4" />
+                          </a>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       )}
-    </section>
+    </div>
   );
 }
