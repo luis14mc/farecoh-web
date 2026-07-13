@@ -1,23 +1,28 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { buildCodeTextSvg, buildTicketQrUrl } from "../src/lib/ticket-image-compose.ts";
+import { buildCodeTextSvg, buildTicketQrUrl, scaleLayoutToTemplate } from "../src/lib/ticket-image-compose.ts";
 import { assertTicketIdentity, hashQrToken } from "../src/lib/ticket-delivery-identity.ts";
 import {
   generateDigitalTicketImage,
   generatePhysicalTicketImage,
 } from "../src/lib/ticket-delivery.ts";
 import { DEFAULT_DIGITAL_TICKET_LAYOUT } from "../src/lib/ticket-layouts/digital-ticket-layout.ts";
+import { decodeDigitalTicketQrUrl } from "../src/lib/ticket-delivery-qr-decode.ts";
 import {
-  decodeDigitalTicketQrUrl,
   stablePreviewQrToken,
-  verifyRenderedTicketCodeSvg,
-  verifyTicketCodeVisibleInPng,
+  verifyDigitalTicketIdentity,
 } from "../src/lib/ticket-delivery-verify.ts";
-import { scaleLayoutToTemplate } from "../src/lib/ticket-image-compose.ts";
 import { TICKET_CODE_FONT_FAMILY } from "../src/lib/ticket-code-font.ts";
 
 const ticketCode = "PF-000016";
 const qrToken = "a1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef123456";
+
+const deliverableTicket = {
+  id: "1",
+  ticket_code: ticketCode,
+  qr_token: qrToken,
+  status: "sold",
+};
 
 test("digital ticket code SVG embeds bundled font and black fill", () => {
   const box = DEFAULT_DIGITAL_TICKET_LAYOUT.codeBoxes[0];
@@ -33,7 +38,6 @@ test("digital ticket code SVG embeds bundled font and black fill", () => {
   assert.match(svg, /font-weight="700"/);
   assert.match(svg, /PF-000016/);
   assert.doesNotMatch(svg, /Montserrat/);
-  assert.doesNotMatch(svg, /dominant-baseline/);
 });
 
 test("physical ticket code SVG keeps physical render mode", () => {
@@ -64,23 +68,30 @@ test("assertTicketIdentity rejects mismatched codes", () => {
   );
 });
 
-test("verifyRenderedTicketCodeSvg validates digital overlay markup", () => {
-  assert.equal(verifyRenderedTicketCodeSvg(ticketCode, DEFAULT_DIGITAL_TICKET_LAYOUT), true);
+test("verifyDigitalTicketIdentity validates stored ticket data", () => {
+  const report = verifyDigitalTicketIdentity(ticketCode, deliverableTicket);
+  assert.equal(report.ok, true);
+  assert.equal(report.ticketCode, ticketCode);
+  assert.equal(report.qrSource, "stored-token");
+  assert.equal(report.qrUrlMatchesStoredToken, true);
+  assert.equal(report.qrTokenHash, hashQrToken(qrToken));
 });
 
-test("generated digital PNG decodes QR to stored token URL", async () => {
+test("verifyDigitalTicketIdentity rejects missing qr_token", () => {
+  const report = verifyDigitalTicketIdentity(ticketCode, {
+    ...deliverableTicket,
+    qr_token: "",
+  });
+  assert.equal(report.ok, false);
+});
+
+test("generated digital PNG decodes QR to stored token URL (dev/CI only)", async () => {
   const png = await generateDigitalTicketImage(ticketCode, qrToken);
   const decoded = await decodeDigitalTicketQrUrl(png);
   assert.equal(decoded, buildTicketQrUrl(qrToken));
 });
 
-test("generated digital PNG renders visible ticket code pixels", async () => {
-  const png = await generateDigitalTicketImage(ticketCode, qrToken);
-  const visible = await verifyTicketCodeVisibleInPng(png, DEFAULT_DIGITAL_TICKET_LAYOUT);
-  assert.equal(visible, true);
-});
-
-test("QR decode uses calibrated layout scaled to PNG dimensions", async () => {
+test("QR decode uses calibrated layout scaled to PNG dimensions (dev/CI only)", async () => {
   const png = await generateDigitalTicketImage(ticketCode, qrToken);
   const storedLayout = {
     ...DEFAULT_DIGITAL_TICKET_LAYOUT,

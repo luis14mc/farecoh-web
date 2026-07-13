@@ -21,7 +21,7 @@ interface TicketDeliveryPanelProps {
 
 interface TicketVerificationState {
   loading: boolean;
-  qrVerified: boolean;
+  identityVerified: boolean;
   statusLabel: string;
   message?: string;
 }
@@ -66,7 +66,7 @@ export function TicketDeliveryPanel({ tickets }: TicketDeliveryPanelProps) {
       eligibleTickets.forEach((ticket) => {
         initial[ticket.ticket_code] = {
           loading: true,
-          qrVerified: false,
+          identityVerified: false,
           statusLabel: formatStatusLabel(ticket.status),
         };
       });
@@ -86,7 +86,7 @@ export function TicketDeliveryPanel({ tickets }: TicketDeliveryPanelProps) {
               ...current,
               [ticket.ticket_code]: {
                 loading: false,
-                qrVerified: Boolean(payload.qrVerified),
+                identityVerified: Boolean(payload.identityVerified ?? payload.ok),
                 statusLabel: payload.statusLabel ?? formatStatusLabel(ticket.status),
                 message: payload.ok ? undefined : payload.message,
               },
@@ -97,9 +97,9 @@ export function TicketDeliveryPanel({ tickets }: TicketDeliveryPanelProps) {
               ...current,
               [ticket.ticket_code]: {
                 loading: false,
-                qrVerified: false,
+                identityVerified: false,
                 statusLabel: formatStatusLabel(ticket.status),
-                message: "No se pudo verificar el QR.",
+                message: "No se pudo verificar la identidad del boleto.",
               },
             }));
           }
@@ -166,7 +166,7 @@ export function TicketDeliveryPanel({ tickets }: TicketDeliveryPanelProps) {
   }, [groupedOrders, searchQuery]);
 
   const isTicketVerified = useCallback(
-    (ticketCode: string) => verificationMap[ticketCode]?.qrVerified === true,
+    (ticketCode: string) => verificationMap[ticketCode]?.identityVerified === true,
     [verificationMap],
   );
 
@@ -221,7 +221,7 @@ export function TicketDeliveryPanel({ tickets }: TicketDeliveryPanelProps) {
 
   const handleDownloadSingle = async (ticketCode: string) => {
     if (!isTicketVerified(ticketCode)) {
-      alert("La verificación del QR falló. No se puede descargar este boleto.");
+      alert("La verificación de identidad falló. No se puede descargar este boleto.");
       return;
     }
 
@@ -234,7 +234,7 @@ export function TicketDeliveryPanel({ tickets }: TicketDeliveryPanelProps) {
   const handleDownloadAllImages = async (ticketCodes: string[], key: string) => {
     const verifiedCodes = ticketCodes.filter((code) => isTicketVerified(code));
     if (verifiedCodes.length === 0) {
-      alert("Ningún boleto de este grupo pasó la verificación de QR.");
+      alert("Ningún boleto de este grupo pasó la verificación de identidad.");
       return;
     }
 
@@ -381,7 +381,7 @@ export function TicketDeliveryPanel({ tickets }: TicketDeliveryPanelProps) {
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {order.tickets.map((ticket) => {
                       const verification = verificationMap[ticket.ticket_code];
-                      const qrVerified = verification?.qrVerified === true;
+                      const identityVerified = verification?.identityVerified === true;
                       const verifying = verification?.loading ?? true;
 
                       return (
@@ -398,20 +398,26 @@ export function TicketDeliveryPanel({ tickets }: TicketDeliveryPanelProps) {
                                 <p>Estado: {verification?.statusLabel ?? formatStatusLabel(ticket.status)}</p>
                                 <p className="flex items-center gap-1">
                                   {verifying ? (
-                                    <>Verificando QR...</>
-                                  ) : qrVerified ? (
+                                    <>Verificando identidad...</>
+                                  ) : identityVerified ? (
                                     <>
                                       <ShieldCheck className="h-3.5 w-3.5 text-green-600" />
-                                      QR verificado: Sí
+                                      QR asociado al boleto: Sí
                                     </>
                                   ) : (
                                     <>
                                       <ShieldAlert className="h-3.5 w-3.5 text-red-600" />
-                                      QR verificado: No
+                                      QR asociado al boleto: No
                                     </>
                                   )}
                                 </p>
-                                {verification?.message && !qrVerified && (
+                                {!verifying && identityVerified && (
+                                  <p className="flex items-center gap-1">
+                                    <ShieldCheck className="h-3.5 w-3.5 text-green-600" />
+                                    Identidad del boleto: Verificada
+                                  </p>
+                                )}
+                                {verification?.message && !identityVerified && (
                                   <p className="text-red-700">{verification.message}</p>
                                 )}
                               </div>
@@ -431,7 +437,7 @@ export function TicketDeliveryPanel({ tickets }: TicketDeliveryPanelProps) {
                             size="sm"
                             variant="outline"
                             className="w-full"
-                            disabled={verifying || !qrVerified}
+                            disabled={verifying || !identityVerified}
                             onClick={() => handleDownloadSingle(ticket.ticket_code)}
                           >
                             <Download className="mr-1.5 h-4 w-4" />

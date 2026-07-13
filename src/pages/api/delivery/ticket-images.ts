@@ -2,11 +2,7 @@ import type { APIRoute } from "astro";
 import { createSupabaseServerClient } from "@/lib/auth";
 import { requireAdminAccess } from "@/lib/rbac";
 import { fetchDeliverableTicket } from "@/lib/ticket-delivery-access";
-import {
-  produceVerifiedDigitalTicketPng,
-  TicketDeliveryVerificationError,
-  verificationReportToText,
-} from "@/lib/ticket-delivery-verify";
+import { produceDigitalTicketPng } from "@/lib/ticket-delivery-verify";
 import { buildDigitalTicketFilename } from "@/lib/ticket-delivery";
 import { normalizeTicketCode } from "@/services/ticket-code";
 import JSZip from "jszip";
@@ -31,7 +27,7 @@ export const POST: APIRoute = async (context) => {
 
     const supabase = createSupabaseServerClient(context);
     const normalizedCodes = ticketCodes.map((code) => normalizeTicketCode(String(code)));
-    const verifiedTickets: Array<{ ticket_code: string; pngBuffer: Buffer }> = [];
+    const generatedTickets: Array<{ ticket_code: string; pngBuffer: Buffer }> = [];
 
     for (const ticketCode of normalizedCodes) {
       const lookup = await fetchDeliverableTicket(supabase, ticketCode);
@@ -41,19 +37,12 @@ export const POST: APIRoute = async (context) => {
         });
       }
 
-      try {
-        const { pngBuffer } = await produceVerifiedDigitalTicketPng(supabase, ticketCode, lookup.ticket);
-        verifiedTickets.push({ ticket_code: lookup.ticket.ticket_code, pngBuffer });
-      } catch (error) {
-        if (error instanceof TicketDeliveryVerificationError) {
-          return new Response(verificationReportToText(error.report), { status: 500 });
-        }
-        throw error;
-      }
+      const pngBuffer = await produceDigitalTicketPng(lookup.ticket);
+      generatedTickets.push({ ticket_code: lookup.ticket.ticket_code, pngBuffer });
     }
 
-    if (verifiedTickets.length === 1) {
-      const ticket = verifiedTickets[0];
+    if (generatedTickets.length === 1) {
+      const ticket = generatedTickets[0];
       return new Response(ticket.pngBuffer, {
         status: 200,
         headers: {
@@ -65,7 +54,7 @@ export const POST: APIRoute = async (context) => {
     }
 
     const zip = new JSZip();
-    for (const ticket of verifiedTickets) {
+    for (const ticket of generatedTickets) {
       zip.file(buildDigitalTicketFilename(ticket.ticket_code), ticket.pngBuffer);
     }
 

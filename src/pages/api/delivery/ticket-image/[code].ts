@@ -3,11 +3,7 @@ import { createSupabaseServerClient } from "@/lib/auth";
 import { requireAdminAccess } from "@/lib/rbac";
 import { fetchDeliverableTicketFromContext } from "@/lib/ticket-delivery-access";
 import { buildDeliveryDebugHeaders } from "@/lib/ticket-delivery-identity";
-import {
-  produceVerifiedDigitalTicketPng,
-  TicketDeliveryVerificationError,
-  verificationReportToText,
-} from "@/lib/ticket-delivery-verify";
+import { produceDigitalTicketPng } from "@/lib/ticket-delivery-verify";
 import { buildDigitalTicketFilename } from "@/lib/ticket-delivery";
 
 export const GET: APIRoute = async (context) => {
@@ -28,9 +24,7 @@ export const GET: APIRoute = async (context) => {
       return new Response(lookup.error ?? "Boleto no encontrado.", { status });
     }
 
-    const supabase = createSupabaseServerClient(context);
-    const { pngBuffer } = await produceVerifiedDigitalTicketPng(supabase, code, lookup.ticket);
-
+    const pngBuffer = await produceDigitalTicketPng(lookup.ticket);
     const filename = buildDigitalTicketFilename(lookup.ticket.ticket_code);
     const isDownload = context.url.searchParams.get("download") === "true";
 
@@ -46,10 +40,6 @@ export const GET: APIRoute = async (context) => {
       },
     });
   } catch (error) {
-    if (error instanceof TicketDeliveryVerificationError) {
-      return new Response(verificationReportToText(error.report), { status: 500 });
-    }
-
     const message = error instanceof Error ? error.message : "Error inesperado generando la imagen del boleto.";
     return new Response(message, { status: 500 });
   }

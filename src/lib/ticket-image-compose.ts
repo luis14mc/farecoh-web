@@ -263,32 +263,3 @@ export async function composeTicketPng(
 
   return sharp(templateBuffer).composite(composites).png().toBuffer();
 }
-
-export async function countDarkPixelsInBox(
-  pngBuffer: Buffer,
-  box: OverlayBox,
-): Promise<number> {
-  const metadata = await sharp(pngBuffer).metadata();
-  if (!metadata.width || !metadata.height) return 0;
-
-  const left = Math.max(0, Math.min(box.x, metadata.width - 1));
-  const top = Math.max(0, Math.min(box.y, metadata.height - 1));
-  const width = Math.min(box.width, metadata.width - left);
-  const height = Math.min(box.height, metadata.height - top);
-
-  if (width <= 0 || height <= 0) return 0;
-
-  const { data, info } = await sharp(pngBuffer)
-    .extract({ left, top, width, height })
-    .raw()
-    .toBuffer({ resolveWithObject: true });
-
-  let dark = 0;
-  for (let i = 0; i < data.length; i += info.channels) {
-    if (data[i] < 60 && data[i + 1] < 60 && data[i + 2] < 60) {
-      dark += 1;
-    }
-  }
-
-  return dark;
-}

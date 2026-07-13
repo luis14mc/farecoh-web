@@ -1,12 +1,9 @@
 import type { APIRoute } from "astro";
-import { createSupabaseServerClient } from "@/lib/auth";
 import { requireAdminAccess } from "@/lib/rbac";
 import { fetchDeliverableTicketFromContext } from "@/lib/ticket-delivery-access";
 import { formatTicketStatusLabel } from "@/lib/ticket-delivery-identity";
-import {
-  produceVerifiedDigitalTicketPng,
-  TicketDeliveryVerificationError,
-} from "@/lib/ticket-delivery-verify";
+import { verifyDigitalTicketIdentity } from "@/lib/ticket-delivery-verify";
+import { normalizeTicketCode } from "@/services/ticket-code";
 
 export const GET: APIRoute = async (context) => {
   const access = await requireAdminAccess(context, "/admin/delivery");
@@ -19,50 +16,48 @@ export const GET: APIRoute = async (context) => {
     return Response.json({ ok: false, message: "Código de boleto no especificado." }, { status: 400 });
   }
 
-  try {
-    const lookup = await fetchDeliverableTicketFromContext(context, ticketCode);
-    if (!lookup.ticket) {
-      const status = lookup.notFound ? 404 : lookup.wrongStatus ? 400 : 404;
-      return Response.json(
-        { ok: false, message: lookup.error ?? "Boleto no encontrado.", qrVerified: false },
-        { status },
-      );
-    }
+  const requestedTicketCode = normalizeTicketCode(ticketCode);
+  const lookup = await fetchDeliverableTicketFromContext(context, requestedTicketCode);
 
-    const supabase = createSupabaseServerClient(context);
-    const { report } = await produceVerifiedDigitalTicketPng(supabase, ticketCode, lookup.ticket);
+  if (!lookup.ticket) {
+    const status = lookup.notFound ? 404 : lookup.wrongStatus ? 400 : 404;
+    return Response.json(
+      { ok: false, message: lookup.error ?? "Boleto no encontrado.", identityVerified: false },
+      { status },
+    );
+  }
 
+  const report = verifyDigitalTicketIdentity(requestedTicketCode, lookup.ticket);
+
+  if (!report.ok) {
+    const status =
+      report.message.includes("no coincide") ? 409 : report.message.includes("qr_token") ? 400 : 400;
     return Response.json(
       {
-        ok: true,
+        ok: false,
+        identityVerified: false,
         ticketCode: lookup.ticket.ticket_code,
         status: lookup.ticket.status,
-        statusLabel: formatTicketStatusLabel(lookup.ticket.status),
-        qrVerified: report.ok,
-        codeVisible: report.codeVisible,
-        layoutSource: report.layoutSource,
-        renderedTicket: report.renderedTicket,
-        qrDecodedMatch: report.qrDecodedMatch,
-        publicTicketResolved: report.publicTicketResolved,
-        qrTokenModified: report.qrTokenModified,
-        ticketCodeModified: report.ticketCodeModified,
+        qrSource: report.qrSource,
+        qrUrlMatchesStoredToken: report.qrUrlMatchesStoredToken,
+        qrTokenHash: report.qrTokenHash || undefined,
+        message: report.message,
       },
-      { headers: { "cache-control": "no-store" } },
+      { status },
     );
-  } catch (error) {
-    if (error instanceof TicketDeliveryVerificationError) {
-      return Response.json(
-        {
-          ok: false,
-          qrVerified: false,
-          message: error.report.message,
-          report: error.report,
-        },
-        { status: 500 },
-      );
-    }
-
-    const message = error instanceof Error ? error.message : "Verification failed.";
-    return Response.json({ ok: false, qrVerified: false, message }, { status: 500 });
   }
+
+  return Response.json(
+    {
+      ok: true,
+      identityVerified: true,
+      ticketCode: report.ticketCode,
+      status: report.status,
+      statusLabel: formatTicketStatusLabel(report.status),
+      qrSource: report.qrSource,
+      qrUrlMatchesStoredToken: report.qrUrlMatchesStoredToken,
+      qrTokenHash: report.qrTokenHash,
+    },
+    { headers: { "cache-control": "no-store" } },
+  );
 };

@@ -4,9 +4,13 @@
  * Run: pnpm verify:digital-ticket PF-000016
  */
 import { createClient } from "@supabase/supabase-js";
+import { buildTicketQrUrl } from "../src/lib/ticket-image-compose.ts";
+import { decodeDigitalTicketQrUrl } from "../src/lib/ticket-delivery-qr-decode.ts";
 import {
-  produceVerifiedDigitalTicketPng,
-  verificationReportToText,
+  assertTicketIdentityUnchanged,
+  identityReportToText,
+  produceDigitalTicketPng,
+  verifyDigitalTicketIdentity,
 } from "../src/lib/ticket-delivery-verify.ts";
 
 const ticketCode = (process.argv[2] ?? "PF-000016").trim().toUpperCase();
@@ -38,22 +42,29 @@ const originalCode = before.ticket_code;
 const originalToken = before.qr_token;
 
 try {
-  const { report } = await produceVerifiedDigitalTicketPng(supabase, ticketCode, before);
-  console.log(verificationReportToText(report));
-
-  const { data: after } = await supabase
-    .from("tickets")
-    .select("ticket_code, qr_token")
-    .eq("id", before.id)
-    .single();
+  const report = verifyDigitalTicketIdentity(ticketCode, before);
+  console.log(identityReportToText(report));
 
   if (!report.ok) process.exit(1);
-  if (after?.qr_token !== originalToken || after?.ticket_code !== originalCode) {
-    console.error("Ticket identity changed after verification.");
+
+  const expectedQrUrl = buildTicketQrUrl(originalToken);
+  const pngBuffer = await produceDigitalTicketPng(before);
+  const decodedUrl = await decodeDigitalTicketQrUrl(pngBuffer);
+
+  if (decodedUrl !== expectedQrUrl) {
+    console.error("QR decode mismatch in development check.");
+    console.error(`Expected: ${expectedQrUrl}`);
+    console.error(`Decoded:  ${decodedUrl ?? "NONE"}`);
     process.exit(1);
   }
 
-  console.log("Verification passed.");
+  const unchanged = await assertTicketIdentityUnchanged(supabase, before);
+  if (!unchanged || originalToken !== before.qr_token || originalCode !== before.ticket_code) {
+    console.error("Ticket identity changed after generation.");
+    process.exit(1);
+  }
+
+  console.log("Identity and QR decode verification passed.");
 } catch (error) {
   console.error(error instanceof Error ? error.message : error);
   process.exit(1);
