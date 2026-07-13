@@ -4,6 +4,8 @@ import type { OverlayBox, TicketLayoutConfig } from "./ticket-layouts/types.ts";
 
 export const TICKET_QR_PUBLIC_BASE_URL = "https://www.farecoh.org";
 
+export type CodeTextRenderMode = "digital" | "physical";
+
 export function buildTicketQrUrl(qrToken: string): string {
   return `${TICKET_QR_PUBLIC_BASE_URL}/t/${qrToken}`;
 }
@@ -57,7 +59,7 @@ export function sanitizeTicketLayoutConfig(
   };
 }
 
-function escapeXml(value: string): string {
+export function escapeXml(value: string): string {
   return value
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
@@ -70,28 +72,47 @@ export function buildCodeTextSvg(
   ticketCode: string,
   box: OverlayBox,
   fontSize: number,
-  options?: { fill?: string; fontWeight?: number },
+  options?: { fill?: string; fontWeight?: number; renderMode?: CodeTextRenderMode },
 ): Buffer {
+  const renderMode = options?.renderMode ?? "physical";
+  const safeCode = escapeXml(ticketCode);
+
+  if (renderMode === "digital") {
+    const fill = options?.fill ?? "#000000";
+    const fontWeight = options?.fontWeight ?? 700;
+    const svg = `<svg width="${box.width}" height="${box.height}" viewBox="0 0 ${box.width} ${box.height}" xmlns="http://www.w3.org/2000/svg">
+  <rect width="100%" height="100%" fill="transparent"/>
+  <text
+    x="50%"
+    y="50%"
+    text-anchor="middle"
+    dominant-baseline="middle"
+    font-family="Arial, Helvetica, sans-serif"
+    font-size="${fontSize}"
+    font-weight="${fontWeight}"
+    fill="${fill}"
+  >${safeCode}</text>
+</svg>`;
+    return Buffer.from(svg);
+  }
+
   const fill = options?.fill ?? "#FFFFFF";
   const fontWeight = options?.fontWeight ?? 900;
-  const safeCode = escapeXml(ticketCode);
   const centerX = box.width / 2;
   const centerY = box.height / 2 + fontSize * 0.35;
 
-  const svg = `
-    <svg width="${box.width}" height="${box.height}" viewBox="0 0 ${box.width} ${box.height}" xmlns="http://www.w3.org/2000/svg">
-      <text
-        x="${centerX}"
-        y="${centerY}"
-        font-family="'Montserrat', 'Helvetica', 'Arial', sans-serif"
-        font-size="${fontSize}"
-        font-weight="${fontWeight}"
-        fill="${fill}"
-        text-anchor="middle"
-        letter-spacing="1.5px"
-      >${safeCode}</text>
-    </svg>
-  `;
+  const svg = `<svg width="${box.width}" height="${box.height}" viewBox="0 0 ${box.width} ${box.height}" xmlns="http://www.w3.org/2000/svg">
+  <text
+    x="${centerX}"
+    y="${centerY}"
+    font-family="'Montserrat', 'Helvetica', 'Arial', sans-serif"
+    font-size="${fontSize}"
+    font-weight="${fontWeight}"
+    fill="${fill}"
+    text-anchor="middle"
+    letter-spacing="1.5px"
+  >${safeCode}</text>
+</svg>`;
 
   return Buffer.from(svg);
 }
@@ -111,7 +132,12 @@ export async function composeTicketPng(
   layout: TicketLayoutConfig,
   ticketCode: string,
   qrToken: string,
-  options?: { codeFill?: string; codeFontWeight?: number; qrDark?: string },
+  options?: {
+    codeFill?: string;
+    codeFontWeight?: number;
+    codeRenderMode?: CodeTextRenderMode;
+    qrDark?: string;
+  },
 ): Promise<Buffer> {
   const qrUrl = buildTicketQrUrl(qrToken);
   const composites: sharp.OverlayOptions[] = [];
@@ -130,11 +156,14 @@ export async function composeTicketPng(
     }
   }
 
+  const renderMode = options?.codeRenderMode ?? "physical";
+
   for (const box of layout.codeBoxes) {
     composites.push({
       input: buildCodeTextSvg(ticketCode, box, layout.codeFontSize, {
         fill: options?.codeFill,
         fontWeight: options?.codeFontWeight,
+        renderMode,
       }),
       top: box.y,
       left: box.x,

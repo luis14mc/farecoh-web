@@ -1,46 +1,65 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { APIContext } from "astro";
 import { createSupabaseServerClient } from "./auth.ts";
+import { normalizeTicketCode } from "../services/ticket-code.ts";
 
 export interface DeliverableTicket {
+  id: string;
   ticket_code: string;
   qr_token: string;
   status: string;
 }
 
+export interface TicketLookupResult {
+  ticket: DeliverableTicket | null;
+  notFound: boolean;
+  wrongStatus: boolean;
+  error?: string;
+}
+
 export async function fetchDeliverableTicket(
   supabase: SupabaseClient,
   ticketCode: string,
-): Promise<DeliverableTicket | null> {
+): Promise<TicketLookupResult> {
+  const requestedTicketCode = normalizeTicketCode(ticketCode);
+
   const { data: ticket, error } = await supabase
     .from("tickets")
-    .select("ticket_code, qr_token, status")
-    .eq("ticket_code", ticketCode.toUpperCase())
-    .maybeSingle();
+    .select("id, ticket_code, qr_token, status")
+    .eq("ticket_code", requestedTicketCode)
+    .in("status", ["sold", "validated"])
+    .single();
 
-  if (error || !ticket) return null;
-  if (ticket.status !== "sold" && ticket.status !== "validated") return null;
-  return ticket;
+  if (error) {
+    if (error.code === "PGRST116") {
+      const { data: existing } = await supabase
+        .from("tickets")
+        .select("status")
+        .eq("ticket_code", requestedTicketCode)
+        .maybeSingle();
+
+      if (!existing) {
+        return { ticket: null, notFound: true, wrongStatus: false };
+      }
+
+      return {
+        ticket: null,
+        notFound: false,
+        wrongStatus: true,
+        error: "El boleto debe estar vendido o validado para generar su imagen.",
+      };
+    }
+
+    throw error;
+  }
+
+  return { ticket, notFound: false, wrongStatus: false };
 }
 
 export async function fetchDeliverableTicketFromContext(
   context: APIContext,
   ticketCode: string,
-): Promise<{ ticket: DeliverableTicket | null; error?: string }> {
+): Promise<TicketLookupResult> {
   const supabase = createSupabaseServerClient(context);
-  const ticket = await fetchDeliverableTicket(supabase, ticketCode);
-  if (!ticket) {
-    const { data } = await supabase
-      .from("tickets")
-      .select("status")
-      .eq("ticket_code", ticketCode.toUpperCase())
-      .maybeSingle();
-
-    if (!data) return { ticket: null, error: "Boleto no encontrado." };
-    return {
-      ticket: null,
-      error: "El boleto debe estar vendido o validado para generar su imagen.",
-    };
-  }
-  return { ticket };
+  return fetchDeliverableTicket(supabase, ticketCode);
 }

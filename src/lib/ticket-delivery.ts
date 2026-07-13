@@ -8,7 +8,7 @@ import {
   loadDigitalTemplateBytes,
   loadPhysicalTemplateBytes,
 } from "./ticket-layout-config.ts";
-import { restorePhysicalTicketLayout } from "./ticket-layouts/physical-ticket-layout.ts";
+import { stablePreviewQrToken } from "./ticket-delivery-verify.ts";
 
 export { buildTicketQrUrl, buildDigitalTicketFilename };
 
@@ -34,6 +34,7 @@ export async function generateDigitalTicketImage(
   return composeTicketPng(templateBuffer, config, ticketCode, qrToken, {
     codeFill: "#000000",
     codeFontWeight: 700,
+    codeRenderMode: "digital",
   });
 }
 
@@ -49,6 +50,7 @@ export async function generatePhysicalTicketImage(
   return composeTicketPng(templateBuffer, config, ticketCode, qrToken, {
     codeFill: "#EDE8FA",
     codeFontWeight: 700,
+    codeRenderMode: "physical",
   });
 }
 
@@ -57,22 +59,25 @@ export async function generateTicketImage(ticketCode: string, qrToken: string): 
   return generateDigitalTicketImage(ticketCode, qrToken);
 }
 
+/** Calibration preview only — never used by production delivery endpoints. */
 export async function generateLayoutPreviewImage(
   layoutType: "physical" | "digital",
   ticketCode: string,
-  qrToken?: string,
 ): Promise<Buffer> {
-  const token = qrToken ?? "preview-token-not-for-validation";
   const templateBuffer =
     layoutType === "physical" ? await loadPhysicalTemplateBytes() : await loadDigitalTemplateBytes();
   const { config } = await readTicketLayoutConfig(layoutType);
+  const previewQrToken = stablePreviewQrToken(ticketCode);
 
-  return composeTicketPng(templateBuffer, config, ticketCode, token, {
+  return composeTicketPng(templateBuffer, config, ticketCode, previewQrToken, {
     codeFill: layoutType === "physical" ? "#EDE8FA" : "#000000",
     codeFontWeight: 700,
+    codeRenderMode: layoutType === "physical" ? "physical" : "digital",
   });
 }
 
 export function buildPhysicalTicketFilename(ticketCode: string): string {
   return `farecoh-physical-${ticketCode}.png`;
 }
+
+export { restoreDigitalTicketLayout };

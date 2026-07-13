@@ -1,12 +1,17 @@
 import type { APIRoute } from "astro";
 import { createSupabaseServerClient } from "@/lib/auth";
 import { requireAdminAccess } from "@/lib/rbac";
-import { generateDigitalTicketImage } from "@/lib/ticket-delivery";
-import { buildDigitalTicketFilename } from "@/lib/ticket-layouts/digital-ticket-layout";
+import { fetchDeliverableTicket } from "@/lib/ticket-delivery-access";
+import {
+  produceVerifiedDigitalTicketPng,
+  TicketDeliveryVerificationError,
+  verificationReportToText,
+} from "@/lib/ticket-delivery-verify";
+import { buildDigitalTicketFilename } from "@/lib/ticket-delivery";
+import { normalizeTicketCode } from "@/services/ticket-code";
 import JSZip from "jszip";
 
 export const POST: APIRoute = async (context) => {
-  // Check authorization for /admin/delivery
   const access = await requireAdminAccess(context, "/admin/delivery");
   if (!access.ok) {
     return new Response("No autorizado.", { status: 403 });
@@ -25,48 +30,43 @@ export const POST: APIRoute = async (context) => {
     }
 
     const supabase = createSupabaseServerClient(context);
+    const normalizedCodes = ticketCodes.map((code) => normalizeTicketCode(String(code)));
+    const verifiedTickets: Array<{ ticket_code: string; pngBuffer: Buffer }> = [];
 
-    // Fetch tickets and enforce status check server-side
-    const { data: tickets, error: ticketsError } = await supabase
-      .from("tickets")
-      .select("ticket_code, qr_token, status")
-      .in("ticket_code", ticketCodes);
+    for (const ticketCode of normalizedCodes) {
+      const lookup = await fetchDeliverableTicket(supabase, ticketCode);
+      if (!lookup.ticket) {
+        return new Response(lookup.error ?? `Boleto no encontrado: ${ticketCode}`, {
+          status: lookup.notFound ? 404 : 400,
+        });
+      }
 
-    if (ticketsError || !tickets) {
-      return new Response("Error al cargar los boletos de la base de datos.", { status: 500 });
+      try {
+        const { pngBuffer } = await produceVerifiedDigitalTicketPng(supabase, ticketCode, lookup.ticket);
+        verifiedTickets.push({ ticket_code: lookup.ticket.ticket_code, pngBuffer });
+      } catch (error) {
+        if (error instanceof TicketDeliveryVerificationError) {
+          return new Response(verificationReportToText(error.report), { status: 500 });
+        }
+        throw error;
+      }
     }
 
-    // Filter to only allow sold or validated tickets
-    const validTickets = tickets.filter(
-      (t) => t.status === "sold" || t.status === "validated"
-    );
-
-    if (validTickets.length === 0) {
-      return new Response("Ninguno de los boletos indicados tiene estado 'sold' o 'validated'.", { status: 400 });
-    }
-
-    // Single ticket request
-    if (validTickets.length === 1) {
-      const ticket = validTickets[0];
-      const pngBuffer = await generateDigitalTicketImage(ticket.ticket_code, ticket.qr_token);
-      const filename = buildDigitalTicketFilename(ticket.ticket_code);
-
-      return new Response(pngBuffer, {
+    if (verifiedTickets.length === 1) {
+      const ticket = verifiedTickets[0];
+      return new Response(ticket.pngBuffer, {
         status: 200,
         headers: {
           "content-type": "image/png",
-          "content-disposition": `attachment; filename="${filename}"`,
+          "content-disposition": `attachment; filename="${buildDigitalTicketFilename(ticket.ticket_code)}"`,
           "cache-control": "no-store",
         },
       });
     }
 
-    // Multiple tickets -> package in ZIP
     const zip = new JSZip();
-
-    for (const ticket of validTickets) {
-      const pngBuffer = await generateDigitalTicketImage(ticket.ticket_code, ticket.qr_token);
-      zip.file(buildDigitalTicketFilename(ticket.ticket_code), pngBuffer);
+    for (const ticket of verifiedTickets) {
+      zip.file(buildDigitalTicketFilename(ticket.ticket_code), ticket.pngBuffer);
     }
 
     const zipBuffer = await zip.generateAsync({ type: "nodebuffer" });
@@ -79,7 +79,6 @@ export const POST: APIRoute = async (context) => {
         "cache-control": "no-store",
       },
     });
-
   } catch (error) {
     const message = error instanceof Error ? error.message : "Error inesperado procesando la entrega.";
     return new Response(message, { status: 500 });

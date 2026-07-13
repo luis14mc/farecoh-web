@@ -1,10 +1,14 @@
 import type { APIRoute } from "astro";
+import { createSupabaseServerClient } from "@/lib/auth";
 import { requireAdminAccess } from "@/lib/rbac";
 import { fetchDeliverableTicketFromContext } from "@/lib/ticket-delivery-access";
+import { buildDeliveryDebugHeaders } from "@/lib/ticket-delivery-identity";
 import {
-  buildDigitalTicketFilename,
-  generateDigitalTicketImage,
-} from "@/lib/ticket-delivery";
+  produceVerifiedDigitalTicketPng,
+  TicketDeliveryVerificationError,
+  verificationReportToText,
+} from "@/lib/ticket-delivery-verify";
+import { buildDigitalTicketFilename } from "@/lib/ticket-delivery";
 
 export const GET: APIRoute = async (context) => {
   const access = await requireAdminAccess(context, "/admin/delivery");
@@ -18,14 +22,16 @@ export const GET: APIRoute = async (context) => {
   }
 
   try {
-    const { ticket, error } = await fetchDeliverableTicketFromContext(context, code);
-    if (!ticket) {
-      const status = error === "Boleto no encontrado." ? 404 : 400;
-      return new Response(error ?? "Boleto no encontrado.", { status });
+    const lookup = await fetchDeliverableTicketFromContext(context, code);
+    if (!lookup.ticket) {
+      const status = lookup.notFound ? 404 : lookup.wrongStatus ? 400 : 404;
+      return new Response(lookup.error ?? "Boleto no encontrado.", { status });
     }
 
-    const pngBuffer = await generateDigitalTicketImage(ticket.ticket_code, ticket.qr_token);
-    const filename = buildDigitalTicketFilename(ticket.ticket_code);
+    const supabase = createSupabaseServerClient(context);
+    const { pngBuffer } = await produceVerifiedDigitalTicketPng(supabase, code, lookup.ticket);
+
+    const filename = buildDigitalTicketFilename(lookup.ticket.ticket_code);
     const isDownload = context.url.searchParams.get("download") === "true";
 
     return new Response(pngBuffer, {
@@ -36,9 +42,14 @@ export const GET: APIRoute = async (context) => {
           ? `attachment; filename="${filename}"`
           : `inline; filename="${filename}"`,
         "cache-control": "no-store",
+        ...buildDeliveryDebugHeaders(lookup.ticket),
       },
     });
   } catch (error) {
+    if (error instanceof TicketDeliveryVerificationError) {
+      return new Response(verificationReportToText(error.report), { status: 500 });
+    }
+
     const message = error instanceof Error ? error.message : "Error inesperado generando la imagen del boleto.";
     return new Response(message, { status: 500 });
   }

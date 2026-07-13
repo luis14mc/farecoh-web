@@ -1,5 +1,5 @@
-import { useState, useMemo, useCallback } from "react";
-import { Search, Clipboard, MessageSquare, Download, ExternalLink, Info } from "lucide-react";
+import { useState, useMemo, useCallback, useEffect } from "react";
+import { Search, Clipboard, MessageSquare, Download, ExternalLink, Info, ShieldCheck, ShieldAlert } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,13 @@ interface TicketDeliveryPanelProps {
   tickets: TicketRow[];
 }
 
+interface TicketVerificationState {
+  loading: boolean;
+  qrVerified: boolean;
+  statusLabel: string;
+  message?: string;
+}
+
 const DOWNLOAD_DELAY_MS = 600;
 
 function buildDigitalDownloadUrl(ticketCode: string): string {
@@ -29,16 +36,87 @@ function buildDigitalFilename(ticketCode: string): string {
   return `farecoh-digital-${ticketCode}.png`;
 }
 
+function buildVerifyUrl(ticketCode: string): string {
+  return `/api/delivery/digital-ticket/${ticketCode}/verify`;
+}
+
+function formatStatusLabel(status: string): string {
+  if (status === "validated") return "Validado";
+  if (status === "sold") return "Vendido";
+  return status;
+}
+
 export function TicketDeliveryPanel({ tickets }: TicketDeliveryPanelProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [downloadingGroup, setDownloadingGroup] = useState<string | null>(null);
   const [downloadProgress, setDownloadProgress] = useState<string | null>(null);
   const [downloadBlockedGroup, setDownloadBlockedGroup] = useState<string | null>(null);
   const [copiedGroup, setCopiedGroup] = useState<string | null>(null);
+  const [verificationMap, setVerificationMap] = useState<Record<string, TicketVerificationState>>({});
 
   const eligibleTickets = useMemo(() => {
     return tickets.filter((t) => t.status === "sold" || t.status === "validated");
   }, [tickets]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function verifyTickets() {
+      const initial: Record<string, TicketVerificationState> = {};
+      eligibleTickets.forEach((ticket) => {
+        initial[ticket.ticket_code] = {
+          loading: true,
+          qrVerified: false,
+          statusLabel: formatStatusLabel(ticket.status),
+        };
+      });
+      setVerificationMap(initial);
+
+      await Promise.all(
+        eligibleTickets.map(async (ticket) => {
+          try {
+            const response = await fetch(buildVerifyUrl(ticket.ticket_code), {
+              credentials: "same-origin",
+              cache: "no-store",
+            });
+            const payload = await response.json();
+            if (cancelled) return;
+
+            setVerificationMap((current) => ({
+              ...current,
+              [ticket.ticket_code]: {
+                loading: false,
+                qrVerified: Boolean(payload.qrVerified),
+                statusLabel: payload.statusLabel ?? formatStatusLabel(ticket.status),
+                message: payload.ok ? undefined : payload.message,
+              },
+            }));
+          } catch {
+            if (cancelled) return;
+            setVerificationMap((current) => ({
+              ...current,
+              [ticket.ticket_code]: {
+                loading: false,
+                qrVerified: false,
+                statusLabel: formatStatusLabel(ticket.status),
+                message: "No se pudo verificar el QR.",
+              },
+            }));
+          }
+        }),
+      );
+    }
+
+    if (eligibleTickets.length > 0) {
+      verifyTickets();
+    } else {
+      setVerificationMap({});
+    }
+
+    return () => {
+      cancelled = true;
+    };
+  }, [eligibleTickets]);
 
   const groupedOrders = useMemo(() => {
     const groups: Record<
@@ -87,6 +165,11 @@ export function TicketDeliveryPanel({ tickets }: TicketDeliveryPanelProps) {
     });
   }, [groupedOrders, searchQuery]);
 
+  const isTicketVerified = useCallback(
+    (ticketCode: string) => verificationMap[ticketCode]?.qrVerified === true,
+    [verificationMap],
+  );
+
   const getWhatsAppMessage = (buyerName: string, ticketCodes: string[]) => {
     const codesList = ticketCodes.map((code) => `- ${code}`).join("\n");
     return `Hola ${buyerName} 👋\n\nTu compra para el Tributo a Pink Floyd ha sido confirmada.\n\nBoletos:\n${codesList}\n\nAdjuntamos tus boletos digitales.\n\nCada código QR es único y válido para un solo ingreso.\n\n⚠️ No compartas, reenvíes ni publiques estas imágenes.\nLa primera persona que utilice un QR válido podrá ingresar y el código quedará invalidado para cualquier intento posterior.\n\nConserva tus boletos en un lugar seguro y preséntalos el día del evento.`;
@@ -113,6 +196,8 @@ export function TicketDeliveryPanel({ tickets }: TicketDeliveryPanelProps) {
   };
 
   const triggerDownload = useCallback(async (ticketCode: string): Promise<boolean> => {
+    if (!isTicketVerified(ticketCode)) return false;
+
     try {
       const response = await fetch(buildDigitalDownloadUrl(ticketCode), { credentials: "same-origin" });
       if (!response.ok) {
@@ -132,25 +217,36 @@ export function TicketDeliveryPanel({ tickets }: TicketDeliveryPanelProps) {
     } catch {
       return false;
     }
-  }, []);
+  }, [isTicketVerified]);
 
   const handleDownloadSingle = async (ticketCode: string) => {
+    if (!isTicketVerified(ticketCode)) {
+      alert("La verificación del QR falló. No se puede descargar este boleto.");
+      return;
+    }
+
     setDownloadProgress(`Descargando ${ticketCode}...`);
     const ok = await triggerDownload(ticketCode);
-    setDownloadProgress(ok ? `Imagen descargada: ${ticketCode}` : `No se pudo descargar ${ticketCode}. Use el botón individual.`);
+    setDownloadProgress(ok ? `Imagen descargada: ${ticketCode}` : `No se pudo descargar ${ticketCode}.`);
     setTimeout(() => setDownloadProgress(null), 3000);
   };
 
   const handleDownloadAllImages = async (ticketCodes: string[], key: string) => {
+    const verifiedCodes = ticketCodes.filter((code) => isTicketVerified(code));
+    if (verifiedCodes.length === 0) {
+      alert("Ningún boleto de este grupo pasó la verificación de QR.");
+      return;
+    }
+
     setDownloadingGroup(key);
     setDownloadBlockedGroup(null);
 
     let successCount = 0;
     let blocked = false;
 
-    for (let index = 0; index < ticketCodes.length; index += 1) {
-      const ticketCode = ticketCodes[index];
-      setDownloadProgress(`Descargando ${index + 1} de ${ticketCodes.length}`);
+    for (let index = 0; index < verifiedCodes.length; index += 1) {
+      const ticketCode = verifiedCodes[index];
+      setDownloadProgress(`Descargando ${index + 1} de ${verifiedCodes.length}`);
 
       const ok = await triggerDownload(ticketCode);
       if (ok) {
@@ -159,7 +255,7 @@ export function TicketDeliveryPanel({ tickets }: TicketDeliveryPanelProps) {
         blocked = true;
       }
 
-      if (index < ticketCodes.length - 1) {
+      if (index < verifiedCodes.length - 1) {
         await new Promise((resolve) => setTimeout(resolve, DOWNLOAD_DELAY_MS));
       }
     }
@@ -181,11 +277,10 @@ export function TicketDeliveryPanel({ tickets }: TicketDeliveryPanelProps) {
         <div>
           <h4 className="font-bold mb-1">Instrucciones de envío por WhatsApp</h4>
           <p className="mb-2">
-            Primero descargue las imágenes. Luego abra WhatsApp y adjúntelas manualmente al mensaje.
+            Primero descargue las imágenes verificadas. Luego abra WhatsApp y adjúntelas manualmente al mensaje.
           </p>
           <p>
-            WhatsApp no permite adjuntar archivos automáticamente desde un enlace web.
-            Use &quot;Descargar todas las imágenes&quot; o descargue cada boleto por separado.
+            La descarga se bloquea si el QR del boleto no coincide con el registro en base de datos.
           </p>
         </div>
       </div>
@@ -224,7 +319,9 @@ export function TicketDeliveryPanel({ tickets }: TicketDeliveryPanelProps) {
         <div className="grid grid-cols-1 gap-6">
           {filteredOrders.map((order) => {
             const ticketCodes = order.tickets.map((t) => t.ticket_code);
+            const verifiedCount = ticketCodes.filter((code) => isTicketVerified(code)).length;
             const isDownloading = downloadingGroup === order.key;
+            const allVerified = verifiedCount === ticketCodes.length && ticketCodes.length > 0;
 
             return (
               <Card key={order.key} className="border-outline-variant bg-surface-container-lowest">
@@ -236,6 +333,7 @@ export function TicketDeliveryPanel({ tickets }: TicketDeliveryPanelProps) {
                         <span>📞 {order.buyerPhone}</span>
                         {order.buyerEmail && <span>✉️ {order.buyerEmail}</span>}
                         <span>🎫 {order.tickets.length} boleto(s)</span>
+                        <span>✅ {verifiedCount}/{ticketCodes.length} verificados</span>
                       </CardDescription>
                     </div>
 
@@ -243,7 +341,7 @@ export function TicketDeliveryPanel({ tickets }: TicketDeliveryPanelProps) {
                       <Button
                         size="sm"
                         variant="outline"
-                        disabled={isDownloading}
+                        disabled={isDownloading || !allVerified}
                         onClick={() => handleDownloadAllImages(ticketCodes, order.key)}
                       >
                         <Download className="mr-1.5 h-4 w-4" />
@@ -281,43 +379,67 @@ export function TicketDeliveryPanel({ tickets }: TicketDeliveryPanelProps) {
                   </h4>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {order.tickets.map((ticket) => (
-                      <div
-                        key={ticket.ticket_code}
-                        className="flex flex-col gap-3 p-3 rounded-lg border border-outline-variant bg-surface-container-low"
-                      >
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex flex-col gap-1">
-                            <span className="font-mono font-bold text-sm text-on-surface">{ticket.ticket_code}</span>
-                            <Badge
-                              variant={ticket.status === "validated" ? "default" : "secondary"}
-                              className="w-fit text-[10px] px-1 py-0"
-                            >
-                              {ticket.status === "validated" ? "Validado" : "Vendido"}
-                            </Badge>
-                          </div>
-                          <a
-                            href={`/api/delivery/digital-ticket/${ticket.ticket_code}`}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex items-center justify-center rounded-md p-1.5 text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors"
-                            title="Ver boleto (admin)"
-                          >
-                            <ExternalLink className="h-4 w-4" />
-                          </a>
-                        </div>
+                    {order.tickets.map((ticket) => {
+                      const verification = verificationMap[ticket.ticket_code];
+                      const qrVerified = verification?.qrVerified === true;
+                      const verifying = verification?.loading ?? true;
 
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="w-full"
-                          onClick={() => handleDownloadSingle(ticket.ticket_code)}
+                      return (
+                        <div
+                          key={ticket.ticket_code}
+                          className="flex flex-col gap-3 p-3 rounded-lg border border-outline-variant bg-surface-container-low"
                         >
-                          <Download className="mr-1.5 h-4 w-4" />
-                          Descargar imagen
-                        </Button>
-                      </div>
-                    ))}
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex flex-col gap-2">
+                              <span className="font-mono font-bold text-sm text-on-surface">
+                                Boleto: {ticket.ticket_code}
+                              </span>
+                              <div className="text-xs text-on-surface-variant space-y-1">
+                                <p>Estado: {verification?.statusLabel ?? formatStatusLabel(ticket.status)}</p>
+                                <p className="flex items-center gap-1">
+                                  {verifying ? (
+                                    <>Verificando QR...</>
+                                  ) : qrVerified ? (
+                                    <>
+                                      <ShieldCheck className="h-3.5 w-3.5 text-green-600" />
+                                      QR verificado: Sí
+                                    </>
+                                  ) : (
+                                    <>
+                                      <ShieldAlert className="h-3.5 w-3.5 text-red-600" />
+                                      QR verificado: No
+                                    </>
+                                  )}
+                                </p>
+                                {verification?.message && !qrVerified && (
+                                  <p className="text-red-700">{verification.message}</p>
+                                )}
+                              </div>
+                            </div>
+                            <a
+                              href={`/api/delivery/digital-ticket/${ticket.ticket_code}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex items-center justify-center rounded-md p-1.5 text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors"
+                              title="Ver boleto (admin)"
+                            >
+                              <ExternalLink className="h-4 w-4" />
+                            </a>
+                          </div>
+
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="w-full"
+                            disabled={verifying || !qrVerified}
+                            onClick={() => handleDownloadSingle(ticket.ticket_code)}
+                          >
+                            <Download className="mr-1.5 h-4 w-4" />
+                            Descargar imagen
+                          </Button>
+                        </div>
+                      );
+                    })}
                   </div>
                 </CardContent>
               </Card>

@@ -18,6 +18,7 @@
         "generate:print-tickets": "node --experimental-strip-types scripts/generate-print-tickets.ts",
         "test:print-layout-pdf": "node --experimental-strip-types scripts/test-print-layout-pdf.ts",
         "verify:ticket-immutability": "node --experimental-strip-types scripts/verify-ticket-immutability.ts",
+        "verify:digital-ticket": "node --experimental-strip-types scripts/verify-digital-ticket.ts",
         "optimize:foundation-photos": "node --experimental-strip-types scripts/optimize-foundation-photos.ts",
         "optimize:site-images": "node --experimental-strip-types scripts/optimize-site-images.ts"
     },
@@ -41,6 +42,7 @@
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
         "html5-qrcode": "^2.3.8",
+        "jsqr": "^1.4.0",
         "jszip": "^3.10.1",
         "lucide-react": "^1.22.0",
         "pdf-lib": "^1.17.1",
