@@ -6,6 +6,26 @@ export const TICKET_QR_PUBLIC_BASE_URL = "https://www.farecoh.org";
 
 export type CodeTextRenderMode = "digital" | "physical";
 
+export interface CodeTextStyle {
+  fill: string;
+  fontWeight: number;
+  fontFamily: string;
+  letterSpacing?: string;
+}
+
+export const DIGITAL_CODE_TEXT_STYLE: CodeTextStyle = {
+  fill: "#000000",
+  fontWeight: 700,
+  fontFamily: "Arial, Helvetica, sans-serif",
+};
+
+export const PHYSICAL_CODE_TEXT_STYLE: CodeTextStyle = {
+  fill: "#EDE8FA",
+  fontWeight: 700,
+  fontFamily: "'Montserrat', 'Helvetica', 'Arial', sans-serif",
+  letterSpacing: "1.5px",
+};
+
 export function buildTicketQrUrl(qrToken: string): string {
   return `${TICKET_QR_PUBLIC_BASE_URL}/t/${qrToken}`;
 }
@@ -59,6 +79,45 @@ export function sanitizeTicketLayoutConfig(
   };
 }
 
+function scaleBox(box: OverlayBox, scaleX: number, scaleY: number): OverlayBox {
+  return {
+    x: Math.round(box.x * scaleX),
+    y: Math.round(box.y * scaleY),
+    width: Math.max(1, Math.round(box.width * scaleX)),
+    height: Math.max(1, Math.round(box.height * scaleY)),
+    ...(box.id ? { id: box.id } : {}),
+    ...(typeof box.fontSize === "number" ? { fontSize: box.fontSize } : {}),
+  };
+}
+
+/** Scale stored calibration coordinates to the actual PNG template dimensions. */
+export function scaleLayoutToTemplate(
+  layout: TicketLayoutConfig,
+  templateWidth: number,
+  templateHeight: number,
+): TicketLayoutConfig {
+  if (layout.templateWidth <= 0 || layout.templateHeight <= 0) {
+    return { ...layout, templateWidth, templateHeight };
+  }
+
+  const scaleX = templateWidth / layout.templateWidth;
+  const scaleY = templateHeight / layout.templateHeight;
+
+  if (Math.abs(scaleX - 1) < 0.0001 && Math.abs(scaleY - 1) < 0.0001) {
+    return { ...layout, templateWidth, templateHeight };
+  }
+
+  const fontScale = Math.min(scaleX, scaleY);
+
+  return {
+    templateWidth,
+    templateHeight,
+    codeFontSize: Math.max(8, Math.round(layout.codeFontSize * fontScale)),
+    codeBoxes: layout.codeBoxes.map((box) => scaleBox(box, scaleX, scaleY)),
+    qrBoxes: layout.qrBoxes.map((box) => scaleBox(box, scaleX, scaleY)),
+  };
+}
+
 export function escapeXml(value: string): string {
   return value
     .replace(/&/g, "&amp;")
@@ -68,6 +127,19 @@ export function escapeXml(value: string): string {
     .replace(/'/g, "&apos;");
 }
 
+function resolveCodeTextStyle(
+  renderMode: CodeTextRenderMode,
+  overrides?: { fill?: string; fontWeight?: number },
+): CodeTextStyle {
+  const base = renderMode === "digital" ? DIGITAL_CODE_TEXT_STYLE : PHYSICAL_CODE_TEXT_STYLE;
+  return {
+    ...base,
+    fill: overrides?.fill ?? base.fill,
+    fontWeight: overrides?.fontWeight ?? base.fontWeight,
+  };
+}
+
+/** Same baseline positioning for physical and digital — only color/font differ. */
 export function buildCodeTextSvg(
   ticketCode: string,
   box: OverlayBox,
@@ -75,42 +147,21 @@ export function buildCodeTextSvg(
   options?: { fill?: string; fontWeight?: number; renderMode?: CodeTextRenderMode },
 ): Buffer {
   const renderMode = options?.renderMode ?? "physical";
+  const style = resolveCodeTextStyle(renderMode, options);
   const safeCode = escapeXml(ticketCode);
-
-  if (renderMode === "digital") {
-    const fill = options?.fill ?? "#000000";
-    const fontWeight = options?.fontWeight ?? 700;
-    const svg = `<svg width="${box.width}" height="${box.height}" viewBox="0 0 ${box.width} ${box.height}" xmlns="http://www.w3.org/2000/svg">
-  <rect width="100%" height="100%" fill="transparent"/>
-  <text
-    x="50%"
-    y="50%"
-    text-anchor="middle"
-    dominant-baseline="middle"
-    font-family="Arial, Helvetica, sans-serif"
-    font-size="${fontSize}"
-    font-weight="${fontWeight}"
-    fill="${fill}"
-  >${safeCode}</text>
-</svg>`;
-    return Buffer.from(svg);
-  }
-
-  const fill = options?.fill ?? "#FFFFFF";
-  const fontWeight = options?.fontWeight ?? 900;
   const centerX = box.width / 2;
   const centerY = box.height / 2 + fontSize * 0.35;
+  const letterSpacingAttr = style.letterSpacing ? ` letter-spacing="${style.letterSpacing}"` : "";
 
   const svg = `<svg width="${box.width}" height="${box.height}" viewBox="0 0 ${box.width} ${box.height}" xmlns="http://www.w3.org/2000/svg">
   <text
     x="${centerX}"
     y="${centerY}"
-    font-family="'Montserrat', 'Helvetica', 'Arial', sans-serif"
+    font-family="${style.fontFamily}"
     font-size="${fontSize}"
-    font-weight="${fontWeight}"
-    fill="${fill}"
-    text-anchor="middle"
-    letter-spacing="1.5px"
+    font-weight="${style.fontWeight}"
+    fill="${style.fill}"
+    text-anchor="middle"${letterSpacingAttr}
   >${safeCode}</text>
 </svg>`;
 
@@ -139,14 +190,23 @@ export async function composeTicketPng(
     qrDark?: string;
   },
 ): Promise<Buffer> {
+  const metadata = await sharp(templateBuffer).metadata();
+  if (!metadata.width || !metadata.height) {
+    throw new Error("No se pudieron leer las dimensiones de la plantilla.");
+  }
+
+  const scaledLayout = scaleLayoutToTemplate(layout, metadata.width, metadata.height);
   const qrUrl = buildTicketQrUrl(qrToken);
   const composites: sharp.OverlayOptions[] = [];
+  const renderMode = options?.codeRenderMode ?? "physical";
 
-  if (layout.qrBoxes.length > 0) {
-    const maxQrSize = Math.max(...layout.qrBoxes.map((box) => Math.max(box.width, box.height)));
+  if (scaledLayout.qrBoxes.length > 0) {
+    const maxQrSize = Math.max(
+      ...scaledLayout.qrBoxes.map((box) => Math.max(box.width, box.height)),
+    );
     const qrBase = await buildQrPng(qrUrl, maxQrSize);
 
-    for (const box of layout.qrBoxes) {
+    for (const box of scaledLayout.qrBoxes) {
       const qrBuffer =
         box.width === maxQrSize && box.height === maxQrSize
           ? qrBase
@@ -156,11 +216,9 @@ export async function composeTicketPng(
     }
   }
 
-  const renderMode = options?.codeRenderMode ?? "physical";
-
-  for (const box of layout.codeBoxes) {
+  for (const box of scaledLayout.codeBoxes) {
     composites.push({
-      input: buildCodeTextSvg(ticketCode, box, layout.codeFontSize, {
+      input: buildCodeTextSvg(ticketCode, box, scaledLayout.codeFontSize, {
         fill: options?.codeFill,
         fontWeight: options?.codeFontWeight,
         renderMode,
@@ -171,4 +229,33 @@ export async function composeTicketPng(
   }
 
   return sharp(templateBuffer).composite(composites).png().toBuffer();
+}
+
+export async function countDarkPixelsInBox(
+  pngBuffer: Buffer,
+  box: OverlayBox,
+): Promise<number> {
+  const metadata = await sharp(pngBuffer).metadata();
+  if (!metadata.width || !metadata.height) return 0;
+
+  const left = Math.max(0, Math.min(box.x, metadata.width - 1));
+  const top = Math.max(0, Math.min(box.y, metadata.height - 1));
+  const width = Math.min(box.width, metadata.width - left);
+  const height = Math.min(box.height, metadata.height - top);
+
+  if (width <= 0 || height <= 0) return 0;
+
+  const { data, info } = await sharp(pngBuffer)
+    .extract({ left, top, width, height })
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+
+  let dark = 0;
+  for (let i = 0; i < data.length; i += info.channels) {
+    if (data[i] < 60 && data[i + 1] < 60 && data[i + 2] < 60) {
+      dark += 1;
+    }
+  }
+
+  return dark;
 }

@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import sharp from "sharp";
 import jsQR from "jsqr";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { buildTicketQrUrl, buildCodeTextSvg } from "./ticket-image-compose.ts";
+import { buildTicketQrUrl, buildCodeTextSvg, countDarkPixelsInBox, scaleLayoutToTemplate } from "./ticket-image-compose.ts";
 import { generateDigitalTicketImage } from "./ticket-delivery.ts";
 import { assertTicketIdentity, hashQrToken } from "./ticket-delivery-identity.ts";
 import type { DeliverableTicket } from "./ticket-delivery-access.ts";
@@ -78,8 +78,24 @@ export function verifyRenderedTicketCodeSvg(ticketCode: string, layout: TicketLa
   return (
     svg.includes('font-family="Arial, Helvetica, sans-serif"') &&
     svg.includes('fill="#000000"') &&
-    svg.includes(ticketCode)
+    svg.includes(`>${ticketCode}<`)
   );
+}
+
+export async function verifyTicketCodeVisibleInPng(
+  pngBuffer: Buffer,
+  layout: TicketLayoutConfig,
+  ticketCode: string,
+): Promise<boolean> {
+  const metadata = await sharp(pngBuffer).metadata();
+  if (!metadata.width || !metadata.height) return false;
+
+  const scaled = scaleLayoutToTemplate(layout, metadata.width, metadata.height);
+  const box = scaled.codeBoxes[0];
+  if (!box) return false;
+
+  const darkPixels = await countDarkPixelsInBox(pngBuffer, box);
+  return darkPixels > 50;
 }
 
 async function resolvePublicTicketCode(
@@ -109,6 +125,7 @@ export async function verifyDigitalTicketRecord(
 
   const { config } = await readTicketLayoutConfig("digital");
   const svgOk = verifyRenderedTicketCodeSvg(originalCode, config);
+  const codeVisible = await verifyTicketCodeVisibleInPng(pngBuffer, config, originalCode);
   const qrDecodedUrl = await decodeDigitalTicketQrUrl(pngBuffer);
   const qrDecodedMatch = qrDecodedUrl === expectedUrl;
   const publicTicketResolved = await resolvePublicTicketCode(supabase, originalToken);
@@ -125,6 +142,7 @@ export async function verifyDigitalTicketRecord(
 
   const ok =
     svgOk &&
+    codeVisible &&
     qrDecodedMatch &&
     publicTicketMatch &&
     !qrTokenModified &&

@@ -11,7 +11,9 @@ import {
   decodeDigitalTicketQrUrl,
   stablePreviewQrToken,
   verifyRenderedTicketCodeSvg,
+  verifyTicketCodeVisibleInPng,
 } from "../src/lib/ticket-delivery-verify.ts";
+import { scaleLayoutToTemplate } from "../src/lib/ticket-image-compose.ts";
 
 const ticketCode = "PF-000016";
 const qrToken = "a1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef123456";
@@ -27,9 +29,9 @@ test("digital ticket code SVG uses safe Arial stack and black fill", () => {
   assert.match(svg, /font-family="Arial, Helvetica, sans-serif"/);
   assert.match(svg, /fill="#000000"/);
   assert.match(svg, /font-weight="700"/);
-  assert.match(svg, /dominant-baseline="middle"/);
   assert.match(svg, /PF-000016/);
   assert.doesNotMatch(svg, /Montserrat/);
+  assert.doesNotMatch(svg, /dominant-baseline/);
 });
 
 test("physical ticket code SVG keeps physical render mode", () => {
@@ -68,6 +70,27 @@ test("generated digital PNG decodes QR to stored token URL", async () => {
   const png = await generateDigitalTicketImage(ticketCode, qrToken);
   const decoded = await decodeDigitalTicketQrUrl(png);
   assert.equal(decoded, buildTicketQrUrl(qrToken));
+});
+
+test("generated digital PNG renders visible ticket code pixels", async () => {
+  const png = await generateDigitalTicketImage(ticketCode, qrToken);
+  const visible = await verifyTicketCodeVisibleInPng(png, DEFAULT_DIGITAL_TICKET_LAYOUT, ticketCode);
+  assert.equal(visible, true);
+});
+
+test("scaleLayoutToTemplate adapts stored calibration to actual PNG size", () => {
+  const stored = {
+    ...DEFAULT_DIGITAL_TICKET_LAYOUT,
+    templateWidth: 1080,
+    templateHeight: 1920,
+    codeBoxes: [{ x: 340, y: 1400, width: 400, height: 80 }],
+    qrBoxes: [{ x: 360, y: 910, width: 360, height: 360 }],
+  };
+  const scaled = scaleLayoutToTemplate(stored, 1050, 1890);
+  assert.equal(scaled.templateWidth, 1050);
+  assert.equal(scaled.templateHeight, 1890);
+  assert.equal(scaled.codeBoxes[0].x, 331);
+  assert.equal(scaled.qrBoxes[0].y, 896);
 });
 
 test("physical ticket generation remains available and unchanged in API surface", async () => {

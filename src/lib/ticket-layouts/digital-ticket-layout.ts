@@ -4,13 +4,13 @@ export const DIGITAL_TICKET_TEMPLATE_PATH = "/templates/digital-ticket.png";
 export const DIGITAL_TICKET_TEMPLATE_FILENAME = "digital-ticket.png";
 export const DIGITAL_TICKET_TEMPLATE_FALLBACK = "ticket-digital-pink-floyd.png";
 
-/** Default overlay positions for the 1080×1920 digital template. */
+/** Default overlay positions for the 1050×1890 digital template. */
 export const DEFAULT_DIGITAL_TICKET_LAYOUT: TicketLayoutConfig = {
-  templateWidth: 1080,
-  templateHeight: 1920,
+  templateWidth: 1050,
+  templateHeight: 1890,
   codeFontSize: 34,
-  codeBoxes: [{ x: 340, y: 1400, width: 400, height: 80 }],
-  qrBoxes: [{ x: 360, y: 910, width: 360, height: 360 }],
+  codeBoxes: [{ x: 331, y: 1378, width: 389, height: 79 }],
+  qrBoxes: [{ x: 350, y: 896, width: 350, height: 354 }],
 };
 
 export function restoreDigitalTicketLayout(): TicketLayoutConfig {
