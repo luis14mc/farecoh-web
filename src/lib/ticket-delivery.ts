@@ -31,7 +31,10 @@ export async function generateDigitalTicketImage(
     loadDigitalTemplateBytes(),
   ]);
 
-  return composeTicketPng(templateBuffer, config, ticketCode, qrToken);
+  return composeTicketPng(templateBuffer, config, ticketCode, qrToken, {
+    codeFill: "#000000",
+    codeFontWeight: 700,
+  });
 }
 
 export async function generatePhysicalTicketImage(
@@ -65,8 +68,8 @@ export async function generateLayoutPreviewImage(
   const { config } = await readTicketLayoutConfig(layoutType);
 
   return composeTicketPng(templateBuffer, config, ticketCode, token, {
-    codeFill: layoutType === "physical" ? "#EDE8FA" : "#FFFFFF",
-    codeFontWeight: layoutType === "physical" ? 700 : 900,
+    codeFill: layoutType === "physical" ? "#EDE8FA" : "#000000",
+    codeFontWeight: 700,
   });
 }
 
