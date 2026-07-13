@@ -39,6 +39,8 @@ export const GET: APIRoute = async (context) => {
         status: lookup.ticket.status,
         statusLabel: formatTicketStatusLabel(lookup.ticket.status),
         qrVerified: report.ok,
+        codeVisible: report.codeVisible,
+        layoutSource: report.layoutSource,
         renderedTicket: report.renderedTicket,
         qrDecodedMatch: report.qrDecodedMatch,
         publicTicketResolved: report.publicTicketResolved,

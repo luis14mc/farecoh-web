@@ -2,7 +2,8 @@ import { createHash } from "node:crypto";
 import sharp from "sharp";
 import jsQR from "jsqr";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { buildTicketQrUrl, buildCodeTextSvg, countDarkPixelsInBox, scaleLayoutToTemplate } from "./ticket-image-compose.ts";
+import { buildTicketQrUrl, buildCodeTextSvg, countDarkPixelsInBox, resolveLayoutForPng } from "./ticket-image-compose.ts";
+import { TICKET_CODE_FONT_FAMILY } from "./ticket-code-font.ts";
 import { generateDigitalTicketImage } from "./ticket-delivery.ts";
 import { assertTicketIdentity, hashQrToken } from "./ticket-delivery-identity.ts";
 import type { DeliverableTicket } from "./ticket-delivery-access.ts";
@@ -15,11 +16,13 @@ export interface DigitalTicketVerificationReport {
   renderedTicket: string;
   qrDecodedUrl: string | null;
   qrDecodedMatch: boolean;
+  codeVisible: boolean;
   publicTicketResolved: string | null;
   publicTicketMatch: boolean;
   qrTokenModified: boolean;
   ticketCodeModified: boolean;
   qrTokenHash: string;
+  layoutSource: string;
   message: string;
 }
 
@@ -60,9 +63,13 @@ async function decodeQrFromRegion(
   return decoded?.data ?? null;
 }
 
-export async function decodeDigitalTicketQrUrl(pngBuffer: Buffer): Promise<string | null> {
-  const { config } = await readTicketLayoutConfig("digital");
-  return decodeQrFromRegion(pngBuffer, config);
+export async function decodeDigitalTicketQrUrl(
+  pngBuffer: Buffer,
+  layout?: TicketLayoutConfig,
+): Promise<string | null> {
+  const config = layout ?? (await readTicketLayoutConfig("digital")).config;
+  const scaled = await resolveLayoutForPng(config, pngBuffer);
+  return decodeQrFromRegion(pngBuffer, scaled);
 }
 
 export function verifyRenderedTicketCodeSvg(ticketCode: string, layout: TicketLayoutConfig): boolean {
@@ -76,7 +83,8 @@ export function verifyRenderedTicketCodeSvg(ticketCode: string, layout: TicketLa
   }).toString();
 
   return (
-    svg.includes('font-family="Arial, Helvetica, sans-serif"') &&
+    svg.includes(`font-family="${TICKET_CODE_FONT_FAMILY}"`) &&
+    svg.includes("@font-face") &&
     svg.includes('fill="#000000"') &&
     svg.includes(`>${ticketCode}<`)
   );
@@ -85,12 +93,8 @@ export function verifyRenderedTicketCodeSvg(ticketCode: string, layout: TicketLa
 export async function verifyTicketCodeVisibleInPng(
   pngBuffer: Buffer,
   layout: TicketLayoutConfig,
-  ticketCode: string,
 ): Promise<boolean> {
-  const metadata = await sharp(pngBuffer).metadata();
-  if (!metadata.width || !metadata.height) return false;
-
-  const scaled = scaleLayoutToTemplate(layout, metadata.width, metadata.height);
+  const scaled = await resolveLayoutForPng(layout, pngBuffer);
   const box = scaled.codeBoxes[0];
   if (!box) return false;
 
@@ -123,10 +127,12 @@ export async function verifyDigitalTicketRecord(
 
   assertTicketIdentity(requested, ticket);
 
-  const { config } = await readTicketLayoutConfig("digital");
+  const layoutRecord = await readTicketLayoutConfig("digital");
+  const { config } = layoutRecord;
+
   const svgOk = verifyRenderedTicketCodeSvg(originalCode, config);
-  const codeVisible = await verifyTicketCodeVisibleInPng(pngBuffer, config, originalCode);
-  const qrDecodedUrl = await decodeDigitalTicketQrUrl(pngBuffer);
+  const codeVisible = await verifyTicketCodeVisibleInPng(pngBuffer, config);
+  const qrDecodedUrl = await decodeDigitalTicketQrUrl(pngBuffer, config);
   const qrDecodedMatch = qrDecodedUrl === expectedUrl;
   const publicTicketResolved = await resolvePublicTicketCode(supabase, originalToken);
   const publicTicketMatch = publicTicketResolved === originalCode;
@@ -151,7 +157,15 @@ export async function verifyDigitalTicketRecord(
 
   const message = ok
     ? "Digital ticket identity and QR verified."
-    : "Digital ticket verification failed.";
+    : [
+        "Digital ticket verification failed.",
+        !codeVisible ? "Ticket code not visible at calibrated position." : null,
+        !qrDecodedMatch ? "QR decode mismatch at calibrated position." : null,
+        !publicTicketMatch ? "Public ticket lookup mismatch." : null,
+        qrTokenModified || ticketCodeModified ? "Ticket identity changed during render." : null,
+      ]
+        .filter(Boolean)
+        .join(" ");
 
   return {
     ok,
@@ -159,11 +173,13 @@ export async function verifyDigitalTicketRecord(
     renderedTicket: originalCode,
     qrDecodedUrl,
     qrDecodedMatch,
+    codeVisible,
     publicTicketResolved,
     publicTicketMatch,
     qrTokenModified,
     ticketCodeModified,
     qrTokenHash: hashQrToken(originalToken),
+    layoutSource: layoutRecord.source,
     message,
   };
 }
@@ -189,6 +205,8 @@ export function verificationReportToText(report: DigitalTicketVerificationReport
   return [
     `Requested ticket: ${report.requestedTicket}`,
     `Rendered ticket: ${report.renderedTicket}`,
+    `Layout source: ${report.layoutSource}`,
+    `Code visible: ${report.codeVisible ? "YES" : "NO"}`,
     `QR decoded URL: ${report.qrDecodedMatch ? "MATCH" : "MISMATCH"}`,
     `Public ticket resolved: ${report.publicTicketResolved ?? "NONE"}`,
     `QR token modified: ${report.qrTokenModified ? "YES" : "NO"}`,

@@ -14,11 +14,12 @@ import {
   verifyTicketCodeVisibleInPng,
 } from "../src/lib/ticket-delivery-verify.ts";
 import { scaleLayoutToTemplate } from "../src/lib/ticket-image-compose.ts";
+import { TICKET_CODE_FONT_FAMILY } from "../src/lib/ticket-code-font.ts";
 
 const ticketCode = "PF-000016";
 const qrToken = "a1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef123456";
 
-test("digital ticket code SVG uses safe Arial stack and black fill", () => {
+test("digital ticket code SVG embeds bundled font and black fill", () => {
   const box = DEFAULT_DIGITAL_TICKET_LAYOUT.codeBoxes[0];
   const svg = buildCodeTextSvg(ticketCode, box, 34, {
     fill: "#000000",
@@ -26,7 +27,8 @@ test("digital ticket code SVG uses safe Arial stack and black fill", () => {
     renderMode: "digital",
   }).toString();
 
-  assert.match(svg, /font-family="Arial, Helvetica, sans-serif"/);
+  assert.match(svg, new RegExp(`font-family="${TICKET_CODE_FONT_FAMILY}"`));
+  assert.match(svg, /@font-face/);
   assert.match(svg, /fill="#000000"/);
   assert.match(svg, /font-weight="700"/);
   assert.match(svg, /PF-000016/);
@@ -74,8 +76,21 @@ test("generated digital PNG decodes QR to stored token URL", async () => {
 
 test("generated digital PNG renders visible ticket code pixels", async () => {
   const png = await generateDigitalTicketImage(ticketCode, qrToken);
-  const visible = await verifyTicketCodeVisibleInPng(png, DEFAULT_DIGITAL_TICKET_LAYOUT, ticketCode);
+  const visible = await verifyTicketCodeVisibleInPng(png, DEFAULT_DIGITAL_TICKET_LAYOUT);
   assert.equal(visible, true);
+});
+
+test("QR decode uses calibrated layout scaled to PNG dimensions", async () => {
+  const png = await generateDigitalTicketImage(ticketCode, qrToken);
+  const storedLayout = {
+    ...DEFAULT_DIGITAL_TICKET_LAYOUT,
+    templateWidth: 1080,
+    templateHeight: 1920,
+    codeBoxes: [{ x: 340, y: 1400, width: 400, height: 80 }],
+    qrBoxes: [{ x: 360, y: 910, width: 360, height: 360 }],
+  };
+  const decoded = await decodeDigitalTicketQrUrl(png, storedLayout);
+  assert.equal(decoded, buildTicketQrUrl(qrToken));
 });
 
 test("scaleLayoutToTemplate adapts stored calibration to actual PNG size", () => {

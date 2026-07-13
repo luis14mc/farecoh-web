@@ -23,7 +23,7 @@ import type {
   TicketLayoutSource,
   TicketLayoutType,
 } from "./ticket-layouts/types.ts";
-import { sanitizeTicketLayoutConfig } from "./ticket-image-compose.ts";
+import { sanitizeTicketLayoutConfig, scaleLayoutToTemplate } from "./ticket-image-compose.ts";
 import { QR_WIDTH_POINTS } from "./ticket-print-measurements.ts";
 import { readTicketPrintLayout } from "./ticket-print-layout-config.ts";
 import type { TicketPrintLayout } from "../types/ticket-print-layout.ts";
@@ -299,17 +299,29 @@ export async function saveTicketLayoutConfig(
   updatedBy: string,
 ): Promise<TicketLayoutRecord> {
   const { config, templatePath, storedConfig } = parseLayoutRequestBody(body, type);
+  const template = await readTemplateDimensions(type);
+  const alignedConfig = scaleLayoutToTemplate(config, template.width, template.height);
   const supabase = await getSupabaseAdmin();
 
   if (!supabase) {
     throw new Error("SUPABASE_SERVICE_ROLE_KEY es necesaria para guardar la calibración en producción.");
   }
 
+  const alignedStoredConfig: StoredTicketLayoutPayload = {
+    ...storedConfig,
+    templatePath,
+    templateWidth: template.width,
+    templateHeight: template.height,
+    codeFontSize: alignedConfig.codeFontSize,
+    codeBoxes: alignedConfig.codeBoxes,
+    qrBoxes: alignedConfig.qrBoxes,
+  };
+
   const { error } = await supabase.from("ticket_layout_configs").upsert(
     {
       layout_type: type,
       template_path: templatePath,
-      config: storedConfig,
+      config: alignedStoredConfig,
       updated_at: new Date().toISOString(),
       updated_by: updatedBy,
     },
@@ -376,9 +388,15 @@ export async function readTemplateDimensions(type: TicketLayoutType): Promise<{ 
 
 export async function readTicketLayoutState(type: TicketLayoutType) {
   const [record, template] = await Promise.all([readTicketLayoutConfig(type), readTemplateDimensions(type)]);
+  const alignedConfig = scaleLayoutToTemplate(record.config, template.width, template.height);
 
   return {
     ...record,
+    config: {
+      ...alignedConfig,
+      templateWidth: template.width,
+      templateHeight: template.height,
+    },
     template,
   };
 }

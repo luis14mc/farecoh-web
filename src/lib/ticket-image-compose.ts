@@ -1,5 +1,9 @@
 import sharp from "sharp";
 import QRCode from "qrcode";
+import {
+  TICKET_CODE_FONT_FAMILY,
+  buildEmbeddedTicketCodeFontFace,
+} from "./ticket-code-font.ts";
 import type { OverlayBox, TicketLayoutConfig } from "./ticket-layouts/types.ts";
 
 export const TICKET_QR_PUBLIC_BASE_URL = "https://www.farecoh.org";
@@ -16,7 +20,7 @@ export interface CodeTextStyle {
 export const DIGITAL_CODE_TEXT_STYLE: CodeTextStyle = {
   fill: "#000000",
   fontWeight: 700,
-  fontFamily: "Arial, Helvetica, sans-serif",
+  fontFamily: TICKET_CODE_FONT_FAMILY,
 };
 
 export const PHYSICAL_CODE_TEXT_STYLE: CodeTextStyle = {
@@ -90,6 +94,18 @@ function scaleBox(box: OverlayBox, scaleX: number, scaleY: number): OverlayBox {
   };
 }
 
+/** Scale stored calibration to the rendered PNG dimensions (same helper for compose + verify). */
+export async function resolveLayoutForPng(
+  layout: TicketLayoutConfig,
+  pngBuffer: Buffer,
+): Promise<TicketLayoutConfig> {
+  const metadata = await sharp(pngBuffer).metadata();
+  if (!metadata.width || !metadata.height) {
+    throw new Error("No se pudieron leer las dimensiones del PNG.");
+  }
+  return scaleLayoutToTemplate(layout, metadata.width, metadata.height);
+}
+
 /** Scale stored calibration coordinates to the actual PNG template dimensions. */
 export function scaleLayoutToTemplate(
   layout: TicketLayoutConfig,
@@ -152,6 +168,23 @@ export function buildCodeTextSvg(
   const centerX = box.width / 2;
   const centerY = box.height / 2 + fontSize * 0.35;
   const letterSpacingAttr = style.letterSpacing ? ` letter-spacing="${style.letterSpacing}"` : "";
+
+  if (renderMode === "digital") {
+    const fontFace = buildEmbeddedTicketCodeFontFace();
+    const svg = `<svg width="${box.width}" height="${box.height}" viewBox="0 0 ${box.width} ${box.height}" xmlns="http://www.w3.org/2000/svg">
+  <defs><style type="text/css"><![CDATA[${fontFace}]]></style></defs>
+  <text
+    x="${centerX}"
+    y="${centerY}"
+    font-family="${TICKET_CODE_FONT_FAMILY}"
+    font-size="${fontSize}"
+    font-weight="${style.fontWeight}"
+    fill="${style.fill}"
+    text-anchor="middle"${letterSpacingAttr}
+  >${safeCode}</text>
+</svg>`;
+    return Buffer.from(svg);
+  }
 
   const svg = `<svg width="${box.width}" height="${box.height}" viewBox="0 0 ${box.width} ${box.height}" xmlns="http://www.w3.org/2000/svg">
   <text

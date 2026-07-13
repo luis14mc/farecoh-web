@@ -205,8 +205,8 @@ function CalibrationTab({
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           templatePath: layoutType === "physical" ? PHYSICAL_TICKET_TEMPLATE_PATH : DIGITAL_TICKET_TEMPLATE_PATH,
-          templateWidth: config.templateWidth,
-          templateHeight: config.templateHeight,
+          templateWidth: template.width,
+          templateHeight: template.height,
           codeFontSize: config.codeFontSize,
           codeBoxes: config.codeBoxes,
           qrBoxes: config.qrBoxes,
