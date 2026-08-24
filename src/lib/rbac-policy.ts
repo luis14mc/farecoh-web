@@ -61,3 +61,8 @@ export function canAccessRoute(role: StaffRole, pathname: string): boolean {
   const route = normalizeAdminPath(pathname);
   return routePermissions[route]?.includes(role) ?? false;
 }
+
+/** Revert tickets to available — super_admin and event_manager only. */
+export function canResetTickets(profile: StaffProfileLike | null | undefined): boolean {
+  return profile?.role === "super_admin" || profile?.role === "event_manager";
+}

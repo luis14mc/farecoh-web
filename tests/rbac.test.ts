@@ -2,11 +2,12 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   canAccessRoute,
+  canResetTickets,
   normalizeAdminPath,
+  resolveAdminAccess,
   roleHomePath,
   routePermissions,
 } from "../src/lib/rbac-policy.ts";
-import { resolveAdminAccess } from "../src/lib/rbac-policy.ts";
 import type { StaffRole } from "../src/lib/rbac-policy.ts";
 
 test("normalizeAdminPath keeps /admin and first-level admin routes", () => {
@@ -71,6 +72,13 @@ test("resolveAdminAccess distinguishes unauthenticated, missing profile, and una
   assert.deepEqual(resolveAdminAccess({ hasUser: true, profile, pathname: "/admin/sales" }), {
     ok: true,
   });
+});
+
+test("canResetTickets allows super_admin and event_manager only", () => {
+  assert.equal(canResetTickets({ role: "seller" } as never), false);
+  assert.equal(canResetTickets({ role: "checkin_operator" } as never), false);
+  assert.equal(canResetTickets({ role: "super_admin" } as never), true);
+  assert.equal(canResetTickets({ role: "event_manager" } as never), true);
 });
 
 test("roleHomePath sends each role to its primary workspace", () => {

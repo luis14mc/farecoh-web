@@ -5,11 +5,13 @@ import { AdminPageHeader } from "@/components/admin/react/AdminPageHeader";
 import { TicketsInventoryTable } from "@/components/admin/react/TicketsInventoryTable";
 import { supabase } from "@/lib/supabase";
 import { getPublicSupabaseConfig, isAuthConfigured, type UserProfile } from "@/lib/auth";
+import { canResetTickets } from "@/lib/rbac";
 import { formatSiteDate } from "@/lib/locale";
 
 const staffProfile = Astro.locals.staffProfile as UserProfile | undefined;
 const authConfigured = isAuthConfigured(getPublicSupabaseConfig());
 const currentDate = formatSiteDate(new Date(), { month: "short", day: "numeric", year: "numeric" });
+const allowTicketReset = canResetTickets(staffProfile);
 
 const { data: tickets = [] } = await supabase
   .from("tickets")
@@ -32,6 +34,12 @@ const locations = Array.from(new Set(tickets.map((t) => t.sale_location).filter(
   />
 
   <AdminPage mobileFab>
-    <TicketsInventoryTable client:load tickets={tickets} sellers={sellers} locations={locations} />
+    <TicketsInventoryTable
+      client:load
+      tickets={tickets}
+      sellers={sellers}
+      locations={locations}
+      canResetTickets={allowTicketReset}
+    />
   </AdminPage>
 </AdminLayout>

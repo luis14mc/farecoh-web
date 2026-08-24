@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { CopyTextButton } from "@/components/admin/react/CopyTextButton";
 import { TicketStatusBadge } from "@/components/admin/react/TicketStatusBadge";
+import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 
 export interface AdminTicketPreview {
@@ -37,6 +38,8 @@ interface AdminTicketViewDialogProps {
   onOpenChange: (open: boolean) => void;
   ticketCode?: string | null;
   initialTicket?: AdminTicketPreview | null;
+  canResetTickets?: boolean;
+  onTicketReset?: () => void;
 }
 
 function DetailRow({ label, value }: { label: string; value: string }) {
@@ -64,10 +67,14 @@ export function AdminTicketViewDialog({
   onOpenChange,
   ticketCode,
   initialTicket,
+  canResetTickets = false,
+  onTicketReset,
 }: AdminTicketViewDialogProps) {
   const [ticket, setTicket] = useState<AdminTicketPreview | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [resetting, setResetting] = useState(false);
+  const [resetError, setResetError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!open) {
@@ -124,6 +131,39 @@ export function AdminTicketViewDialog({
   const status = ticket?.status ?? initialTicket?.status ?? "available";
   const qrToken = ticket?.qr_token ?? initialTicket?.qr_token;
   const publicUrl = qrToken ? buildTicketQrUrl(qrToken) : null;
+  const canRevertThisTicket = canResetTickets && status !== "available";
+
+  async function handleRevertTicket() {
+    const code = ticket?.ticket_code ?? initialTicket?.ticket_code;
+    if (!code) return;
+
+    const confirmed = window.confirm(
+      `¿Revertir ${code} a disponible? Se eliminarán venta, reserva y check-in asociados. El QR no cambia.`,
+    );
+    if (!confirmed) return;
+
+    setResetting(true);
+    setResetError(null);
+
+    try {
+      const response = await fetch("/api/admin/tickets/reset", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({ ticketCodes: code }),
+      });
+      const payload = await response.json();
+      if (!response.ok || !payload.ok) {
+        throw new Error(payload.message ?? "No se pudo revertir el boleto.");
+      }
+      onTicketReset?.();
+      onOpenChange(false);
+    } catch (err) {
+      setResetError(err instanceof Error ? err.message : "Error inesperado.");
+    } finally {
+      setResetting(false);
+    }
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -191,6 +231,24 @@ export function AdminTicketViewDialog({
                   <CopyTextButton value={publicUrl} label="Copiar enlace consulta" />
                 ) : null}
               </div>
+            ) : null}
+
+            {resetError ? (
+              <Alert variant="destructive">
+                <AlertDescription>{resetError}</AlertDescription>
+              </Alert>
+            ) : null}
+
+            {canRevertThisTicket ? (
+              <Button
+                type="button"
+                variant="destructive"
+                className="w-full"
+                disabled={resetting}
+                onClick={() => void handleRevertTicket()}
+              >
+                {resetting ? "Revirtiendo..." : "Revertir a disponible"}
+              </Button>
             ) : null}
           </div>
         ) : null}

@@ -3,6 +3,7 @@ import { Filter, Plus } from "lucide-react";
 import { formatSiteDate } from "@/lib/locale";
 import { buildTicketQrUrl } from "@/lib/ticket-qr-url";
 import { AdminTicketViewDialog, type AdminTicketPreview } from "@/components/admin/react/AdminTicketViewDialog";
+import { TicketResetPanel } from "@/components/admin/react/TicketResetPanel";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -32,6 +33,7 @@ interface TicketsInventoryTableProps {
   tickets: TicketRow[];
   sellers: string[];
   locations: string[];
+  canResetTickets?: boolean;
 }
 
 function FilterFields({
@@ -116,7 +118,12 @@ function FilterFields({
   );
 }
 
-export function TicketsInventoryTable({ tickets, sellers, locations }: TicketsInventoryTableProps) {
+export function TicketsInventoryTable({
+  tickets,
+  sellers,
+  locations,
+  canResetTickets = false,
+}: TicketsInventoryTableProps) {
   const [codeFilter, setCodeFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [sellerFilter, setSellerFilter] = useState("all");
@@ -154,6 +161,11 @@ export function TicketsInventoryTable({ tickets, sellers, locations }: TicketsIn
   };
 
   return (
+    <div className="space-y-4">
+      {canResetTickets ? (
+        <TicketResetPanel onResetComplete={() => window.location.reload()} />
+      ) : null}
+
     <Card>
       <div className="border-b bg-muted/30 p-4">
         <div className="mb-3 flex items-center justify-between gap-3 md:hidden">
@@ -302,7 +314,14 @@ export function TicketsInventoryTable({ tickets, sellers, locations }: TicketsIn
         </Button>
       </CardFooter>
 
-      <AdminTicketViewDialog open={viewOpen} onOpenChange={setViewOpen} ticketCode={viewTicket?.ticket_code} initialTicket={viewTicket} />
+      <AdminTicketViewDialog
+        open={viewOpen}
+        onOpenChange={setViewOpen}
+        ticketCode={viewTicket?.ticket_code}
+        initialTicket={viewTicket}
+        canResetTickets={canResetTickets}
+        onTicketReset={() => window.location.reload()}
+      />
 
       <AdminMobileActionBar>
         <Button asChild className="h-12 w-full">
@@ -313,5 +332,6 @@ export function TicketsInventoryTable({ tickets, sellers, locations }: TicketsIn
         </Button>
       </AdminMobileActionBar>
     </Card>
+    </div>
   );
 }

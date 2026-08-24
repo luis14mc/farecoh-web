@@ -3,6 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { createSupabaseServerClient, type UserProfile, type StaffRole } from "@/lib/auth";
 import {
   canAccessRoute,
+  canResetTickets,
   normalizeAdminPath,
   resolveAdminAccess,
   roleHomePath,
@@ -11,7 +12,7 @@ import {
 } from "@/lib/rbac-policy";
 import type { Database } from "@/types/database";
 
-export { canAccessRoute, normalizeAdminPath, roleHomePath, routePermissions, resolveAdminAccess };
+export { canAccessRoute, canResetTickets, normalizeAdminPath, roleHomePath, routePermissions, resolveAdminAccess };
 export type { AdminAccessReason };
 
 function mapStaffProfile(data: {
