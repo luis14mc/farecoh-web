@@ -5,6 +5,7 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
+  Music2,
   Package,
   Printer,
   ScanLine,
@@ -26,6 +27,7 @@ export const ADMIN_NAV_ICONS: Record<AdminNavKey, LucideIcon> = {
   batches: Package,
   checkin: ScanLine,
   vendors: Users,
+  "band-assignments": Music2,
   reports: BarChart3,
   printing: Printer,
 };

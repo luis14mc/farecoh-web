@@ -1,0 +1,41 @@
+---
+import AdminLayout from "@/layouts/AdminLayout.astro";
+import AdminPage from "@/components/admin/ui/AdminPage.astro";
+import { AdminPageHeader } from "@/components/admin/react/AdminPageHeader";
+import { BandAssignmentsPanel } from "@/components/admin/react/BandAssignmentsPanel";
+import { createSupabaseServerClient, getPublicSupabaseConfig, isAuthConfigured, type UserProfile } from "@/lib/auth";
+import { listBandMusicianAssignments } from "@/lib/band-assignments";
+import { formatSiteDate } from "@/lib/locale";
+
+const supabase = createSupabaseServerClient(Astro);
+const staffProfile = Astro.locals.staffProfile as UserProfile | undefined;
+const authConfigured = isAuthConfigured(getPublicSupabaseConfig());
+const currentDate = formatSiteDate(new Date(), { month: "short", day: "numeric", year: "numeric" });
+
+let musicians = [];
+try {
+  musicians = await listBandMusicianAssignments(supabase);
+} catch {
+  musicians = [];
+}
+---
+
+<AdminLayout
+  title="Banda | FARECOH"
+  description="Control de boletos asignados a integrantes de la banda"
+  active="band-assignments"
+>
+  <AdminPageHeader
+    client:load
+    title="Control banda"
+    section="Operaciones"
+    description="Lista de referencia: qué boletos tiene asignado cada músico."
+    currentDate={currentDate}
+    staffProfile={staffProfile}
+    authConfigured={authConfigured}
+  />
+
+  <AdminPage>
+    <BandAssignmentsPanel client:load musicians={musicians} />
+  </AdminPage>
+</AdminLayout>

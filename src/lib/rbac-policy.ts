@@ -39,6 +39,7 @@ export const routePermissions: Record<string, StaffRole[]> = {
   "/admin/reports": ["super_admin", "event_manager"],
   "/admin/printing": ["super_admin", "event_manager"],
   "/admin/vendors": ["super_admin", "event_manager"],
+  "/admin/band-assignments": ["super_admin", "event_manager"],
   "/admin/no-autorizado": ["super_admin", "event_manager", "seller", "checkin_operator"],
 };
 

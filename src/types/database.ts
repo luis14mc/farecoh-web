@@ -235,6 +235,33 @@ export interface Database {
         };
         Update: Partial<Database["public"]["Tables"]["reservation_notifications"]["Row"]>;
       };
+      band_musicians: {
+        Row: {
+          id: string;
+          name: string;
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          name: string;
+          notes?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["band_musicians"]["Row"]>;
+      };
+      band_musician_tickets: {
+        Row: {
+          id: string;
+          musician_id: string;
+          ticket_code: string;
+          created_at: string;
+        };
+        Insert: {
+          musician_id: string;
+          ticket_code: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["band_musician_tickets"]["Row"]>;
+      };
     };
     Functions: {
       get_auth_user_role: {

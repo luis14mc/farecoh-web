@@ -7,6 +7,7 @@ export type AdminNavKey =
   | "batches"
   | "checkin"
   | "vendors"
+  | "band-assignments"
   | "reports"
   | "printing"
   | "delivery";
@@ -28,6 +29,7 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
   { label: "Lotes", href: "/admin/batches", icon: "inventory_2", key: "batches" },
   { label: "Acceso", href: "/admin/checkin", icon: "qr_code_scanner", key: "checkin" },
   { label: "Vendedores", href: "/admin/vendors", icon: "group", key: "vendors" },
+  { label: "Banda", href: "/admin/band-assignments", icon: "music_note", key: "band-assignments" },
   { label: "Reportes", href: "/admin/reports", icon: "monitoring", key: "reports" },
   { label: "Impresión", href: "/admin/printing", icon: "print", key: "printing" },
 ];
