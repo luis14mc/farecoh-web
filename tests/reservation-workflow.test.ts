@@ -12,6 +12,7 @@ import {
 
 test("reserved ticket actions link to reservations workspace", () => {
   assert.equal(getTicketActionHref("reserved", "PF-000001"), "/admin/reservations?code=PF-000001");
+  assert.equal(getTicketActionHref("assigned", "PF-000004"), "/admin/reservations?reserve=PF-000004");
   assert.equal(getTicketActionHref("available", "PF-000002"), "/admin/sales?code=PF-000002");
   assert.equal(getTicketActionHref("sold", "PF-000003"), null);
 });

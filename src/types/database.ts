@@ -324,6 +324,16 @@ export interface Database {
         };
         Returns: Database["public"]["Tables"]["tickets"]["Row"];
       };
+      staff_reserve_ticket: {
+        Args: {
+          p_ticket_code: string;
+          p_full_name: string;
+          p_phone: string;
+          p_email: string;
+          p_reserved_by: string;
+        };
+        Returns: Database["public"]["Tables"]["tickets"]["Row"];
+      };
       sell_physical_ticket: {
         Args: {
           p_ticket_code: string;

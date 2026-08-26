@@ -53,7 +53,8 @@ INSERT INTO public.band_musicians (name) VALUES
   ('Miguel'),
   ('Marlon'),
   ('Sergio'),
-  ('Jonathan')
+  ('Jonathan'),
+  ('Gustavo')
 ON CONFLICT (name) DO NOTHING;
 
 WITH seed AS (
@@ -113,7 +114,17 @@ WITH seed AS (
     ('Jonathan', 'PF-000257'),
     ('Jonathan', 'PF-000287'),
     ('Jonathan', 'PF-000250'),
-    ('Jonathan', 'PF-000385')
+    ('Jonathan', 'PF-000385'),
+    ('Gustavo', 'PF-000256'),
+    ('Gustavo', 'PF-000384'),
+    ('Gustavo', 'PF-000442'),
+    ('Gustavo', 'PF-000479'),
+    ('Gustavo', 'PF-000320'),
+    ('Gustavo', 'PF-000448'),
+    ('Gustavo', 'PF-000351'),
+    ('Gustavo', 'PF-000415'),
+    ('Gustavo', 'PF-000378'),
+    ('Gustavo', 'PF-000282')
   ) AS t(musician_name, ticket_code)
 )
 INSERT INTO public.band_musician_tickets (musician_id, ticket_code)

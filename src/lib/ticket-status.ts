@@ -35,8 +35,9 @@ export function getTicketActionLabel(status: string): string {
   switch (status) {
     case "reserved":
       return "Confirmar pago";
-    case "available":
     case "assigned":
+      return "Reservar o vender";
+    case "available":
       return "Registrar venta";
     case "sold":
       return "Listo para check-in";
@@ -56,6 +57,10 @@ export function canConfirmPayment(status: string): boolean {
 export function getTicketActionHref(status: string, ticketCode: string): string | null {
   if (status === "reserved") {
     return `/admin/reservations?code=${encodeURIComponent(ticketCode)}`;
+  }
+
+  if (status === "assigned") {
+    return `/admin/reservations?reserve=${encodeURIComponent(ticketCode)}`;
   }
 
   if (canConfirmPayment(status)) {

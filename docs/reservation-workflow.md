@@ -11,6 +11,10 @@ reserved → available   (cancel reservation)
 
 Public reservations are created via `POST /api/tickets/reserve` → RPC `create_ticket_order`.
 
+**Online pool:** only tickets with `status = available`, `batch_id IS NULL`, and not listed in `band_musician_tickets`. Batch-assigned tickets (`assigned` + `batch_id`) and band control-list tickets are reserved/sold manually only.
+
+**Staff manual reserve:** `/admin/reservations` → *Reserva manual (admin)* uses RPC `staff_reserve_ticket` for `available` or `assigned` tickets (including batch/lote). Cancelling a batch reservation restores `assigned` instead of `available`.
+
 Staff follow-up happens in **`/admin/reservations`**.
 
 ## Admin page
@@ -57,6 +61,8 @@ Run in Supabase SQL Editor:
 
 ```
 supabase/migrations/20260630_reservation_workflow.sql
+supabase/migrations/20260826_exclude_batch_tickets_from_online_reservation.sql
+supabase/migrations/20260827_staff_reserve_ticket.sql
 ```
 
 Adds:

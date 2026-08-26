@@ -439,7 +439,8 @@ export function ReservationsPanel({
           <DialogHeader>
             <DialogTitle>Cancelar reserva</DialogTitle>
             <DialogDescription>
-              Libera el boleto {activeTicket?.ticket_code}. El QR se conserva y el boleto vuelve a disponible.
+              Libera el boleto {activeTicket?.ticket_code}. El QR se conserva y el boleto vuelve a disponible o
+              asignado si pertenece a un lote.
             </DialogDescription>
           </DialogHeader>
 

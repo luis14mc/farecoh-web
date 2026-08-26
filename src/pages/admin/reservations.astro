@@ -2,11 +2,12 @@
 import AdminLayout from "@/layouts/AdminLayout.astro";
 import AdminPage from "@/components/admin/ui/AdminPage.astro";
 import { AdminPageHeader } from "@/components/admin/react/AdminPageHeader";
+import { StaffReservationForm } from "@/components/admin/react/StaffReservationForm";
 import { ReservationsPanel } from "@/components/admin/react/ReservationsPanel";
 import { createSupabaseServerClient, getPublicSupabaseConfig, isAuthConfigured, type UserProfile } from "@/lib/auth";
 import { formatSiteDate } from "@/lib/locale";
 import { confirmTicketPayment } from "@/services/ticket-payment";
-import { cancelTicketReservation } from "@/services/ticket-reservation";
+import { cancelTicketReservation, createStaffReservations } from "@/services/ticket-reservation";
 import { getSiteStartOfTodayIso } from "@/services/reservation-stats";
 import { loadConvertedReservationsToday, loadReservedTickets } from "@/services/reservation-queries";
 
@@ -17,6 +18,8 @@ const currentDate = formatSiteDate(new Date(), { month: "short", day: "numeric",
 
 let formMessage = "";
 let formError = false;
+let reserveMessage = "";
+let reserveError = false;
 let cancelMessage = "";
 let cancelError = false;
 let pageError = "";
@@ -29,6 +32,35 @@ function normalizeTicketCode(ticketCode: string): string {
 if (Astro.request.method === "POST") {
   const data = await Astro.request.formData();
   const action = String(data.get("action") || "");
+
+  if (action === "create_reservation") {
+    try {
+      const ticketCodes = String(data.get("ticket_codes") || "");
+      const buyerName = String(data.get("buyer_name") || "").trim();
+      const buyerPhone = String(data.get("buyer_phone") || "").trim();
+      const buyerEmail = String(data.get("buyer_email") || "").trim().toLowerCase() || "";
+
+      if (!ticketCodes.trim() || !buyerName || !buyerPhone) {
+        throw new Error("Complete códigos, nombre y teléfono.");
+      }
+
+      const result = await createStaffReservations(supabase, {
+        ticketCodes,
+        buyer_name: buyerName,
+        buyer_phone: buyerPhone,
+        buyer_email: buyerEmail,
+        reserved_by: staffProfile?.email ?? staffProfile?.full_name ?? "admin-reservations",
+      });
+
+      reserveMessage =
+        result.errors.length > 0
+          ? `${result.reserved.length} reserva(s) creada(s). Avisos: ${result.errors.join(" ")}`
+          : `${result.reserved.length} boleto(s) reservado(s): ${result.reserved.join(", ")}.`;
+    } catch (err: unknown) {
+      reserveError = true;
+      reserveMessage = err instanceof Error ? err.message : "Error al crear la reserva.";
+    }
+  }
 
   if (action === "confirm_payment") {
     try {
@@ -87,7 +119,10 @@ if (Astro.request.method === "POST") {
         throw new Error(result.message);
       }
 
-      cancelMessage = `Reserva ${result.ticket_code} cancelada. El boleto volvió a disponible.`;
+      cancelMessage =
+        result.status === "assigned"
+          ? `Reserva ${result.ticket_code} cancelada. El boleto volvió a asignado (lote).`
+          : `Reserva ${result.ticket_code} cancelada. El boleto volvió a disponible.`;
     } catch (err: unknown) {
       cancelError = true;
       cancelMessage = err instanceof Error ? err.message : "Error al cancelar la reserva.";
@@ -126,7 +161,7 @@ try {
     client:load
     title="Reservas"
     section="Operaciones"
-    description="Gestione reservas web: confirme pagos, contacte compradores o libere boletos."
+    description="Gestione reservas web y reserve manualmente boletos de lotes asignados."
     currentDate={currentDate}
     staffProfile={staffProfile}
     authConfigured={authConfigured}
@@ -146,7 +181,9 @@ try {
     )}
 
     {!pageError && (
-      <ReservationsPanel
+      <>
+        <StaffReservationForm reserveMessage={reserveMessage || undefined} reserveError={reserveError} />
+        <ReservationsPanel
         client:load
         reservations={reservations}
         sellers={sellers}
@@ -156,6 +193,7 @@ try {
         cancelMessage={cancelMessage || undefined}
         cancelError={cancelError}
       />
+      </>
     )}
   </AdminPage>
 </AdminLayout>
