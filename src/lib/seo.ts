@@ -1,6 +1,6 @@
 /** SEO helpers — canonical URLs, meta text, sitemap routes. */
 
-export const DEFAULT_OG_IMAGE = "/images/evento/hero.webp";
+export const DEFAULT_OG_IMAGE = "/images/farecoh-hero-orchestra.webp";
 
 export function getSiteUrl(): string {
   const url = import.meta.env.PUBLIC_SITE_URL ?? "https://farecoh.org";
@@ -32,11 +32,9 @@ export type SitemapEntry = {
   priority: string;
 };
 
-/** Rutas públicas indexables (excluye admin, auth y consultas de boleto). */
+/** Rutas públicas indexables (excluye admin, auth, consultas de boleto y eventos ocultos). */
 export const SITEMAP_ENTRIES: SitemapEntry[] = [
   { path: "/", changefreq: "weekly", priority: "1.0" },
-  { path: "/eventos/pink-floyd", changefreq: "weekly", priority: "0.9" },
-  { path: "/eventos/pink-floyd/boletos", changefreq: "weekly", priority: "0.85" },
 ];
 
 export function buildSitemapXml(lastmod: string): string {
