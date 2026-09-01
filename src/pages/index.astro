@@ -25,6 +25,89 @@ import Analytics from '@vercel/analytics/astro';
   <CauseBlock />
   <MissionVision />
   <WhatWeDo />
+
+  <section class="reveal-section relative overflow-hidden bg-[#090909] py-24 text-white md:py-32">
+    <div class="absolute inset-0 opacity-70" aria-hidden="true">
+      <div class="absolute -left-24 top-10 h-72 w-72 rounded-full bg-fuchsia-500/20 blur-3xl"></div>
+      <div class="absolute right-0 top-1/3 h-80 w-80 rounded-full bg-cyan-400/15 blur-3xl"></div>
+      <div class="absolute bottom-0 left-1/3 h-64 w-64 rounded-full bg-violet-500/15 blur-3xl"></div>
+    </div>
+
+    <div class="landing-shell relative z-10">
+      <div class="grid items-center gap-12 lg:grid-cols-[0.9fr_1.1fr]">
+        <div class="relative min-h-[360px] overflow-hidden border border-white/10 bg-black shadow-2xl">
+          <img
+            src="/images/evento/hero.webp"
+            alt="Escenario artístico con iluminación y ambiente de concierto benéfico"
+            class="h-full min-h-[360px] w-full object-cover opacity-70 grayscale"
+            loading="lazy"
+            width="1600"
+            height="1067"
+          />
+          <div class="absolute inset-0 bg-gradient-to-t from-black via-black/45 to-transparent"></div>
+          <div class="absolute bottom-0 left-0 right-0 p-8">
+            <span class="mb-4 inline-flex border border-white/15 bg-white/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.28em] text-white/80 backdrop-blur">
+              Próximamente
+            </span>
+            <p class="max-w-sm text-sm uppercase tracking-[0.22em] text-white/70">
+              Valle de Ángeles · Concierto benéfico
+            </p>
+          </div>
+        </div>
+
+        <div>
+          <span class="mb-5 inline-flex items-center gap-3 text-sm font-bold uppercase tracking-[0.28em] text-[#f7b733]">
+            <span class="h-px w-12 bg-[#f7b733]"></span>
+            FARECOH presenta
+          </span>
+
+          <h2 class="max-w-4xl text-4xl font-black uppercase leading-[0.95] tracking-[-0.04em] text-white md:text-6xl lg:text-7xl">
+            Concierto benéfico<br />
+            <span class="bg-gradient-to-r from-[#f7b733] via-white to-[#35d4ff] bg-clip-text text-transparent">
+              Tributo Pink Floyd
+            </span>
+          </h2>
+
+          <p class="mt-8 max-w-2xl text-lg leading-8 text-white/75 md:text-xl">
+            Próximamente en <strong class="text-white">Valle de Ángeles</strong>, una experiencia musical y solidaria a beneficio de
+            <strong class="text-white"> José Joaquín Cerrato</strong>, como parte de la recaudación de fondos para su
+            <strong class="text-white">trasplante de hígado</strong>.
+          </p>
+
+          <div class="mt-10 grid gap-4 sm:grid-cols-3">
+            <div class="border border-white/10 bg-white/[0.04] p-5 backdrop-blur">
+              <p class="text-xs font-bold uppercase tracking-[0.22em] text-white/45">Lugar</p>
+              <p class="mt-2 text-lg font-bold text-white">Valle de Ángeles</p>
+            </div>
+            <div class="border border-white/10 bg-white/[0.04] p-5 backdrop-blur">
+              <p class="text-xs font-bold uppercase tracking-[0.22em] text-white/45">Causa</p>
+              <p class="mt-2 text-lg font-bold text-white">Trasplante de hígado</p>
+            </div>
+            <div class="border border-white/10 bg-white/[0.04] p-5 backdrop-blur">
+              <p class="text-xs font-bold uppercase tracking-[0.22em] text-white/45">Estado</p>
+              <p class="mt-2 text-lg font-bold text-white">Muy pronto</p>
+            </div>
+          </div>
+
+          <div class="mt-10 flex flex-col gap-4 sm:flex-row">
+            <a
+              href="/contacto"
+              class="inline-flex items-center justify-center bg-white px-7 py-4 text-sm font-black uppercase tracking-[0.18em] text-black transition hover:bg-[#f7b733]"
+            >
+              Quiero apoyar
+            </a>
+            <a
+              href="/donar"
+              class="inline-flex items-center justify-center border border-white/20 px-7 py-4 text-sm font-black uppercase tracking-[0.18em] text-white transition hover:border-[#35d4ff] hover:text-[#35d4ff]"
+            >
+              Donar a la causa
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <ImpactBlock />
   <EmotionalQuote />
   <FinalCTA />
