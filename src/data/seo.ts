@@ -9,7 +9,7 @@ export const seoPages = {
   home: {
     title: `FARECOH | ${truncateDescription(homeHero.title, 42)}`,
     description: truncateDescription(
-      `${site.fullName.es}. ${homeHero.subtitle} Conoce el tributo a Pink Floyd y apoya programas artísticos en Honduras.`,
+      `${site.fullName.es}. ${homeHero.subtitle} Promovemos formación artística, educación musical y actividades culturales en Honduras.`,
     ),
     image: "/images/farecoh-hero-orchestra.webp",
     path: "/",
