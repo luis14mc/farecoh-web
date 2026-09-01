@@ -9,7 +9,14 @@ import ImpactBlock from "@/components/landing/ImpactBlock.astro";
 import EmotionalQuote from "@/components/landing/EmotionalQuote.astro";
 import FinalCTA from "@/components/landing/FinalCTA.astro";
 import { seoPages, organizationJsonLd, webSiteJsonLd } from "@/data/seo";
+import { site } from "@/data/site";
 import Analytics from '@vercel/analytics/astro';
+
+const benefitConcertSubject = encodeURIComponent("Apoyo concierto benéfico FARECOH");
+const benefitConcertBody = encodeURIComponent(
+  "Hola FARECOH, me gustaría recibir información para apoyar el concierto benéfico a beneficio de José Joaquín Cerrato.",
+);
+const benefitConcertMailto = `mailto:${site.email}?subject=${benefitConcertSubject}&body=${benefitConcertBody}`;
 ---
 
 <Layout
@@ -83,16 +90,16 @@ import Analytics from '@vercel/analytics/astro';
 
           <div class="mt-10 flex flex-col gap-4 sm:flex-row">
             <a
-              href="/contacto"
+              href={benefitConcertMailto}
               class="inline-flex min-h-11 items-center justify-center bg-primary px-6 py-3 text-sm font-bold uppercase tracking-[0.16em] text-on-primary transition hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
             >
               Quiero apoyar
             </a>
             <a
-              href="/donar"
+              href={`mailto:${site.email}`}
               class="inline-flex min-h-11 items-center justify-center border border-outline-variant px-6 py-3 text-sm font-bold uppercase tracking-[0.16em] text-on-surface transition hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
             >
-              Donar a la causa
+              Escribir a FARECOH
             </a>
           </div>
         </div>
