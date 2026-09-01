@@ -10,11 +10,7 @@ const { active, variant = "light" } = Astro.props;
 
 const navItems = [
   { label: "Inicio", href: "/", key: "home" },
-  { label: "Evento", href: "/eventos/pink-floyd", key: "events" },
-  { label: "Boletos", href: "/eventos/pink-floyd/boletos", key: "tickets" },
 ];
-
-const ticketsHref = "/eventos/pink-floyd/boletos";
 
 const headerClass =
   variant === "concert"
@@ -38,11 +34,6 @@ const activeClass =
       : "border-b-2 border-primary pb-1 font-bold text-primary";
 
 const logoTheme = variant === "light" ? "color" : "white";
-
-const ctaClass =
-  variant === "concert"
-    ? "event-rock-button hidden px-6 py-2 text-label-md font-label-md uppercase whitespace-nowrap lg:inline-flex"
-    : "hidden lg:inline-flex bg-primary-container px-6 py-2 text-label-md font-label-md text-on-primary-container transition-all hover:bg-primary active:scale-95 whitespace-nowrap";
 
 const mobileMenuClass =
   variant === "concert"
@@ -76,10 +67,6 @@ const menuIconClass =
     </nav>
 
     <div class="relative z-10 flex shrink-0 items-center justify-end gap-3">
-      <a href={ticketsHref} class={ctaClass}>
-        Reservar boletos
-      </a>
-
       <details class="group relative md:hidden" id="mobile-nav">
         <summary class={`list-none cursor-pointer focus:outline-none ${menuIconClass}`} aria-label="Abrir menú">
           <span class="material-symbols-outlined align-middle text-[28px]">menu</span>
@@ -95,13 +82,6 @@ const menuIconClass =
                 {item.label}
               </a>
             ))}
-            <a
-              class={`mt-2 px-4 py-3 text-center text-label-md font-label-md uppercase ${variant === "concert" ? "event-rock-button" : "bg-primary-container text-on-primary-container"}`}
-              href={ticketsHref}
-              data-mobile-nav-link
-            >
-              Reservar boletos
-            </a>
           </nav>
         </div>
       </details>
