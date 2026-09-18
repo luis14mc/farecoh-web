@@ -1,4 +1,4 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+import { query, queryRows, queryOne } from "./db.ts";
 import { formatTicketCode, isTicketCode, normalizeTicketCode, parseTicketSequence } from "../services/ticket-code.ts";
 
 export interface BandMusicianRow {
@@ -60,33 +60,37 @@ export function parseBandTicketCodeInput(raw: string): string | null {
     }
   }
 
-  const sequence = parseTicketSequence(trimmed);
-  if (sequence && sequence >= 1) {
-    try {
-      return formatTicketCode(sequence);
-    } catch {
-      return null;
-    }
-  }
-
   return null;
 }
 
 export function parseBandTicketCodesInput(raw: string): string[] {
-  const parts = raw.split(/[\s,;]+/).map((part) => parseBandTicketCodeInput(part)).filter(Boolean) as string[];
-  return [...new Set(parts)];
+  if (!raw) return [];
+  const parts = raw
+    .split(/[\s,;]+/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+
+  const parsed = parts.map(parseBandTicketCodeInput).filter((code): code is string => Boolean(code));
+  return Array.from(new Set(parsed));
 }
 
 export function validateBandTicketCodes(codes: string[]): string[] {
   if (codes.length === 0) {
-    throw new Error("Indique al menos un código de boleto.");
+    throw new Error("Indique al menos un código.");
   }
 
   if (codes.length > MAX_TICKETS_PER_BATCH) {
-    throw new Error(`El límite es de ${MAX_TICKETS_PER_BATCH} boletos por operación.`);
+    throw new Error(`No puede asignar más de ${MAX_TICKETS_PER_BATCH} boletos a la vez.`);
   }
 
-  const invalid = codes.filter((code) => !isTicketCode(code));
+  const invalid = codes.filter((code) => {
+    try {
+      return parseTicketSequence(code) < 1;
+    } catch {
+      return true;
+    }
+  });
+
   if (invalid.length) {
     throw new Error(`Código inválido: ${invalid.join(", ")}`);
   }
@@ -94,39 +98,31 @@ export function validateBandTicketCodes(codes: string[]): string[] {
   return codes;
 }
 
-export async function listBandMusicianAssignments(supabase: SupabaseClient): Promise<BandMusicianView[]> {
-  const { data: musicians, error: musiciansError } = await supabase
-    .from("band_musicians")
-    .select("id, name, notes")
-    .order("name", { ascending: true });
+export async function listBandMusicianAssignments(_client?: any): Promise<BandMusicianView[]> {
+  const musicians = await queryRows<BandMusicianRow>(
+    "SELECT id, name, notes, created_at, updated_at FROM band_musicians ORDER BY name ASC;"
+  );
 
-  if (musiciansError) throw musiciansError;
+  const assignments = await queryRows<{ id: string; musician_id: string; ticket_code: string }>(
+    "SELECT id, musician_id, ticket_code FROM band_musician_tickets ORDER BY ticket_code ASC;"
+  );
 
-  const { data: assignments, error: assignmentsError } = await supabase
-    .from("band_musician_tickets")
-    .select("id, musician_id, ticket_code")
-    .order("ticket_code", { ascending: true });
-
-  if (assignmentsError) throw assignmentsError;
-
-  const ticketCodes = (assignments ?? []).map((row) => row.ticket_code);
+  const ticketCodes = assignments.map((row) => row.ticket_code);
   const statusByCode = new Map<string, string>();
 
   if (ticketCodes.length > 0) {
-    const { data: tickets, error: ticketsError } = await supabase
-      .from("tickets")
-      .select("ticket_code, status")
-      .in("ticket_code", ticketCodes);
+    const tickets = await queryRows<{ ticket_code: string; status: string }>(
+      "SELECT ticket_code, status FROM tickets WHERE ticket_code = ANY($1);",
+      [ticketCodes]
+    );
 
-    if (ticketsError) throw ticketsError;
-
-    for (const ticket of tickets ?? []) {
+    for (const ticket of tickets) {
       statusByCode.set(ticket.ticket_code, ticket.status);
     }
   }
 
   const ticketsByMusician = new Map<string, BandMusicianTicketView[]>();
-  for (const assignment of assignments ?? []) {
+  for (const assignment of assignments) {
     const list = ticketsByMusician.get(assignment.musician_id) ?? [];
     list.push({
       id: assignment.id,
@@ -136,7 +132,7 @@ export async function listBandMusicianAssignments(supabase: SupabaseClient): Pro
     ticketsByMusician.set(assignment.musician_id, list);
   }
 
-  return (musicians ?? []).map((musician) => ({
+  return musicians.map((musician) => ({
     id: musician.id,
     name: musician.name,
     notes: musician.notes,
@@ -145,73 +141,80 @@ export async function listBandMusicianAssignments(supabase: SupabaseClient): Pro
 }
 
 export async function createBandMusician(
-  supabase: SupabaseClient,
-  name: string,
-  notes?: string | null,
+  _clientOrName: any,
+  possibleNameOrNotes?: string | null,
+  possibleNotes?: string | null,
 ): Promise<BandMusicianRow> {
+  const name = typeof _clientOrName === "string" ? _clientOrName : (possibleNameOrNotes || "");
+  const notes = typeof _clientOrName === "string" ? possibleNameOrNotes : possibleNotes;
+
   const trimmedName = name.trim();
   if (!trimmedName) {
     throw new Error("Indique el nombre del músico.");
   }
 
-  const { data, error } = await supabase
-    .from("band_musicians")
-    .insert({ name: trimmedName, notes: notes?.trim() || null })
-    .select("id, name, notes, created_at, updated_at")
-    .single();
+  try {
+    const row = await queryOne<BandMusicianRow>(
+      "INSERT INTO band_musicians (name, notes) VALUES ($1, $2) RETURNING id, name, notes, created_at, updated_at;",
+      [trimmedName, notes?.trim() || null]
+    );
 
-  if (error) {
-    if (error.code === "23505") {
+    if (!row) throw new Error("No se pudo crear el músico.");
+    return row;
+  } catch (error: any) {
+    if (error?.code === "23505") {
       throw new Error(`Ya existe un músico llamado ${trimmedName}.`);
     }
     throw error;
   }
-
-  return data as BandMusicianRow;
 }
 
 export async function addTicketsToMusician(
-  supabase: SupabaseClient,
-  musicianId: string,
-  rawCodes: string,
+  _clientOrMusicianId: any,
+  possibleMusicianIdOrCodes: string,
+  possibleCodes?: string,
 ): Promise<{ added: string[]; skipped: string[] }> {
+  const musicianId = typeof _clientOrMusicianId === "string" && possibleCodes === undefined
+    ? _clientOrMusicianId
+    : (possibleCodes !== undefined ? possibleMusicianIdOrCodes : _clientOrMusicianId);
+  const rawCodes = possibleCodes !== undefined ? possibleCodes : possibleMusicianIdOrCodes;
+
   const codes = validateBandTicketCodes(parseBandTicketCodesInput(rawCodes));
 
-  const { data: musician, error: musicianError } = await supabase
-    .from("band_musicians")
-    .select("id")
-    .eq("id", musicianId)
-    .maybeSingle();
+  const musician = await queryOne<{ id: string }>(
+    "SELECT id FROM band_musicians WHERE id = $1 LIMIT 1;",
+    [musicianId]
+  );
 
-  if (musicianError) throw musicianError;
   if (!musician) {
     throw new Error("Músico no encontrado.");
   }
 
-  const { data: existing, error: existingError } = await supabase
-    .from("band_musician_tickets")
-    .select("ticket_code, musician_id")
-    .in("ticket_code", codes);
+  const existing = await queryRows<{ ticket_code: string; musician_id: string }>(
+    "SELECT ticket_code, musician_id FROM band_musician_tickets WHERE ticket_code = ANY($1);",
+    [codes]
+  );
 
-  if (existingError) throw existingError;
-
-  const conflicts = (existing ?? []).filter((row) => row.musician_id !== musicianId);
+  const conflicts = existing.filter((row) => row.musician_id !== musicianId);
   if (conflicts.length) {
     throw new Error(
       `Estos boletos ya están asignados: ${conflicts.map((row) => row.ticket_code).join(", ")}`,
     );
   }
 
-  const alreadyAssigned = new Set((existing ?? []).map((row) => row.ticket_code));
+  const alreadyAssigned = new Set(existing.map((row) => row.ticket_code));
   const toInsert = codes.filter((code) => !alreadyAssigned.has(code));
 
   if (toInsert.length === 0) {
     return { added: [], skipped: codes };
   }
 
-  const rows = toInsert.map((ticket_code) => ({ musician_id: musicianId, ticket_code }));
-  const { error: insertError } = await supabase.from("band_musician_tickets").insert(rows);
-  if (insertError) throw insertError;
+  for (const ticket_code of toInsert) {
+    await query(
+      "INSERT INTO band_musician_tickets (musician_id, ticket_code) VALUES ($1, $2) ON CONFLICT DO NOTHING;",
+      [musicianId, ticket_code]
+    );
+  }
 
   return {
     added: toInsert,
@@ -219,12 +222,18 @@ export async function addTicketsToMusician(
   };
 }
 
-export async function removeBandTicketAssignment(supabase: SupabaseClient, assignmentId: string): Promise<void> {
-  const { error } = await supabase.from("band_musician_tickets").delete().eq("id", assignmentId);
-  if (error) throw error;
+export async function removeBandTicketAssignment(
+  _clientOrId: any,
+  possibleId?: string,
+): Promise<void> {
+  const assignmentId = possibleId || _clientOrId;
+  await query("DELETE FROM band_musician_tickets WHERE id = $1;", [assignmentId]);
 }
 
-export async function deleteBandMusician(supabase: SupabaseClient, musicianId: string): Promise<void> {
-  const { error } = await supabase.from("band_musicians").delete().eq("id", musicianId);
-  if (error) throw error;
+export async function deleteBandMusician(
+  _clientOrId: any,
+  possibleId?: string,
+): Promise<void> {
+  const musicianId = possibleId || _clientOrId;
+  await query("DELETE FROM band_musicians WHERE id = $1;", [musicianId]);
 }

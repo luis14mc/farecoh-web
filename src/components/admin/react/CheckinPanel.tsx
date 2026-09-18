@@ -16,8 +16,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CheckinQrScanner } from "@/components/admin/react/CheckinQrScanner";
-import { TicketStatusBadge } from "@/components/admin/react/TicketStatusBadge";
-import { supabase } from "@/lib/supabase";
 
 interface TicketRecord {
   ticket_code: string;
@@ -71,22 +69,33 @@ export function CheckinPanel() {
     setLoading(true);
     setMessage({ text: "Buscando boleto...", variant: "info" });
 
-    const query =
+    const searchUrl =
       parsed.kind === "ticket_code"
-        ? supabase.from("tickets").select("*").eq("ticket_code", parsed.value).single()
-        : supabase.from("tickets").select("*").eq("qr_token", parsed.value).single();
+        ? `/api/admin/tickets/search?code=${encodeURIComponent(parsed.value)}`
+        : `/api/admin/tickets/search?token=${encodeURIComponent(parsed.value)}`;
 
-    const { data, error } = await query;
-    setLoading(false);
+    try {
+      const res = await fetch(searchUrl);
+      setLoading(false);
 
-    if (error || !data) {
-      setMessage({ text: "Boleto inexistente.", variant: "destructive" });
-      return;
+      if (!res.ok) {
+        setMessage({ text: "Boleto inexistente.", variant: "destructive" });
+        return;
+      }
+
+      const payload = await res.json();
+      if (!payload.ok || !payload.data) {
+        setMessage({ text: "Boleto inexistente.", variant: "destructive" });
+        return;
+      }
+
+      setTicket(payload.data);
+      setSearchKind(parsed.kind);
+      setTicketStatusMessage(payload.data.status);
+    } catch {
+      setLoading(false);
+      setMessage({ text: "Error de conexión al buscar boleto.", variant: "destructive" });
     }
-
-    setTicket(data);
-    setSearchKind(parsed.kind);
-    setTicketStatusMessage(data.status);
   }
 
   async function validateTicket() {
@@ -95,32 +104,33 @@ export function CheckinPanel() {
     setMessage({ text: "Validando boleto...", variant: "info" });
 
     const useQr = searchKind === "qr_token";
-    const { data, error } = useQr
-      ? await supabase.rpc("validate_ticket_by_qr", {
-          p_qr_token: ticket.qr_token,
-          p_validated_by: "admin-checkin",
-        })
-      : await supabase.rpc("validate_ticket", {
-          p_ticket_code: ticket.ticket_code,
-          p_validated_by: "admin-checkin",
-        });
+    try {
+      const res = await fetch("/api/admin/checkin/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(
+          useQr
+            ? { qrToken: ticket.qr_token, validatedBy: "admin-checkin" }
+            : { ticketCode: ticket.ticket_code, validatedBy: "admin-checkin" }
+        ),
+      });
 
-    setValidating(false);
-    setConfirmOpen(false);
+      setValidating(false);
+      setConfirmOpen(false);
 
-    if (error) {
-      setMessage({ text: "Error al validar: " + error.message, variant: "destructive" });
-      return;
+      const result = await res.json().catch(() => ({}));
+      if (!res.ok || !result?.ok) {
+        setMessage({ text: result?.message || "No se pudo validar el boleto.", variant: "destructive" });
+        return;
+      }
+
+      setTicket({ ...ticket, status: "validated", validated_at: result.validated_at });
+      setMessage({ text: "Ingreso validado correctamente.", variant: "success" });
+    } catch {
+      setValidating(false);
+      setConfirmOpen(false);
+      setMessage({ text: "Error de conexión al validar.", variant: "destructive" });
     }
-
-    const result = data?.[0];
-    if (!result?.ok) {
-      setMessage({ text: result?.message || "No se pudo validar el boleto.", variant: "destructive" });
-      return;
-    }
-
-    setTicket({ ...ticket, status: "validated", validated_at: result.validated_at });
-    setMessage({ text: "Ingreso validado correctamente.", variant: "success" });
   }
 
   function handleQrScan(value: string) {

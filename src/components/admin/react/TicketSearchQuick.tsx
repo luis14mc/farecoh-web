@@ -14,8 +14,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { TicketStatusBadge } from "@/components/admin/react/TicketStatusBadge";
-import { formatSiteTime } from "@/lib/locale";
-import { supabase } from "@/lib/supabase";
 import { TICKET_STATUS_LABELS } from "@/lib/ticket-status";
 
 export function TicketSearchQuick() {
@@ -45,30 +43,51 @@ export function TicketSearchQuick() {
 
     setLoading(true);
     setValidated(false);
-    const { data, error } = await supabase.from("tickets").select("*").eq("ticket_code", clean).single();
-    setLoading(false);
 
-    if (error || !data) {
-      setMessage({ text: "Boleto no encontrado. Verifique el código.", variant: "destructive" });
+    try {
+      const res = await fetch(`/api/admin/tickets/search?code=${encodeURIComponent(clean)}`);
+      setLoading(false);
+
+      if (!res.ok) {
+        setMessage({ text: "Boleto no encontrado. Verifique el código.", variant: "destructive" });
+        setTicket(null);
+        return;
+      }
+
+      const payload = await res.json();
+      if (!payload.ok || !payload.data) {
+        setMessage({ text: "Boleto no encontrado. Verifique el código.", variant: "destructive" });
+        setTicket(null);
+        return;
+      }
+
+      setTicket(payload.data);
+      setMessage({ text: "Boleto encontrado.", variant: "success" });
+    } catch {
+      setLoading(false);
+      setMessage({ text: "Error al buscar el boleto.", variant: "destructive" });
       setTicket(null);
-      return;
     }
-
-    setTicket(data);
-    setMessage({ text: "Boleto encontrado.", variant: "success" });
   }
 
   async function validateTicket() {
     if (!ticket) return;
     setValidating(true);
     try {
-      const { data, error } = await supabase.rpc("validate_ticket", {
-        p_ticket_code: ticket.ticket_code,
-        p_validated_by: "admin-dashboard",
+      const res = await fetch("/api/admin/checkin/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ticketCode: ticket.ticket_code,
+          validatedBy: "admin-dashboard",
+        }),
       });
-      if (error) throw error;
-      const result = data?.[0];
-      if (!result?.ok) throw new Error(result?.message || "No se pudo validar el boleto.");
+
+      const result = await res.json().catch(() => ({}));
+      if (!res.ok || !result?.ok) {
+        throw new Error(result?.message || "No se pudo validar el boleto.");
+      }
+
       setValidated(true);
       setTicket({ ...ticket, status: "validated", validated_at: result.validated_at });
       setMessage({ text: "Entrada validada correctamente.", variant: "success" });

@@ -40,8 +40,7 @@ For local or CI runs without the admin UI:
 
 ```bash
 PUBLIC_SITE_URL=https://www.farecoh.org \
-PUBLIC_SUPABASE_URL=... \
-SUPABASE_SERVICE_ROLE_KEY=... \
+DATABASE_URL=postgresql://... \
 pnpm generate:print-tickets
 ```
 
@@ -119,5 +118,5 @@ Workflow to tune placement:
 
 - `/admin/printing` and `/api/print/tickets` require admin login
 - Only `super_admin` and `event_manager` roles can access
-- Server uses the authenticated Supabase client; service role is CLI-only
+- Server uses native PostgreSQL connection via pg.Pool
 - PDF contains only `ticket_code` and QR URL — no buyer PII

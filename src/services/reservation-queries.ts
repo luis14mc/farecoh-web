@@ -1,9 +1,5 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database } from "@/types/database";
+import { queryRows, queryOne } from "../lib/db.ts";
 import type { ReservationTicketRow } from "./reservation-stats.ts";
-
-const BASE_SELECT =
-  "ticket_code, qr_token, buyer_name, buyer_phone, buyer_email, created_at, payment_method, payment_reference";
 
 export function isMissingReservedAtColumn(message: string): boolean {
   const normalized = message.toLowerCase();
@@ -11,58 +7,49 @@ export function isMissingReservedAtColumn(message: string): boolean {
 }
 
 export async function loadReservedTickets(
-  supabase: SupabaseClient<Database>,
+  _client?: any,
 ): Promise<{ rows: ReservationTicketRow[]; warning: string | null }> {
-  const withReservedAt = await supabase
-    .from("tickets")
-    .select(`${BASE_SELECT}, reserved_at`)
-    .eq("status", "reserved")
-    .order("reserved_at", { ascending: false, nullsFirst: false })
-    .order("created_at", { ascending: false });
+  try {
+    const rows = await queryRows<ReservationTicketRow>(`
+      SELECT ticket_code, qr_token, buyer_name, buyer_phone, buyer_email, created_at, payment_method, payment_reference, reserved_at
+      FROM tickets
+      WHERE status = 'reserved'
+      ORDER BY reserved_at DESC NULLS LAST, created_at DESC;
+    `);
 
-  if (!withReservedAt.error) {
-    return { rows: (withReservedAt.data ?? []) as ReservationTicketRow[], warning: null };
+    return { rows, warning: null };
+  } catch (err: any) {
+    if (isMissingReservedAtColumn(err?.message || "")) {
+      const fallbackRows = await queryRows<ReservationTicketRow>(`
+        SELECT ticket_code, qr_token, buyer_name, buyer_phone, buyer_email, created_at, payment_method, payment_reference, NULL as reserved_at
+        FROM tickets
+        WHERE status = 'reserved'
+        ORDER BY created_at DESC;
+      `);
+      return {
+        rows: fallbackRows,
+        warning: "La columna reserved_at no existe en la base de datos.",
+      };
+    }
+    throw err;
   }
-
-  if (!isMissingReservedAtColumn(withReservedAt.error.message)) {
-    throw new Error(withReservedAt.error.message);
-  }
-
-  const fallback = await supabase
-    .from("tickets")
-    .select(BASE_SELECT)
-    .eq("status", "reserved")
-    .order("created_at", { ascending: false });
-
-  if (fallback.error) {
-    throw new Error(fallback.error.message);
-  }
-
-  const rows = (fallback.data ?? []).map((row) => ({
-    ...row,
-    reserved_at: null,
-  })) as ReservationTicketRow[];
-
-  return {
-    rows,
-    warning:
-      "La columna reserved_at aún no existe en Supabase. Ejecute supabase/migrations/20260630_reservation_workflow.sql para fechas de reserva precisas.",
-  };
 }
 
 export async function loadConvertedReservationsToday(
-  supabase: SupabaseClient<Database>,
-  startOfTodayIso: string,
+  _client: any,
+  startOfTodayIso?: string,
 ): Promise<number> {
-  const { count, error } = await supabase
-    .from("audit_logs")
-    .select("id", { count: "exact", head: true })
-    .eq("action", "ticket.payment_confirmed")
-    .gte("created_at", startOfTodayIso);
+  const dateIso = typeof _client === "string" ? _client : (startOfTodayIso || new Date().toISOString());
 
-  if (error) {
+  try {
+    const res = await queryOne<{ count: string | number }>(`
+      SELECT COUNT(*) as count
+      FROM audit_logs
+      WHERE action = 'ticket.payment_confirmed' AND created_at >= $1;
+    `, [dateIso]);
+
+    return Number(res?.count || 0);
+  } catch {
     return 0;
   }
-
-  return count ?? 0;
 }

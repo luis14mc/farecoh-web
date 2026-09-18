@@ -92,7 +92,7 @@ Requieren admin autenticado. Solo boletos `sold` o `validated`.
 ```sql
 DELETE FROM public.ticket_layout_configs WHERE layout_type IN ('physical', 'digital');
 -- La migración volverá a insertar defaults en el próximo deploy si usa ON CONFLICT DO NOTHING;
--- para forzar defaults, vuelva a correr el INSERT de supabase/migrations/20260713_ticket_layout_configs.sql
+-- para forzar defaults, vuelva a correr el INSERT de database/schema.sql
 ```
 
 Esto **no afecta** `tickets.qr_token` ni `tickets.ticket_code`.

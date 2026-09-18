@@ -62,7 +62,12 @@ const mainClass = variant === "light" ? "pt-20" : "";
     <title>{title}</title>
   </head>
   <body class={bodyClass}>
-    <a class="sr-only" href="#main-content">Saltar al contenido</a>
+    <a
+      class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[120] focus:rounded-md focus:bg-primary focus:px-5 focus:py-2.5 focus:text-sm focus:font-bold focus:text-white focus:shadow-xl focus:outline-none focus:ring-2 focus:ring-brand-400 focus:ring-offset-2"
+      href="#main-content"
+    >
+      Saltar al contenido
+    </a>
     <Navbar active={active} variant={variant} />
     <main id="main-content" class={mainClass}>
       <slot />
@@ -73,6 +78,22 @@ const mainClass = variant === "light" ? "pt-20" : "";
 
 <style is:global>
   .reveal-section {
-    transition: all 0.7s ease;
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: opacity, transform;
+  }
+
+  .reveal-section.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .reveal-section {
+      opacity: 1 !important;
+      transform: none !important;
+      transition: none !important;
+    }
   }
 </style>

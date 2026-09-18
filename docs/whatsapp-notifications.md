@@ -38,7 +38,7 @@ TWILIO_ACCOUNT_SID=
 TWILIO_AUTH_TOKEN=
 TWILIO_WHATSAPP_FROM=whatsapp:+14155238886
 FARECOH_NOTIFY_WHATSAPP_TO=whatsapp:+504XXXXXXXX
-SUPABASE_SERVICE_ROLE_KEY=...
+DATABASE_URL=postgresql://...
 ```
 
 ### Meta WhatsApp Cloud API
@@ -49,18 +49,14 @@ META_WHATSAPP_ACCESS_TOKEN=
 META_WHATSAPP_PHONE_NUMBER_ID=
 META_WHATSAPP_FROM=whatsapp:+504XXXXXXXX
 FARECOH_NOTIFY_WHATSAPP_TO=whatsapp:+504XXXXXXXX
-SUPABASE_SERVICE_ROLE_KEY=...
+DATABASE_URL=postgresql://...
 ```
 
-`SUPABASE_SERVICE_ROLE_KEY` is required to persist notification logs.
+`DATABASE_URL` is required to persist notification logs to PostgreSQL.
 
 ## Database
 
-Run manually in Supabase SQL Editor:
-
-```
-supabase/migrations/20260630_reservation_notifications.sql
-```
+Included in `database/schema.sql` (applied via `pnpm db:init`).
 
 Table: `reservation_notifications`
 

@@ -3,18 +3,17 @@ import AdminLayout from "@/layouts/AdminLayout.astro";
 import AdminPage from "@/components/admin/ui/AdminPage.astro";
 import { AdminPageHeader } from "@/components/admin/react/AdminPageHeader";
 import { BandAssignmentsPanel } from "@/components/admin/react/BandAssignmentsPanel";
-import { createSupabaseServerClient, getPublicSupabaseConfig, isAuthConfigured, type UserProfile } from "@/lib/auth";
+import type { UserProfile } from "@/lib/auth";
 import { listBandMusicianAssignments } from "@/lib/band-assignments";
 import { formatSiteDate } from "@/lib/locale";
 
-const supabase = createSupabaseServerClient(Astro);
 const staffProfile = Astro.locals.staffProfile as UserProfile | undefined;
-const authConfigured = isAuthConfigured(getPublicSupabaseConfig());
+const authConfigured = true;
 const currentDate = formatSiteDate(new Date(), { month: "short", day: "numeric", year: "numeric" });
 
 let musicians = [];
 try {
-  musicians = await listBandMusicianAssignments(supabase);
+  musicians = await listBandMusicianAssignments();
 } catch {
   musicians = [];
 }

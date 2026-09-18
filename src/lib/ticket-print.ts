@@ -1,4 +1,3 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from "pdf-lib";
 import QRCode from "qrcode";
 import sharp from "sharp";
@@ -91,31 +90,31 @@ export function filterTicketsByRange(tickets: TicketPrintRow[], fromCode: string
 const CODE_COLOR = rgb(0.93, 0.91, 0.98);
 
 export async function loadPinkFloydPrintTickets(
-  supabase: SupabaseClient,
-  fromCode: string,
-  toCode: string,
+  _clientOrFromCode: any,
+  fromCodeOrToCode?: string,
+  maybeToCode?: string,
 ): Promise<TicketPrintRow[]> {
+  const fromCode = typeof _clientOrFromCode === "string" && maybeToCode === undefined
+    ? _clientOrFromCode
+    : (maybeToCode !== undefined ? fromCodeOrToCode! : _clientOrFromCode);
+  const toCode = maybeToCode !== undefined ? maybeToCode : fromCodeOrToCode!;
+
   const { from, to } = parsePrintRange(fromCode, toCode);
+  const { queryOne, queryRows } = await import("./db.ts");
 
-  const { data: event, error: eventError } = await supabase
-    .from("events")
-    .select("id")
-    .eq("slug", PINK_FLOYD_CANVA_EVENT_SLUG)
-    .single();
+  const event = await queryOne<{ id: string }>(
+    "SELECT id FROM events WHERE slug = $1 LIMIT 1;",
+    [PINK_FLOYD_CANVA_EVENT_SLUG]
+  );
 
-  if (eventError || !event) {
-    throw new Error(`Evento Pink Floyd no encontrado: ${eventError?.message ?? "sin fila"}`);
+  if (!event) {
+    throw new Error("Evento Pink Floyd no encontrado.");
   }
 
-  const { data: tickets = [], error: ticketsError } = await supabase
-    .from("tickets")
-    .select("ticket_code, qr_token")
-    .eq("event_id", event.id)
-    .order("ticket_code", { ascending: true });
-
-  if (ticketsError) {
-    throw new Error(`Error al cargar boletos: ${ticketsError.message}`);
-  }
+  const tickets = await queryRows<TicketPrintRow>(
+    "SELECT ticket_code, qr_token FROM tickets WHERE event_id = $1 ORDER BY ticket_code ASC;",
+    [event.id]
+  );
 
   const filtered = filterTicketsByRange(tickets, from, to);
   if (!filtered.length) {

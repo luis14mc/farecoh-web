@@ -1,4 +1,4 @@
-import { supabaseAdmin } from "../../lib/supabase.ts";
+import { query } from "../../lib/db.ts";
 import { sanitizeText } from "../../lib/security.ts";
 import { buildReservationNotificationMessage } from "./reservation-notification-message.ts";
 import {
@@ -31,24 +31,24 @@ function safeErrorMessage(error: unknown): string {
 }
 
 async function persistNotificationRecord(record: ReservationNotificationRecord): Promise<void> {
-  if (!supabaseAdmin) {
-    console.error("[reservation-notification] SUPABASE_SERVICE_ROLE_KEY missing; audit row not saved.");
-    return;
-  }
-
-  const { error } = await supabaseAdmin.from("reservation_notifications").insert({
-    ticket_codes: record.ticketCodes,
-    buyer_name: record.buyerName,
-    buyer_phone: record.buyerPhone || null,
-    buyer_email: record.buyerEmail || null,
-    channel: record.channel,
-    recipient: record.recipient,
-    status: record.status,
-    error_message: record.errorMessage ?? null,
-  });
-
-  if (error) {
-    console.error("[reservation-notification] Failed to persist notification log:", sanitizeText(error.message, 240));
+  try {
+    await query(
+      `INSERT INTO reservation_notifications
+        (ticket_codes, buyer_name, buyer_phone, buyer_email, channel, recipient, status, error_message)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8);`,
+      [
+        record.ticketCodes,
+        record.buyerName,
+        record.buyerPhone || null,
+        record.buyerEmail || null,
+        record.channel,
+        record.recipient,
+        record.status,
+        record.errorMessage ?? null,
+      ]
+    );
+  } catch (error: any) {
+    console.error("[reservation-notification] Failed to persist notification log:", sanitizeText(error?.message || String(error), 240));
   }
 }
 

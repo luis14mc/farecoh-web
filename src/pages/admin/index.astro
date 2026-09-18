@@ -6,25 +6,97 @@ import { DashboardStats, ProgressChartCard } from "@/components/admin/react/Dash
 import { RecentCheckinsTable, RecentReservationsTable } from "@/components/admin/react/DashboardTables";
 import { SalesHistoryTable } from "@/components/admin/react/SalesHistoryTable";
 import { TicketSearchQuick } from "@/components/admin/react/TicketSearchQuick";
-import { createSupabaseServerClient, getPublicSupabaseConfig, isAuthConfigured, type UserProfile } from "@/lib/auth";
+import type { UserProfile } from "@/lib/auth";
 import { formatSiteCurrency, formatSiteDate, formatSiteNumber } from "@/lib/locale";
 import { getPinkFloydEventFallback } from "@/lib/events";
 import { countTicketsByStatus, countTicketsSold, resolveGrossRevenue } from "@/services/admin-stats";
-
-const supabase = createSupabaseServerClient(Astro);
+import { queryRows } from "@/lib/db";
 
 const staffProfile = Astro.locals.staffProfile as UserProfile | undefined;
-const authConfigured = isAuthConfigured(getPublicSupabaseConfig());
+const authConfigured = true;
 const currentDate = formatSiteDate(new Date(), { month: "short", day: "numeric", year: "numeric" });
 const CAPACITY = getPinkFloydEventFallback().total_tickets;
 
-const { data: sales = [] } = await supabase
-  .from("sales")
-  .select("amount, seller_name, created_at, payment_method, sales_point, ticket:tickets(ticket_code, buyer_name, buyer_phone, buyer_email)")
-  .order("created_at", { ascending: false });
+let rawSales: Array<{
+  amount: number | string;
+  seller_name: string | null;
+  created_at: string;
+  payment_method: string | null;
+  sales_point: string | null;
+  ticket_code: string | null;
+  buyer_name: string | null;
+  buyer_phone: string | null;
+  buyer_email: string | null;
+}> = [];
+
+let tickets: Array<{ status: string }> = [];
+let reservations: Array<{ ticket_code: string; buyer_name: string | null; buyer_phone: string | null }> = [];
+let checkins: Array<{
+  validated_by: string | null;
+  validated_at: string;
+  ticket: { ticket_code: string | null; buyer_name: string | null };
+}> = [];
+
+try {
+  rawSales = await queryRows(`
+    SELECT s.amount, s.seller_name, s.created_at, s.payment_method, s.sales_point,
+           t.ticket_code, t.buyer_name, t.buyer_phone, t.buyer_email
+    FROM sales s
+    LEFT JOIN tickets t ON s.ticket_id = t.id
+    ORDER BY s.created_at DESC;
+  `);
+
+  tickets = await queryRows(`SELECT status FROM tickets;`);
+
+  reservations = await queryRows(`
+    SELECT ticket_code, buyer_name, buyer_phone
+    FROM tickets
+    WHERE status = 'reserved'
+    ORDER BY ticket_code DESC
+    LIMIT 8;
+  `);
+
+  const rawCheckins = await queryRows<{
+    validated_by: string | null;
+    validated_at: string;
+    ticket_code: string | null;
+    buyer_name: string | null;
+  }>(`
+    SELECT c.validated_by, c.validated_at, t.ticket_code, t.buyer_name
+    FROM checkins c
+    LEFT JOIN tickets t ON c.ticket_id = t.id
+    ORDER BY c.validated_at DESC
+    LIMIT 8;
+  `);
+
+  checkins = rawCheckins.map((row) => ({
+    validated_by: row.validated_by,
+    validated_at: row.validated_at,
+    ticket: {
+      ticket_code: row.ticket_code,
+      buyer_name: row.buyer_name,
+    },
+  }));
+} catch (err) {
+  console.error("Error loading dashboard data:", err);
+}
+
+const sales = rawSales.map((sale) => ({
+  amount: sale.amount,
+  seller_name: sale.seller_name,
+  created_at: sale.created_at,
+  payment_method: sale.payment_method,
+  sales_point: sale.sales_point,
+  ticket: {
+    ticket_code: sale.ticket_code,
+    buyer_name: sale.buyer_name,
+    buyer_phone: sale.buyer_phone,
+    buyer_email: sale.buyer_email,
+  },
+}));
 
 const salesByDayMap: Record<string, number> = {};
-sales?.forEach((sale: { created_at: string; amount: number | string }) => {
+sales.forEach((sale) => {
   const dayStr = formatSiteDate(sale.created_at, { day: "numeric", month: "short" });
   salesByDayMap[dayStr] = (salesByDayMap[dayStr] || 0) + Number(sale.amount);
 });
@@ -32,7 +104,7 @@ const salesByDay = Object.entries(salesByDayMap).slice(-7);
 const maxDaySales = Math.max(...salesByDay.map(([, amt]) => amt), 1);
 
 const salesBySellerMap: Record<string, number> = {};
-sales?.forEach((sale: { seller_name: string; amount: number | string }) => {
+sales.forEach((sale) => {
   const seller = sale.seller_name || "Desconocido";
   salesBySellerMap[seller] = (salesBySellerMap[seller] || 0) + Number(sale.amount);
 });
@@ -41,9 +113,8 @@ const salesBySeller = Object.entries(salesBySellerMap)
   .slice(0, 5);
 const maxSellerSales = Math.max(...salesBySeller.map(([, amt]) => amt), 1);
 
-const { data: pointSales = [] } = await supabase.from("sales").select("sales_point, amount");
 const salesByPointMap: Record<string, number> = {};
-pointSales?.forEach((sale: { sales_point: string | null; amount: number | string }) => {
+sales.forEach((sale) => {
   const point = sale.sales_point || "Sin punto";
   salesByPointMap[point] = (salesByPointMap[point] || 0) + Number(sale.amount);
 });
@@ -52,12 +123,8 @@ const salesByPoint = Object.entries(salesByPointMap)
   .slice(0, 5);
 const maxPointSales = Math.max(...salesByPoint.map(([, amt]) => amt), 1);
 
-const { data: ticketsData } = await supabase.from("tickets").select("status");
-const tickets = ticketsData ?? [];
-
-const { data: revenueSales = [] } = await supabase.from("sales").select("amount");
 const totalRevenue = resolveGrossRevenue({
-  salesAmounts: revenueSales.map((sale) => sale.amount),
+  salesAmounts: sales.map((sale) => sale.amount),
   ticketsSold: countTicketsSold(tickets),
   ticketPrice: getPinkFloydEventFallback().ticket_price,
 });
@@ -73,19 +140,6 @@ const kpis = [
 ];
 
 const pendingReservations = countTicketsByStatus(tickets, "reserved");
-
-const { data: reservations = [] } = await supabase
-  .from("tickets")
-  .select("ticket_code, buyer_name, buyer_phone")
-  .eq("status", "reserved")
-  .order("ticket_code", { ascending: false })
-  .limit(8);
-
-const { data: checkins = [] } = await supabase
-  .from("checkins")
-  .select("validated_by, validated_at, ticket:tickets(ticket_code, buyer_name)")
-  .order("validated_at", { ascending: false })
-  .limit(8);
 ---
 
 <AdminLayout title="Panel administrativo | FARECOH" description="Panel de administración de boletería de FARECOH" active="dashboard">

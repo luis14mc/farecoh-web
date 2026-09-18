@@ -1,5 +1,4 @@
 import type { APIRoute } from "astro";
-import { createSupabaseServerClient } from "@/lib/auth";
 import { canResetTickets, requireAdminAccess } from "@/lib/rbac";
 import { parseTicketCodesInput, resetTicketsToAvailable } from "@/lib/ticket-reset";
 
@@ -36,9 +35,8 @@ export const POST: APIRoute = async (context) => {
   }
 
   try {
-    const supabase = createSupabaseServerClient(context);
     const performedBy = access.profile?.email ?? access.profile?.full_name ?? "admin";
-    const result = await resetTicketsToAvailable(supabase, ticketCodes, { performedBy });
+    const result = await resetTicketsToAvailable(ticketCodes, { performedBy });
 
     return Response.json({
       ok: true,

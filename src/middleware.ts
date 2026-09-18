@@ -1,5 +1,5 @@
 import { defineMiddleware } from "astro:middleware";
-import { createSupabaseServerClient, isAuthConfigured } from "@/lib/auth";
+import { isAuthConfigured } from "@/lib/auth";
 import { requireAdminAccess, roleHomePath } from "@/lib/rbac";
 
 const PUBLIC_ADMIN_PATHS = new Set(["/admin/login", "/admin/no-autorizado", "/admin/reset-password"]);
@@ -11,18 +11,15 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
   if (!isAuthConfigured()) {
     if (PUBLIC_ADMIN_PATHS.has(pathname)) return next();
-    return new Response("Admin auth is not configured. Set PUBLIC_SUPABASE_URL and PUBLIC_SUPABASE_ANON_KEY.", {
+    return new Response("Admin auth is not configured. Set DATABASE_URL and AUTH_SECRET.", {
       status: 503,
       headers: { "content-type": "text/plain; charset=utf-8" },
     });
   }
 
-  const supabase = createSupabaseServerClient(context);
-  await supabase.auth.getUser();
-
   if (PUBLIC_ADMIN_PATHS.has(pathname)) return next();
 
-  const access = await requireAdminAccess(context, pathname, supabase).catch(() => ({
+  const access = await requireAdminAccess(context, pathname).catch(() => ({
     ok: false as const,
     profile: null,
     reason: "unauthenticated" as const,

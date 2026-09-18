@@ -1,6 +1,5 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
 import type { APIContext } from "astro";
-import { createSupabaseServerClient } from "./auth.ts";
+import { queryOne } from "./db.ts";
 import { normalizeTicketCode } from "../services/ticket-code.ts";
 
 export interface DeliverableTicket {
@@ -18,48 +17,36 @@ export interface TicketLookupResult {
 }
 
 export async function fetchDeliverableTicket(
-  supabase: SupabaseClient,
-  ticketCode: string,
+  _clientOrCode: any,
+  possibleCode?: string,
 ): Promise<TicketLookupResult> {
-  const requestedTicketCode = normalizeTicketCode(ticketCode);
+  const code = typeof _clientOrCode === "string" ? _clientOrCode : (possibleCode || "");
+  const requestedTicketCode = normalizeTicketCode(code);
 
-  const { data: ticket, error } = await supabase
-    .from("tickets")
-    .select("id, ticket_code, qr_token, status")
-    .eq("ticket_code", requestedTicketCode)
-    .in("status", ["sold", "validated"])
-    .single();
+  const existing = await queryOne<DeliverableTicket>(
+    "SELECT id, ticket_code, qr_token, status FROM tickets WHERE ticket_code = $1 LIMIT 1;",
+    [requestedTicketCode]
+  );
 
-  if (error) {
-    if (error.code === "PGRST116") {
-      const { data: existing } = await supabase
-        .from("tickets")
-        .select("status")
-        .eq("ticket_code", requestedTicketCode)
-        .maybeSingle();
-
-      if (!existing) {
-        return { ticket: null, notFound: true, wrongStatus: false };
-      }
-
-      return {
-        ticket: null,
-        notFound: false,
-        wrongStatus: true,
-        error: "El boleto debe estar vendido o validado para generar su imagen.",
-      };
-    }
-
-    throw error;
+  if (!existing) {
+    return { ticket: null, notFound: true, wrongStatus: false };
   }
 
-  return { ticket, notFound: false, wrongStatus: false };
+  if (existing.status !== "sold" && existing.status !== "validated") {
+    return {
+      ticket: null,
+      notFound: false,
+      wrongStatus: true,
+      error: "El boleto debe estar vendido o validado para generar su imagen.",
+    };
+  }
+
+  return { ticket: existing, notFound: false, wrongStatus: false };
 }
 
 export async function fetchDeliverableTicketFromContext(
-  context: APIContext,
+  _context: APIContext,
   ticketCode: string,
 ): Promise<TicketLookupResult> {
-  const supabase = createSupabaseServerClient(context);
-  return fetchDeliverableTicket(supabase, ticketCode);
+  return fetchDeliverableTicket(ticketCode);
 }

@@ -11,8 +11,8 @@ La plataforma queda preparada para operar eventos culturales de FARECOH con un p
 - `src/lib`: integración base y validaciones compartidas.
 - `src/services`: lógica de aplicación reusable para órdenes, códigos, check-in y reportes.
 - `src/types`: contratos TypeScript entre UI, servicios y base de datos.
-- `supabase/migrations/001_ticketing_core.sql`: modelo PostgreSQL/Supabase canónico con RLS, RPCs transaccionales y auditoría.
-- `docs/database-setup.md`: pasos de ejecución y verificación en Supabase.
+- `database/schema.sql`: modelo PostgreSQL canónico con tablas, índices, RPCs transaccionales y auditoría para Railway.
+- `docs/database-setup.md`: pasos de ejecución y verificación en PostgreSQL.
 - `tests`: pruebas de reglas críticas de ticketing.
 
 ## Modelo ER
@@ -67,7 +67,9 @@ erDiagram
 
   users {
     uuid id PK
-    uuid auth_user_id FK
+    text email UK
+    text password_hash
+    text full_name
     uuid role_id FK
     boolean active
   }
@@ -78,18 +80,17 @@ erDiagram
 - Todo evento público se consulta por `slug`.
 - Los boletos usan formato `PF-000001` … `PF-000500` para Pink Floyd.
 - La reserva pública usa RPC `create_ticket_order` y deja boletos en `reserved`.
-- La venta física usa RPC `sell_physical_ticket` y deja boletos en `sold`.
-- El check-in usa RPC `validate_ticket`, bloquea la fila con `FOR UPDATE` e impide doble validación.
-- RLS restringe escrituras directas; operaciones sensibles pasan por RPCs `SECURITY DEFINER`.
+- La venta física usa RPC `confirm_ticket_payment` y deja boletos en `sold`.
+- El check-in usa RPC `validate_ticket` o `validate_ticket_by_qr`, bloquea la fila con `FOR UPDATE` e impide doble validación.
+- Conexión directa a PostgreSQL vía `pg.Pool` con soporte SSL para Railway.
 - `audit_logs` registra reservas, ventas y validaciones.
 
 ## Seguridad
 
-- Supabase Auth maneja administradores.
-- `users` referencia `auth.users` y `roles`.
-- Las políticas usan `public.get_auth_user_role()` e `public.is_admin()`.
-- El formulario público reserva vía RPC anon; venta y check-in requieren sesión staff.
-- Nunca exponer `service_role` al navegador.
+- Autenticación administrativa nativa (`crypto.scrypt` + cookies de sesión firmadas con HMAC-SHA256).
+- `users` almacena `password_hash` y referencia `roles`.
+- Las rutas administrativas son protegidas mediante middleware Astro (`/admin/*`) y control de acceso basado en roles (RBAC).
+- Variables de entorno seguras (`DATABASE_URL`, `AUTH_SECRET`).
 
 ## Próximas fases
 

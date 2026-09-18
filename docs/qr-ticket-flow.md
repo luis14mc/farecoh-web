@@ -4,7 +4,7 @@ This document describes how QR codes work for physical and web tickets for **Tri
 
 ## How QR works
 
-Each ticket row has a unique `qr_token` (UUID) generated in Supabase. The QR code encodes a **public URL**:
+Each ticket row has a unique `qr_token` (UUID) generated in PostgreSQL. The QR code encodes a **public URL**:
 
 ```
 PUBLIC_SITE_URL/t/{qr_token}
@@ -34,12 +34,11 @@ QR codes are printed on physical tickets and visible to anyone who scans them. S
 
 ## Export CSV for Canva
 
-From the project root, with Supabase credentials:
+From the project root, with database credentials:
 
 ```bash
 PUBLIC_SITE_URL=https://www.farecoh.org \
-PUBLIC_SUPABASE_URL=... \
-SUPABASE_SERVICE_ROLE_KEY=... \
+DATABASE_URL=postgresql://... \
 pnpm export:canva-tickets
 ```
 
@@ -51,7 +50,7 @@ Columns:
 |-------------|--------------------------------------|
 | ticket_code | e.g. `PF-000001`                     |
 | qr_url      | Full public URL for the QR           |
-| status      | Current ticket status in Supabase    |
+| status      | Current ticket status in PostgreSQL  |
 
 Rows are sorted by `ticket_code` ascending. Canva generates QR images from the `qr_url` column — this script does **not** create PDFs or QR image files.
 
@@ -59,7 +58,7 @@ If `PUBLIC_SITE_URL` is omitted, the script defaults to `https://www.farecoh.org
 
 ## Canva Bulk Create
 
-1. Run `pnpm export:canva-tickets` after ticket inventory exists in Supabase.
+1. Run `pnpm export:canva-tickets` after ticket inventory exists in database.
 2. In Canva, open your ticket design template.
 3. Use **Bulk Create** and upload `exports/canva-tickets-pink-floyd.csv`.
 4. Map `ticket_code` to the visible code on the ticket.
@@ -100,12 +99,10 @@ Invalid statuses at check-in:
 | `validated`         | Boleto ya utilizado                         |
 
 ## Database
-
-Apply migration manually in Supabase SQL Editor:
-
-`supabase/migrations/20260629_qr_ticket_flow.sql`
-
-This ensures `qr_token`, `get_public_ticket_status`, and `validate_ticket_by_qr` exist with correct grants.
+ 
+Included in `database/schema.sql` (applied via `pnpm db:init`).
+ 
+This ensures `qr_token`, `get_public_ticket_status`, and `validate_ticket_by_qr` exist with correct definitions.
 
 ## Security summary
 

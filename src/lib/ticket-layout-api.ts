@@ -1,5 +1,9 @@
-import type { PostgrestError } from "@supabase/supabase-js";
-import type { TicketLayoutType } from "./ticket-layouts/types.ts";
+export interface DatabaseError {
+  message: string;
+  code?: string;
+  details?: any;
+  hint?: any;
+}
 
 export function parseLayoutTypeParam(raw: string | undefined): TicketLayoutType | null {
   if (raw === "physical" || raw === "digital") return raw;
@@ -10,8 +14,8 @@ export function resolveLayoutTypeParam(params: Record<string, string | undefined
   return parseLayoutTypeParam(params.layoutType ?? params.type);
 }
 
-export function isPostgrestError(error: unknown): error is PostgrestError {
-  return Boolean(error && typeof error === "object" && "message" in error && "code" in error);
+export function isPostgrestError(error: unknown): error is DatabaseError {
+  return Boolean(error && typeof error === "object" && "message" in error);
 }
 
 export function isMissingLayoutTableError(error: unknown): boolean {
@@ -32,7 +36,7 @@ export function layoutTableMissingMessage(): string {
   return "ticket_layout_configs table is missing. Run the additive migration.";
 }
 
-export function logLayoutDbError(context: string, error: PostgrestError): void {
+export function logLayoutDbError(context: string, error: DatabaseError): void {
   console.error(`[ticket-layouts] ${context}`, {
     code: error.code,
     message: error.message,

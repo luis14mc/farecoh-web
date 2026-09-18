@@ -103,7 +103,7 @@ export function UsersAdminPanel({
         <ShieldAlert className="h-4 w-4" />
         <AlertTitle>Solo super administrador</AlertTitle>
         <AlertDescription>
-          Cree usuarios en Supabase Auth y asigne permisos desde la tabla de perfiles administrativos.
+          Cree usuarios y asigne permisos directamente desde este panel administrativo.
         </AlertDescription>
       </Alert>
 

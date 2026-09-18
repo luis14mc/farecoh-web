@@ -1,4 +1,4 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+import { query, queryRows } from "./db.ts";
 import { isTicketCode, normalizeTicketCode } from "../services/ticket-code.ts";
 
 export const RESETTABLE_TICKET_STATUSES = [
@@ -27,12 +27,6 @@ export interface TicketResetResult {
 
 const MAX_RESET_BATCH = 25;
 
-function chunk<T>(items: T[], size: number): T[][] {
-  const out: T[][] = [];
-  for (let i = 0; i < items.length; i += size) out.push(items.slice(i, i + size));
-  return out;
-}
-
 export function parseTicketCodesInput(raw: string): string[] {
   const parts = raw
     .split(/[\s,;]+/)
@@ -60,21 +54,27 @@ export function validateTicketResetCodes(codes: string[]): string[] {
 }
 
 export async function resetTicketsToAvailable(
-  supabase: SupabaseClient,
-  ticketCodes: string[],
-  options?: { performedBy?: string },
+  _clientOrCodes: any,
+  maybeCodes?: string[] | { performedBy?: string },
+  maybeOptions?: { performedBy?: string },
 ): Promise<{ reset: TicketResetResult[]; skipped: string[] }> {
+  const ticketCodes: string[] = Array.isArray(_clientOrCodes)
+    ? _clientOrCodes
+    : Array.isArray(maybeCodes)
+      ? maybeCodes
+      : [];
+
+  const options = (typeof maybeCodes === "object" && !Array.isArray(maybeCodes) ? maybeCodes : maybeOptions) as
+    | { performedBy?: string }
+    | undefined;
+
   const codes = validateTicketResetCodes(ticketCodes);
 
-  const { data: tickets, error: listError } = await supabase
-    .from("tickets")
-    .select("id, ticket_code, status, buyer_name, seller_name")
-    .in("ticket_code", codes)
-    .order("ticket_code");
+  const found = await queryRows<TicketResetRow>(
+    "SELECT id, ticket_code, status, buyer_name, seller_name FROM tickets WHERE ticket_code = ANY($1) ORDER BY ticket_code ASC;",
+    [codes]
+  );
 
-  if (listError) throw listError;
-
-  const found = tickets ?? [];
   const foundCodes = new Set(found.map((row) => row.ticket_code));
   const missing = codes.filter((code) => !foundCodes.has(code));
   if (missing.length) {
@@ -82,7 +82,7 @@ export async function resetTicketsToAvailable(
   }
 
   const skipped = found.filter((row) => row.status === "available").map((row) => row.ticket_code);
-  const toReset = found.filter((row) => row.status !== "available") as TicketResetRow[];
+  const toReset = found.filter((row) => row.status !== "available");
 
   if (toReset.length === 0) {
     return { reset: [], skipped };
@@ -90,42 +90,32 @@ export async function resetTicketsToAvailable(
 
   const ids = toReset.map((row) => row.id);
 
-  for (const batch of chunk(ids, 100)) {
-    const { error } = await supabase.from("checkins").delete().in("ticket_id", batch);
-    if (error) throw error;
-  }
-
-  for (const batch of chunk(ids, 100)) {
-    const { error } = await supabase.from("sales").delete().in("ticket_id", batch);
-    if (error) throw error;
-  }
-
-  for (const batch of chunk(ids, 100)) {
-    const { error } = await supabase.from("tickets").update({
-      status: "available",
-      buyer_name: null,
-      buyer_phone: null,
-      buyer_email: null,
-      seller_id: null,
-      seller_name: null,
-      sale_location: null,
-      payment_method: null,
-      payment_reference: null,
-      sold_at: null,
-      validated_at: null,
-      reserved_at: null,
-      batch_id: null,
-    }).in("id", batch);
-    if (error) throw error;
-  }
+  await query("DELETE FROM checkins WHERE ticket_id = ANY($1);", [ids]);
+  await query("DELETE FROM sales WHERE ticket_id = ANY($1);", [ids]);
+  await query(
+    `UPDATE tickets SET
+      status = 'available',
+      buyer_name = NULL,
+      buyer_phone = NULL,
+      buyer_email = NULL,
+      seller_id = NULL,
+      seller_name = NULL,
+      sale_location = NULL,
+      payment_method = NULL,
+      payment_reference = NULL,
+      sold_at = NULL,
+      validated_at = NULL,
+      reserved_at = NULL,
+      batch_id = NULL
+    WHERE id = ANY($1);`,
+    [ids]
+  );
 
   if (options?.performedBy) {
-    await supabase.from("audit_logs").insert({
-      action: "ticket.reset",
-      entity: "tickets",
-      entity_id: null,
-      performed_by: `${options.performedBy} (${toReset.map((row) => row.ticket_code).join(", ")})`,
-    });
+    await query(
+      "INSERT INTO audit_logs (action, entity, performed_by) VALUES ($1, $2, $3);",
+      ["ticket.reset", "tickets", `${options.performedBy} (${toReset.map((row) => row.ticket_code).join(", ")})`]
+    );
   }
 
   return {

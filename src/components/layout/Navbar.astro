@@ -10,55 +10,67 @@ const { active, variant = "light" } = Astro.props;
 
 const navItems = [
   { label: "Inicio", href: "/", key: "home" },
+  { label: "Nuestra Historia", href: "/#historia", key: "historia" },
+  { label: "Programas", href: "/#programas", key: "programas" },
+  { label: "Impacto", href: "/#impacto", key: "impacto" },
+  { label: "Concierto Benéfico", href: "/#concierto-benefico", key: "concierto" },
 ];
 
 const headerClass =
   variant === "concert"
-    ? "fixed top-0 left-0 z-[100] w-full border-b border-white/5 bg-black/90 py-4 backdrop-blur-md transition-all duration-300"
+    ? "fixed top-0 left-0 z-[100] w-full border-b border-white/10 bg-black/85 py-3.5 backdrop-blur-md transition-all duration-300 shadow-sm"
     : variant === "dark"
-      ? "fixed top-0 left-0 z-[100] w-full border-b border-outline/10 bg-on-background/90 py-4 backdrop-blur-md transition-all duration-300"
-      : "fixed top-0 left-0 z-[100] w-full border-b border-outline-variant bg-surface/90 py-4 backdrop-blur-md transition-all duration-300";
+      ? "fixed top-0 left-0 z-[100] w-full border-b border-outline/10 bg-on-background/90 py-3.5 backdrop-blur-md transition-all duration-300 shadow-sm"
+      : "fixed top-0 left-0 z-[100] w-full border-b border-outline-variant/60 bg-surface/90 py-3.5 backdrop-blur-md transition-all duration-300 shadow-sm";
 
 const inactiveClass =
   variant === "concert"
-    ? "text-white/65 hover:text-concert-amber"
+    ? "text-white/75 hover:text-concert-amber focus-visible:text-concert-amber"
     : variant === "dark"
-      ? "text-surface-bright/70 hover:text-primary-container"
-      : "text-on-surface-variant hover:text-primary";
+      ? "text-surface-bright/75 hover:text-primary-container focus-visible:text-primary-container"
+      : "text-on-surface-variant hover:text-primary focus-visible:text-primary";
 
 const activeClass =
   variant === "concert"
-    ? "border-b-2 border-concert-orange pb-1 font-bold text-concert-amber"
+    ? "text-concert-amber font-semibold border-b-2 border-concert-orange"
     : variant === "dark"
-      ? "border-b-2 border-primary-container pb-1 font-bold text-primary-container"
-      : "border-b-2 border-primary pb-1 font-bold text-primary";
+      ? "text-primary-container font-semibold border-b-2 border-primary-container"
+      : "text-primary font-semibold border-b-2 border-primary";
 
 const logoTheme = variant === "light" ? "color" : "white";
 
 const mobileMenuClass =
   variant === "concert"
-    ? "border-concert-orange/25 bg-concert-elevated"
+    ? "border-concert-orange/30 bg-concert-elevated text-white"
     : variant === "dark"
-      ? "border-outline/20 bg-on-background"
-      : "border-outline-variant bg-surface";
+      ? "border-outline/20 bg-on-background text-white"
+      : "border-outline-variant bg-surface text-on-surface";
 
 const mobileActiveClass =
-  variant === "concert" ? "font-bold text-concert-amber" : "font-bold text-primary-container";
+  variant === "concert" ? "font-bold text-concert-amber" : "font-bold text-primary";
 
-const menuIconClass =
-  variant === "concert" ? "text-white" : variant === "dark" ? "text-surface-bright" : "text-on-surface";
+const menuButtonClass =
+  variant === "concert"
+    ? "text-white hover:bg-white/10"
+    : variant === "dark"
+      ? "text-surface-bright hover:bg-white/10"
+      : "text-on-surface hover:bg-surface-container";
 ---
 
 <header class={headerClass} id="main-header">
-  <div class="mx-auto grid w-full max-w-container-max grid-cols-[auto_1fr_auto] items-center gap-3 px-margin md:gap-4">
-    <a href="/" class="relative z-10 shrink-0 transition-opacity hover:opacity-90" aria-label="FARECOH inicio">
+  <div class="mx-auto flex w-full max-w-container-max items-center justify-between gap-4 px-margin">
+    <a
+      href="/"
+      class="relative z-10 shrink-0 transition-transform duration-200 hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 rounded-md"
+      aria-label="FARECOH - Inicio"
+    >
       <FarecohLogo variant="horizontal" theme={logoTheme} size="nav" loading="eager" />
     </a>
 
-    <nav class="relative z-20 hidden min-w-0 items-center justify-center gap-6 md:flex lg:gap-8" aria-label="Navegación principal">
+    <nav class="relative z-20 hidden min-w-0 items-center gap-1 md:flex lg:gap-2" aria-label="Navegación principal">
       {navItems.map((item) => (
         <a
-          class={`relative z-10 shrink-0 text-label-md font-label-md transition-colors ${active === item.key ? activeClass : inactiveClass}`}
+          class={`relative z-10 inline-flex min-h-[44px] items-center px-3 py-2 text-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-1 rounded-md ${active === item.key ? activeClass : inactiveClass}`}
           href={item.href}
         >
           {item.label}
@@ -66,22 +78,46 @@ const menuIconClass =
       ))}
     </nav>
 
-    <div class="relative z-10 flex shrink-0 items-center justify-end gap-3">
+    <div class="relative z-10 flex shrink-0 items-center gap-3">
+      <a
+        href="/#concierto-benefico"
+        class="hidden sm:inline-flex min-h-[44px] items-center justify-center rounded-lg bg-primary px-4 py-2 text-xs font-bold uppercase tracking-wider text-white shadow-sm transition-all duration-200 hover:bg-brand-500 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 active:scale-98"
+      >
+        Apoyar Causa
+      </a>
+
       <details class="group relative md:hidden" id="mobile-nav">
-        <summary class={`list-none cursor-pointer focus:outline-none ${menuIconClass}`} aria-label="Abrir menú">
-          <span class="material-symbols-outlined align-middle text-[28px]">menu</span>
+        <summary
+          class={`flex min-h-[44px] min-w-[44px] cursor-pointer items-center justify-center rounded-lg p-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 list-none ${menuButtonClass}`}
+          aria-label="Menú principal de navegación"
+        >
+          <svg class="h-6 w-6 group-open:hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+          <svg class="hidden h-6 w-6 group-open:block" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
         </summary>
-        <div class={`absolute right-0 top-full z-[110] mt-4 min-w-[240px] border p-6 shadow-2xl ${mobileMenuClass}`}>
-          <nav class="flex flex-col gap-4" aria-label="Navegación móvil">
+        <div class={`absolute right-0 top-full z-[110] mt-3 min-w-[260px] rounded-xl border p-5 shadow-2xl backdrop-blur-lg ${mobileMenuClass}`}>
+          <nav class="flex flex-col gap-1.5" aria-label="Navegación móvil">
             {navItems.map((item) => (
               <a
-                class={`text-label-md font-label-md ${active === item.key ? mobileActiveClass : "opacity-80"}`}
+                class={`flex min-h-[44px] items-center rounded-lg px-3.5 py-2.5 text-sm transition-colors hover:bg-black/5 dark:hover:bg-white/10 ${active === item.key ? mobileActiveClass : "opacity-85"}`}
                 href={item.href}
                 data-mobile-nav-link
               >
                 {item.label}
               </a>
             ))}
+            <div class="pt-3 border-t border-outline-variant/40 mt-2">
+              <a
+                href="/#concierto-benefico"
+                class="flex min-h-[44px] items-center justify-center rounded-lg bg-primary px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-white text-center shadow-sm"
+                data-mobile-nav-link
+              >
+                Apoyar Causa
+              </a>
+            </div>
           </nav>
         </div>
       </details>

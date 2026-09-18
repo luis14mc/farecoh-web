@@ -1,5 +1,5 @@
 import type { APIRoute } from "astro";
-import { createSupabaseServerClient } from "@/lib/auth";
+import { queryOne } from "@/lib/db";
 import { requireAdminAccess } from "@/lib/rbac";
 import { buildDeliveryDebugHeaders } from "@/lib/ticket-delivery-identity";
 import { produceDigitalTicketPng } from "@/lib/ticket-delivery-verify";
@@ -22,15 +22,12 @@ export const GET: APIRoute = async (context) => {
   }
 
   try {
-    const supabase = createSupabaseServerClient(context);
-    const { data: ticket, error } = await supabase
-      .from("tickets")
-      .select("id, ticket_code, qr_token, status")
-      .eq("ticket_code", requestedTicketCode)
-      .in("status", ["sold", "validated"])
-      .single();
+    const ticket = await queryOne<{ id: string; ticket_code: string; qr_token: string; status: string }>(
+      "SELECT id, ticket_code, qr_token, status FROM tickets WHERE ticket_code = $1 AND status IN ('sold', 'validated') LIMIT 1;",
+      [requestedTicketCode]
+    );
 
-    if (error || !ticket) {
+    if (!ticket) {
       return new Response(JSON.stringify({ ok: false, message: "Boleto no encontrado." }), {
         status: 404,
         headers: { "content-type": "application/json" },

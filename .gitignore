@@ -27,4 +27,5 @@ pnpm-debug.log*
 .pnpm-store/
 .vercel/
 .agents/
+.claude/
 skills-lock.json

@@ -1,41 +1,33 @@
 ---
 import AdminAuthLayout from "@/layouts/AdminAuthLayout.astro";
-import { getPublicSupabaseConfig, isAuthConfigured } from "@/lib/auth";
+import { isAuthConfigured } from "@/lib/auth";
 
-const { supabaseUrl, supabaseAnonKey } = getPublicSupabaseConfig();
-const authConfigured = isAuthConfigured({ supabaseUrl, supabaseAnonKey });
+const authConfigured = isAuthConfigured();
 ---
 
 <AdminAuthLayout
   title="Acceso no autorizado | FARECOH"
-  supabaseUrl={supabaseUrl}
-  supabaseAnonKey={supabaseAnonKey}
   authConfigured={authConfigured}
 >
   <main class="flex min-h-screen items-center justify-center px-margin py-12">
-    <section class="max-w-md rounded-lg border border-outline-variant bg-surface-container-lowest p-6 text-center shadow-sm">
-      <p class="label-caps text-red-700">Acceso no autorizado</p>
-      <h1 class="mt-2 headline-md text-on-surface">No tiene permisos para esta sección</h1>
-      <p class="mt-2 body-md text-on-surface-variant">Solicite a un super administrador que revise su rol o estado de acceso.</p>
+    <section class="max-w-md rounded-2xl border border-outline-variant/60 bg-surface-container-lowest p-8 text-center shadow-xl">
+      <p class="text-xs font-bold uppercase tracking-wider text-red-600">Acceso no autorizado</p>
+      <h1 class="mt-2 text-2xl font-bold tracking-tight text-on-surface">No tiene permisos para esta sección</h1>
+      <p class="mt-2 text-sm leading-relaxed text-on-surface-variant">Solicite a un super administrador que revise su rol o estado de acceso.</p>
       <div class="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
-        <a href="/admin" class="rounded bg-primary px-4 py-3 label-caps text-on-primary hover:bg-secondary">Volver al panel</a>
-        <button id="logout-button" class="rounded border border-outline-variant px-4 py-3 label-caps text-on-surface hover:bg-surface-container-high" type="button">Cerrar sesión</button>
+        <a href="/admin" class="rounded-xl bg-primary px-5 py-3 text-xs font-bold uppercase tracking-wider text-white shadow-sm hover:bg-brand-500 transition-colors">Volver al panel</a>
+        <button id="logout-button" class="rounded-xl border border-outline-variant px-5 py-3 text-xs font-bold uppercase tracking-wider text-on-surface hover:bg-surface-container transition-colors" type="button">Cerrar sesión</button>
       </div>
     </section>
   </main>
 
   <script>
-    import { createBrowserClient } from "@supabase/ssr";
-
-    const body = document.body;
-    const supabaseUrl = body.dataset.supabaseUrl || "";
-    const supabaseAnonKey = body.dataset.supabaseAnonKey || "";
-    const authConfigured = body.dataset.authConfigured === "true";
-
-    const supabase = authConfigured ? createBrowserClient(supabaseUrl, supabaseAnonKey) : null;
     document.getElementById("logout-button")?.addEventListener("click", async () => {
-      if (supabase) await supabase.auth.signOut();
-      window.location.href = "/admin/login";
+      try {
+        await fetch("/api/auth/logout", { method: "POST" });
+      } finally {
+        window.location.href = "/admin/login";
+      }
     });
   </script>
 </AdminAuthLayout>

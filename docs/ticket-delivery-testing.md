@@ -11,7 +11,7 @@ This implementation is read-only for ticket identity fields. It never updates:
 - ticket inventory sequences
 - existing sold ticket records
 
-Every public ticket link is built from the existing `qr_token` already stored in Supabase.
+Every public ticket link is built from the existing `qr_token` already stored in PostgreSQL.
 
 ## Test route
 

@@ -2,12 +2,12 @@
 import AdminLayout from "@/layouts/AdminLayout.astro";
 import { AdminPageHeader } from "@/components/admin/react/AdminPageHeader";
 import { TicketDeliveryPanel } from "@/components/admin/react/TicketDeliveryPanel";
-import { createSupabaseServerClient, getPublicSupabaseConfig, isAuthConfigured, type UserProfile } from "@/lib/auth";
+import type { UserProfile } from "@/lib/auth";
 import { formatSiteDate } from "@/lib/locale";
+import { queryRows } from "@/lib/db";
 
-const supabase = createSupabaseServerClient(Astro);
 const staffProfile = Astro.locals.staffProfile as UserProfile | undefined;
-const authConfigured = isAuthConfigured(getPublicSupabaseConfig());
+const authConfigured = true;
 const currentDate = formatSiteDate(new Date(), { month: "short", day: "numeric", year: "numeric" });
 const requestedCode = (Astro.url.searchParams.get("code") ?? "").trim().toUpperCase();
 
@@ -15,15 +15,12 @@ let tickets: any[] = [];
 let pageError = "";
 
 try {
-  const { data: allTickets = [], error } = await supabase
-    .from("tickets")
-    .select("ticket_code, qr_token, status, buyer_name, buyer_phone, buyer_email, sold_at, validated_at")
-    .in("status", ["sold", "validated"])
-    .order("sold_at", { ascending: false });
-
-  if (error) {
-    throw error;
-  }
+  const allTickets = await queryRows(
+    `SELECT ticket_code, qr_token, status, buyer_name, buyer_phone, buyer_email, sold_at, validated_at
+     FROM tickets
+     WHERE status IN ('sold', 'validated')
+     ORDER BY sold_at DESC;`
+  );
 
   tickets = allTickets;
 

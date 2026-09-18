@@ -3,19 +3,22 @@ import AdminLayout from "@/layouts/AdminLayout.astro";
 import AdminPage from "@/components/admin/ui/AdminPage.astro";
 import { AdminPageHeader } from "@/components/admin/react/AdminPageHeader";
 import { BatchesAdminPanel } from "@/components/admin/react/BatchesAdminPanel";
-import { createSupabaseServerClient, getPublicSupabaseConfig, isAuthConfigured, type UserProfile } from "@/lib/auth";
+import type { UserProfile } from "@/lib/auth";
 import { getPinkFloydEventFallback } from "@/lib/events";
 import { formatSiteDate } from "@/lib/locale";
 import { formatTicketCode, parseTicketSequence } from "@/services/ticket-code";
 import { countTicketsByStatus, countTicketsSold } from "@/services/admin-stats";
+import { query, queryRows, queryOne } from "@/lib/db";
 
-const supabase = createSupabaseServerClient(Astro);
 const staffProfile = Astro.locals.staffProfile as UserProfile | undefined;
-const authConfigured = isAuthConfigured(getPublicSupabaseConfig());
+const authConfigured = true;
 const currentDate = formatSiteDate(new Date(), { month: "short", day: "numeric", year: "numeric" });
 const event = getPinkFloydEventFallback();
 
-const { data: pinkFloydEvent } = await supabase.from("events").select("id").eq("slug", "pink-floyd").single();
+const pinkFloydEvent = await queryOne<{ id: string }>(
+  "SELECT id FROM events WHERE slug = $1 LIMIT 1;",
+  ["pink-floyd"]
+);
 const eventId = pinkFloydEvent?.id;
 
 let formMessage = "";
@@ -48,13 +51,12 @@ if (Astro.request.method === "POST") {
       throw new Error("Especifique un punto físico o ubicación.");
     }
 
-    const { data: seller, error: sellerErr } = await supabase
-      .from("sellers")
-      .select("*")
-      .eq("id", sellerId)
-      .single();
+    const seller = await queryOne<{ id: string; name: string; active: boolean }>(
+      "SELECT id, name, active FROM sellers WHERE id = $1 LIMIT 1;",
+      [sellerId]
+    );
 
-    if (sellerErr || !seller) {
+    if (!seller) {
       throw new Error("El vendedor seleccionado no existe.");
     }
 
@@ -62,22 +64,14 @@ if (Astro.request.method === "POST") {
       throw new Error("El vendedor seleccionado está inactivo.");
     }
 
-    const { data: pinkFloydEvent, error: eventErr } = await supabase
-      .from("events")
-      .select("id")
-      .eq("slug", "pink-floyd")
-      .single();
-
-    if (eventErr || !pinkFloydEvent) {
+    if (!pinkFloydEvent) {
       throw new Error("Evento Pink Floyd no encontrado.");
     }
 
-    const { data: ticketsInRange = [], error: ticketsErr } = await supabase
-      .from("tickets")
-      .select("id, ticket_code, status")
-      .eq("event_id", pinkFloydEvent.id);
-
-    if (ticketsErr) throw ticketsErr;
+    const ticketsInRange = await queryRows<{ id: string; ticket_code: string; status: string }>(
+      "SELECT id, ticket_code, status FROM tickets WHERE event_id = $1;",
+      [pinkFloydEvent.id]
+    );
 
     const matchedTickets = ticketsInRange.filter((t) => {
       const seq = parseTicketSequence(t.ticket_code);
@@ -96,42 +90,31 @@ if (Astro.request.method === "POST") {
     }
 
     const batchName = `Lote ${startCode} - ${endCode}`;
-    const { data: newBatch, error: batchErr } = await supabase
-      .from("ticket_batches")
-      .insert({
-        event_id: pinkFloydEvent.id,
-        name: batchName,
-        start_code: startCode,
-        end_code: endCode,
-        total_tickets: matchedTickets.length,
-        assigned_seller_id: sellerId,
-        location,
-      })
-      .select()
-      .single();
+    const newBatch = await queryOne<{ id: string }>(
+      `INSERT INTO ticket_batches (event_id, name, start_code, end_code, total_tickets, assigned_seller_id, location)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       RETURNING id;`,
+      [pinkFloydEvent.id, batchName, startCode, endCode, matchedTickets.length, sellerId, location]
+    );
 
-    if (batchErr || !newBatch) throw batchErr || new Error("Error al crear el lote en la base de datos.");
+    if (!newBatch) throw new Error("Error al crear el lote en la base de datos.");
 
     const ticketIds = matchedTickets.map((t) => t.id);
-    const { error: updateErr } = await supabase
-      .from("tickets")
-      .update({
-        status: "assigned",
-        batch_id: newBatch.id,
-        seller_name: seller.name,
-        sale_location: location,
-      })
-      .in("id", ticketIds);
-
-    if (updateErr) throw updateErr;
+    await query(
+      `UPDATE tickets SET
+        status = 'assigned',
+        batch_id = $1,
+        seller_name = $2,
+        sale_location = $3
+       WHERE id = ANY($4);`,
+      [newBatch.id, seller.name, location, ticketIds]
+    );
 
     const userEmail = Astro.locals.staffProfile?.email || "Admin";
-    await supabase.from("audit_logs").insert({
-      action: "batch.assigned",
-      entity: "ticket_batches",
-      entity_id: newBatch.id,
-      performed_by: userEmail,
-    });
+    await query(
+      "INSERT INTO audit_logs (action, entity, entity_id, performed_by) VALUES ($1, $2, $3, $4);",
+      ["batch.assigned", "ticket_batches", newBatch.id, userEmail]
+    );
 
     formMessage = `${matchedTickets.length} boletos asignados correctamente a ${seller.name} en ${location}.`;
   } catch (err: unknown) {
@@ -140,20 +123,17 @@ if (Astro.request.method === "POST") {
   }
 }
 
-const { data: tickets = [] } = eventId
-  ? await supabase.from("tickets").select("status").eq("event_id", eventId)
-  : { data: [] as { status: string }[] };
+const tickets = eventId
+  ? await queryRows<{ status: string }>("SELECT status FROM tickets WHERE event_id = $1;", [eventId])
+  : [];
 
-const { data: sellers = [] } = await supabase
-  .from("sellers")
-  .select("id, name, type")
-  .eq("active", true)
-  .order("name", { ascending: true });
+const sellers = await queryRows<{ id: string; name: string; type: string }>(
+  "SELECT id, name, type FROM sellers WHERE active = true ORDER BY name ASC;"
+);
 
-const { data: batches = [] } = await supabase
-  .from("ticket_batches")
-  .select("id, name, start_code, end_code, location, created_at")
-  .order("created_at", { ascending: false });
+const batches = await queryRows<{ id: string; name: string; start_code: string; end_code: string; location: string; created_at: string }>(
+  "SELECT id, name, start_code, end_code, location, created_at FROM ticket_batches ORDER BY created_at DESC;"
+);
 
 const stats = {
   available: countTicketsByStatus(tickets, "available"),

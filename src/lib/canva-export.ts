@@ -1,4 +1,4 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+import { queryOne, queryRows } from "./db.ts";
 
 const DEFAULT_CANVA_SITE_URL = "https://www.farecoh.org";
 export const PINK_FLOYD_CANVA_EVENT_SLUG = "pink-floyd";
@@ -39,7 +39,6 @@ export function buildCanvaTicketRows(
 }
 
 export function buildCanvaTicketsCsv(rows: CanvaTicketExportRow[]): string {
-  // Dynamic import avoided — use inline to keep canva-export usable from node script without circular deps
   const csvEscape = (value: string) => {
     if ([",", "\n", '"'].some((char) => value.includes(char))) {
       return `"${value.replaceAll('"', '""')}"`;
@@ -57,26 +56,20 @@ export function buildCanvaTicketsCsv(rows: CanvaTicketExportRow[]): string {
   return `\uFEFF${lines.join("\n")}\n`;
 }
 
-export async function loadPinkFloydCanvaTicketRows(supabase: SupabaseClient): Promise<CanvaTicketExportRow[]> {
-  const { data: event, error: eventError } = await supabase
-    .from("events")
-    .select("id")
-    .eq("slug", PINK_FLOYD_CANVA_EVENT_SLUG)
-    .single();
+export async function loadPinkFloydCanvaTicketRows(_client?: any): Promise<CanvaTicketExportRow[]> {
+  const event = await queryOne<{ id: string }>(
+    "SELECT id FROM events WHERE slug = $1 LIMIT 1;",
+    [PINK_FLOYD_CANVA_EVENT_SLUG]
+  );
 
-  if (eventError || !event) {
-    throw new Error(`Pink Floyd event not found: ${eventError?.message ?? "missing row"}`);
+  if (!event) {
+    throw new Error(`Pink Floyd event not found`);
   }
 
-  const { data: tickets = [], error: ticketsError } = await supabase
-    .from("tickets")
-    .select("ticket_code, qr_token, status")
-    .eq("event_id", event.id)
-    .order("ticket_code", { ascending: true });
-
-  if (ticketsError) {
-    throw new Error(`Failed to load tickets: ${ticketsError.message}`);
-  }
+  const tickets = await queryRows<{ ticket_code: string; qr_token: string; status: string }>(
+    "SELECT ticket_code, qr_token, status FROM tickets WHERE event_id = $1 ORDER BY ticket_code ASC;",
+    [event.id]
+  );
 
   if (!tickets.length) {
     throw new Error("No tickets found for pink-floyd event.");

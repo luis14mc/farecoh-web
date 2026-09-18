@@ -4,12 +4,11 @@ FARECOH only exports CSV data for Canva. Ticket design and PDF export happen in 
 
 ## Generate CSV
 
-From the project root, with Supabase credentials:
+From the project root, with database credentials:
 
 ```bash
 PUBLIC_SITE_URL=https://www.farecoh.org \
-PUBLIC_SUPABASE_URL=... \
-SUPABASE_SERVICE_ROLE_KEY=... \
+DATABASE_URL=postgresql://... \
 pnpm export:canva-tickets
 ```
 
@@ -24,7 +23,7 @@ Columns:
 | ticket_code | e.g. `PF-000001`                                 |
 | qr_url      | Public ticket page: `/t/{qr_token}`              |
 | qr_image    | PNG QR URL: `/api/qr/{qr_token}`                 |
-| status      | Current ticket status in Supabase                |
+| status      | Current ticket status in PostgreSQL              |
 
 Example row:
 

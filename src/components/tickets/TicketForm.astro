@@ -1,4 +1,4 @@
-﻿---
+---
 import InputField from "@/components/Forms/InputField.astro";
 import TicketSummary from "@/components/tickets/TicketSummary.astro";
 import type { EventData } from "@/lib/events";
@@ -165,15 +165,15 @@ const eventSchedule = `${event.dateDisplay} · ${event.time}`;
   }
 
   function getBookingErrorMessage(err: unknown): string {
-    const supabaseErr = err as {
+    const requestErr = err as {
       message?: string;
       details?: string;
       hint?: string;
       code?: string;
     };
 
-    if (supabaseErr?.message && supabaseErr.message.trim()) {
-      return supabaseErr.message;
+    if (requestErr?.message && requestErr.message.trim()) {
+      return requestErr.message;
     }
 
     if (err instanceof Error && err.message.trim()) {
@@ -235,7 +235,7 @@ const eventSchedule = `${event.dateDisplay} · ${event.time}`;
           successContainer.classList.remove("hidden");
         }
       } catch (err: unknown) {
-        const supabaseErr = err as {
+        const requestErr = err as {
           message?: string;
           details?: string;
           hint?: string;
@@ -243,10 +243,10 @@ const eventSchedule = `${event.dateDisplay} · ${event.time}`;
         };
 
         console.error("Booking error full:", {
-          message: supabaseErr?.message,
-          details: supabaseErr?.details,
-          hint: supabaseErr?.hint,
-          code: supabaseErr?.code,
+          message: requestErr?.message,
+          details: requestErr?.details,
+          hint: requestErr?.hint,
+          code: requestErr?.code,
           raw: err,
         });
 

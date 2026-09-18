@@ -51,14 +51,27 @@ const logoTheme = variant === "light" ? "color" : "white";
       <p class="label-caps text-outline-variant">© {site.year} {site.name}. Todos los derechos reservados.</p>
     </div>
 
-    <div class="grid grid-cols-1 gap-stack-lg sm:flex sm:gap-stack-lg">
-      <div class="flex flex-col space-y-2">
-        <h4 class={titleClass}>Fundación</h4>
+    <div class="grid grid-cols-2 gap-8 sm:flex sm:gap-12 lg:gap-16">
+      <div class="flex flex-col space-y-2.5">
+        <h4 class={titleClass}>Navegación</h4>
         <a class={linkClass} href="/">Inicio</a>
+        <a class={linkClass} href="/#historia">Nuestra Historia</a>
+        <a class={linkClass} href="/#programas">Programas</a>
+        <a class={linkClass} href="/#impacto">Impacto</a>
+        <a class={linkClass} href="/#concierto-benefico">Concierto Benéfico</a>
       </div>
-      <div class="flex flex-col space-y-2">
+      <div class="flex flex-col space-y-2.5">
         <h4 class={titleClass}>Contacto</h4>
         <a class={linkClass} href={`mailto:${site.email}`}>{site.email}</a>
+        <span class={`${mutedClass} text-xs leading-relaxed max-w-[200px]`}>Valle de Ángeles, Francisco Morazán, Honduras</span>
+        <div class="pt-4 mt-2 border-t border-outline-variant/30">
+          <a class={`${linkClass} text-xs opacity-75 hover:opacity-100 flex items-center gap-1.5`} href="/admin/login">
+            <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+            Acceso Staff
+          </a>
+        </div>
       </div>
     </div>
   </div>

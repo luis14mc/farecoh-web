@@ -1,4 +1,3 @@
-import { createClient } from "@supabase/supabase-js";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import {
@@ -12,14 +11,9 @@ import {
   parsePrintRange,
 } from "../src/lib/ticket-print.ts";
 import { formatTicketCode, normalizeTicketCode } from "../src/services/ticket-code.ts";
+import { getDbPool } from "../src/lib/db.ts";
 
 const EXPORT_DIR = path.join(process.cwd(), "exports", "print");
-
-function requireEnv(name: string): string {
-  const value = process.env[name];
-  if (!value) throw new Error(`${name} is required.`);
-  return value;
-}
 
 function parseCliArgs(argv: string[]) {
   let from = formatTicketCode(1);
@@ -55,11 +49,7 @@ async function main() {
   const { from, to, test } = parseCliArgs(process.argv);
   parsePrintRange(from, to);
 
-  const supabase = createClient(requireEnv("PUBLIC_SUPABASE_URL"), requireEnv("SUPABASE_SERVICE_ROLE_KEY"), {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
-
-  const tickets = await loadPinkFloydPrintTickets(supabase, from, to);
+  const tickets = await loadPinkFloydPrintTickets(from, to);
   const outputPath = path.join(
     EXPORT_DIR,
     test ? "test-5-tickets.pdf" : buildPrintPdfFilename(from, to),
@@ -69,11 +59,15 @@ async function main() {
   const pdfBytes = await buildTicketPrintPdf(tickets);
   await writeFile(outputPath, pdfBytes);
 
+  try {
+    await getDbPool().end();
+  } catch {}
+
   console.log(`Generated ${tickets.length} ticket page(s): ${outputPath}`);
   console.log(`Range: ${tickets[0]?.ticket_code} – ${tickets[tickets.length - 1]?.ticket_code}`);
 }
 
-main().catch((error: unknown) => {
-  console.error(error instanceof Error ? error.message : error);
+main().catch((err) => {
+  console.error("Print generation failed:", err);
   process.exit(1);
 });

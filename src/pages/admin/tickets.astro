@@ -3,20 +3,31 @@ import AdminLayout from "@/layouts/AdminLayout.astro";
 import AdminPage from "@/components/admin/ui/AdminPage.astro";
 import { AdminPageHeader } from "@/components/admin/react/AdminPageHeader";
 import { TicketsInventoryTable } from "@/components/admin/react/TicketsInventoryTable";
-import { supabase } from "@/lib/supabase";
-import { getPublicSupabaseConfig, isAuthConfigured, type UserProfile } from "@/lib/auth";
+import type { UserProfile } from "@/lib/auth";
 import { canResetTickets } from "@/lib/rbac";
 import { formatSiteDate } from "@/lib/locale";
+import { queryRows } from "@/lib/db";
 
 const staffProfile = Astro.locals.staffProfile as UserProfile | undefined;
-const authConfigured = isAuthConfigured(getPublicSupabaseConfig());
+const authConfigured = true;
 const currentDate = formatSiteDate(new Date(), { month: "short", day: "numeric", year: "numeric" });
 const allowTicketReset = canResetTickets(staffProfile);
 
-const { data: tickets = [] } = await supabase
-  .from("tickets")
-  .select("ticket_code, qr_token, status, buyer_name, buyer_phone, seller_name, sale_location, sold_at, validated_at")
-  .order("ticket_code", { ascending: true });
+const tickets = await queryRows<{
+  ticket_code: string;
+  qr_token: string;
+  status: string;
+  buyer_name: string | null;
+  buyer_phone: string | null;
+  seller_name: string | null;
+  sale_location: string | null;
+  sold_at: string | null;
+  validated_at: string | null;
+}>(
+  `SELECT ticket_code, qr_token, status, buyer_name, buyer_phone, seller_name, sale_location, sold_at, validated_at
+   FROM tickets
+   ORDER BY ticket_code ASC;`
+);
 
 const sellers = Array.from(new Set(tickets.map((t) => t.seller_name).filter(Boolean))) as string[];
 const locations = Array.from(new Set(tickets.map((t) => t.sale_location).filter(Boolean))) as string[];

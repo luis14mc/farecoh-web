@@ -1,5 +1,4 @@
 import type { APIRoute } from "astro";
-import { createSupabaseServerClient } from "@/lib/auth";
 import {
   buildCanvaTicketsCsv,
   CANVA_TICKETS_FILENAME,
@@ -14,8 +13,7 @@ export const GET: APIRoute = async (context) => {
   }
 
   try {
-    const supabase = createSupabaseServerClient(context);
-    const rows = await loadPinkFloydCanvaTicketRows(supabase);
+    const rows = await loadPinkFloydCanvaTicketRows();
     const csv = buildCanvaTicketsCsv(rows);
 
     return new Response(csv, {

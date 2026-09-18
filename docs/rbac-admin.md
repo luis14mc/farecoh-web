@@ -1,6 +1,6 @@
 # RBAC Admin - FARECOH
 
-El esquema canónico vive en `supabase/migrations/001_ticketing_core.sql`. Ejecuta ese archivo antes de configurar usuarios admin (ver `docs/database-setup.md`).
+El esquema canónico vive en `database/schema.sql`. Ejecuta ese archivo antes de configurar usuarios admin (ver `docs/database-setup.md`).
 
 ## Tablas RBAC
 
@@ -14,13 +14,14 @@ El esquema canónico vive en `supabase/migrations/001_ticketing_core.sql`. Ejecu
 **users**
 
 ```sql
-id uuid primary key
-auth_user_id uuid references auth.users(id)
-email text unique
-full_name text
-role_id uuid references roles(id)
-active boolean default true
+id uuid primary key default gen_random_uuid()
+email text unique not null
+password_hash text not null
+full_name text not null
+role_id uuid references roles(id) not null
+active boolean default true not null
 created_at timestamptz default now()
+updated_at timestamptz default now()
 ```
 
 ## Mapa de permisos
@@ -39,58 +40,20 @@ created_at timestamptz default now()
 ## Reglas
 
 - El módulo `/admin/users` solo lo ve y accede `super_admin`.
-- Ocultar links no es suficiente: `src/middleware.ts` valida cada ruta antes de renderizar.
+- Ocultar links no es suficiente: `src/middleware/admin.ts` valida cada ruta antes de renderizar.
 - Los roles se consultan desde `public.users` + `public.roles`.
-- No se guardan roles en `localStorage`.
+- Las contraseñas se almacenan con hash criptográfico (`crypto.scrypt`).
+- Las sesiones se gestionan mediante cookies seguras firmadas con HMAC-SHA256 (`AUTH_SECRET`).
 - No se permite editar el propio rol desde frontend.
 
-## Crear super_admin
+## Gestión de usuarios
 
-1. Crear el usuario en Supabase Auth.
-2. Copiar `auth.users.id`.
-3. Ejecutar:
+Los usuarios pueden crearse, activarse, desactivarse y modificarse directamente desde la interfaz web en:
+`/admin/users` (disponible para `super_admin`).
 
-```sql
-INSERT INTO public.users (auth_user_id, email, full_name, role_id, active)
-SELECT
-  'AUTH_USER_UUID',
-  'admin@farecoh.org',
-  'FARECOH Admin',
-  r.id,
-  true
-FROM public.roles r
-WHERE r.name = 'super_admin';
-```
+También pueden gestionarse mediante SQL:
 
-## Crear seller
-
-```sql
-INSERT INTO public.users (auth_user_id, email, full_name, role_id, active)
-SELECT
-  'AUTH_USER_UUID',
-  'seller@farecoh.org',
-  'Nombre Vendedor',
-  r.id,
-  true
-FROM public.roles r
-WHERE r.name = 'seller';
-```
-
-## Crear checkin_operator
-
-```sql
-INSERT INTO public.users (auth_user_id, email, full_name, role_id, active)
-SELECT
-  'AUTH_USER_UUID',
-  'checkin@farecoh.org',
-  'Operador Check-in',
-  r.id,
-  true
-FROM public.roles r
-WHERE r.name = 'checkin_operator';
-```
-
-## Revocar acceso
+### Revocar acceso
 
 ```sql
 UPDATE public.users

@@ -3,9 +3,8 @@ import AdminLayout from "@/layouts/AdminLayout.astro";
 import AdminPage from "@/components/admin/ui/AdminPage.astro";
 import { AdminPageHeader } from "@/components/admin/react/AdminPageHeader";
 import { SalesFormPanel } from "@/components/admin/react/SalesFormPanel";
-import { createSupabaseServerClient } from "@/lib/auth";
 import { confirmTicketPayment } from "@/services/ticket-payment";
-import { getPublicSupabaseConfig, isAuthConfigured, type UserProfile } from "@/lib/auth";
+import type { UserProfile } from "@/lib/auth";
 import { formatSiteCurrency, formatSiteDate, formatSiteNumber } from "@/lib/locale";
 import {
   calculateAdminReportMetrics,
@@ -13,20 +12,19 @@ import {
   countTicketsSoldOnDate,
   resolveGrossRevenue,
 } from "@/services/admin-stats";
+import { queryOne, queryRows } from "@/lib/db";
 
-const supabase = createSupabaseServerClient(Astro);
 const staffProfile = Astro.locals.staffProfile as UserProfile | undefined;
-const authConfigured = isAuthConfigured(getPublicSupabaseConfig());
+const authConfigured = true;
 const currentDate = formatSiteDate(new Date(), { month: "short", day: "numeric", year: "numeric" });
 let formMessage = "";
 let formError = false;
 let deliveryCode = "";
 
-const { data: event } = await supabase
-  .from("events")
-  .select("ticket_price, capacity")
-  .eq("slug", "pink-floyd")
-  .single();
+const event = await queryOne<{ ticket_price: number; capacity: number }>(
+  "SELECT ticket_price, capacity FROM events WHERE slug = $1 LIMIT 1;",
+  ["pink-floyd"]
+);
 const ticketPrice = event?.ticket_price || 500.0;
 const capacity = event?.capacity || 500;
 
@@ -50,7 +48,7 @@ if (Astro.request.method === "POST") {
       throw new Error("Complete todos los campos obligatorios.");
     }
 
-    const result = await confirmTicketPayment(supabase, {
+    const result = await confirmTicketPayment(null, {
       ticket_code: ticketCode,
       buyer_name: buyerName,
       buyer_phone: buyerPhone,
@@ -74,23 +72,38 @@ if (Astro.request.method === "POST") {
   }
 }
 
-const { data: sellersData } = await supabase
-  .from("sellers")
-  .select("*")
-  .eq("active", true)
-  .order("name", { ascending: true });
-const sellers = sellersData ?? [];
+const sellers = await queryRows<{ id: string; name: string; type: string }>(
+  "SELECT * FROM sellers WHERE active = true ORDER BY name ASC;"
+);
 
-const { data: ticketsData } = await supabase
-  .from("tickets")
-  .select("status, validated_at, sold_at");
-const tickets = ticketsData ?? [];
+const tickets = await queryRows<{ status: string; validated_at: string | null; sold_at: string | null }>(
+  "SELECT status, validated_at, sold_at FROM tickets;"
+);
 
-const { data: salesData } = await supabase
-  .from("sales")
-  .select("amount, created_at, seller_name, sales_point, ticket:tickets(ticket_code, buyer_name)")
-  .order("created_at", { ascending: false });
-const sales = salesData ?? [];
+const rawSales = await queryRows<{
+  amount: number | string;
+  created_at: string;
+  seller_name: string | null;
+  sales_point: string | null;
+  ticket_code: string | null;
+  buyer_name: string | null;
+}>(`
+  SELECT s.amount, s.created_at, s.seller_name, s.sales_point, t.ticket_code, t.buyer_name
+  FROM sales s
+  LEFT JOIN tickets t ON s.ticket_id = t.id
+  ORDER BY s.created_at DESC;
+`);
+
+const sales = rawSales.map((row) => ({
+  amount: row.amount,
+  created_at: row.created_at,
+  seller_name: row.seller_name,
+  sales_point: row.sales_point,
+  ticket: {
+    ticket_code: row.ticket_code,
+    buyer_name: row.buyer_name,
+  },
+}));
 
 const metricsData = calculateAdminReportMetrics({
   capacity,
@@ -163,15 +176,13 @@ let recentSales: RecentSaleRow[] = sales
   .slice(0, 10);
 
 if (recentSales.length === 0) {
-  const { data: ticketSalesData } = await supabase
-    .from("tickets")
-    .select("ticket_code, buyer_name, seller_name, sale_location, sold_at")
-    .in("status", ["sold", "validated"])
-    .not("sold_at", "is", null)
-    .order("sold_at", { ascending: false })
-    .limit(10);
-
-  recentSales = ticketSalesData ?? [];
+  recentSales = await queryRows<RecentSaleRow>(
+    `SELECT ticket_code, buyer_name, seller_name, sale_location, sold_at
+     FROM tickets
+     WHERE status IN ('sold', 'validated') AND sold_at IS NOT NULL
+     ORDER BY sold_at DESC
+     LIMIT 10;`
+  );
 }
 ---
 

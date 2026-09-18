@@ -1,4 +1,4 @@
-﻿---
+---
 import { homeHero } from "@/data/home";
 import LandingButton from "@/components/landing/LandingButton.astro";
 import FarecohLogo from "@/components/layout/FarecohLogo.astro";
@@ -17,20 +17,34 @@ import FarecohLogo from "@/components/layout/FarecohLogo.astro";
     <div class="hero-editorial absolute inset-0"></div>
   </div>
 
-  <div class="landing-section relative z-10 w-full pb-8 pt-28 md:pb-0 md:pt-0">
-    <div class="landing-shell hero-content max-w-3xl text-white">
-      <div class="mb-4 flex items-center gap-3">
-        <span class="inline-block h-8 w-1 bg-brand-400" aria-hidden="true"></span>
+  <div class="landing-section relative z-10 w-full pb-12 pt-32 md:pb-16 md:pt-16">
+    <div class="landing-shell hero-content max-w-4xl text-white">
+      <div class="mb-6 inline-flex items-center gap-3 rounded-full border border-white/20 bg-black/40 px-4 py-2 backdrop-blur-md">
+        <span class="inline-block h-2.5 w-2.5 rounded-full bg-brand-400 animate-pulse" aria-hidden="true"></span>
+        <span class="text-xs font-bold uppercase tracking-[0.18em] text-white/90">Música · Educación · Transformación Social</span>
+      </div>
+
+      <div class="mb-6 flex items-center gap-4">
         <FarecohLogo variant="stacked" theme="white" size="hero" loading="eager" />
       </div>
-      <h1 class="display mb-4 text-white">{homeHero.title}</h1>
-      <p class="subtitle-lg mb-4 font-semibold text-white/95">{homeHero.subtitle}</p>
-      <p class="landing-body mb-stack-lg text-white/88">{homeHero.body}</p>
+
+      <h1 class="text-4xl font-extrabold tracking-tight text-white sm:text-5xl md:text-6xl lg:text-7xl leading-[1.08] mb-6 drop-shadow-sm">
+        {homeHero.title}
+      </h1>
+
+      <p class="text-lg md:text-xl font-normal leading-relaxed text-white/90 max-w-2xl mb-4">
+        {homeHero.subtitle}
+      </p>
+
+      <p class="text-sm md:text-base font-medium text-brand-400 max-w-2xl mb-8">
+        {homeHero.body}
+      </p>
+
       <div class="flex flex-col gap-4 sm:flex-row sm:flex-wrap">
-        <LandingButton href="/eventos/pink-floyd" variant="primary">
+        <LandingButton href="/#concierto-benefico" variant="primary" class="rounded-xl shadow-lg hover:shadow-cyan-500/25">
           {homeHero.ctaEvent}
         </LandingButton>
-        <LandingButton href="#historia" variant="secondary">
+        <LandingButton href="/#historia" variant="secondary" class="rounded-xl backdrop-blur-sm">
           {homeHero.ctaStory}
         </LandingButton>
       </div>

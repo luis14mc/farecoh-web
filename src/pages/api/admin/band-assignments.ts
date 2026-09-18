@@ -1,5 +1,4 @@
 import type { APIRoute } from "astro";
-import { createSupabaseServerClient } from "@/lib/auth";
 import {
   addTicketsToMusician,
   createBandMusician,
@@ -40,11 +39,9 @@ export const POST: APIRoute = async (context) => {
   const action = String(payload.action ?? "");
 
   try {
-    const supabase = createSupabaseServerClient(context);
-
     if (action === "create_musician") {
       const musician = await createBandMusician(
-        supabase,
+        null,
         String(payload.name ?? ""),
         typeof payload.notes === "string" ? payload.notes : null,
       );
@@ -58,7 +55,7 @@ export const POST: APIRoute = async (context) => {
         return Response.json({ ok: false, message: "Seleccione un músico." }, { status: 400 });
       }
 
-      const result = await addTicketsToMusician(supabase, musicianId, ticketCodes);
+      const result = await addTicketsToMusician(null, musicianId, ticketCodes);
       return Response.json({
         ok: true,
         added: result.added,
@@ -75,7 +72,7 @@ export const POST: APIRoute = async (context) => {
       if (!assignmentId) {
         return Response.json({ ok: false, message: "Asignación no indicada." }, { status: 400 });
       }
-      await removeBandTicketAssignment(supabase, assignmentId);
+      await removeBandTicketAssignment(null, assignmentId);
       return Response.json({ ok: true, message: "Boleto quitado de la lista." });
     }
 
@@ -84,7 +81,7 @@ export const POST: APIRoute = async (context) => {
       if (!musicianId) {
         return Response.json({ ok: false, message: "Músico no indicado." }, { status: 400 });
       }
-      await deleteBandMusician(supabase, musicianId);
+      await deleteBandMusician(null, musicianId);
       return Response.json({ ok: true, message: "Músico eliminado de la lista." });
     }
 

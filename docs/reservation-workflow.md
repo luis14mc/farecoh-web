@@ -57,13 +57,7 @@ Staff follow-up happens in **`/admin/reservations`**.
 
 ## Database
 
-Run in Supabase SQL Editor:
-
-```
-supabase/migrations/20260630_reservation_workflow.sql
-supabase/migrations/20260826_exclude_batch_tickets_from_online_reservation.sql
-supabase/migrations/20260827_staff_reserve_ticket.sql
-```
+Included in `database/schema.sql` (applied via `pnpm db:init`):
 
 Adds:
 

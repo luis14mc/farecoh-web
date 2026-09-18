@@ -1,27 +1,28 @@
-﻿import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database } from "@/types/database";
+import { rpc } from "@/lib/db";
 import type { TicketOrderRequest, TicketOrderResult } from "@/types/orders";
 import { ticketOrderSchema } from "@/lib/validation";
 
 export async function createTicketOrder(
-  supabase: SupabaseClient<Database>,
-  input: TicketOrderRequest,
+  _clientOrInput: any,
+  possibleInput?: TicketOrderRequest,
 ): Promise<TicketOrderResult> {
+  const input = possibleInput || (_clientOrInput as TicketOrderRequest);
   const parsed = ticketOrderSchema.parse(input);
 
-  const { data, error } = await supabase.rpc("create_ticket_order", {
-    p_event_slug: parsed.eventSlug,
-    p_full_name: parsed.fullName,
-    p_email: parsed.email ?? "",
-    p_phone: parsed.phone,
-    p_quantity: parsed.quantity,
-  });
+  const rows = await rpc<Array<{
+    order_id: string;
+    ticket_codes: string[];
+    total_amount: number | string;
+    reservation_status: string;
+  }>>("create_ticket_order", [
+    parsed.eventSlug,
+    parsed.fullName,
+    parsed.email ?? "",
+    parsed.phone,
+    parsed.quantity,
+  ]);
 
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  const order = data?.[0];
+  const order = rows?.[0];
   if (!order) {
     throw new Error("No se pudo crear la reservación de boletos.");
   }

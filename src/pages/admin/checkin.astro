@@ -3,11 +3,11 @@ import AdminLayout from "@/layouts/AdminLayout.astro";
 import AdminPage from "@/components/admin/ui/AdminPage.astro";
 import { AdminPageHeader } from "@/components/admin/react/AdminPageHeader";
 import { CheckinPanel } from "@/components/admin/react/CheckinPanel";
-import { getPublicSupabaseConfig, isAuthConfigured, type UserProfile } from "@/lib/auth";
+import type { UserProfile } from "@/lib/auth";
 import { formatSiteDate } from "@/lib/locale";
 
 const staffProfile = Astro.locals.staffProfile as UserProfile | undefined;
-const authConfigured = isAuthConfigured(getPublicSupabaseConfig());
+const authConfigured = true;
 const currentDate = formatSiteDate(new Date(), { month: "short", day: "numeric", year: "numeric" });
 ---
 

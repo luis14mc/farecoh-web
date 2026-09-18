@@ -1,7 +1,7 @@
 import { Calendar, LogOut } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ROLE_LABELS, type UserProfile, createSupabaseBrowserClient } from "@/lib/auth";
+import { ROLE_LABELS, type UserProfile } from "@/lib/auth";
 
 interface AdminPageHeaderProps {
   title: string;
@@ -12,12 +12,12 @@ interface AdminPageHeaderProps {
   authConfigured: boolean;
 }
 
-async function signOutAndRedirect(authConfigured: boolean) {
-  if (authConfigured) {
-    const supabase = createSupabaseBrowserClient();
-    if (supabase) await supabase.auth.signOut();
+async function signOutAndRedirect(_authConfigured: boolean) {
+  try {
+    await fetch("/api/auth/logout", { method: "POST" });
+  } finally {
+    window.location.assign("/admin/login");
   }
-  window.location.assign("/admin/login");
 }
 
 export function AdminPageHeader({

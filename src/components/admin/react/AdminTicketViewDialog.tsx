@@ -14,7 +14,6 @@ import {
 import { CopyTextButton } from "@/components/admin/react/CopyTextButton";
 import { TicketStatusBadge } from "@/components/admin/react/TicketStatusBadge";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/lib/supabase";
 
 export interface AdminTicketPreview {
   ticket_code: string;
@@ -97,28 +96,37 @@ export function AdminTicketViewDialog({
     let cancelled = false;
 
     async function load() {
-      setLoading(true);
-      setError(null);
+      try {
+        const res = await fetch(`/api/admin/tickets/search?code=${encodeURIComponent(code)}`);
+        if (cancelled) return;
+        setLoading(false);
 
-      const { data, error: fetchError } = await supabase
-        .from("tickets")
-        .select("*")
-        .eq("ticket_code", code)
-        .single();
+        if (!res.ok) {
+          if (!initialTicket) {
+            setError("No se encontró el boleto.");
+            setTicket(null);
+          }
+          return;
+        }
 
-      if (cancelled) return;
+        const payload = await res.json();
+        if (!payload.ok || !payload.data) {
+          if (!initialTicket) {
+            setError("No se encontró el boleto.");
+            setTicket(null);
+          }
+          return;
+        }
 
-      setLoading(false);
-
-      if (fetchError || !data) {
+        setTicket(payload.data as AdminTicketPreview);
+      } catch {
+        if (cancelled) return;
+        setLoading(false);
         if (!initialTicket) {
-          setError("No se encontró el boleto.");
+          setError("Error al cargar boleto.");
           setTicket(null);
         }
-        return;
       }
-
-      setTicket(data as AdminTicketPreview);
     }
 
     void load();

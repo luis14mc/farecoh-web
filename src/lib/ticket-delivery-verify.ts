@@ -1,5 +1,4 @@
 import { createHash } from "node:crypto";
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { buildTicketQrUrl } from "./ticket-image-compose.ts";
 import { generateDigitalTicketImage } from "./ticket-delivery.ts";
 import { assertTicketIdentity, hashQrToken } from "./ticket-delivery-identity.ts";
@@ -71,19 +70,20 @@ export function verifyDigitalTicketIdentity(
 }
 
 export async function assertTicketIdentityUnchanged(
-  supabase: SupabaseClient,
-  ticket: DeliverableTicket,
+  _clientOrTicket: any,
+  possibleTicket?: DeliverableTicket,
 ): Promise<boolean> {
-  const { data: after } = await supabase
-    .from("tickets")
-    .select("ticket_code, qr_token")
-    .eq("id", ticket.id)
-    .single();
+  const ticket = possibleTicket || (_clientOrTicket as DeliverableTicket);
+  const { queryOne } = await import("./db.ts");
+  const after = await queryOne<{ ticket_code: string; qr_token: string }>(
+    "SELECT ticket_code, qr_token FROM tickets WHERE id = $1 LIMIT 1;",
+    [ticket.id]
+  );
 
   return (
     Boolean(after) &&
-    after.ticket_code === ticket.ticket_code &&
-    after.qr_token === ticket.qr_token
+    after!.ticket_code === ticket.ticket_code &&
+    after!.qr_token === ticket.qr_token
   );
 }
 

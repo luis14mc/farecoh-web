@@ -1,5 +1,4 @@
 import type { APIRoute } from "astro";
-import { createSupabaseServerClient } from "@/lib/auth";
 import { requireAdminAccess } from "@/lib/rbac";
 import {
   buildPrintPdfFilename,
@@ -19,8 +18,7 @@ export const GET: APIRoute = async (context) => {
 
   try {
     const { from, to } = parsePrintRange(fromRaw, toRaw);
-    const supabase = createSupabaseServerClient(context);
-    const tickets = await loadPinkFloydPrintTickets(supabase, from, to);
+    const tickets = await loadPinkFloydPrintTickets(from, to);
     const pdfBytes = await buildTicketPrintPdf(tickets);
     const filename = buildPrintPdfFilename(from, to);
 

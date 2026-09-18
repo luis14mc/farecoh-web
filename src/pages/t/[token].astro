@@ -8,14 +8,22 @@ import {
 } from "@/lib/public-ticket-status";
 import { seoPages } from "@/data/seo";
 import { site } from "@/data/site";
-import { supabase } from "@/lib/supabase";
+import { rpc } from "@/lib/db";
 
 const token = (Astro.params.token ?? "").trim();
 const pinkFloyd = getPinkFloydEventFallback();
 const eventPath = "/eventos/pink-floyd";
 
-const { data, error } = await supabase.rpc("get_public_ticket_status", { p_qr_token: token });
-const ticket = !error && Array.isArray(data) ? data[0] : null;
+let ticket: any = null;
+try {
+  const rows = await rpc<Array<{ ticket_code: string; status: string; event_slug: string }>>(
+    "get_public_ticket_status",
+    [token]
+  );
+  ticket = rows?.[0] ?? null;
+} catch {
+  ticket = null;
+}
 
 const notFound = !ticket;
 const eventName = ticket?.event_slug === "pink-floyd" ? pinkFloyd.name : pinkFloyd.name;

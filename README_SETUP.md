@@ -1,100 +1,97 @@
-# FARECOH Event Platform - Setup MVP
+# FARECOH Event Platform - Setup & Deployment Guide
 
 ## Stack
 
-- Astro
-- Tailwind CSS 4
-- DaisyUI
-- TypeScript
-- Supabase
-- PostgreSQL
-- Zod
+- **Framework**: Astro 7 (Node.js Standalone SSR)
+- **UI & Components**: React 19, Tailwind CSS 4, Radix UI, Lucide Icons
+- **Database**: PostgreSQL (Railway) via `pg`
+- **Authentication**: Native session auth with `crypto.scrypt` password hashing + HMAC-SHA256 session cookies
+- **Validation**: Zod & TypeScript
+- **Deployment**: Railway (Nixpacks / Node.js)
 
-## Variables de entorno
+## Variables de Entorno
 
-Crea `.env` desde `.env.example` si existe, o agrega:
+Configura en tu archivo `.env` local o en las variables de servicio de Railway:
 
 ```bash
-PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-SUPABASE_SERVICE_ROLE_KEY=server-only-service-role-key
-SUPABASE_STORAGE_BUCKET=farecoh-private
+# Servidor & Dominio
+PORT=4321
+PUBLIC_SITE_URL=https://farecoh.org
+
+# Base de Datos PostgreSQL (Railway)
+DATABASE_URL=postgresql://postgres:password@roundhouse.proxy.rlwy.net:5432/railway
+
+# Clave secreta para sesiones administrativas (32+ caracteres)
+AUTH_SECRET=genera-una-cadena-secreta-larga-para-produccion
+
+# Alertas WhatsApp para el staff (Opcional - Twilio)
+WHATSAPP_PROVIDER=twilio
+TWILIO_ACCOUNT_SID=
+TWILIO_AUTH_TOKEN=
+TWILIO_WHATSAPP_FROM=whatsapp:+14155238886
+FARECOH_NOTIFY_WHATSAPP_TO=whatsapp:+504XXXXXXXX
 ```
 
-`SUPABASE_SERVICE_ROLE_KEY` debe usarse solo en endpoints server-side.
+## Base de Datos (PostgreSQL en Railway)
 
-## Base de datos
-
-1. Abre Supabase SQL Editor.
-2. Ejecuta `supabase/migrations/001_ticketing_core.sql`.
-3. Sigue la guía completa en `docs/database-setup.md`.
-4. Crea usuarios admin en Supabase Auth.
-5. Inserta el perfil en `public.users` con el rol correspondiente.
-
-Ejemplo:
-
-```sql
-INSERT INTO public.users (auth_user_id, email, full_name, role_id, active)
-SELECT
-  'AUTH_USER_UUID',
-  'admin@farecoh.org',
-  'FARECOH Admin',
-  r.id,
-  true
-FROM public.roles r
-WHERE r.name = 'super_admin';
-```
-
-## Evento inicial
-
-- Slug: `pink-floyd`
-- Nombre: Tributo a Pink Floyd 2026
-- Fecha: 29 de agosto de 2026
-- Hora: 8:00 p. m.
-- Lugar: Escuela Nacional de Música, Tegucigalpa
-- Donativo: L.500
-
-## Rutas objetivo del MVP
-
-Públicas:
-
-- `/`
-- `/eventos/pink-floyd`
-- `/eventos/pink-floyd/boletos`
-
-Administración:
-
-- `/admin`
-- `/admin/ventas`
-- `/admin/boletos`
-- `/admin/checkin`
-- `/admin/reportes`
+1. En Railway, crea un servicio **PostgreSQL**.
+2. Conéctate a la base de datos o copia la variable `DATABASE_URL`.
+3. Inicializa el esquema ejecutando:
+   ```bash
+   pnpm db:init
+   ```
+   o aplica directamente `database/schema.sql` usando `psql`:
+   ```bash
+   psql "$DATABASE_URL" -f database/schema.sql
+   ```
+4. El esquema creará las tablas, índices, funciones RPC (`create_ticket_order`, `validate_ticket`, `staff_reserve_ticket`, etc.) y el usuario inicial:
+   - **Correo**: `admin@farecoh.org`
+   - **Contraseña inicial**: `Admin2026!farecoh`
+   *(Cambia esta contraseña desde el panel de usuarios tras iniciar sesión)*.
 
 ## Comandos
 
 ```bash
+# Instalar dependencias
 pnpm install
-pnpm run dev
-pnpm run build
+
+# Inicializar base de datos
+pnpm db:init
+
+# Servidor de desarrollo
+pnpm dev
+
+# Ejecutar suite de pruebas (73 tests)
+pnpm test
+
+# Compilación para producción
+pnpm build
+
+# Iniciar servidor compilado (producción)
+pnpm start
 ```
 
-Si pnpm bloquea scripts nativos:
+## Despliegue en Railway
 
-```bash
-pnpm approve-builds
-```
+El proyecto incluye `railway.json` preconfigurado:
+- **Build command**: `pnpm build`
+- **Start command**: `node ./dist/server/entry.mjs`
+- **Healthcheck**: `/`
+- Añade las variables `DATABASE_URL` y `AUTH_SECRET` en Railway Dashboard.
 
-Aprueba `esbuild` y `sharp`.
+## Rutas Principales
 
-## Pruebas propuestas
+### Públicas:
+- `/` - Página principal rediseñada con animación y estética cultural.
+- `/eventos/pink-floyd` - Landing page del evento Tributo a Pink Floyd.
+- `/eventos/pink-floyd/boletos` - Flujo de reserva pública de boletos con validación y confirmación.
 
-Las pruebas críticas viven en `tests/ticketing.test.ts` y cubren:
-
-- generación `PF-000001`
-- normalización y parsing de códigos
-- rechazo de secuencias inválidas
-- métricas de ventas/check-in/capacidad
-- sanitización
-- rate limiting básico
-
-Para ejecutarlas en una fase posterior se recomienda añadir `tsx` o `vitest` como dependencia de desarrollo.
+### Administración (`/admin`):
+- `/admin` - Dashboard con métricas de ventas, ingresos, capacidad y accesos rápidos.
+- `/admin/ventas` - Registro de ventas directas.
+- `/admin/boletos` - Visualización, búsqueda y gestión del inventario de boletos.
+- `/admin/reservas` - Monitoreo y confirmación de pagos de reservas en línea.
+- `/admin/checkin` - Control de acceso con escáner QR en vivo y validación por código.
+- `/admin/lotes` - Asignación de lotes de boletos físicos a vendedores.
+- `/admin/reportes` - Reportes de ventas, exportación CSV e indicadores clave.
+- `/admin/usuarios` - Gestión de administradores, operadores y vendedores.

@@ -1,19 +1,51 @@
-﻿---
+---
 import { homeCause } from "@/data/home";
+
+const challenges = [
+  {
+    title: "Violencia y Entornos Vulnerables",
+    description: "Espacios comunitarios afectados por riesgos psicosociales donde niños y jóvenes carecen de refugios de paz y expresión positiva.",
+    icon: `<svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>`,
+  },
+  {
+    title: "Exclusión y Desigualdad Social",
+    description: "Barreras económicas y culturales que impiden a las familias en situación de vulnerabilidad acceder a formación artística y musical.",
+    icon: `<svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>`,
+  },
+  {
+    title: "Falta de Oportunidades de Futuro",
+    description: "Ausencia de programas formativos integrales que desarrollen disciplina, liderazgo y proyectos de vida con impacto duradero.",
+    icon: `<svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>`,
+  },
+];
 ---
 
-<section class="reveal-section landing-section bg-surface">
-  <div class="landing-shell text-center">
-    <div class="mx-auto max-w-4xl">
-      <p class="landing-eyebrow mb-3 text-brand-700">El desafío</p>
-      <h2 class="landing-headline mb-stack-md text-on-surface">{homeCause.title}</h2>
-      <p class="landing-body mx-auto max-w-3xl text-on-surface-variant">{homeCause.body}</p>
+<section class="reveal-section landing-section bg-surface-container-low/40 py-20 lg:py-28 border-y border-outline-variant/30">
+  <div class="landing-shell">
+    <div class="mx-auto max-w-3xl text-center mb-16">
+      <div class="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3.5 py-1.5">
+        <span class="h-2 w-2 rounded-full bg-primary" aria-hidden="true"></span>
+        <span class="text-xs font-bold uppercase tracking-[0.16em] text-primary">El Desafío</span>
+      </div>
+      <h2 class="text-3xl font-extrabold tracking-tight text-on-surface sm:text-4xl lg:text-5xl leading-tight mb-4">
+        {homeCause.title}
+      </h2>
+      <p class="text-base sm:text-lg leading-relaxed text-on-surface-variant max-w-2xl mx-auto">
+        {homeCause.body}
+      </p>
     </div>
-    <div class="mt-stack-lg grid grid-cols-1 gap-gutter md:grid-cols-3">
-      {homeCause.items.map((item) => (
-        <div class="border-y border-outline-variant/50 py-stack-lg">
-          <p class="headline-md text-brand-neutral">{item}</p>
-        </div>
+
+    <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
+      {challenges.map((challenge) => (
+        <article class="group relative rounded-2xl border border-outline-variant/60 bg-surface-container-lowest p-8 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-lg">
+          <div class="mb-6 flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10 text-primary transition-colors duration-300 group-hover:bg-primary group-hover:text-white" set:html={challenge.icon} />
+          <h3 class="text-xl font-bold tracking-tight text-on-surface mb-3 leading-snug">
+            {challenge.title}
+          </h3>
+          <p class="text-sm leading-relaxed text-on-surface-variant">
+            {challenge.description}
+          </p>
+        </article>
       ))}
     </div>
   </div>

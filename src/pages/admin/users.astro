@@ -3,24 +3,23 @@ import AdminLayout from "@/layouts/AdminLayout.astro";
 import AdminPage from "@/components/admin/ui/AdminPage.astro";
 import { AdminPageHeader } from "@/components/admin/react/AdminPageHeader";
 import { UsersAdminPanel } from "@/components/admin/react/UsersAdminPanel";
-import { createSupabaseServerClient, ROLE_LABELS, type StaffRole, getPublicSupabaseConfig, isAuthConfigured, type UserProfile } from "@/lib/auth";
-import { supabaseAdmin } from "@/lib/supabase";
+import { ROLE_LABELS, type StaffRole, type UserProfile, hashPassword } from "@/lib/auth";
 import { formatSiteDate } from "@/lib/locale";
+import { query, queryRows, queryOne } from "@/lib/db";
 
-const supabase = createSupabaseServerClient(Astro);
 let formMessage = "";
 let formError = false;
 let lastFormAction = "";
 
 const currentProfile = Astro.locals.staffProfile as UserProfile | undefined;
 const staffProfile = currentProfile;
-const authConfigured = isAuthConfigured(getPublicSupabaseConfig());
+const authConfigured = true;
 const currentDate = formatSiteDate(new Date(), { month: "short", day: "numeric", year: "numeric" });
 const isSuperAdmin = currentProfile?.role === "super_admin";
 
 async function getRoleId(roleName: string): Promise<string | null> {
-  const { data } = await supabase.from("roles").select("id").eq("name", roleName).single();
-  return data?.id ?? null;
+  const row = await queryOne<{ id: string }>("SELECT id FROM roles WHERE name = $1 LIMIT 1;", [roleName]);
+  return row?.id ?? null;
 }
 
 if (Astro.request.method === "POST") {
@@ -44,41 +43,22 @@ if (Astro.request.method === "POST") {
         throw new Error("Complete todos los campos obligatorios.");
       }
 
-      if (!supabaseAdmin) {
-        throw new Error("SUPABASE_SERVICE_ROLE_KEY no está configurada.");
-      }
-
       const roleId = await getRoleId(roleName);
       if (!roleId) throw new Error("Rol inválido.");
 
-      const { data: authData, error: authErr } = await supabaseAdmin.auth.admin.createUser({
-        email,
-        password,
-        email_confirm: true,
-        user_metadata: { full_name: fullName },
-      });
+      const passwordHash = await hashPassword(password);
 
-      if (authErr || !authData.user) {
-        throw new Error("Error en Supabase Auth: " + (authErr?.message || "Usuario no creado."));
-      }
-
-      const { error: profileErr } = await supabase.from("users").insert({
-        auth_user_id: authData.user.id,
-        email,
-        full_name: fullName,
-        role_id: roleId,
-        active: true,
-      });
-
-      if (profileErr) {
-        await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
-        throw profileErr;
-      }
+      await query(
+        `INSERT INTO users (email, password_hash, full_name, role_id, active)
+         VALUES ($1, $2, $3, $4, true);`,
+        [email, passwordHash, fullName, roleId]
+      );
 
       formMessage = `Usuario ${fullName} creado correctamente.`;
     } else if (action === "update") {
       const fullName = String(data.get("full_name") || "").trim();
       const roleName = String(data.get("role") || "");
+      const password = String(data.get("password") || "").trim();
 
       if (!fullName || !roleName) {
         throw new Error("Complete todos los campos obligatorios.");
@@ -87,39 +67,32 @@ if (Astro.request.method === "POST") {
       const roleId = await getRoleId(roleName);
       if (!roleId) throw new Error("Rol inválido.");
 
-      const { error: profileErr } = await supabase
-        .from("users")
-        .update({ full_name: fullName, role_id: roleId })
-        .eq("id", id);
-
-      if (profileErr) throw profileErr;
-      formMessage = "Usuario actualizado correctamente.";
-    } else if (action === "toggle_active") {
-      if (!supabaseAdmin) {
-        throw new Error("SUPABASE_SERVICE_ROLE_KEY no está configurada.");
+      if (password) {
+        const passwordHash = await hashPassword(password);
+        await query(
+          "UPDATE users SET full_name = $1, role_id = $2, password_hash = $3 WHERE id = $4;",
+          [fullName, roleId, passwordHash, id]
+        );
+      } else {
+        await query(
+          "UPDATE users SET full_name = $1, role_id = $2 WHERE id = $3;",
+          [fullName, roleId, id]
+        );
       }
 
-      const { data: profile, error: fetchErr } = await supabase
-        .from("users")
-        .select("auth_user_id, active, full_name")
-        .eq("id", id)
-        .single();
+      formMessage = "Usuario actualizado correctamente.";
+    } else if (action === "toggle_active") {
+      const profile = await queryOne<{ active: boolean; full_name: string }>(
+        "SELECT active, full_name FROM users WHERE id = $1 LIMIT 1;",
+        [id]
+      );
 
-      if (fetchErr || !profile) {
+      if (!profile) {
         throw new Error("Usuario no encontrado.");
       }
 
       const nextActiveState = !profile.active;
-
-      const { error: profileErr } = await supabase.from("users").update({ active: nextActiveState }).eq("id", id);
-
-      if (profileErr) throw profileErr;
-
-      const { error: authUpdateErr } = await supabaseAdmin.auth.admin.updateUserById(profile.auth_user_id, {
-        ban_duration: nextActiveState ? "none" : "876600h",
-      });
-
-      if (authUpdateErr) throw authUpdateErr;
+      await query("UPDATE users SET active = $1 WHERE id = $2;", [nextActiveState, id]);
 
       formMessage = `Usuario ${profile.full_name} ${nextActiveState ? "reactivado" : "desactivado"} correctamente.`;
     }
@@ -129,22 +102,31 @@ if (Astro.request.method === "POST") {
   }
 }
 
-const { data: staffProfiles = [] } = await supabase
-  .from("users")
-  .select("*, roles(name)")
-  .order("created_at", { ascending: false });
+const staffProfiles = await queryRows<{
+  id: string;
+  email: string;
+  full_name: string;
+  active: boolean;
+  created_at: string;
+  role_name: string | null;
+}>(`
+  SELECT u.id, u.email, u.full_name, u.active, u.created_at, r.name as role_name
+  FROM users u
+  LEFT JOIN roles r ON u.role_id = r.id
+  ORDER BY u.created_at DESC;
+`);
 
 const roleLabel = (roleName: string) => ROLE_LABELS[roleName as StaffRole] ?? roleName;
 
-const users = (staffProfiles ?? []).map((profile) => ({
+const users = staffProfiles.map((profile) => ({
   id: profile.id,
-  auth_user_id: profile.auth_user_id,
+  auth_user_id: profile.id,
   email: profile.email,
   full_name: profile.full_name,
   active: profile.active,
   created_at: profile.created_at,
-  roleName: profile.roles?.name ?? "",
-  roleLabel: roleLabel(profile.roles?.name ?? ""),
+  roleName: profile.role_name ?? "",
+  roleLabel: roleLabel(profile.role_name ?? ""),
   createdLabel: formatSiteDate(profile.created_at),
 }));
 ---
@@ -165,7 +147,7 @@ const users = (staffProfiles ?? []).map((profile) => ({
       client:load
       users={users}
       isSuperAdmin={isSuperAdmin}
-      currentAuthUserId={currentProfile?.auth_user_id}
+      currentAuthUserId={currentProfile?.id}
       formMessage={formMessage || undefined}
       formError={formError}
       lastFormAction={lastFormAction || undefined}

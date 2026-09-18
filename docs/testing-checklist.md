@@ -1,12 +1,12 @@
 # FARECOH Ticketing — Manual Test Checklist
 
-Use this checklist after applying Supabase migrations and deploying the app.
+Use this checklist after applying PostgreSQL schema and deploying the app.
 
 ## 1. Public reservation
 
 - [ ] Open `/eventos/pink-floyd` and submit the reservation form for **1 ticket**
 - [ ] Form succeeds without alert popups
-- [ ] Ticket status becomes **`reserved`** in Supabase
+- [ ] Ticket status becomes **`reserved`** in PostgreSQL
 - [ ] Buyer name, phone, and email are saved on the ticket row
 
 ## 2. Confirm payment (reserved → sold)
@@ -53,7 +53,7 @@ Use this checklist after applying Supabase migrations and deploying the app.
 
 ## 8. Admin dashboard & exports
 
-- [ ] `/admin` KPIs reflect real Supabase counts (capacity 500, reserved, sold, etc.)
+- [ ] `/admin` KPIs reflect real database counts (capacity 500, reserved, sold, etc.)
 - [ ] Revenue equals **sum of `sales.amount`**
 - [ ] CSV downloads work: tickets, sales, check-ins
 
@@ -61,8 +61,7 @@ Use this checklist after applying Supabase migrations and deploying the app.
 
 ```bash
 PUBLIC_SITE_URL=https://www.farecoh.org \
-PUBLIC_SUPABASE_URL=... \
-SUPABASE_SERVICE_ROLE_KEY=... \
+DATABASE_URL=postgresql://... \
 pnpm export:canva-tickets
 ```
 

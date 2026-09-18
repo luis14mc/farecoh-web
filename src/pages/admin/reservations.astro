@@ -4,16 +4,16 @@ import AdminPage from "@/components/admin/ui/AdminPage.astro";
 import { AdminPageHeader } from "@/components/admin/react/AdminPageHeader";
 import { StaffReservationForm } from "@/components/admin/react/StaffReservationForm";
 import { ReservationsPanel } from "@/components/admin/react/ReservationsPanel";
-import { createSupabaseServerClient, getPublicSupabaseConfig, isAuthConfigured, type UserProfile } from "@/lib/auth";
+import type { UserProfile } from "@/lib/auth";
 import { formatSiteDate } from "@/lib/locale";
 import { confirmTicketPayment } from "@/services/ticket-payment";
 import { cancelTicketReservation, createStaffReservations } from "@/services/ticket-reservation";
 import { getSiteStartOfTodayIso } from "@/services/reservation-stats";
 import { loadConvertedReservationsToday, loadReservedTickets } from "@/services/reservation-queries";
+import { queryRows } from "@/lib/db";
 
-const supabase = createSupabaseServerClient(Astro);
 const staffProfile = Astro.locals.staffProfile as UserProfile | undefined;
-const authConfigured = isAuthConfigured(getPublicSupabaseConfig());
+const authConfigured = true;
 const currentDate = formatSiteDate(new Date(), { month: "short", day: "numeric", year: "numeric" });
 
 let formMessage = "";
@@ -44,7 +44,7 @@ if (Astro.request.method === "POST") {
         throw new Error("Complete códigos, nombre y teléfono.");
       }
 
-      const result = await createStaffReservations(supabase, {
+      const result = await createStaffReservations(null, {
         ticketCodes,
         buyer_name: buyerName,
         buyer_phone: buyerPhone,
@@ -77,7 +77,7 @@ if (Astro.request.method === "POST") {
         throw new Error("Complete todos los campos obligatorios.");
       }
 
-      const result = await confirmTicketPayment(supabase, {
+      const result = await confirmTicketPayment(null, {
         ticket_code: ticketCode,
         buyer_name: buyerName,
         buyer_phone: buyerPhone,
@@ -109,7 +109,7 @@ if (Astro.request.method === "POST") {
         throw new Error("Indique el boleto y el motivo de cancelación.");
       }
 
-      const result = await cancelTicketReservation(supabase, {
+      const result = await cancelTicketReservation(null, {
         ticket_code: ticketCode,
         cancelled_by: staffProfile?.email ?? staffProfile?.full_name ?? "admin-reservations",
         reason,
@@ -135,22 +135,14 @@ let sellers: { id: string; name: string; type: string }[] = [];
 let convertedToSoldToday = 0;
 
 try {
-  const loaded = await loadReservedTickets(supabase);
+  const loaded = await loadReservedTickets(null);
   reservations = loaded.rows;
   migrationWarning = loaded.warning ?? "";
 
-  const sellersResult = await supabase
-    .from("sellers")
-    .select("id, name, type")
-    .eq("active", true)
-    .order("name", { ascending: true });
-
-  if (sellersResult.error) {
-    throw new Error(sellersResult.error.message);
-  }
-
-  sellers = sellersResult.data ?? [];
-  convertedToSoldToday = await loadConvertedReservationsToday(supabase, getSiteStartOfTodayIso());
+  sellers = await queryRows<{ id: string; name: string; type: string }>(
+    "SELECT id, name, type FROM sellers WHERE active = true ORDER BY name ASC;"
+  );
+  convertedToSoldToday = await loadConvertedReservationsToday(null, getSiteStartOfTodayIso());
 } catch (err: unknown) {
   pageError = err instanceof Error ? err.message : "No se pudieron cargar las reservas.";
 }

@@ -1,6 +1,5 @@
 import type { APIContext } from "astro";
-import { createSupabaseServerClient } from "@/lib/auth";
-import { toCsv } from "@/lib/csv";
+import { toCsv } from "./csv.ts";
 
 export async function exportCsvResponse(
   _context: APIContext,
@@ -19,5 +18,3 @@ export async function exportCsvResponse(
     },
   });
 }
-
-export { createSupabaseServerClient };

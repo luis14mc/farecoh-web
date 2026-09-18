@@ -2,7 +2,7 @@
 import "../styles/global.css";
 import "../styles/admin-shadcn.css";
 import { AdminShell } from "@/components/admin/react/AdminShell";
-import { getPublicSupabaseConfig, isAuthConfigured, type UserProfile } from "@/lib/auth";
+import type { UserProfile } from "@/lib/auth";
 import { SITE_LANG } from "@/lib/locale";
 import { ROBOTS_NOINDEX } from "@/lib/seo";
 import { ADMIN_NAV_ITEMS, type AdminNavKey } from "@/lib/admin-nav";
@@ -15,8 +15,7 @@ interface Props {
 }
 
 const { title, description, active = "dashboard" } = Astro.props;
-const { supabaseUrl, supabaseAnonKey } = getPublicSupabaseConfig();
-const authConfigured = isAuthConfigured({ supabaseUrl, supabaseAnonKey });
+const authConfigured = true;
 const staffProfile = Astro.locals.staffProfile as UserProfile | undefined;
 
 const navItems = ADMIN_NAV_ITEMS.filter(

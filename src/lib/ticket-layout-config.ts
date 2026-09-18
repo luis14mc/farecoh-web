@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
-import type { PostgrestError } from "@supabase/supabase-js";
+import type { DatabaseError } from "./ticket-layout-api.ts";
 import type { UserProfile } from "./auth.ts";
 import { isMissingLayoutTableError, layoutTableMissingMessage } from "./ticket-layout-api.ts";
 import {
@@ -199,15 +199,6 @@ async function readLegacyPhysicalLayout(): Promise<TicketLayoutConfig | null> {
   }
 }
 
-async function getSupabaseAdmin() {
-  try {
-    const { supabaseAdmin } = await import("./supabase.ts");
-    return supabaseAdmin ?? null;
-  } catch {
-    return null;
-  }
-}
-
 function defaultRecord(type: TicketLayoutType, source: TicketLayoutSource): TicketLayoutRecord {
   const defaults = layoutDefaults(type);
   return {
@@ -228,52 +219,57 @@ async function queryLayoutRow(type: TicketLayoutType): Promise<{
     updated_at: string;
     updated_by: string | null;
   } | null;
-  error: PostgrestError | null;
+  error: DatabaseError | null;
   tableMissing: boolean;
 }> {
-  const supabase = await getSupabaseAdmin();
-  if (!supabase) {
-    return { data: null, error: null, tableMissing: false };
-  }
+  try {
+    const { queryOne } = await import("./db.ts");
+    const data = await queryOne<{
+      layout_type: string;
+      template_path: string;
+      config: unknown;
+      updated_at: string;
+      updated_by: string | null;
+    }>(
+      "SELECT layout_type, template_path, config, updated_at, updated_by FROM ticket_layout_configs WHERE layout_type = $1 LIMIT 1;",
+      [type]
+    );
 
-  const { data, error } = await supabase
-    .from("ticket_layout_configs")
-    .select("layout_type, template_path, config, updated_at, updated_by")
-    .eq("layout_type", type)
-    .maybeSingle();
-
-  if (error) {
+    return { data, error: null, tableMissing: false };
+  } catch (err: any) {
+    const dbError: DatabaseError = { message: err?.message || "DB Error", code: err?.code };
     return {
       data: null,
-      error,
-      tableMissing: isMissingLayoutTableError(error),
+      error: dbError,
+      tableMissing: isMissingLayoutTableError(dbError),
     };
   }
-
-  return { data, error: null, tableMissing: false };
 }
 
 export async function readTicketLayoutConfig(type: TicketLayoutType): Promise<TicketLayoutRecord> {
-  const { data, error, tableMissing } = await queryLayoutRow(type);
+  try {
+    const { data, error, tableMissing } = await queryLayoutRow(type);
 
-  if (tableMissing && error) {
-    throw new TicketLayoutTableMissingError();
-  }
+    if (tableMissing && error) {
+      throw new TicketLayoutTableMissingError();
+    }
 
-  if (error) {
-    throw error;
-  }
-
-  if (data) {
-    const normalized = normalizeStoredLayoutConfig(data.config, type);
-    return {
-      layoutType: type,
-      templatePath: data.template_path || normalized.templatePath,
-      config: normalized.config,
-      updatedAt: data.updated_at,
-      updatedBy: data.updated_by,
-      source: "database",
-    };
+    if (data) {
+      const normalized = normalizeStoredLayoutConfig(data.config, type);
+      return {
+        layoutType: type,
+        templatePath: data.template_path || normalized.templatePath,
+        config: normalized.config,
+        updatedAt: data.updated_at,
+        updatedBy: data.updated_by,
+        source: "database",
+      };
+    }
+  } catch (err: any) {
+    if (err instanceof TicketLayoutTableMissingError) {
+      throw err;
+    }
+    // DB not available or offline: fall back to default
   }
 
   if (type === "physical") {
@@ -301,12 +297,6 @@ export async function saveTicketLayoutConfig(
   const { config, templatePath, storedConfig } = parseLayoutRequestBody(body, type);
   const template = await readTemplateDimensions(type);
   const alignedConfig = scaleLayoutToTemplate(config, template.width, template.height);
-  const supabase = await getSupabaseAdmin();
-
-  if (!supabase) {
-    throw new Error("SUPABASE_SERVICE_ROLE_KEY es necesaria para guardar la calibración en producción.");
-  }
-
   const alignedStoredConfig: StoredTicketLayoutPayload = {
     ...storedConfig,
     templatePath,
@@ -317,22 +307,24 @@ export async function saveTicketLayoutConfig(
     qrBoxes: alignedConfig.qrBoxes,
   };
 
-  const { error } = await supabase.from("ticket_layout_configs").upsert(
-    {
-      layout_type: type,
-      template_path: templatePath,
-      config: alignedStoredConfig,
-      updated_at: new Date().toISOString(),
-      updated_by: updatedBy,
-    },
-    { onConflict: "layout_type" },
-  );
-
-  if (error) {
-    if (isMissingLayoutTableError(error)) {
+  const { query } = await import("./db.ts");
+  try {
+    await query(
+      `INSERT INTO ticket_layout_configs (layout_type, template_path, config, updated_at, updated_by)
+       VALUES ($1, $2, $3, NOW(), $4)
+       ON CONFLICT (layout_type) DO UPDATE SET
+         template_path = EXCLUDED.template_path,
+         config = EXCLUDED.config,
+         updated_at = NOW(),
+         updated_by = EXCLUDED.updated_by;`,
+      [type, templatePath, JSON.stringify(alignedStoredConfig), updatedBy]
+    );
+  } catch (err: any) {
+    const dbError: DatabaseError = { message: err?.message || "DB Error", code: err?.code };
+    if (isMissingLayoutTableError(dbError)) {
       throw new TicketLayoutTableMissingError();
     }
-    throw error;
+    throw err;
   }
 
   return readTicketLayoutConfig(type);

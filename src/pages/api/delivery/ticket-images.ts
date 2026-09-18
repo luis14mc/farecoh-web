@@ -1,5 +1,4 @@
 import type { APIRoute } from "astro";
-import { createSupabaseServerClient } from "@/lib/auth";
 import { requireAdminAccess } from "@/lib/rbac";
 import { fetchDeliverableTicket } from "@/lib/ticket-delivery-access";
 import { produceDigitalTicketPng } from "@/lib/ticket-delivery-verify";
@@ -25,12 +24,11 @@ export const POST: APIRoute = async (context) => {
       return new Response("El límite máximo es de 10 boletos por solicitud.", { status: 400 });
     }
 
-    const supabase = createSupabaseServerClient(context);
     const normalizedCodes = ticketCodes.map((code) => normalizeTicketCode(String(code)));
     const generatedTickets: Array<{ ticket_code: string; pngBuffer: Buffer }> = [];
 
     for (const ticketCode of normalizedCodes) {
-      const lookup = await fetchDeliverableTicket(supabase, ticketCode);
+      const lookup = await fetchDeliverableTicket(ticketCode);
       if (!lookup.ticket) {
         return new Response(lookup.error ?? `Boleto no encontrado: ${ticketCode}`, {
           status: lookup.notFound ? 404 : 400,

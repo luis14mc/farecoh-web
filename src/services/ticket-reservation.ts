@@ -1,35 +1,44 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database } from "@/types/database";
+import { rpc } from "@/lib/db";
 import { parseTicketCodesInput } from "@/lib/ticket-reset";
 import { normalizeTicketCode } from "./ticket-code";
 
 export async function cancelTicketReservation(
-  supabase: SupabaseClient<Database>,
-  input: { ticket_code: string; cancelled_by: string; reason: string },
+  _clientOrInput: any,
+  possibleInput?: { ticket_code: string; cancelled_by: string; reason: string },
 ): Promise<{ ok: true; ticket_code: string; status: string } | { ok: false; message: string }> {
-  const { data, error } = await supabase.rpc("cancel_ticket_reservation", {
-    p_ticket_code: normalizeTicketCode(input.ticket_code),
-    p_cancelled_by: input.cancelled_by,
-    p_reason: input.reason.trim(),
-  });
+  const input = possibleInput || (_clientOrInput as { ticket_code: string; cancelled_by: string; reason: string });
 
-  if (error || !data) {
+  try {
+    const rows = await rpc<Array<{ ticket_code: string; status: string }>>("cancel_ticket_reservation", [
+      normalizeTicketCode(input.ticket_code),
+      input.cancelled_by,
+      input.reason.trim(),
+    ]);
+
+    const data = rows?.[0];
+    if (!data) {
+      return {
+        ok: false,
+        message: "No se pudo cancelar la reserva.",
+      };
+    }
+
+    return {
+      ok: true,
+      ticket_code: data.ticket_code,
+      status: data.status,
+    };
+  } catch (error: any) {
     return {
       ok: false,
       message: error?.message ?? "No se pudo cancelar la reserva.",
     };
   }
-
-  return {
-    ok: true,
-    ticket_code: data.ticket_code,
-    status: data.status,
-  };
 }
 
 export async function createStaffReservations(
-  supabase: SupabaseClient<Database>,
-  input: {
+  _clientOrInput: any,
+  possibleInput?: {
     ticketCodes: string;
     buyer_name: string;
     buyer_phone: string;
@@ -37,6 +46,14 @@ export async function createStaffReservations(
     reserved_by: string;
   },
 ): Promise<{ reserved: string[]; errors: string[] }> {
+  const input = possibleInput || (_clientOrInput as {
+    ticketCodes: string;
+    buyer_name: string;
+    buyer_phone: string;
+    buyer_email?: string;
+    reserved_by: string;
+  });
+
   const codes = parseTicketCodesInput(input.ticketCodes);
   if (codes.length === 0) {
     throw new Error("Indique al menos un código PF-XXXXXX.");
@@ -46,20 +63,25 @@ export async function createStaffReservations(
   const errors: string[] = [];
 
   for (const ticket_code of codes) {
-    const { data, error } = await supabase.rpc("staff_reserve_ticket", {
-      p_ticket_code: ticket_code,
-      p_full_name: input.buyer_name.trim(),
-      p_phone: input.buyer_phone.trim(),
-      p_email: input.buyer_email?.trim() ?? "",
-      p_reserved_by: input.reserved_by,
-    });
+    try {
+      const rows = await rpc<Array<{ ticket_code: string }>>("staff_reserve_ticket", [
+        ticket_code,
+        input.buyer_name.trim(),
+        input.buyer_phone.trim(),
+        input.buyer_email?.trim() ?? "",
+        input.reserved_by,
+      ]);
 
-    if (error || !data) {
+      const data = rows?.[0];
+      if (!data) {
+        errors.push(`${ticket_code}: No se pudo reservar.`);
+        continue;
+      }
+
+      reserved.push(data.ticket_code);
+    } catch (error: any) {
       errors.push(`${ticket_code}: ${error?.message ?? "No se pudo reservar."}`);
-      continue;
     }
-
-    reserved.push(data.ticket_code);
   }
 
   if (reserved.length === 0) {

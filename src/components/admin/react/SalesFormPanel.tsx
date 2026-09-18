@@ -20,7 +20,6 @@ import { ResponsiveScrollArea } from "@/components/admin/react/ResponsiveScrollA
 import { SalesMetricsPanel, type SalesMetric } from "@/components/admin/react/SalesMetricsPanel";
 import { TicketStatusBadge } from "@/components/admin/react/TicketStatusBadge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { supabase } from "@/lib/supabase";
 
 interface Seller {
   id: string;
@@ -94,22 +93,37 @@ export function SalesFormPanel({
 
     setPreviewLoading(true);
     setPreviewError(null);
-    const { data: ticket, error } = await supabase.from("tickets").select("*").eq("ticket_code", cleanCode).single();
-    setPreviewLoading(false);
 
-    if (error || !ticket) {
-      setPreviewError("Boleto inexistente.");
+    try {
+      const res = await fetch(`/api/admin/tickets/search?code=${encodeURIComponent(cleanCode)}`);
+      setPreviewLoading(false);
+
+      if (!res.ok) {
+        setPreviewError("Boleto inexistente.");
+        setPreview(null);
+        return;
+      }
+
+      const payload = await res.json();
+      const ticket = payload.data;
+      if (!payload.ok || !ticket) {
+        setPreviewError("Boleto inexistente.");
+        setPreview(null);
+        return;
+      }
+
+      setPreview(ticket);
+      const hasBuyer = Boolean(ticket.buyer_name && ticket.buyer_phone);
+      const readonly = ticket.status === "reserved" && hasBuyer;
+      setBuyerReadonly(readonly);
+      setBuyerName(ticket.buyer_name || "");
+      setBuyerPhone(ticket.buyer_phone || "");
+      setBuyerEmail(ticket.buyer_email || "");
+    } catch {
+      setPreviewLoading(false);
+      setPreviewError("Error al cargar vista previa.");
       setPreview(null);
-      return;
     }
-
-    setPreview(ticket);
-    const hasBuyer = Boolean(ticket.buyer_name && ticket.buyer_phone);
-    const readonly = ticket.status === "reserved" && hasBuyer;
-    setBuyerReadonly(readonly);
-    setBuyerName(ticket.buyer_name || "");
-    setBuyerPhone(ticket.buyer_phone || "");
-    setBuyerEmail(ticket.buyer_email || "");
   }
 
   function openSaleModal() {

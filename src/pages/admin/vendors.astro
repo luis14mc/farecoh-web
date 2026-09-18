@@ -3,12 +3,12 @@ import AdminLayout from "@/layouts/AdminLayout.astro";
 import AdminPage from "@/components/admin/ui/AdminPage.astro";
 import { AdminPageHeader } from "@/components/admin/react/AdminPageHeader";
 import { VendorsAdminPanel } from "@/components/admin/react/VendorsAdminPanel";
-import { createSupabaseServerClient, getPublicSupabaseConfig, isAuthConfigured, type UserProfile } from "@/lib/auth";
+import type { UserProfile } from "@/lib/auth";
 import { formatSiteDate } from "@/lib/locale";
+import { query, queryRows } from "@/lib/db";
 
-const supabase = createSupabaseServerClient(Astro);
 const staffProfile = Astro.locals.staffProfile as UserProfile | undefined;
-const authConfigured = isAuthConfigured(getPublicSupabaseConfig());
+const authConfigured = true;
 const currentDate = formatSiteDate(new Date(), { month: "short", day: "numeric", year: "numeric" });
 
 let formMessage = "";
@@ -31,21 +31,23 @@ if (Astro.request.method === "POST") {
       }
 
       if (action === "create") {
-        const { error } = await supabase.from("sellers").insert({ name, phone, email, type, active: true });
-        if (error) throw error;
+        await query(
+          "INSERT INTO sellers (name, phone, email, type, active) VALUES ($1, $2, $3, $4, true);",
+          [name, phone, email, type]
+        );
         formMessage = `${name} registrado correctamente.`;
       } else {
-        const { error } = await supabase.from("sellers").update({ name, phone, email, type }).eq("id", id);
-        if (error) throw error;
+        await query(
+          "UPDATE sellers SET name = $1, phone = $2, email = $3, type = $4 WHERE id = $5;",
+          [name, phone, email, type, id]
+        );
         formMessage = `${name} actualizado correctamente.`;
       }
     } else if (action === "deactivate") {
-      const { error } = await supabase.from("sellers").update({ active: false }).eq("id", id);
-      if (error) throw error;
+      await query("UPDATE sellers SET active = false WHERE id = $1;", [id]);
       formMessage = "Vendedor desactivado.";
     } else if (action === "activate") {
-      const { error } = await supabase.from("sellers").update({ active: true }).eq("id", id);
-      if (error) throw error;
+      await query("UPDATE sellers SET active = true WHERE id = $1;", [id]);
       formMessage = "Vendedor reactivado.";
     }
   } catch (err: unknown) {
@@ -54,7 +56,9 @@ if (Astro.request.method === "POST") {
   }
 }
 
-const { data: sellers = [] } = await supabase.from("sellers").select("*").order("name", { ascending: true });
+const sellers = await queryRows<{ id: string; name: string; phone: string; email: string; type: string; active: boolean; created_at: string }>(
+  "SELECT * FROM sellers ORDER BY name ASC;"
+);
 ---
 
 <AdminLayout title="Vendedores | FARECOH" description="Administración de vendedores y puntos físicos" active="vendors">

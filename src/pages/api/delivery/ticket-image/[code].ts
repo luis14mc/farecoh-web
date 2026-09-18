@@ -1,5 +1,4 @@
 import type { APIRoute } from "astro";
-import { createSupabaseServerClient } from "@/lib/auth";
 import { requireAdminAccess } from "@/lib/rbac";
 import { fetchDeliverableTicketFromContext } from "@/lib/ticket-delivery-access";
 import { buildDeliveryDebugHeaders } from "@/lib/ticket-delivery-identity";

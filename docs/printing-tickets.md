@@ -12,25 +12,22 @@ Generar 500 boletos físicos numerados para el evento Pink Floyd Tribute 2026, c
 
 El QR no valida ingreso automáticamente. Solo abre `/t/{qr_token}` para consultar estado básico del boleto.
 
-## Preparar Supabase
+## Preparar Base de Datos
 
-Ejecuta la migración canónica:
+Ejecuta el esquema canónico:
 
-```sql
-supabase/migrations/001_ticketing_core.sql
+```bash
+pnpm db:init
 ```
 
-Esto crea el evento `pink-floyd` y el inventario `PF-000001` … `PF-000500` mediante `create_initial_ticket_inventory()`.
+Esto crea el evento `pink-floyd` y el inventario `PF-000001` … `PF-000500` mediante `database/schema.sql`.
 
 ## Variables necesarias
 
 ```bash
 PUBLIC_SITE_URL=https://farecoh.org
-PUBLIC_SUPABASE_URL=https://TU-PROYECTO.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=TU_SERVICE_ROLE_KEY
+DATABASE_URL=postgresql://...
 ```
-
-`SUPABASE_SERVICE_ROLE_KEY` solo se usa localmente o en un entorno seguro. Nunca debe exponerse en navegador.
 
 ## Instalar dependencia QR
 
@@ -48,7 +45,7 @@ pnpm run generate:ticket-assets
 
 El script:
 
-1. Lee los 500 boletos desde Supabase.
+1. Lee los 500 boletos desde PostgreSQL.
 2. Valida que no haya códigos repetidos.
 3. Valida que no haya `qr_token` repetidos.
 4. Completa `qr_token` y `qr_url` si hiciera falta.

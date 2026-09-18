@@ -2,7 +2,6 @@ import type { APIRoute } from "astro";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { getClientIp, sanitizeText } from "@/lib/security";
 import { ticketOrderSchema } from "@/lib/validation";
-import { supabase } from "@/lib/supabase";
 import { createTicketOrder } from "@/services/orders";
 import { notifyStaffOfNewReservation } from "@/services/notifications/reservation-notifications";
 
@@ -37,7 +36,7 @@ export const POST: APIRoute = async ({ request }) => {
   }
 
   try {
-    const order = await createTicketOrder(supabase, parsed.data);
+    const order = await createTicketOrder(parsed.data);
 
     void notifyStaffOfNewReservation({
       ticketCodes: order.ticketCodes,
