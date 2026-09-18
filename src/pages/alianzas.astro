@@ -1,0 +1,172 @@
+---
+import InstitutionalLayout from "@/layouts/InstitutionalLayout.astro";
+import { FARECOH_PARTNERS } from "@/data/farecoh";
+
+const title = `Alianzas Estratégicas · FARECOH`;
+const description = "Cooperación multilateral, agencias y redes artísticas que acompañan la misión de FARECOH.";
+
+const regionLabels: Record<string, string> = {
+  multilateral: "Cooperación Multilateral",
+  americas: "Américas",
+  europe: "Europa",
+  "central-america": "Centroamérica",
+};
+---
+
+<InstitutionalLayout
+  title={title}
+  description={description}
+  canonicalPath="/alianzas"
+  active="partners"
+>
+  <section class="inst-section partners-header">
+    <div class="inst-shell">
+      <p class="inst-eyebrow inst-eyebrow--accent partners-header__eyebrow">
+        <span class="inst-bar inst-bar--accent" aria-hidden="true"></span>
+        Alianzas estratégicas
+      </p>
+      <h1 class="inst-display inst-display--hero partners-header__title">
+        Cinco aliados, una red de cooperación sostenida.
+      </h1>
+      <p class="inst-body--lead partners-header__lead">
+        La fundación opera en articulación con organismos multilaterales,
+        agencias nacionales de cooperación y redes artísticas internacionales.
+      </p>
+    </div>
+  </section>
+
+  <section class="inst-section partners-grid" aria-labelledby="partners-grid-title">
+    <div class="inst-shell">
+      <h2 id="partners-grid-title" class="sr-only">Listado de aliados</h2>
+
+      <ul class="partners-grid__list" role="list">
+        {
+          FARECOH_PARTNERS.map((partner, idx) => (
+            <li class="inst-partner">
+              <div class="partners-grid__head">
+                <span class="inst-mono partners-grid__index">
+                  {String(idx + 1).padStart(2, "0")}
+                </span>
+                <span class="inst-eyebrow inst-eyebrow--ink">
+                  {regionLabels[partner.region]}
+                </span>
+              </div>
+              <p class="inst-partner__name">{partner.name}</p>
+              <p class="inst-partner__entity">{partner.entity}</p>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <section class="inst-section partners-cta">
+    <div class="inst-shell partners-cta__inner">
+      <h2 class="inst-display inst-display--xl partners-cta__title">
+        ¿Su organización busca articularse con un programa artístico educativo?
+      </h2>
+      <a href="mailto:info@farecoh.org" class="inst-cta inst-cta--solid">
+        Escribir al equipo
+        <span class="inst-cta__arrow" aria-hidden="true"></span>
+      </a>
+    </div>
+  </section>
+</InstitutionalLayout>
+
+<style>
+  .partners-header {
+    padding-top: clamp(8rem, 14vw, 12rem);
+    background: var(--color-inst-ivory-bright);
+  }
+
+  .partners-header__eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.85rem;
+  }
+
+  .partners-header__title {
+    margin: 1.5rem 0 0;
+    max-width: 20ch;
+    color: var(--color-inst-deep);
+  }
+
+  .partners-header__lead {
+    margin: 2rem 0 0;
+    max-width: 44rem;
+  }
+
+  .partners-grid {
+    background: var(--color-inst-ivory);
+  }
+
+  .partners-grid__list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+
+  @media (min-width: 768px) {
+    .partners-grid__list {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (min-width: 1280px) {
+    .partners-grid__list {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  .partners-grid__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .partners-grid__index {
+    font-size: 0.75rem;
+    color: var(--color-inst-cyan-deep);
+    letter-spacing: 0.1em;
+  }
+
+  .partners-cta {
+    background: var(--color-inst-deep);
+    color: var(--color-inst-ivory);
+  }
+
+  .partners-cta__inner {
+    display: grid;
+    gap: 2rem;
+    align-items: center;
+  }
+
+  @media (min-width: 768px) {
+    .partners-cta__inner {
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 4rem;
+    }
+  }
+
+  .partners-cta__title {
+    margin: 0;
+    color: var(--color-inst-ivory);
+    max-width: 28ch;
+  }
+
+  .partners-cta .inst-cta {
+    background: var(--color-inst-cyan);
+    color: var(--color-inst-deep);
+    border-color: var(--color-inst-cyan);
+  }
+
+  .partners-cta .inst-cta:hover {
+    background: var(--color-inst-ivory);
+    border-color: var(--color-inst-ivory);
+    color: var(--color-inst-deep);
+  }
+</style>

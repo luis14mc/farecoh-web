@@ -1,0 +1,70 @@
+---
+import { FARECOH_METADATA, FARECOH_CONTACT } from "@/data/farecoh";
+import { site } from "@/data/site";
+
+const currentYear = new Date().getFullYear();
+const foundationYear = FARECOH_METADATA.established;
+---
+
+<footer class="inst-footer">
+  <div class="inst-shell">
+    <h2 class="inst-footer__lead">
+      Una <em>pedagogía</em> del arte para la cohesión social de Honduras.
+    </h2>
+
+    <div class="inst-footer__columns">
+      <div class="inst-footer__col">
+        <h3>Fundación</h3>
+        <ul>
+          <li><a href="/sobre-nosotros">Sobre nosotros</a></li>
+          <li><a href="/programas">Programas</a></li>
+          <li><a href="/junta-directiva">Junta directiva</a></li>
+          <li><a href="/alianzas">Alianzas estratégicas</a></li>
+        </ul>
+      </div>
+
+      <div class="inst-footer__col">
+        <h3>Eventos</h3>
+        <ul>
+          <li><a href="/eventos/pink-floyd">Tributo a Pink Floyd</a></li>
+          <li>
+            <a href="/eventos/pink-floyd/boletos">Reservar boletos</a>
+          </li>
+        </ul>
+      </div>
+
+      <div class="inst-footer__col">
+        <h3>Contacto</h3>
+        <ul>
+          <li>
+            <a href={`mailto:${FARECOH_CONTACT.email}`}
+              >{FARECOH_CONTACT.email}</a
+            >
+          </li>
+          <li>
+            <a href={`tel:${FARECOH_CONTACT.phone.replace(/\s/g, "")}`}
+              >{FARECOH_CONTACT.phone}</a
+            >
+          </li>
+          <li>{FARECOH_CONTACT.postalAddress}</li>
+        </ul>
+      </div>
+
+      <div class="inst-footer__col">
+        <h3>Coordinación</h3>
+        <ul>
+          <li>{FARECOH_METADATA.legalSeat}</li>
+          <li>Fundada en {foundationYear}</li>
+          <li>Siglas: {FARECOH_METADATA.acronym}</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="inst-footer__bottom">
+      <span>© {currentYear} {site.name}. Todos los derechos reservados.</span>
+      <span
+        >Hecho con propósito · Tegucigalpa, Honduras · {site.url.replace("https://", "")}</span
+      >
+    </div>
+  </div>
+</footer>

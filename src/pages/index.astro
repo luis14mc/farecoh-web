@@ -1,65 +1,545 @@
 ﻿---
-import Layout from "@/layouts/Layout.astro";
-import LandingHero from "@/components/landing/LandingHero.astro";
-import WhoWeAre from "@/components/landing/WhoWeAre.astro";
-import CauseBlock from "@/components/landing/CauseBlock.astro";
-import MissionVision from "@/components/landing/MissionVision.astro";
-import WhatWeDo from "@/components/landing/WhatWeDo.astro";
-import ImpactBlock from "@/components/landing/ImpactBlock.astro";
-import FeaturedEvent from "@/components/landing/FeaturedEvent.astro";
-import EmotionalQuote from "@/components/landing/EmotionalQuote.astro";
-import FinalCTA from "@/components/landing/FinalCTA.astro";
-import { seoPages, organizationJsonLd, webSiteJsonLd } from "@/data/seo";
-import Analytics from '@vercel/analytics/astro';
+import InstitutionalLayout from "@/layouts/InstitutionalLayout.astro";
+import Orchestra3DCanvas from "@/components/canvas/Orchestra3DCanvas.astro";
+import PhotoStrip from "@/components/institutional/PhotoStrip.astro";
+import { FARECOH_METADATA, FARECOH_NARRATIVE, FARECOH_PROGRAMS, INSTITUTIONAL_STATS } from "@/data/farecoh";
+
+const title = `${FARECOH_METADATA.acronym} · ${FARECOH_METADATA.fullName}`;
+const description = FARECOH_METADATA.tagline;
+const foundationYear = FARECOH_METADATA.established;
+const yearsOfService = new Date().getFullYear() - foundationYear;
+
+const stats = INSTITUTIONAL_STATS.map((stat) =>
+  stat.label === "Años de trayectoria"
+    ? { ...stat, value: `+${yearsOfService}` }
+    : stat,
+);
 ---
 
-<Layout
-  title={seoPages.home.title}
-  description={seoPages.home.description}
-  image={seoPages.home.image}
-  canonicalPath={seoPages.home.path}
-  jsonLd={[organizationJsonLd(), webSiteJsonLd()]}
+<InstitutionalLayout
+  title={title}
+  description={description}
+  canonicalPath="/"
   active="home"
+  transparentHeader={true}
 >
-  <LandingHero />
-  <WhoWeAre />
-  <CauseBlock />
-  <MissionVision />
-  <WhatWeDo />
-  <ImpactBlock />
-  <FeaturedEvent />
-  <EmotionalQuote />
-  <FinalCTA />
-</Layout>
+  <!-- ───────────────────────────────────────────────────────────────
+       HERO — Lienzo 3D + composición asimétrica editorial
+  ──────────────────────────────────────────────────────────────── -->
+  <section
+    class="hero-inst"
+    aria-labelledby="hero-title"
+    data-inst-hero
+  >
+    <div class="hero-inst__canvas" aria-hidden="true">
+      <Orchestra3DCanvas />
+    </div>
 
-<script>
-  import { initParallax } from "@/scripts/parallax";
+    <div class="hero-inst__grain" aria-hidden="true"></div>
 
-  initParallax();
-</script>
+    <div class="inst-shell hero-inst__shell">
+      <div class="hero-inst__grid">
+        <h1 id="hero-title" class="hero-inst__title">
+          Transformando vidas a través del
+          <span class="hero-inst__title-accent">arte, la educación y la esperanza.</span>
+        </h1>
 
-<script is:inline>
-  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        <div class="hero-inst__actions">
+          <a href="/sobre-nosotros" class="inst-cta inst-cta--solid">
+            Conoce la fundación
+            <span class="inst-cta__arrow" aria-hidden="true"></span>
+          </a>
+          <a
+            href="/programas"
+            class="inst-cta"
+            style="color:#fff;border-color:rgba(255,255,255,0.5);"
+          >
+            Ver programas
+            <span class="inst-cta__arrow" aria-hidden="true"></span>
+          </a>
+        </div>
+      </div>
+    </div>
 
-  if (!prefersReducedMotion) {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (!entry.isIntersecting) return;
-          entry.target.classList.add("is-visible");
-          observer.unobserve(entry.target);
-        });
-      },
-      { threshold: 0.1, rootMargin: "0px 0px -40px 0px" }
-    );
+    <div class="hero-inst__scrollbar" aria-hidden="true">
+      <span>↓</span>
+      <small>Desplazar</small>
+    </div>
+  </section>
 
-    document.querySelectorAll(".reveal-section").forEach((section, index) => {
-      section.style.setProperty("--reveal-delay", `${Math.min(index * 80, 320)}ms`);
-      observer.observe(section);
-    });
-  } else {
-    document.querySelectorAll(".reveal-section").forEach((section) => {
-      section.classList.add("is-visible");
-    });
+  <!-- ───────────────────────────────────────────────────────────────
+       NARRATIVA — Misión & Visión asimétricas
+  ──────────────────────────────────────────────────────────────── -->
+  <section class="inst-section narrative-inst" aria-labelledby="narrative-title">
+    <div class="inst-shell narrative-inst__grid">
+      <header class="narrative-inst__header">
+        <p class="inst-eyebrow inst-eyebrow--accent inst-shift-r">
+          <span class="inst-bar inst-bar--accent" aria-hidden="true"></span>
+          01 — Propósito
+        </p>
+        <h2 id="narrative-title" class="inst-display inst-display--xl narrative-inst__title">
+          Construimos comunidad desde la práctica artística rigurosa.
+        </h2>
+      </header>
+
+      <div class="narrative-inst__body">
+        <article class="narrative-inst__mission">
+          <h3 class="inst-eyebrow inst-eyebrow--ink">Misión</h3>
+          <p class="inst-body--lead">{FARECOH_NARRATIVE.mission}</p>
+        </article>
+
+        <article class="narrative-inst__vision">
+          <h3 class="inst-eyebrow inst-eyebrow--ink">Visión</h3>
+          <p class="inst-body--lead">{FARECOH_NARRATIVE.vision}</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───────────────────────────────────────────────────────────────
+       PROGRAMAS — Lista editorial numerada, no grid simétrico
+  ──────────────────────────────────────────────────────────────── -->
+  <section class="inst-section programs-inst" aria-labelledby="programs-title">
+    <div class="inst-shell">
+      <header class="inst-marker">
+        <span class="inst-marker__index">02</span>
+        <div>
+          <p class="inst-marker__label">Programas activos</p>
+          <h2 id="programs-title" class="inst-marker__title">
+            Cuatro disciplinas para una formación integral.
+          </h2>
+        </div>
+      </header>
+
+      <ol class="programs-inst__list" role="list">
+        {
+          FARECOH_PROGRAMS.map((program, index) => (
+            <li
+              class={`programs-inst__item programs-inst__item--${index % 2 === 0 ? "even" : "odd"}`}
+            >
+              <article class="inst-program-card">
+                <header class="programs-inst__card-head">
+                  <span class="inst-mono-index">{program.index}</span>
+                  <span class="inst-badge">{program.badge}</span>
+                </header>
+                <h3 class="inst-display inst-display--lg programs-inst__card-title">
+                  {program.title}
+                </h3>
+                <p class="inst-eyebrow inst-program-card__category">
+                  {program.category}
+                </p>
+                <p class="inst-body">{program.description}</p>
+              </article>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </section>
+
+  <!-- ───────────────────────────────────────────────────────────────
+       GALERÍA — fotografías reales de los programas
+  ──────────────────────────────────────────────────────────────── -->
+  <PhotoStrip
+    eyebrow="03 — Memoria visual"
+    caption="La formación artística en imágenes."
+    photos={[
+      { src: "/images/fotografias/IMG_6827.webp", alt: "Estudiante de coro en ensayo", span: "wide" },
+      { src: "/images/fotografias/IMG_6829.webp", alt: "Docente trabajando con alumnos en clase", span: "square" },
+      { src: "/images/fotografias/IMG_6832.webp", alt: "Orquesta infantil en concierto", span: "tall" },
+      { src: "/images/fotografias/IMG_6835.webp", alt: "Sección de cuerdas en presentación", span: "square" },
+      { src: "/images/fotografias/IMG_6840.webp", alt: "Taller de estimulación temprana", span: "wide" },
+      { src: "/images/fotografias/IMG_6843.webp", alt: "Coro de Manos Blancas en concierto", span: "tall" },
+      { src: "/images/fotografias/IMG_6847.webp", alt: "Ensayo orquestal con director invitado", span: "square" },
+      { src: "/images/fotografias/IMG_6850.webp", alt: "Presentación de cierre de temporada", span: "wide" },
+    ]}
+  />
+
+  <!-- ───────────────────────────────────────────────────────────────
+       CIFRAS — barra minimalista con tipografía mono
+  ──────────────────────────────────────────────────────────────── -->
+  <section class="inst-section stats-inst" aria-labelledby="stats-title">
+    <div class="inst-shell">
+      <h2 id="stats-title" class="sr-only">Cifras institucionales</h2>
+      <dl class="stats-inst__row">
+        {
+          stats.map((stat, index) => (
+            <div class="stats-inst__cell">
+              <dt class="inst-eyebrow inst-eyebrow--ink stats-inst__label">
+                <span aria-hidden="true">0{index + 1}</span>
+                <span>{stat.label}</span>
+              </dt>
+              <dd class="inst-display inst-display--xl stats-inst__value">
+                {stat.value}
+              </dd>
+              <dd class="inst-body--small">{stat.caption}</dd>
+            </div>
+          ))
+        }
+      </dl>
+    </div>
+  </section>
+
+  <!-- ───────────────────────────────────────────────────────────────
+       CIERRE — Puente al evento solidario
+  ──────────────────────────────────────────────────────────────── -->
+  <section class="inst-section bridge-inst" aria-labelledby="bridge-title">
+    <div class="inst-shell bridge-inst__inner">
+      <p class="inst-eyebrow inst-eyebrow--inverse">
+        <span class="inst-bar inst-bar--inverse" aria-hidden="true"></span>
+        Próximo concierto solidario
+      </p>
+      <h2 id="bridge-title" class="inst-display inst-display--xl bridge-inst__title">
+        Apoya los programas reservando un boleto para el Tributo a Pink Floyd.
+      </h2>
+      <p class="inst-body--inverse bridge-inst__lead">
+        Una producción sinfónica benéfica cuya recaudación financia los programas
+        formativos de la fundación durante todo el año.
+      </p>
+      <div class="bridge-inst__actions">
+        <a
+          href="/eventos/pink-floyd"
+          class="inst-cta inst-cta--solid"
+          style="background:#fff;color:#0b2545;border-color:#fff;"
+        >
+          Conocer el concierto
+          <span class="inst-cta__arrow" aria-hidden="true"></span>
+        </a>
+        <a
+          href="/eventos/pink-floyd/boletos"
+          class="inst-cta"
+          style="color:#fff;border-color:rgba(255,255,255,0.5);"
+        >
+          Reservar boletos
+          <span class="inst-cta__arrow" aria-hidden="true"></span>
+        </a>
+      </div>
+    </div>
+  </section>
+</InstitutionalLayout>
+
+<style>
+  .hero-inst {
+    position: relative;
+    min-height: clamp(720px, 95vh, 1100px);
+    background:
+      radial-gradient(ellipse 80% 60% at 80% 30%, rgba(79, 195, 245, 0.18) 0%, transparent 60%),
+      linear-gradient(180deg, #061a33 0%, #0b2545 55%, #0a1f3a 100%);
+    color: var(--color-inst-ivory);
+    isolation: isolate;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    padding-top: 7rem;
+    padding-bottom: 4rem;
   }
-</script>
+
+  .hero-inst__canvas {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .hero-inst__grain {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    opacity: 0.06;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  .hero-inst__shell {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+  }
+
+  .hero-inst__grid {
+    display: flex;
+    flex-direction: column;
+    gap: 3rem;
+    align-items: flex-start;
+    max-width: 60rem;
+  }
+
+  .hero-inst__title {
+    margin: 0;
+    font-family: var(--font-inst-display);
+    font-weight: 700;
+    font-variation-settings: "wdth" 105, "wght" 700, "opsz" 72;
+    font-size: clamp(2.25rem, 5.5vw, 5rem);
+    line-height: 1.04;
+    letter-spacing: -0.028em;
+    color: var(--color-inst-ivory);
+    text-wrap: balance;
+    max-width: 18ch;
+    position: relative;
+    z-index: 2;
+  }
+
+  @media (min-width: 1024px) {
+    .hero-inst__title {
+      max-width: 12ch;
+    }
+  }
+
+  .hero-inst__title-accent {
+    color: var(--color-inst-cyan);
+    font-style: italic;
+    font-weight: 800;
+  }
+
+  .hero-inst__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    position: relative;
+    z-index: 2;
+  }
+
+  @media (max-width: 1023px) {
+    .hero-inst__title {
+      max-width: 100%;
+    }
+  }
+
+  .hero-inst__panel {
+    display: none;
+  }
+
+  .hero-inst__scrollbar {
+    position: absolute;
+    bottom: 1.5rem;
+    right: var(--spacing-inst-gutter);
+    z-index: 3;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    color: rgba(250, 246, 238, 0.55);
+    font-family: var(--font-inst-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+
+  @media (min-width: 1024px) {
+    .hero-inst__scrollbar {
+      display: flex;
+    }
+  }
+
+  .hero-inst__scrollbar span {
+    display: block;
+    font-size: 1rem;
+    animation: inst-scroll 2.2s ease-in-out infinite;
+  }
+
+  @keyframes inst-scroll {
+    0%, 100% { transform: translateY(0); opacity: 0.55; }
+    50% { transform: translateY(6px); opacity: 1; }
+  }
+
+  /* ── Narrativa ── */
+  .narrative-inst {
+    background: var(--color-inst-ivory-bright);
+  }
+
+  .narrative-inst__grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 3rem;
+  }
+
+  @media (min-width: 1024px) {
+    .narrative-inst__grid {
+      grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+      gap: 5rem 6rem;
+    }
+  }
+
+  .narrative-inst__header {
+    align-self: start;
+  }
+
+  .narrative-inst__title {
+    margin: 1.5rem 0 0;
+    max-width: 22ch;
+  }
+
+  .narrative-inst__body {
+    display: grid;
+    gap: 2.5rem;
+    align-content: start;
+    padding-top: 0.5rem;
+  }
+
+  @media (min-width: 768px) {
+    .narrative-inst__body {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .narrative-inst__mission,
+  .narrative-inst__vision {
+    padding-top: 1.5rem;
+    border-top: 1px solid color-mix(in srgb, var(--color-inst-deep) 14%, transparent);
+  }
+
+  .narrative-inst__mission h3,
+  .narrative-inst__vision h3 {
+    margin: 0 0 1.25rem;
+  }
+
+  /* ── Programas ── */
+  .programs-inst {
+    background: var(--color-inst-ivory);
+  }
+
+  .programs-inst__list {
+    list-style: none;
+    padding: 0;
+    margin: 3rem 0 0;
+    display: grid;
+    gap: 1.5rem;
+  }
+
+  @media (min-width: 1024px) {
+    .programs-inst__list {
+      gap: 2rem;
+    }
+  }
+
+  .programs-inst__item--even {
+    margin-right: 0;
+  }
+
+  @media (min-width: 1024px) {
+    .programs-inst__item--odd {
+      margin-left: clamp(2rem, 12vw, 9rem);
+    }
+
+    .programs-inst__item--even {
+      margin-right: clamp(2rem, 12vw, 9rem);
+    }
+  }
+
+  .programs-inst__card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .programs-inst__card-title {
+    margin: 0;
+    color: var(--color-inst-deep);
+    text-wrap: balance;
+    max-width: 22ch;
+  }
+
+  /* ── Stats ── */
+  .stats-inst {
+    background: var(--color-inst-ivory-bright);
+    border-top: 1px solid color-mix(in srgb, var(--color-inst-deep) 8%, transparent);
+  }
+
+  .stats-inst__row {
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 3rem;
+  }
+
+  @media (min-width: 768px) {
+    .stats-inst__row {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0;
+    }
+  }
+
+  .stats-inst__cell {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 0 1.5rem;
+  }
+
+  @media (min-width: 768px) {
+    .stats-inst__cell:first-child {
+      padding-left: 0;
+    }
+
+    .stats-inst__cell:last-child {
+      padding-right: 0;
+    }
+
+    .stats-inst__cell + .stats-inst__cell {
+      border-left: 1px solid color-mix(in srgb, var(--color-inst-deep) 12%, transparent);
+    }
+  }
+
+  .stats-inst__value {
+    margin: 0;
+    color: var(--color-inst-deep);
+    font-variation-settings: "opsz" 144, "SOFT" 30, "WONK" 0;
+  }
+
+  .stats-inst__label {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--color-inst-cyan-deep);
+  }
+
+  .stats-inst__label span:first-child {
+    font-family: var(--font-inst-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.1em;
+    color: var(--color-inst-graphite-muted);
+  }
+
+  /* ── Bridge ── */
+  .bridge-inst {
+    background:
+      radial-gradient(ellipse 60% 50% at 90% 10%, rgba(79, 195, 245, 0.2) 0%, transparent 55%),
+      linear-gradient(180deg, #0b2545 0%, #061a33 100%);
+    color: var(--color-inst-ivory);
+  }
+
+  .bridge-inst__inner {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    max-width: 60rem;
+  }
+
+  .bridge-inst__title {
+    margin: 0;
+    color: var(--color-inst-ivory);
+    text-wrap: balance;
+    max-width: 26ch;
+  }
+
+  .bridge-inst__lead {
+    margin: 0;
+    max-width: 44rem;
+  }
+
+  .bridge-inst__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero-inst__scrollbar span {
+      animation: none;
+    }
+  }
+</style>
