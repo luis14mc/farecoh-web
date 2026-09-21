@@ -1,3 +1,4 @@
+import { ArrowUpRight, CalendarCheck, Clock, Inbox } from "lucide-react";
 import { formatSiteDate } from "@/lib/locale";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ResponsiveScrollArea } from "@/components/admin/react/ResponsiveScrollArea";
@@ -13,28 +14,42 @@ interface ReservationRow {
 export function RecentReservationsTable({ reservations }: { reservations: ReservationRow[] }) {
   if (!reservations.length) {
     return (
-      <Card>
-        <CardHeader className="border-b">
-          <CardTitle className="text-base">Reservas recientes</CardTitle>
+      <Card className="border-border/60">
+        <CardHeader className="border-b pb-4">
+          <div className="flex items-center gap-2">
+            <Clock className="h-4 w-4 text-amber-500" />
+            <CardTitle className="text-sm font-semibold">Reservas recientes</CardTitle>
+          </div>
           <CardDescription>Boletos reservados desde el formulario público</CardDescription>
         </CardHeader>
-        <CardContent>
-          <p className="py-8 text-center text-sm text-muted-foreground">No hay reservas recientes.</p>
+        <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted text-muted-foreground">
+            <Inbox className="h-5 w-5" />
+          </div>
+          <p className="mt-3 text-sm font-medium text-foreground">No hay reservas recientes</p>
+          <p className="mt-1 text-xs text-muted-foreground">Las nuevas reservas aparecerán aquí automáticamente.</p>
         </CardContent>
       </Card>
     );
   }
 
   return (
-    <Card>
-      <CardHeader className="border-b">
+    <Card className="border-border/60">
+      <CardHeader className="border-b pb-4">
         <div className="flex items-center justify-between gap-3">
-          <div>
-            <CardTitle className="text-base">Reservas recientes</CardTitle>
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <Clock className="h-4 w-4 text-amber-500" />
+              <CardTitle className="text-sm font-semibold">Reservas recientes</CardTitle>
+            </div>
             <CardDescription>Boletos reservados desde el formulario público</CardDescription>
           </div>
-          <a href="/admin/reservations" className="text-sm font-semibold text-primary hover:underline">
-            Ver todas
+          <a
+            href="/admin/reservations"
+            className="inline-flex items-center gap-1 text-xs font-semibold text-primary transition-colors hover:text-primary/80"
+          >
+            <span>Ver todas</span>
+            <ArrowUpRight className="h-3.5 w-3.5" />
           </a>
         </div>
       </CardHeader>
@@ -43,24 +58,27 @@ export function RecentReservationsTable({ reservations }: { reservations: Reserv
           <ResponsiveScrollArea minWidth="560px">
             <Table>
               <TableHeader>
-                <TableRow>
-                  <TableHead>Código</TableHead>
-                  <TableHead>Comprador</TableHead>
-                  <TableHead>Teléfono</TableHead>
-                  <TableHead>Estado</TableHead>
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className="w-[120px] text-xs font-semibold">Código</TableHead>
+                  <TableHead className="text-xs font-semibold">Comprador</TableHead>
+                  <TableHead className="text-xs font-semibold">Teléfono</TableHead>
+                  <TableHead className="w-[100px] text-right text-xs font-semibold">Estado</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {reservations.map((ticket) => (
-                  <TableRow key={ticket.ticket_code}>
-                    <TableCell className="font-mono font-semibold">
-                      <a href={`/admin/reservations?code=${ticket.ticket_code}`} className="hover:underline">
+                  <TableRow key={ticket.ticket_code} className="hover:bg-muted/50">
+                    <TableCell className="font-mono text-xs font-bold text-foreground">
+                      <a
+                        href={`/admin/reservations?code=${ticket.ticket_code}`}
+                        className="rounded bg-muted/60 px-1.5 py-0.5 text-foreground transition-colors hover:bg-primary/10 hover:text-primary"
+                      >
                         {ticket.ticket_code}
                       </a>
                     </TableCell>
-                    <TableCell>{ticket.buyer_name || "-"}</TableCell>
-                    <TableCell className="text-muted-foreground">{ticket.buyer_phone || "-"}</TableCell>
-                    <TableCell>
+                    <TableCell className="text-xs font-medium text-foreground">{ticket.buyer_name || "-"}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground">{ticket.buyer_phone || "-"}</TableCell>
+                    <TableCell className="text-right">
                       <TicketStatusBadge status="reserved" />
                     </TableCell>
                   </TableRow>
@@ -70,14 +88,17 @@ export function RecentReservationsTable({ reservations }: { reservations: Reserv
           </ResponsiveScrollArea>
         </div>
 
-        <div className="divide-y sm:hidden">
+        <div className="divide-y divide-border/60 sm:hidden">
           {reservations.map((ticket) => (
             <article key={ticket.ticket_code} className="flex items-start justify-between gap-3 p-4">
               <div>
-                <a href={`/admin/reservations?code=${ticket.ticket_code}`} className="font-mono font-semibold hover:underline">
+                <a
+                  href={`/admin/reservations?code=${ticket.ticket_code}`}
+                  className="rounded bg-muted/60 px-1.5 py-0.5 font-mono text-xs font-bold text-foreground hover:text-primary"
+                >
                   {ticket.ticket_code}
                 </a>
-                <p className="mt-1 text-sm">{ticket.buyer_name || "-"}</p>
+                <p className="mt-1.5 text-xs font-medium text-foreground">{ticket.buyer_name || "-"}</p>
                 <p className="text-xs text-muted-foreground">{ticket.buyer_phone || "-"}</p>
               </div>
               <TicketStatusBadge status="reserved" />
@@ -98,22 +119,32 @@ interface CheckinRow {
 export function RecentCheckinsTable({ checkins }: { checkins: CheckinRow[] }) {
   if (!checkins.length) {
     return (
-      <Card>
-        <CardHeader className="border-b">
-          <CardTitle className="text-base">Check-ins recientes</CardTitle>
+      <Card className="border-border/60">
+        <CardHeader className="border-b pb-4">
+          <div className="flex items-center gap-2">
+            <CalendarCheck className="h-4 w-4 text-emerald-500" />
+            <CardTitle className="text-sm font-semibold">Check-ins recientes</CardTitle>
+          </div>
           <CardDescription>Últimos ingresos validados en puerta</CardDescription>
         </CardHeader>
-        <CardContent>
-          <p className="py-8 text-center text-sm text-muted-foreground">No hay check-ins registrados.</p>
+        <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted text-muted-foreground">
+            <CalendarCheck className="h-5 w-5" />
+          </div>
+          <p className="mt-3 text-sm font-medium text-foreground">No hay check-ins registrados</p>
+          <p className="mt-1 text-xs text-muted-foreground">Las validaciones en puerta se mostrarán aquí en vivo.</p>
         </CardContent>
       </Card>
     );
   }
 
   return (
-    <Card>
-      <CardHeader className="border-b">
-        <CardTitle className="text-base">Check-ins recientes</CardTitle>
+    <Card className="border-border/60">
+      <CardHeader className="border-b pb-4">
+        <div className="flex items-center gap-2">
+          <CalendarCheck className="h-4 w-4 text-emerald-500" />
+          <CardTitle className="text-sm font-semibold">Check-ins recientes</CardTitle>
+        </div>
         <CardDescription>Últimos ingresos validados en puerta</CardDescription>
       </CardHeader>
       <CardContent className="p-0">
@@ -121,20 +152,24 @@ export function RecentCheckinsTable({ checkins }: { checkins: CheckinRow[] }) {
           <ResponsiveScrollArea minWidth="560px">
             <Table>
               <TableHeader>
-                <TableRow>
-                  <TableHead>Código</TableHead>
-                  <TableHead>Comprador</TableHead>
-                  <TableHead>Validado por</TableHead>
-                  <TableHead>Fecha</TableHead>
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className="w-[120px] text-xs font-semibold">Código</TableHead>
+                  <TableHead className="text-xs font-semibold">Comprador</TableHead>
+                  <TableHead className="text-xs font-semibold">Validado por</TableHead>
+                  <TableHead className="text-right text-xs font-semibold">Fecha</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {checkins.map((row, i) => (
-                  <TableRow key={`${row.ticket?.ticket_code}-${i}`}>
-                    <TableCell className="font-mono font-semibold">{row.ticket?.ticket_code || "-"}</TableCell>
-                    <TableCell>{row.ticket?.buyer_name || "-"}</TableCell>
-                    <TableCell>{row.validated_by || "-"}</TableCell>
-                    <TableCell className="text-muted-foreground">
+                  <TableRow key={`${row.ticket?.ticket_code}-${i}`} className="hover:bg-muted/50">
+                    <TableCell className="font-mono text-xs font-bold text-foreground">
+                      <span className="rounded bg-muted/60 px-1.5 py-0.5">
+                        {row.ticket?.ticket_code || "-"}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-xs font-medium text-foreground">{row.ticket?.buyer_name || "-"}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground">{row.validated_by || "-"}</TableCell>
+                    <TableCell className="text-right text-xs text-muted-foreground font-mono">
                       {row.validated_at
                         ? formatSiteDate(row.validated_at, { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })
                         : "-"}
@@ -146,18 +181,20 @@ export function RecentCheckinsTable({ checkins }: { checkins: CheckinRow[] }) {
           </ResponsiveScrollArea>
         </div>
 
-        <div className="divide-y sm:hidden">
+        <div className="divide-y divide-border/60 sm:hidden">
           {checkins.map((row, i) => (
             <article key={`${row.ticket?.ticket_code}-${i}`} className="space-y-1 p-4">
               <div className="flex items-center justify-between gap-2">
-                <span className="font-mono font-semibold">{row.ticket?.ticket_code || "-"}</span>
-                <span className="text-xs text-muted-foreground">
+                <span className="rounded bg-muted/60 px-1.5 py-0.5 font-mono text-xs font-bold text-foreground">
+                  {row.ticket?.ticket_code || "-"}
+                </span>
+                <span className="font-mono text-xs text-muted-foreground">
                   {row.validated_at
                     ? formatSiteDate(row.validated_at, { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })
                     : "-"}
                 </span>
               </div>
-              <p className="text-sm">{row.ticket?.buyer_name || "-"}</p>
+              <p className="text-xs font-medium text-foreground">{row.ticket?.buyer_name || "-"}</p>
               <p className="text-xs text-muted-foreground">{row.validated_by || "-"}</p>
             </article>
           ))}

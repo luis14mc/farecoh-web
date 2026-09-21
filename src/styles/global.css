@@ -156,9 +156,9 @@
   }
 }
 
-*,
-*::before,
-*::after {
+body:not(.admin-shell) *,
+body:not(.admin-shell) *::before,
+body:not(.admin-shell) *::after {
   border-radius: 0;
 }
 

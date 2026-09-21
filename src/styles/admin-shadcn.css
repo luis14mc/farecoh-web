@@ -1,19 +1,13 @@
-/* Admin shell — neutral dashboard background + shadcn border-radius fix */
+/* Admin shell — modern shadcn dashboard design system */
 .admin-shell {
-  background-color: hsl(240 4.8% 95.9%);
-  color: hsl(240 10% 3.9%);
+  background-color: #f8fafc;
+  color: #0f172a;
   --admin-mobile-top: calc(3.5rem + env(safe-area-inset-top, 0px));
+  --radius: 0.5rem;
 }
 
 .admin-shell main {
   overflow-x: clip;
-}
-
-/* Restore shadcn border-radius inside admin (global.css sets border-radius: 0 on *) */
-.admin-shell *,
-.admin-shell *::before,
-.admin-shell *::after {
-  border-radius: revert-layer;
 }
 
 .admin-mobile-header {
@@ -23,4 +17,28 @@
 
 .admin-page-content {
   min-width: 0;
+}
+
+/* Subtle card & panel enhancements */
+.admin-shell .card {
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.05), 0 1px 2px -1px rgb(0 0 0 / 0.05);
+}
+
+/* Scrollbar polish for data tables */
+.admin-shell ::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.admin-shell ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.admin-shell ::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+
+.admin-shell ::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }

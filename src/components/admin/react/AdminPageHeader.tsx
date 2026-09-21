@@ -1,4 +1,4 @@
-import { Calendar, LogOut } from "lucide-react";
+import { Calendar, ChevronRight, LogOut } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ROLE_LABELS, type UserProfile } from "@/lib/auth";
@@ -29,39 +29,38 @@ export function AdminPageHeader({
   authConfigured,
 }: AdminPageHeaderProps) {
   return (
-    <header className="sticky top-[var(--admin-mobile-top)] z-20 border-b bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/80 md:top-0">
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 px-4 py-4 md:flex-row md:items-center md:justify-between md:px-8 md:py-5">
-        <div className="min-w-0">
-          <nav aria-label="Breadcrumb" className="mb-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-            <ol className="inline-flex flex-wrap items-center gap-1">
-              <li>
-                <a className="transition-colors hover:text-primary" href="/admin">
-                  Admin
-                </a>
-              </li>
-              <li aria-hidden="true" className="text-muted-foreground/50">
-                /
-              </li>
-              <li className="text-primary">{section}</li>
-            </ol>
+    <header className="sticky top-[var(--admin-mobile-top)] z-20 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 md:top-0">
+      <div className="mx-auto flex w-full max-w-7xl flex-col gap-3 px-4 py-4 md:flex-row md:items-center md:justify-between md:px-8 md:py-5">
+        <div className="min-w-0 space-y-1">
+          <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+            <a className="transition-colors hover:text-foreground" href="/admin">
+              Admin
+            </a>
+            <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/50" />
+            <span className="font-semibold text-foreground">{section}</span>
           </nav>
-          <h1 className="text-xl font-semibold tracking-tight md:text-2xl">{title}</h1>
-          {description && <p className="mt-1 text-sm text-muted-foreground">{description}</p>}
+          <h1 className="text-xl font-bold tracking-tight text-foreground md:text-2xl">{title}</h1>
+          {description && <p className="text-sm text-muted-foreground">{description}</p>}
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 md:justify-end">
+        <div className="flex flex-wrap items-center gap-2.5 md:justify-end">
           {staffProfile && (
-            <Badge variant="outline" className="hidden sm:inline-flex">
+            <Badge variant="secondary" className="hidden font-medium tracking-wide sm:inline-flex">
               {ROLE_LABELS[staffProfile.role]}
             </Badge>
           )}
-          <span className="hidden items-center gap-1.5 text-xs text-muted-foreground sm:inline-flex">
-            <Calendar className="h-4 w-4" />
-            {currentDate}
-          </span>
-          <Button variant="outline" size="sm" className="hidden md:inline-flex" onClick={() => void signOutAndRedirect(authConfigured)}>
-            <LogOut className="h-4 w-4" />
-            Salir
+          <div className="hidden items-center gap-1.5 rounded-full border border-border/60 bg-muted/40 px-3 py-1 text-xs font-medium text-muted-foreground sm:inline-flex">
+            <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+            <span>{currentDate}</span>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="hidden gap-1.5 font-medium hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 md:inline-flex"
+            onClick={() => void signOutAndRedirect(authConfigured)}
+          >
+            <LogOut className="h-3.5 w-3.5" />
+            <span>Salir</span>
           </Button>
         </div>
       </div>
