@@ -22,15 +22,38 @@ Set these in the Railway service **Variables** tab:
 
 | Variable | Required | Purpose |
 |---|---|---|
-| `PUBLIC_SUPABASE_URL` | yes | Public Supabase project URL |
-| `PUBLIC_SUPABASE_ANON_KEY` | yes | Public anon key (safe in browser) |
+| `DATABASE_URL` | yes | Postgres connection string (Railway Postgres auto-injects) |
+| `SESSION_SECRET` | yes | Random 32+ char string for signing session cookies |
 | `PUBLIC_SITE_URL` | recommended | Canonical site URL, e.g. `https://farecoh.org` |
-| `SUPABASE_SERVICE_ROLE_KEY` | yes (admin endpoints) | Server-only service role key |
 | `WHATSAPP_PROVIDER` | optional | `twilio` or `meta` for staff alerts |
 | `TWILIO_ACCOUNT_SID` / `TWILIO_AUTH_TOKEN` / `TWILIO_WHATSAPP_FROM` | optional | Twilio credentials |
 | `FARECOH_NOTIFY_WHATSAPP_TO` | optional | Recipient for staff notifications |
 
-Variables prefixed with `PUBLIC_` are exposed to the client. Do **not** prefix the service role key.
+Variables prefixed with `PUBLIC_` are exposed to the client.
+
+## Database (Postgres)
+
+The app uses a plain Postgres database provisioned in Railway. Schema and seed data live in `db/migrations/` and are applied automatically on every deploy via `pnpm run db:migrate` (idempotent — tracks applied files in `schema_migrations`).
+
+To create the Postgres service:
+
+1. In Railway, click **+ New → Database → PostgreSQL**.
+2. Once provisioned, set `DATABASE_URL` on the web service via **Variables → Reference Variable**.
+3. The first deploy will run the migrations and create all tables, RPCs, and seed data.
+
+### Local development
+
+```bash
+docker run -d --name farecoh-pg \
+  -e POSTGRES_USER=farecoh \
+  -e POSTGRES_PASSWORD=farecoh \
+  -e POSTGRES_DB=farecoh \
+  -p 54321:5432 \
+  postgres:17-alpine
+
+export DATABASE_URL="postgres://farecoh:farecoh@localhost:54321/farecoh"
+pnpm run db:migrate
+```
 
 ## Build and run commands
 
