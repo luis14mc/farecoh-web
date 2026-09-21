@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabase";
+import { sql } from "@/lib/db";
 import { PINK_FLOYD_EVENT_SLUG } from "@/types/events";
 import {
   buildEventStartIso,
@@ -56,7 +56,7 @@ type EventRow = {
   event_time: string;
   location: string;
   city: string | null;
-  ticket_price: number;
+  ticket_price: number | string;
   capacity: number;
   created_at: string;
 };
@@ -90,23 +90,22 @@ export function getPinkFloydEventFallback(): EventData {
 export const SEED_EVENT = PINK_FLOYD_FALLBACK;
 
 export async function getPinkFloydEvent(): Promise<EventData> {
-  const { data, error } = await supabase
-    .from("events")
-    .select("*")
-    .eq("slug", PINK_FLOYD_EVENT_SLUG)
-    .single();
+  const rows = await sql<EventRow[]>`
+    SELECT id, slug, title, description, event_date, event_time,
+           location, city, ticket_price, capacity, created_at
+    FROM events
+    WHERE slug = ${PINK_FLOYD_EVENT_SLUG}
+    LIMIT 1
+  `;
 
-  if (error || !data) {
+  if (rows.length === 0) {
     if (import.meta.env.DEV) {
-      console.warn(
-        "[events] Pink Floyd event not found in Supabase, using fallback:",
-        error?.message ?? "no row",
-      );
+      console.warn("[events] Pink Floyd event not found in DB, using fallback");
     }
     return getPinkFloydEventFallback();
   }
 
-  return mapEventRow(data as EventRow);
+  return mapEventRow(rows[0]);
 }
 
 /** @deprecated Use getPinkFloydEvent(). Kept for legacy imports. */

@@ -3,15 +3,11 @@ import "../styles/admin-auth.css";
 
 export interface Props {
   title: string;
-  supabaseUrl?: string;
-  supabaseAnonKey?: string;
   authConfigured?: boolean;
 }
 
 const {
   title,
-  supabaseUrl = "",
-  supabaseAnonKey = "",
   authConfigured = false,
 } = Astro.props;
 ---
@@ -30,8 +26,6 @@ const {
   </head>
   <body
     class="min-h-screen bg-surface text-on-surface body-md"
-    data-supabase-url={supabaseUrl}
-    data-supabase-anon-key={supabaseAnonKey}
     data-auth-configured={authConfigured ? "true" : "false"}
   >
     <slot />
