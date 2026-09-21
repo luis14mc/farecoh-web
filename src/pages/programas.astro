@@ -1,239 +1,366 @@
 ---
-import Layout from "@/layouts/Layout.astro";
-import { FARECOH_DATA } from "@/data/farecoh";
-import { site } from "@/data/site";
+import InstitutionalLayout from "@/layouts/InstitutionalLayout.astro";
+import Orchestra3DCanvas from "@/components/canvas/Orchestra3DCanvas.astro";
+import PhotoStrip from "@/components/institutional/PhotoStrip.astro";
+import { FARECOH_PROGRAMS, FARECOH_MOBILITY } from "@/data/farecoh";
 
-const detailedPrograms = [
-  {
-    id: "orquesta-sinfonica",
-    title: "Orquesta Sinfónica Infantil y Juvenil",
-    category: "Música Clásica y Ensamble Instrumental",
-    lead: "Formación orquestal de alto rigor técnico basada en la práctica colectiva intensiva.",
-    description: "Los estudiantes aprenden a tocar instrumentos sinfónicos desde el primer día en ensambles grupales. El modelo fomenta el trabajo en equipo, la disciplina auditiva, la lectura musical y la sensibilidad estética.",
-    image: "/images/fotografias/IMG_6841.webp",
-    imageAlt: "Estudiantes de violín ensayando en la orquesta juvenil de FARECOH",
-    instruments: ["Violín, Viola, Violonchelo y Contrabajo", "Flauta Traversa, Oboe y Clarinete", "Trompeta, Corno Francés y Trombón", "Percusión Sinfónica y Timbales"],
-    modality: "Presencial &bull; Clases teóricas, técnica seccional y tuttis orquestales",
-    cost: "100% Beca Completa (Instrumento y enseñanza gratuita)"
-  },
-  {
-    id: "coro-manos-blancas",
-    title: "Coro de Manos Blancas",
-    category: "Inclusión y Diversidad Funcional",
-    lead: "Programa pionero en Honduras de integración artística para la comunidad sorda.",
-    description: "A través de guantes blancos y el lenguaje corporal de señas, niños y jóvenes con discapacidad auditiva y diversidad motriz interpretan y dan vida física a las obras vocales y sinfónicas, compartiendo escenario en igualdad de condiciones.",
-    image: "/images/fotografias/IMG_6846.webp",
-    imageAlt: "Solista e intérprete de señas con guantes blancos en el Coro de Manos Blancas",
-    instruments: ["Lenguaje gestual de señas adaptado a música", "Técnica vocal y resonancia corporal", "Expresión corporal y coordinación cinestésica", "Ensamble coral mixto integrado"],
-    modality: "Presencial &bull; Terapia artística y coro integrado",
-    cost: "100% Gratuito para personas con capacidades diversas"
-  },
-  {
-    id: "artes-visuales",
-    title: "Artes Plásticas, Dibujo y Pintura",
-    category: "Educación Visual y Patrimonio",
-    lead: "Desarrollo del pensamiento visual, la creatividad manual y el arraigo cultural.",
-    description: "Talleres diseñados para que niños y adolescentes exploren técnicas de dibujo artístico, acuarela, óleo y modelado, vinculando la identidad local de Valle de Ángeles y sus tradiciones artesanales con el arte universal.",
-    image: "/images/fotografias/IMG_6849.webp",
-    imageAlt: "Niña en taller de artes visuales dibujando y coloreando en FARECOH",
-    instruments: ["Dibujo artístico y perspectiva", "Teoría del color y técnicas pictóricas", "Modelado y escultura básica", "Apreciación del arte e historia visual"],
-    modality: "Presencial &bull; Talleres prácticos y exposiciones comunitarias",
-    cost: "100% Gratuito (Materiales formativos provistos)"
-  },
-  {
-    id: "estimulacion-temprana",
-    title: "Iniciación y Estimulación Temprana",
-    category: "Desarrollo Sensorial y Psicomotriz",
-    lead: "Sensibilización temprana a través del sonido, el ritmo y el movimiento guiado.",
-    description: "Dirigido a la primera infancia para estimular el desarrollo auditivo, neurocognitivo y socioafectivo mediante juegos rítmicos, cantos tradicionales y exploración sonora interactiva junto a sus familias.",
-    image: "/images/fotografias/IMG_6830.webp",
-    imageAlt: "Infante en sesión de estimulación multisensorial y aprendizaje sonoro",
-    instruments: ["Juegos de exploración rítmica y tímbrica", "Desarrollo auditivo y vocal temprano", "Psicomotricidad gruesa y fina asistida", "Socialización y vínculo afectivo familiar"],
-    modality: "Presencial &bull; Sesiones guiadas junto a madres y tutores",
-    cost: "100% Gratuito para familias de la comunidad"
-  }
-];
+const title = `Programas · FARECOH`;
+const description = "Cuatro programas activos: coros y orquestas, inclusión, primera infancia y artes visuales.";
+
+const disciplineLabels: Record<string, string> = {
+  music: "Música",
+  inclusion: "Inclusión",
+  "early-childhood": "Primera Infancia",
+  "visual-arts": "Artes Visuales",
+};
 ---
 
-<Layout
-  title="Programas Pedagógicos | FARECOH - Formación Musical y Artística"
-  description="Explora los programas de orquestas infantiles, Coro de Manos Blancas, estimulación temprana y artes plásticas de FARECOH en Honduras."
+<InstitutionalLayout
+  title={title}
+  description={description}
+  canonicalPath="/programas"
   active="programs"
 >
-  <!-- Encabezado Editorial -->
-  <header class="bg-[#091118] text-white pt-28 pb-20 lg:pt-36 lg:pb-24 border-b border-white/10">
-    <div class="landing-shell">
-      <div class="max-w-3xl">
-        <p class="text-xs font-semibold uppercase tracking-widest text-[#04B2D9] mb-4">
-          Currículo Artístico y Social &bull; Becas al 100%
-        </p>
-        <h1 class="font-serif text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-white leading-[1.08] mb-6">
-          Programas formativos de alto impacto
-        </h1>
-        <p class="text-lg sm:text-xl text-white/80 leading-relaxed font-normal text-pretty">
-          Diseñados bajo metodologías colectivas que fortalecen la autoestima, previenen la exclusión y abren horizontes reales de desarrollo humano a través de la música y las artes.
-        </p>
-      </div>
+  <!-- Encabezado con canvas sutil -->
+  <section class="inst-section programs-header">
+    <div class="programs-header__canvas" aria-hidden="true">
+      <Orchestra3DCanvas />
     </div>
-  </header>
+    <div class="inst-shell programs-header__inner">
+      <p class="inst-eyebrow inst-eyebrow--inverse">
+        <span class="inst-bar inst-bar--inverse" aria-hidden="true"></span>
+        Programas
+      </p>
+      <h1 class="inst-display inst-display--hero programs-header__title">
+        Cuatro disciplinas, una sola <em>coherencia pedagógica.</em>
+      </h1>
+      <p class="inst-body--inverse programs-header__lead">
+        Cada programa responde a un momento del desarrollo humano: la primera
+        escucha, la inclusión radical, el dominio instrumental y la expresión
+        plástica.
+      </p>
+    </div>
+  </section>
 
-  <!-- Lista Editorial en Profundidad con Fotografía Real de Cada Programa -->
-  <section class="landing-section bg-white py-24 lg:py-32 border-b border-[#e4e4e7]">
-    <div class="landing-shell space-y-24 lg:space-y-32">
-      {detailedPrograms.map((program, index) => {
-        const isReversed = index % 2 === 1;
-        return (
-          <article id={program.id} class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
-            
-            <!-- Columna Fotográfica -->
-            <div class={`lg:col-span-6 ${isReversed ? "lg:order-2" : "lg:order-1"}`}>
-              <figure class="overflow-hidden border border-[#e4e4e7] bg-[#091118]">
-                <img
-                  src={program.image}
-                  alt={program.imageAlt}
-                  class="w-full aspect-[4/3] object-cover"
-                  loading="lazy"
-                  width="800"
-                  height="600"
-                />
-                <figcaption class="p-4 bg-white border-t border-[#e4e4e7] text-xs text-[#71717a] flex justify-between">
-                  <span class="font-medium text-[#18181B]">{program.title}</span>
-                  <span class="text-[#0378A6] font-semibold">{program.category}</span>
-                </figcaption>
-              </figure>
-            </div>
+  <!-- Lista editorial de programas -->
+  <section class="inst-section programs-list" aria-labelledby="programs-list-title">
+    <div class="inst-shell">
+      <h2 id="programs-list-title" class="sr-only">Lista de programas</h2>
 
-            <!-- Columna Curricular y Descriptiva -->
-            <div class={`lg:col-span-6 ${isReversed ? "lg:order-1" : "lg:order-2"}`}>
-              <p class="text-xs font-semibold uppercase tracking-widest text-[#0378A6] mb-2">
-                {program.category}
-              </p>
-              
-              <h2 class="font-serif text-3xl sm:text-4xl font-bold tracking-tight text-[#18181B] leading-snug mb-4">
-                {program.title}
-              </h2>
-
-              <p class="text-base sm:text-lg font-medium text-[#18181B] leading-relaxed mb-4">
-                {program.lead}
-              </p>
-
-              <p class="text-sm sm:text-base text-[#3f3f46] leading-relaxed font-normal mb-8">
-                {program.description}
-              </p>
-
-              <!-- Detalles Curriculares -->
-              <div class="bg-[#fcfbfa] border border-[#e4e4e7] p-6 space-y-4 mb-6">
-                <div>
-                  <span class="text-xs font-bold uppercase tracking-wider text-[#0378A6] block mb-1">
-                    Áreas de Formación y Contenidos
+      <ol class="programs-list__items" role="list">
+        {
+          FARECOH_PROGRAMS.map((program, idx) => (
+            <li class="programs-list__item">
+              <article class="programs-list__card">
+                <header class="programs-list__card-head">
+                  <span class="inst-mono-index" aria-hidden="true">{program.index}</span>
+                  <span class="inst-eyebrow inst-eyebrow--accent">
+                    {disciplineLabels[program.discipline]}
                   </span>
-                  <ul class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-[#3f3f46]">
-                    {program.instruments.map((inst) => (
-                      <li class="flex items-center gap-2">
-                        <span class="h-1 w-1 bg-[#0378A6] rounded-full shrink-0"></span>
-                        <span>{inst}</span>
-                      </li>
-                    ))}
-                  </ul>
+                </header>
+
+                <div class="programs-list__card-body">
+                  <h3 class="inst-display inst-display--lg programs-list__card-title">
+                    {program.title}
+                  </h3>
+                  <p class="inst-eyebrow inst-eyebrow--ink programs-list__card-category">
+                    {program.category}
+                  </p>
+                  <p class="inst-body">{program.description}</p>
+                  <span class="inst-badge">{program.badge}</span>
                 </div>
 
-                <div class="pt-3 border-t border-[#e4e4e7] flex flex-wrap items-center justify-between gap-2 text-xs">
-                  <span class="text-[#71717a]" set:html={program.modality}></span>
-                  <span class="font-semibold text-[#0378A6]">{program.cost}</span>
-                </div>
+                <footer class="programs-list__card-foot">
+                  <span class="inst-mono programs-list__card-serial">
+                    No. {String(idx + 1).padStart(2, "0")} / 04
+                  </span>
+                  <a href="/sobre-nosotros" class="inst-link">
+                    Conocer el marco institucional
+                    <span aria-hidden="true">→</span>
+                  </a>
+                </footer>
+              </article>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </section>
+
+  <!-- Galería fotográfica de los programas -->
+  <PhotoStrip
+    eyebrow="Galería · prácticas formativas"
+    caption="La música, la inclusión y la plástica en imágenes."
+    photos={[
+      { src: "/images/fotografias/IMG_6827.webp", alt: "Ensayo coral", span: "square" },
+      { src: "/images/fotografias/IMG_6830.webp", alt: "Práctica orquestal", span: "tall" },
+      { src: "/images/fotografias/IMG_6836.webp", alt: "Sesión de estimulación", span: "wide" },
+      { src: "/images/fotografias/IMG_6838.webp", alt: "Coro infantil", span: "square" },
+      { src: "/images/fotografias/IMG_6842.webp", alt: "Taller de plástica", span: "square" },
+      { src: "/images/fotografias/IMG_6846.webp", alt: "Manos Blancas en concierto", span: "tall" },
+      { src: "/images/fotografias/IMG_6849.webp", alt: "Repertorio contemporáneo", span: "wide" },
+    ]}
+  />
+
+  <!-- Intercambios & becas -->
+  <section
+    id="intercambios"
+    class="inst-section programs-mobility"
+    aria-labelledby="mobility-title"
+  >
+    <div class="inst-shell programs-mobility__grid">
+      <div class="programs-mobility__head">
+        <p class="inst-eyebrow inst-eyebrow--accent">
+          <span class="inst-bar inst-bar--accent" aria-hidden="true"></span>
+          05 — Intercambios
+        </p>
+        <h2 id="mobility-title" class="inst-display inst-display--xl programs-mobility__title">
+          {FARECOH_MOBILITY.title}
+        </h2>
+        <p class="inst-body--lead">{FARECOH_MOBILITY.description}</p>
+        <span class="inst-badge">{FARECOH_MOBILITY.badge}</span>
+      </div>
+
+      <ul class="programs-mobility__destinations" role="list">
+        {
+          FARECOH_MOBILITY.destinations.map((destination, idx) => (
+            <li class="programs-mobility__destination">
+              <span class="inst-mono programs-mobility__destination-index">
+                {String(idx + 1).padStart(2, "0")}
+              </span>
+              <div>
+                <p class="programs-mobility__destination-name">{destination.institution}</p>
+                <p class="inst-body--small">{destination.country}</p>
               </div>
-
-              <a
-                href={`mailto:${site.email}?subject=${encodeURIComponent(`Consulta sobre programa: ${program.title}`)}`}
-                class="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[#0378A6] hover:text-[#04B2D9] transition-colors"
-              >
-                <span>Solicitar información de admisión</span>
-                <span aria-hidden="true">&rarr;</span>
-              </a>
-            </div>
-
-          </article>
-        );
-      })}
+            </li>
+          ))
+        }
+      </ul>
     </div>
   </section>
+</InstitutionalLayout>
 
-  <!-- Iniciativa Especial: Becas de Verano & Movilidad Internacional con Fotografía Real -->
-  <section class="landing-section bg-[#fcfbfa] py-24 lg:py-32 border-b border-[#e4e4e7]">
-    <div class="landing-shell">
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
-        
-        <div class="lg:col-span-6">
-          <p class="text-xs font-semibold uppercase tracking-widest text-[#04B2D9] mb-3">
-            Movilidad Internacional
-          </p>
-          <h2 class="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-[#18181B] leading-tight mb-6">
-            Intercambios Culturales y Becas de Verano
-          </h2>
-          <p class="text-base sm:text-lg text-[#18181B] leading-relaxed mb-6 font-normal">
-            {FARECOH_DATA.initiatives.description} Nuestros estudiantes más dedicados tienen la oportunidad de audicionar y participar en conservatorios y campamentos sinfónicos internacionales.
-          </p>
+<style>
+  .programs-header {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    background:
+      radial-gradient(ellipse 70% 60% at 20% 30%, rgba(79, 195, 245, 0.16) 0%, transparent 55%),
+      linear-gradient(180deg, #061a33 0%, #0b2545 100%);
+    color: var(--color-inst-ivory);
+    padding-top: clamp(8rem, 14vw, 12rem);
+    min-height: 60vh;
+    display: flex;
+    align-items: center;
+  }
 
-          <div class="space-y-4 pt-4 border-t border-[#e4e4e7] text-sm text-[#3f3f46]">
-            <div>
-              <span class="font-bold text-[#18181B] block mb-1">Destinos de Movilidad Estudiantil</span>
-              <p>Alianzas con el International Music Camp en Estados Unidos y encuentros orquestales en México y Centroamérica.</p>
-            </div>
-            <div>
-              <span class="font-bold text-[#18181B] block mb-1">Talleres con Maestros Visitantes</span>
-              <p>Músicos profesionales y directores de renombre internacional imparten clases magistrales gratuitas en Valle de Ángeles.</p>
-            </div>
-          </div>
-        </div>
+  .programs-header__canvas {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    opacity: 0.85;
+  }
 
-        <div class="lg:col-span-6">
-          <figure class="overflow-hidden border border-[#e4e4e7] bg-[#091118]">
-            <img
-              src="/images/fotografias/IMG_6843.webp"
-              alt="Estudiantes de FARECOH en campamento musical internacional con banderas mundiales"
-              class="w-full aspect-[4/3] object-cover"
-              loading="lazy"
-              width="800"
-              height="600"
-            />
-            <figcaption class="p-4 bg-white border-t border-[#e4e4e7] text-xs text-[#71717a] flex justify-between">
-              <span class="font-medium text-[#18181B]">Estudiantes en Programa de Movilidad</span>
-              <span>Becas de Verano Internacionales</span>
-            </figcaption>
-          </figure>
-        </div>
+  .programs-header__inner {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    max-width: 60rem;
+  }
 
-      </div>
-    </div>
-  </section>
+  .programs-header__title {
+    margin: 0;
+    color: var(--color-inst-ivory);
+    max-width: 22ch;
+  }
 
-  <!-- CTA para Admisiones y Apadrinamiento de Instrumentos -->
-  <section class="landing-section bg-white py-24 lg:py-32">
-    <div class="landing-shell max-w-3xl mx-auto text-center">
-      <p class="text-xs font-semibold uppercase tracking-widest text-[#0378A6] mb-3">
-        Participación Comunitaria
-      </p>
-      <h2 class="font-serif text-3xl sm:text-4xl font-bold tracking-tight text-[#18181B] mb-6 text-balance">
-        ¿Deseas inscribir a un estudiante o apadrinar un instrumento?
-      </h2>
-      <p class="text-base sm:text-lg text-[#3f3f46] leading-relaxed mb-10 font-normal text-pretty">
-        Nuestras puertas están abiertas permanentemente para niños y jóvenes con vocación artística, así como para personas e instituciones que deseen apadrinar instrumentos musicales o becas de estudio.
-      </p>
-      <div class="flex flex-wrap items-center justify-center gap-4">
-        <a
-          href={`mailto:${site.email}?subject=${encodeURIComponent("Información de inscripción a programas FARECOH")}`}
-          class="inline-flex min-h-[48px] items-center justify-center rounded-lg bg-[#0378A6] px-8 py-3 text-sm font-semibold text-white transition-[background-color,color,transform] duration-200 hover:bg-[#04B2D9] hover:text-[#011e2a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#04B2D9] focus-visible:ring-offset-2 active:scale-[0.98]"
-        >
-          Contactar para Admisión
-        </a>
-        <a
-          href="/nosotros"
-          class="inline-flex min-h-[48px] items-center justify-center rounded-lg border border-[#e4e4e7] bg-[#fcfbfa] px-8 py-3 text-sm font-semibold text-[#18181B] transition-[background-color,border-color,transform] duration-200 hover:border-[#0378A6] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0378A6] focus-visible:ring-offset-2 active:scale-[0.98]"
-        >
-          Conocer la Fundación
-        </a>
-      </div>
-    </div>
-  </section>
-</Layout>
+  .programs-header__title em {
+    font-style: italic;
+    font-weight: 700;
+    color: var(--color-inst-cyan);
+    font-variation-settings: "wdth" 110, "wght" 700;
+  }
 
+  .programs-header__lead {
+    margin: 0;
+    max-width: 44rem;
+  }
+
+  .programs-list {
+    background: var(--color-inst-ivory-bright);
+  }
+
+  .programs-list__items {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 1.5rem;
+  }
+
+  @media (min-width: 1024px) {
+    .programs-list__items {
+      gap: 2rem;
+    }
+  }
+
+  .programs-list__item:nth-child(odd) {
+    margin-right: 0;
+  }
+
+  .programs-list__item:nth-child(even) {
+    margin-left: 0;
+  }
+
+  @media (min-width: 1024px) {
+    .programs-list__item:nth-child(odd) {
+      margin-right: clamp(0px, 8vw, 6rem);
+    }
+
+    .programs-list__item:nth-child(even) {
+      margin-left: clamp(0px, 8vw, 6rem);
+    }
+  }
+
+  .programs-list__card {
+    display: grid;
+    gap: 1.5rem;
+    padding: 2.5rem;
+    background: var(--color-inst-ivory);
+    border: 1px solid color-mix(in srgb, var(--color-inst-deep) 10%, transparent);
+    border-left: 3px solid var(--color-inst-deep);
+  }
+
+  @media (min-width: 768px) {
+    .programs-list__card {
+      grid-template-columns: minmax(0, 5.5rem) minmax(0, 1fr) auto;
+      align-items: start;
+      gap: 2rem;
+    }
+  }
+
+  .programs-list__card-head {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .programs-list__card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .programs-list__card-title {
+    margin: 0;
+    color: var(--color-inst-deep);
+    max-width: 24ch;
+    text-wrap: balance;
+  }
+
+  .programs-list__card-category {
+    color: var(--color-inst-graphite-soft);
+  }
+
+  .programs-list__card-foot {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding-top: 1rem;
+    border-top: 1px solid color-mix(in srgb, var(--color-inst-deep) 10%, transparent);
+    grid-column: 1 / -1;
+  }
+
+  @media (min-width: 768px) {
+    .programs-list__card-foot {
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: center;
+      grid-column: 2 / -1;
+    }
+  }
+
+  .programs-list__card-serial {
+    font-size: 0.75rem;
+    color: var(--color-inst-graphite-soft);
+    letter-spacing: 0.12em;
+  }
+
+  /* Movilidad */
+  .programs-mobility {
+    background:
+      linear-gradient(180deg, var(--color-inst-ivory) 0%, var(--color-inst-ivory-bright) 100%);
+  }
+
+  .programs-mobility__grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 3rem;
+    align-items: start;
+  }
+
+  @media (min-width: 1024px) {
+    .programs-mobility__grid {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 5rem 6rem;
+    }
+  }
+
+  .programs-mobility__head {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .programs-mobility__head .inst-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.85rem;
+  }
+
+  .programs-mobility__title {
+    margin: 0;
+    max-width: 20ch;
+    color: var(--color-inst-deep);
+  }
+
+  .programs-mobility__destinations {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .programs-mobility__destination {
+    display: grid;
+    grid-template-columns: 4rem 1fr;
+    gap: 1.5rem;
+    align-items: baseline;
+    padding: 1.5rem 0;
+    border-top: 1px solid color-mix(in srgb, var(--color-inst-deep) 14%, transparent);
+  }
+
+  .programs-mobility__destination:last-child {
+    border-bottom: 1px solid color-mix(in srgb, var(--color-inst-deep) 14%, transparent);
+  }
+
+  .programs-mobility__destination-index {
+    font-size: 0.75rem;
+    color: var(--color-inst-cyan-deep);
+    letter-spacing: 0.1em;
+  }
+
+  .programs-mobility__destination-name {
+    margin: 0 0 0.25rem;
+    font-family: var(--font-inst-display);
+    font-weight: 600;
+    font-size: 1.375rem;
+    color: var(--color-inst-deep);
+    letter-spacing: -0.015em;
+  }
+</style>

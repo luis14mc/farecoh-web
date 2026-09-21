@@ -1,0 +1,128 @@
+---
+import InstitutionalLayout from "@/layouts/InstitutionalLayout.astro";
+import { FARECOH_BOARD } from "@/data/farecoh";
+
+const title = `Junta Directiva · FARECOH`;
+const description = "Gobierno institucional de FARECOH: cuerpo directivo voluntario.";
+---
+
+<InstitutionalLayout
+  title={title}
+  description={description}
+  canonicalPath="/junta-directiva"
+  active="board"
+>
+  <section class="inst-section board-header">
+    <div class="inst-shell">
+      <p class="inst-eyebrow inst-eyebrow--accent board-header__eyebrow">
+        <span class="inst-bar inst-bar--accent" aria-hidden="true"></span>
+        Gobierno institucional
+      </p>
+      <h1 class="inst-display inst-display--hero board-header__title">
+        La junta directiva que sostiene la misión.
+      </h1>
+      <p class="inst-body--lead board-header__lead">
+        Cargos ad-honorem ejercidos por profesionales y ciudadanos comprometidos
+        con el desarrollo humano a través del arte.
+      </p>
+    </div>
+  </section>
+
+  <hr class="inst-rule" />
+
+  <section class="inst-section board-list" aria-labelledby="board-list-title">
+    <div class="inst-shell">
+      <h2 id="board-list-title" class="sr-only">Listado de la junta directiva</h2>
+
+      <ol class="board-list__items" role="list">
+        {
+          FARECOH_BOARD.map((member, idx) => (
+            <li class="inst-board-item">
+              <span class="inst-board-item__index">
+                {String(idx + 1).padStart(2, "0")}
+              </span>
+              <div class="board-list__cell">
+                <p class="inst-display board-list__name">{member.name}</p>
+                <p class="inst-eyebrow inst-eyebrow--ink board-list__role">
+                  {member.role}
+                </p>
+              </div>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </section>
+
+  <section class="inst-section board-note">
+    <div class="inst-shell">
+      <p class="inst-body--lead board-note__text">
+        La junta directiva sesiona periódicamente y sus cargos son ejercidos de
+        forma voluntaria. Toda la operación institucional se sostiene gracias a
+        la cooperación internacional, los aportes solidarios y el trabajo de
+        equipo educativo.
+      </p>
+    </div>
+  </section>
+</InstitutionalLayout>
+
+<style>
+  .board-header {
+    padding-top: clamp(8rem, 14vw, 12rem);
+    background: var(--color-inst-ivory-bright);
+  }
+
+  .board-header__eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.85rem;
+  }
+
+  .board-header__title {
+    margin: 1.5rem 0 0;
+    max-width: 22ch;
+    color: var(--color-inst-deep);
+  }
+
+  .board-header__lead {
+    margin: 2rem 0 0;
+    max-width: 44rem;
+  }
+
+  .board-list {
+    background: var(--color-inst-ivory);
+  }
+
+  .board-list__items {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .board-list__cell {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .board-list__name {
+    margin: 0;
+    font-size: clamp(1.5rem, 2.5vw, 2rem);
+    color: var(--color-inst-deep);
+    text-wrap: balance;
+  }
+
+  .board-list__role {
+    color: var(--color-inst-cyan-deep);
+  }
+
+  .board-note {
+    background: var(--color-inst-ivory-bright);
+    border-top: 1px solid color-mix(in srgb, var(--color-inst-deep) 8%, transparent);
+  }
+
+  .board-note__text {
+    max-width: 48rem;
+    margin: 0;
+  }
+</style>

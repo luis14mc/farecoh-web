@@ -1,0 +1,349 @@
+---
+import InstitutionalLayout from "@/layouts/InstitutionalLayout.astro";
+import PhotoStrip from "@/components/institutional/PhotoStrip.astro";
+import { FARECOH_METADATA, FARECOH_NARRATIVE, INSTITUTIONAL_STATS } from "@/data/farecoh";
+
+const title = `Sobre nosotros · ${FARECOH_METADATA.acronym}`;
+const description = FARECOH_NARRATIVE.about;
+const foundationYear = FARECOH_METADATA.established;
+const yearsOfService = new Date().getFullYear() - foundationYear;
+---
+
+<InstitutionalLayout
+  title={title}
+  description={description}
+  canonicalPath="/sobre-nosotros"
+  active="about"
+>
+  <!-- Encabezado editorial con número grande de fondo -->
+  <section class="inst-section about-header">
+    <div class="inst-shell about-header__grid">
+      <div class="about-header__meta">
+        <p class="inst-eyebrow inst-eyebrow--accent">
+          <span class="inst-bar inst-bar--accent" aria-hidden="true"></span>
+          Sobre la fundación
+        </p>
+        <h1 class="inst-display inst-display--hero about-header__title">
+          Una práctica artística rigurosa al servicio de la formación ciudadana.
+        </h1>
+      </div>
+
+      <div class="about-header__number" aria-hidden="true">
+        <span class="inst-mono">{String(yearsOfService).padStart(2, "0")}</span>
+        <small>años</small>
+      </div>
+    </div>
+  </section>
+
+  <hr class="inst-rule" />
+
+  <!-- Galería fundacional -->
+  <PhotoStrip
+    eyebrow="Galería institucional"
+    caption="Veintitrés años formando con el arte."
+    photos={[
+      { src: "/images/fotografias/IMG_6835.webp", alt: "Orquesta en concierto", span: "wide" },
+      { src: "/images/fotografias/IMG_6837.webp", alt: "Coro institucional", span: "square" },
+      { src: "/images/fotografias/IMG_6841.webp", alt: "Trabajo con docentes", span: "square" },
+      { src: "/images/fotografias/IMG_6845.webp", alt: "Jóvenes en escena", span: "tall" },
+      { src: "/images/fotografias/IMG_6848.webp", alt: "Acto institucional", span: "wide" },
+      { src: "/images/fotografias/IMG_6829.webp", alt: "Práctica pedagógica", span: "square" },
+    ]}
+  />
+
+  <!-- Manifiesto -->
+  <section class="inst-section about-manifesto" aria-labelledby="manifesto-title">
+    <div class="inst-shell about-manifesto__grid">
+      <p class="inst-eyebrow inst-eyebrow--accent about-manifesto__eyebrow">
+        <span class="inst-bar inst-bar--accent" aria-hidden="true"></span>
+        Manifiesto
+      </p>
+      <div>
+        <h2 id="manifesto-title" class="inst-quote">
+          <span class="inst-quote__mark">“</span>
+          {FARECOH_NARRATIVE.about}
+        </h2>
+      </div>
+    </div>
+  </section>
+
+  <!-- Misión & Visión apiladas, asimétricas -->
+  <section class="inst-section about-mv" aria-labelledby="mv-title">
+    <div class="inst-shell">
+      <h2 id="mv-title" class="sr-only">Misión y visión</h2>
+
+      <article class="about-mv__block about-mv__block--shifted">
+        <header class="about-mv__head">
+          <span class="inst-mono about-mv__index">01 — Misión</span>
+        </header>
+        <p class="inst-body--lead">{FARECOH_NARRATIVE.mission}</p>
+      </article>
+
+      <article class="about-mv__block about-mv__block--opposite">
+        <header class="about-mv__head">
+          <span class="inst-mono about-mv__index">02 — Visión</span>
+        </header>
+        <p class="inst-body--lead">{FARECOH_NARRATIVE.vision}</p>
+      </article>
+    </div>
+  </section>
+
+  <!-- Línea de tiempo sintética (no lorem ipsum: datos reales) -->
+  <section class="inst-section about-foundation" aria-labelledby="foundation-title">
+    <div class="inst-shell">
+      <header class="inst-marker">
+        <span class="inst-marker__index">03</span>
+        <div>
+          <p class="inst-marker__label">Datos fundamentales</p>
+          <h2 id="foundation-title" class="inst-marker__title">
+            Lo que somos, sin adornos.
+          </h2>
+        </div>
+      </header>
+
+      <dl class="about-foundation__grid">
+        {
+          INSTITUTIONAL_STATS.map((stat) => (
+            <div class="about-foundation__cell">
+              <dt class="inst-eyebrow inst-eyebrow--ink">{stat.label}</dt>
+              <dd class="inst-display inst-display--lg about-foundation__value">
+                {stat.label === "Años de trayectoria" ? `+${yearsOfService}` : stat.value}
+              </dd>
+              <dd class="inst-body--small">{stat.caption}</dd>
+            </div>
+          ))
+        }
+        <div class="about-foundation__cell">
+          <dt class="inst-eyebrow inst-eyebrow--ink">Sede legal</dt>
+          <dd class="inst-body--lead about-foundation__seat">
+            {FARECOH_METADATA.legalSeat}
+          </dd>
+          <dd class="inst-body--small">Fundada en {foundationYear}</dd>
+        </div>
+      </dl>
+    </div>
+  </section>
+
+  <section class="inst-section about-cta">
+    <div class="inst-shell about-cta__inner">
+      <h2 class="inst-display inst-display--xl about-cta__title">
+        Conoce los programas que sostienen esta misión.
+      </h2>
+      <a href="/programas" class="inst-cta inst-cta--solid">
+        Ver programas
+        <span class="inst-cta__arrow" aria-hidden="true"></span>
+      </a>
+    </div>
+  </section>
+</InstitutionalLayout>
+
+<style>
+  .about-header {
+    padding-top: clamp(8rem, 14vw, 12rem);
+    background: var(--color-inst-ivory-bright);
+  }
+
+  .about-header__grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 3rem;
+    align-items: end;
+  }
+
+  @media (min-width: 1024px) {
+    .about-header__grid {
+      grid-template-columns: minmax(0, 1.4fr) auto;
+      gap: 4rem;
+    }
+  }
+
+  .about-header__meta {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .about-header__meta .inst-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.85rem;
+  }
+
+  .about-header__title {
+    margin: 0;
+    max-width: 22ch;
+    color: var(--color-inst-deep);
+  }
+
+  .about-header__number {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.25rem;
+    color: var(--color-inst-deep);
+  }
+
+  .about-header__number span {
+    font-size: clamp(6rem, 16vw, 13rem);
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: -0.05em;
+  }
+
+  .about-header__number small {
+    font-family: var(--font-inst-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-inst-cyan-deep);
+  }
+
+  .about-manifesto {
+    background: var(--color-inst-ivory);
+  }
+
+  .about-manifesto__grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+
+  @media (min-width: 1024px) {
+    .about-manifesto__grid {
+      grid-template-columns: 12rem 1fr;
+      gap: 4rem;
+      align-items: start;
+    }
+  }
+
+  .about-manifesto__eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding-top: 1rem;
+  }
+
+  .about-mv {
+    background: var(--color-inst-ivory-bright);
+  }
+
+  .about-mv__block {
+    display: grid;
+    gap: 1.5rem;
+    max-width: 52rem;
+    padding-block: clamp(2rem, 4vw, 3rem);
+    border-top: 1px solid color-mix(in srgb, var(--color-inst-deep) 12%, transparent);
+  }
+
+  .about-mv__block--shifted {
+    margin-left: 0;
+  }
+
+  .about-mv__block--opposite {
+    margin-left: 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--color-inst-deep) 12%, transparent);
+  }
+
+  @media (min-width: 1024px) {
+    .about-mv__block--shifted {
+      margin-left: clamp(0px, 8vw, 5rem);
+    }
+
+    .about-mv__block--opposite {
+      margin-left: auto;
+    }
+  }
+
+  .about-mv__head {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .about-mv__index {
+    font-size: 0.75rem;
+    color: var(--color-inst-cyan-deep);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+
+  .about-foundation {
+    background: var(--color-inst-ivory);
+  }
+
+  .about-foundation__grid {
+    margin: 3rem 0 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+  }
+
+  @media (min-width: 768px) {
+    .about-foundation__grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 3rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .about-foundation__grid {
+      grid-template-columns: repeat(4, 1fr);
+      gap: 2.5rem;
+    }
+  }
+
+  .about-foundation__cell {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding-top: 1.5rem;
+    border-top: 2px solid var(--color-inst-deep);
+  }
+
+  .about-foundation__value {
+    margin: 0.25rem 0;
+    color: var(--color-inst-deep);
+  }
+
+  .about-foundation__seat {
+    margin: 0;
+    font-weight: 500;
+  }
+
+  .about-cta {
+    background: var(--color-inst-deep);
+    color: var(--color-inst-ivory);
+  }
+
+  .about-cta__inner {
+    display: grid;
+    gap: 2rem;
+    align-items: center;
+  }
+
+  @media (min-width: 768px) {
+    .about-cta__inner {
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 4rem;
+    }
+  }
+
+  .about-cta__title {
+    margin: 0;
+    color: var(--color-inst-ivory);
+    max-width: 24ch;
+  }
+
+  .about-cta .inst-cta {
+    background: var(--color-inst-cyan);
+    color: var(--color-inst-deep);
+    border-color: var(--color-inst-cyan);
+  }
+
+  .about-cta .inst-cta:hover {
+    background: var(--color-inst-ivory);
+    border-color: var(--color-inst-ivory);
+    color: var(--color-inst-deep);
+  }
+</style>

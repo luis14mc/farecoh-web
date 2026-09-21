@@ -1,0 +1,11 @@
+---
+import Orchestra3D from "@/components/canvas/Orchestra3D";
+
+interface Props {
+  readonly className?: string;
+}
+
+const { className } = Astro.props;
+---
+
+<Orchestra3D client:only="react" className={className} />
