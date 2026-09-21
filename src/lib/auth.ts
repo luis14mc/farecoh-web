@@ -2,11 +2,14 @@ import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import bcrypt from "bcryptjs";
 import type { APIContext, AstroCookies } from "astro";
 import { sql } from "@/lib/db";
+import { db } from "@/lib/db-client";
+import type { StaffRole } from "@/lib/roles";
 
-export type StaffRole = "super_admin" | "event_manager" | "seller" | "checkin_operator";
+export { ROLE_LABELS, STAFF_ROLE_LABELS, type StaffRole } from "@/lib/roles";
 
 export interface UserProfile {
   id: string;
+  auth_user_id?: string;
   email: string;
   full_name: string;
   role_id: string;
@@ -34,17 +37,7 @@ const SESSION_REFRESH_MS = 1000 * 60 * 60 * 24; // refresh after 1 day
 const SESSION_GRACE_PERIOD_MS = 1000 * 60 * 60; // expire within grace if clock skew
 const BCRYPT_COST = 12;
 
-export const ROLE_LABELS: Record<StaffRole, string> = {
-  super_admin: "Super administrador",
-  event_manager: "Gestor de eventos",
-  seller: "Vendedor",
-  checkin_operator: "Operador de acceso",
-};
-
-/** @deprecated Use ROLE_LABELS instead */
-export const STAFF_ROLE_LABELS = ROLE_LABELS;
-
-export function getSessionSecret(): string {
+function getSessionSecret(): string {
   const secret = process.env.SESSION_SECRET;
   if (!secret || secret.length < 16) {
     throw new Error("SESSION_SECRET env var must be set (>= 16 chars).");
@@ -74,6 +67,24 @@ function buildCookieValue(sessionId: string): string {
 
 export function isAuthConfigured(): boolean {
   return Boolean(process.env.SESSION_SECRET && process.env.DATABASE_URL);
+}
+
+/** @deprecated Use db from @/lib/db-client instead. Kept for compatibility. */
+export type PublicSupabaseConfig = Record<string, never>;
+
+/** @deprecated Use db from @/lib/db-client instead. Kept for compatibility. */
+export function getPublicSupabaseConfig(): PublicSupabaseConfig {
+  return {};
+}
+
+/** @deprecated Use db.from(table) from @/lib/db-client instead. */
+export function createSupabaseServerClient(_context?: APIContext) {
+  return db;
+}
+
+/** @deprecated Use db.from(table) from @/lib/db-client instead. */
+export function createSupabaseBrowserClient() {
+  return db;
 }
 
 export async function hashPassword(password: string): Promise<string> {

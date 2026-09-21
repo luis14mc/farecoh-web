@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
-import { ROLE_LABELS, type UserProfile, createSupabaseBrowserClient } from "@/lib/auth";
+import { ROLE_LABELS } from "@/lib/roles";
 import type { AdminNavItem, AdminNavKey } from "@/lib/admin-nav";
 import { ADMIN_NAV_ICONS, LogOut, Menu } from "@/lib/admin-nav-icons";
 

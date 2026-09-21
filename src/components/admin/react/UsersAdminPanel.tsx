@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Pencil, Plus, ShieldAlert, UserPlus } from "lucide-react";
-import { ROLE_LABELS, type StaffRole } from "@/lib/auth";
+import { ROLE_LABELS, type StaffRole } from "@/lib/roles";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

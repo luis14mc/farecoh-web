@@ -1,7 +1,7 @@
 import { Calendar, LogOut } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ROLE_LABELS, type UserProfile, createSupabaseBrowserClient } from "@/lib/auth";
+import { ROLE_LABELS } from "@/lib/roles";
 
 interface AdminPageHeaderProps {
   title: string;

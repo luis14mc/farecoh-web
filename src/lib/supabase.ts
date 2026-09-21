@@ -1,22 +1,13 @@
-import { createClient } from "@supabase/supabase-js";
+/**
+ * Database client singleton (Supabase-compatible API surface).
+ *
+ * Migrating from Supabase to plain Postgres — this re-exports the same
+ * `db` instance that pages, services, and components have always used
+ * via `supabase.from(...)` / `supabase.rpc(...)`.
+ *
+ * Prefer `sql\`…\`` from `@/lib/db` for new code.
+ */
+import { db } from "@/lib/db-client";
 
-const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
-const supabaseServiceKey = import.meta.env.SUPABASE_SERVICE_ROLE_KEY;
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error("PUBLIC_SUPABASE_URL and PUBLIC_SUPABASE_ANON_KEY environment variables are required.");
-}
-
-// Public client used in client-side components and standard server actions
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-// Private administrative client (runs server-side ONLY) using service role to manage staff profiles and auth
-export const supabaseAdmin = supabaseServiceKey
-  ? createClient(supabaseUrl, supabaseServiceKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-      },
-    })
-  : null;
+export const supabase = db;
+export const supabaseAdmin = db;

@@ -52,7 +52,7 @@ type EventRow = {
   slug: string;
   title: string;
   description: string | null;
-  event_date: string;
+  event_date: string | Date;
   event_time: string;
   location: string;
   city: string | null;
@@ -61,19 +61,31 @@ type EventRow = {
   created_at: string;
 };
 
+function normalizeEventDate(value: string | Date): string {
+  if (typeof value === "string") return value;
+  if (value instanceof Date) {
+    const y = value.getUTCFullYear();
+    const m = String(value.getUTCMonth() + 1).padStart(2, "0");
+    const d = String(value.getUTCDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+  }
+  return String(value);
+}
+
 function mapEventRow(row: EventRow): EventData {
   const city = row.city ?? PINK_FLOYD_FALLBACK.city;
   const venue = row.location.includes(city) ? row.location : `${row.location}, ${city}`;
+  const dateStr = normalizeEventDate(row.event_date);
 
   return {
     id: row.id,
     slug: row.slug,
     name: row.title,
     description: row.description ?? PINK_FLOYD_FALLBACK.description,
-    date: row.event_date,
-    dateDisplay: formatEventDateDisplay(row.event_date),
+    date: dateStr,
+    dateDisplay: formatEventDateDisplay(dateStr),
     time: row.event_time,
-    startsAtIso: buildEventStartIso(row.event_date, row.event_time),
+    startsAtIso: buildEventStartIso(dateStr, row.event_time),
     venue,
     city,
     ticket_price: Number(row.ticket_price),

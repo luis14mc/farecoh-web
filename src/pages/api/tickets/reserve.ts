@@ -27,9 +27,13 @@ export const POST: APIRoute = async ({ request }) => {
     });
   }
 
+  console.log("[reserve] payload:", JSON.stringify(payload));
+
   const parsed = ticketOrderSchema.safeParse(payload);
   if (!parsed.success) {
-    const message = parsed.error.issues[0]?.message ?? "Datos de reservación inválidos.";
+    const message = parsed.error.issues
+      .map((issue) => `${issue.path.join(".")}: ${issue.message}`)
+      .join("; ") ?? "Datos de reservación inválidos.";
     return new Response(JSON.stringify({ error: message }), {
       status: 400,
       headers: { "content-type": "application/json" },
@@ -37,7 +41,7 @@ export const POST: APIRoute = async ({ request }) => {
   }
 
   try {
-    const order = await createTicketOrder(supabase, parsed.data);
+    const order = await createTicketOrder(parsed.data);
 
     void notifyStaffOfNewReservation({
       ticketCodes: order.ticketCodes,

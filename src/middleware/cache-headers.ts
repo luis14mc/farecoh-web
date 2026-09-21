@@ -22,6 +22,7 @@ const MIN_COMPRESS_BYTES = 512;
 export const cacheHeaders = defineMiddleware(async (context, next) => {
   const response = await next();
   if (response.status >= 300 && response.status < 400) return response;
+  if (context.url.pathname.startsWith("/api/")) return response;
 
   const { pathname } = context.url;
   const acceptEncoding = context.request.headers.get("accept-encoding") ?? "";
