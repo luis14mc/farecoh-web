@@ -1,10 +1,11 @@
-import { defineMiddleware } from "astro:middleware";
+import { sequence, defineMiddleware } from "astro:middleware";
 import { createSupabaseServerClient, isAuthConfigured } from "@/lib/auth";
 import { requireAdminAccess, roleHomePath } from "@/lib/rbac";
+import { cacheHeaders } from "@/middleware/cache-headers";
 
 const PUBLIC_ADMIN_PATHS = new Set(["/admin/login", "/admin/no-autorizado", "/admin/reset-password"]);
 
-export const onRequest = defineMiddleware(async (context, next) => {
+const adminGuard = defineMiddleware(async (context, next) => {
   const { pathname } = context.url;
 
   if (!pathname.startsWith("/admin")) return next();
@@ -48,6 +49,8 @@ export const onRequest = defineMiddleware(async (context, next) => {
   context.locals.staffProfile = access.profile ?? undefined;
   return next();
 });
+
+export const onRequest = sequence(adminGuard, cacheHeaders);
 
 function normalizePath(pathname: string): string {
   return pathname.replace(/\/$/, "") || "/";

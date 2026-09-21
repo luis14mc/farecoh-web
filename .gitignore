@@ -26,5 +26,6 @@ pnpm-debug.log*
 # local tooling/cache
 .pnpm-store/
 .vercel/
+.railway/
 .agents/
 skills-lock.json
