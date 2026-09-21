@@ -101,22 +101,20 @@ const stats = INSTITUTIONAL_STATS.map((stat) =>
   ──────────────────────────────────────────────────────────────── -->
   <section class="inst-section programs-inst" aria-labelledby="programs-title">
     <div class="inst-shell">
-      <header class="inst-marker">
-        <span class="inst-marker__index">02</span>
-        <div>
-          <p class="inst-marker__label">Programas activos</p>
-          <h2 id="programs-title" class="inst-marker__title">
-            Cuatro disciplinas para una formación integral.
-          </h2>
-        </div>
+      <header class="inst-section-head">
+        <p class="inst-eyebrow inst-eyebrow--accent">
+          <span class="inst-bar inst-bar--accent" aria-hidden="true"></span>
+          02 — Programas activos
+        </p>
+        <h2 id="programs-title" class="inst-display inst-display--xl inst-section-head__title">
+          Cuatro disciplinas para una formación integral.
+        </h2>
       </header>
 
       <ol class="programs-inst__list" role="list">
         {
-          FARECOH_PROGRAMS.map((program, index) => (
-            <li
-              class={`programs-inst__item programs-inst__item--${index % 2 === 0 ? "even" : "odd"}`}
-            >
+          FARECOH_PROGRAMS.map((program) => (
+            <li class="programs-inst__item">
               <article class="inst-program-card">
                 <header class="programs-inst__card-head">
                   <span class="inst-mono-index">{program.index}</span>
@@ -282,7 +280,7 @@ const stats = INSTITUTIONAL_STATS.map((stat) =>
 
   @media (min-width: 1024px) {
     .hero-inst__title {
-      max-width: 12ch;
+      max-width: 24ch;
     }
   }
 
@@ -421,27 +419,26 @@ const stats = INSTITUTIONAL_STATS.map((stat) =>
     padding: 0;
     margin: 3rem 0 0;
     display: grid;
+    grid-template-columns: 1fr;
     gap: 1.5rem;
   }
 
-  @media (min-width: 1024px) {
+  @media (min-width: 768px) {
     .programs-inst__list {
+      grid-template-columns: repeat(2, 1fr);
       gap: 2rem;
     }
   }
 
-  .programs-inst__item--even {
-    margin-right: 0;
+  .programs-inst__item {
+    height: 100%;
   }
 
-  @media (min-width: 1024px) {
-    .programs-inst__item--odd {
-      margin-left: clamp(2rem, 12vw, 9rem);
-    }
-
-    .programs-inst__item--even {
-      margin-right: clamp(2rem, 12vw, 9rem);
-    }
+  .programs-inst__item .inst-program-card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
   }
 
   .programs-inst__card-head {
@@ -455,7 +452,6 @@ const stats = INSTITUTIONAL_STATS.map((stat) =>
     margin: 0;
     color: var(--color-inst-deep);
     text-wrap: balance;
-    max-width: 22ch;
   }
 
   /* ── Stats ── */

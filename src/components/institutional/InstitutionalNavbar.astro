@@ -41,57 +41,59 @@ const navItems: ReadonlyArray<{
   class={`inst-nav ${transparent ? "inst-nav--transparent" : ""}`}
   id="main-header"
 >
-  <a href="/" class="inst-nav__brand" aria-label={`${FARECOH_METADATA.acronym} — Inicio`}>
-    <FarecohLogo variant="stacked" theme="color" size="nav" loading="eager" />
-  </a>
-
-  <nav aria-label="Navegación institucional" class="inst-nav__list-wrap">
-    <ul class="inst-nav__list">
-      {
-        navItems.map((item) => (
-          <li>
-            <a
-              href={item.href}
-              class="inst-nav__link"
-              aria-current={resolved === item.key ? "page" : undefined}
-            >
-              {item.label}
-            </a>
-          </li>
-        ))
-      }
-    </ul>
-  </nav>
-
-  <div class="inst-nav__actions">
-    <a
-      href="/donaciones"
-      class="inst-cta inst-cta--solid inst-nav__cta"
-      aria-label="Donar a FARECOH"
-    >
-      Donar
-      <span class="inst-cta__arrow" aria-hidden="true"></span>
+  <div class="inst-shell inst-nav__inner">
+    <a href="/" class="inst-nav__brand" aria-label={`${FARECOH_METADATA.acronym} — Inicio`}>
+      <FarecohLogo variant="stacked" theme="color" size="nav" loading="eager" />
     </a>
-    <button
-      type="button"
-      class="inst-nav__menu-btn"
-      aria-label="Abrir menú de navegación"
-      aria-expanded="false"
-      aria-controls="inst-mobile-panel"
-      data-inst-menu-open
-    >
-      <span class="sr-only">Menú</span>
-      <svg
-        width="22"
-        height="16"
-        viewBox="0 0 22 16"
-        fill="none"
-        aria-hidden="true"
-        focusable="false"
+
+    <nav aria-label="Navegación institucional" class="inst-nav__list-wrap">
+      <ul class="inst-nav__list">
+        {
+          navItems.map((item) => (
+            <li>
+              <a
+                href={item.href}
+                class="inst-nav__link"
+                aria-current={resolved === item.key ? "page" : undefined}
+              >
+                {item.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+
+    <div class="inst-nav__actions">
+      <a
+        href="/donaciones"
+        class="inst-cta inst-cta--solid inst-nav__cta"
+        aria-label="Donar a FARECOH"
       >
-        <path d="M1 2h20M1 8h20M1 14h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-      </svg>
-    </button>
+        Donar
+        <span class="inst-cta__arrow" aria-hidden="true"></span>
+      </a>
+      <button
+        type="button"
+        class="inst-nav__menu-btn"
+        aria-label="Abrir menú de navegación"
+        aria-expanded="false"
+        aria-controls="inst-mobile-panel"
+        data-inst-menu-open
+      >
+        <span class="sr-only">Menú</span>
+        <svg
+          width="22"
+          height="16"
+          viewBox="0 0 22 16"
+          fill="none"
+          aria-hidden="true"
+          focusable="false"
+        >
+          <path d="M1 2h20M1 8h20M1 14h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+        </svg>
+      </button>
+    </div>
   </div>
 </header>
 

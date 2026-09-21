@@ -53,17 +53,15 @@ const yearsOfService = new Date().getFullYear() - foundationYear;
 
   <!-- Manifiesto -->
   <section class="inst-section about-manifesto" aria-labelledby="manifesto-title">
-    <div class="inst-shell about-manifesto__grid">
-      <p class="inst-eyebrow inst-eyebrow--accent about-manifesto__eyebrow">
+    <div class="inst-shell about-manifesto__inner">
+      <p class="inst-eyebrow inst-eyebrow--accent">
         <span class="inst-bar inst-bar--accent" aria-hidden="true"></span>
         Manifiesto
       </p>
-      <div>
-        <h2 id="manifesto-title" class="inst-quote">
-          <span class="inst-quote__mark">“</span>
-          {FARECOH_NARRATIVE.about}
-        </h2>
-      </div>
+      <h2 id="manifesto-title" class="inst-quote">
+        <span class="inst-quote__mark">“</span>
+        {FARECOH_NARRATIVE.about}
+      </h2>
     </div>
   </section>
 
@@ -72,33 +70,35 @@ const yearsOfService = new Date().getFullYear() - foundationYear;
     <div class="inst-shell">
       <h2 id="mv-title" class="sr-only">Misión y visión</h2>
 
-      <article class="about-mv__block about-mv__block--shifted">
-        <header class="about-mv__head">
-          <span class="inst-mono about-mv__index">01 — Misión</span>
-        </header>
-        <p class="inst-body--lead">{FARECOH_NARRATIVE.mission}</p>
-      </article>
+      <div class="about-mv__grid">
+        <article class="about-mv__block">
+          <header class="about-mv__head">
+            <span class="inst-mono about-mv__index">01 — Misión</span>
+          </header>
+          <p class="inst-body--lead">{FARECOH_NARRATIVE.mission}</p>
+        </article>
 
-      <article class="about-mv__block about-mv__block--opposite">
-        <header class="about-mv__head">
-          <span class="inst-mono about-mv__index">02 — Visión</span>
-        </header>
-        <p class="inst-body--lead">{FARECOH_NARRATIVE.vision}</p>
-      </article>
+        <article class="about-mv__block">
+          <header class="about-mv__head">
+            <span class="inst-mono about-mv__index">02 — Visión</span>
+          </header>
+          <p class="inst-body--lead">{FARECOH_NARRATIVE.vision}</p>
+        </article>
+      </div>
     </div>
   </section>
 
   <!-- Línea de tiempo sintética (no lorem ipsum: datos reales) -->
   <section class="inst-section about-foundation" aria-labelledby="foundation-title">
     <div class="inst-shell">
-      <header class="inst-marker">
-        <span class="inst-marker__index">03</span>
-        <div>
-          <p class="inst-marker__label">Datos fundamentales</p>
-          <h2 id="foundation-title" class="inst-marker__title">
-            Lo que somos, sin adornos.
-          </h2>
-        </div>
+      <header class="inst-section-head">
+        <p class="inst-eyebrow inst-eyebrow--accent">
+          <span class="inst-bar inst-bar--accent" aria-hidden="true"></span>
+          03 — Datos fundamentales
+        </p>
+        <h2 id="foundation-title" class="inst-display inst-display--xl inst-section-head__title">
+          Lo que somos, sin adornos.
+        </h2>
       </header>
 
       <dl class="about-foundation__grid">
@@ -147,13 +147,14 @@ const yearsOfService = new Date().getFullYear() - foundationYear;
     display: grid;
     grid-template-columns: 1fr;
     gap: 2.5rem;
-    align-items: end;
+    align-items: start;
   }
 
   @media (min-width: 1024px) {
     .about-header__grid {
-      grid-template-columns: minmax(0, 1.4fr) auto;
+      grid-template-columns: minmax(0, 1fr) auto;
       gap: 4rem;
+      align-items: center;
     }
   }
 
@@ -208,56 +209,36 @@ const yearsOfService = new Date().getFullYear() - foundationYear;
     background: var(--color-inst-ivory);
   }
 
-  .about-manifesto__grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 2rem;
-  }
-
-  @media (min-width: 1024px) {
-    .about-manifesto__grid {
-      grid-template-columns: 12rem 1fr;
-      gap: 4rem;
-      align-items: start;
-    }
-  }
-
-  .about-manifesto__eyebrow {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.85rem;
-    padding-top: 1rem;
+  .about-manifesto__inner {
+    max-width: 54rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
   }
 
   .about-mv {
     background: var(--color-inst-ivory-bright);
   }
 
-  .about-mv__block {
+  .about-mv__grid {
     display: grid;
-    gap: 1.5rem;
-    max-width: 52rem;
-    padding-block: clamp(2rem, 4vw, 3rem);
-    border-top: 1px solid color-mix(in srgb, var(--color-inst-deep) 12%, transparent);
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
   }
 
-  .about-mv__block--shifted {
-    margin-left: 0;
-  }
-
-  .about-mv__block--opposite {
-    margin-left: 0;
-    border-bottom: 1px solid color-mix(in srgb, var(--color-inst-deep) 12%, transparent);
-  }
-
-  @media (min-width: 1024px) {
-    .about-mv__block--shifted {
-      margin-left: clamp(0px, 8vw, 5rem);
+  @media (min-width: 768px) {
+    .about-mv__grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 3.5rem;
     }
+  }
 
-    .about-mv__block--opposite {
-      margin-left: auto;
-    }
+  .about-mv__block {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    padding-top: 1.75rem;
+    border-top: 1px solid color-mix(in srgb, var(--color-inst-deep) 14%, transparent);
   }
 
   .about-mv__head {
