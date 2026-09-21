@@ -95,12 +95,15 @@ const {
       const menuBtn = document.querySelector("[data-inst-menu-open]");
       const closeBtn = document.querySelector("[data-inst-menu-close]");
       const panel = document.querySelector("[data-inst-mobile-panel]");
+      const backdrop = document.querySelector("[data-inst-mobile-backdrop]");
       if (
         menuBtn instanceof HTMLButtonElement &&
         panel instanceof HTMLElement
       ) {
         const open = () => {
           panel.dataset["open"] = "true";
+          if (backdrop instanceof HTMLElement) backdrop.dataset["open"] = "true";
+          menuBtn.setAttribute("aria-expanded", "true");
           document.body.style.overflow = "hidden";
           const focusable = panel.querySelector<HTMLElement>(
             "a, button:not([disabled])",
@@ -109,6 +112,8 @@ const {
         };
         const close = () => {
           panel.dataset["open"] = "false";
+          if (backdrop instanceof HTMLElement) backdrop.dataset["open"] = "false";
+          menuBtn.setAttribute("aria-expanded", "false");
           document.body.style.overflow = "";
           menuBtn.focus();
         };
@@ -116,8 +121,11 @@ const {
         if (closeBtn instanceof HTMLButtonElement) {
           closeBtn.addEventListener("click", close);
         }
+        if (backdrop instanceof HTMLElement) {
+          backdrop.addEventListener("click", close);
+        }
         panel.addEventListener("click", (event) => {
-          if (event.target instanceof HTMLAnchorElement) {
+          if (event.target instanceof HTMLAnchorElement || (event.target instanceof HTMLElement && event.target.closest("a"))) {
             close();
           }
         });

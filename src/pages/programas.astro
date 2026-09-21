@@ -149,7 +149,7 @@ const disciplineLabels: Record<string, string> = {
       radial-gradient(ellipse 70% 60% at 20% 30%, rgba(79, 195, 245, 0.16) 0%, transparent 55%),
       linear-gradient(180deg, #061a33 0%, #0b2545 100%);
     color: var(--color-inst-ivory);
-    padding-top: clamp(8rem, 14vw, 12rem);
+    padding-top: clamp(5.5rem, 10vw, 10rem);
     min-height: 60vh;
     display: flex;
     align-items: center;
@@ -228,7 +228,7 @@ const disciplineLabels: Record<string, string> = {
   .programs-list__card {
     display: grid;
     gap: 1.5rem;
-    padding: 2.5rem;
+    padding: clamp(1.25rem, 4vw, 2.5rem);
     background: var(--color-inst-ivory);
     border: 1px solid color-mix(in srgb, var(--color-inst-deep) 10%, transparent);
     border-left: 3px solid var(--color-inst-deep);
@@ -337,12 +337,21 @@ const disciplineLabels: Record<string, string> = {
   }
 
   .programs-mobility__destination {
-    display: grid;
-    grid-template-columns: 4rem 1fr;
-    gap: 1.5rem;
-    align-items: baseline;
-    padding: 1.5rem 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 1.25rem 0;
     border-top: 1px solid color-mix(in srgb, var(--color-inst-deep) 14%, transparent);
+  }
+
+  @media (min-width: 640px) {
+    .programs-mobility__destination {
+      display: grid;
+      grid-template-columns: 4rem 1fr;
+      gap: 1.5rem;
+      align-items: baseline;
+      padding: 1.5rem 0;
+    }
   }
 
   .programs-mobility__destination:last-child {

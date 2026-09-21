@@ -139,14 +139,14 @@ const yearsOfService = new Date().getFullYear() - foundationYear;
 
 <style>
   .about-header {
-    padding-top: clamp(8rem, 14vw, 12rem);
+    padding-top: clamp(5.5rem, 10vw, 10rem);
     background: var(--color-inst-ivory-bright);
   }
 
   .about-header__grid {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 3rem;
+    gap: 2.5rem;
     align-items: end;
   }
 
@@ -178,13 +178,19 @@ const yearsOfService = new Date().getFullYear() - foundationYear;
   .about-header__number {
     display: flex;
     flex-direction: column;
-    align-items: flex-end;
+    align-items: flex-start;
     gap: 0.25rem;
     color: var(--color-inst-deep);
   }
 
+  @media (min-width: 1024px) {
+    .about-header__number {
+      align-items: flex-end;
+    }
+  }
+
   .about-header__number span {
-    font-size: clamp(6rem, 16vw, 13rem);
+    font-size: clamp(5rem, 16vw, 13rem);
     font-weight: 600;
     line-height: 1;
     letter-spacing: -0.05em;
@@ -339,6 +345,13 @@ const yearsOfService = new Date().getFullYear() - foundationYear;
     background: var(--color-inst-cyan);
     color: var(--color-inst-deep);
     border-color: var(--color-inst-cyan);
+    width: 100%;
+  }
+
+  @media (min-width: 768px) {
+    .about-cta .inst-cta {
+      width: auto;
+    }
   }
 
   .about-cta .inst-cta:hover {

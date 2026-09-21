@@ -1,10 +1,9 @@
 ---
 import FarecohLogo from "@/components/layout/FarecohLogo.astro";
-import { FARECOH_METADATA } from "@/data/farecoh";
-import { logoAlt } from "@/data/logos";
+import { FARECOH_METADATA, FARECOH_CONTACT } from "@/data/farecoh";
 
 interface Props {
-  readonly active?: "home" | "about" | "programs" | "donations";
+  readonly active?: "home" | "about" | "programs" | "board" | "partners" | "donations";
   readonly transparent?: boolean;
 }
 
@@ -15,6 +14,8 @@ const resolveActive = (): Props["active"] => {
   if (path === "/") return "home";
   if (path.startsWith("/sobre-nosotros")) return "about";
   if (path.startsWith("/programas")) return "programs";
+  if (path.startsWith("/junta-directiva")) return "board";
+  if (path.startsWith("/alianzas")) return "partners";
   if (path.startsWith("/donaciones")) return "donations";
   return active;
 };
@@ -25,11 +26,14 @@ const navItems: ReadonlyArray<{
   readonly label: string;
   readonly href: string;
   readonly key: NonNullable<Props["active"]>;
+  readonly index: string;
+  readonly desc: string;
 }> = [
-  { label: "Inicio", href: "/", key: "home" },
-  { label: "Nosotros", href: "/sobre-nosotros", key: "about" },
-  { label: "Programas", href: "/programas", key: "programs" },
-  { label: "Donaciones", href: "/donaciones", key: "donations" },
+  { label: "Inicio", href: "/", key: "home", index: "01", desc: "Portada institucional" },
+  { label: "Nosotros", href: "/sobre-nosotros", key: "about", index: "02", desc: "Misión y causa social" },
+  { label: "Programas", href: "/programas", key: "programs", index: "03", desc: "Formación orquestal y coral" },
+  { label: "Junta Directiva", href: "/junta-directiva", key: "board", index: "04", desc: "Gobierno y liderazgo" },
+  { label: "Alianzas", href: "/alianzas", key: "partners", index: "05", desc: "Convenios y cooperación" },
 ];
 ---
 
@@ -76,68 +80,103 @@ const navItems: ReadonlyArray<{
       aria-controls="inst-mobile-panel"
       data-inst-menu-open
     >
+      <span class="sr-only">Menú</span>
       <svg
-        width="18"
-        height="12"
-        viewBox="0 0 18 12"
+        width="22"
+        height="16"
+        viewBox="0 0 22 16"
         fill="none"
         aria-hidden="true"
         focusable="false"
       >
-        <path d="M0 1h18M0 6h18M0 11h12" stroke="currentColor" stroke-width="1.25" />
+        <path d="M1 2h20M1 8h20M1 14h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
       </svg>
     </button>
   </div>
 </header>
+
+<!-- Mobile Navigation Drawer -->
+<div
+  class="inst-mobile-backdrop"
+  data-inst-mobile-backdrop
+  aria-hidden="true"
+></div>
 
 <div
   class="inst-mobile-panel"
   id="inst-mobile-panel"
   role="dialog"
   aria-modal="true"
-  aria-label="Menú principal"
+  aria-label="Menú principal de navegación"
   data-inst-mobile-panel
   data-open="false"
 >
-  <button
-    type="button"
-    class="inst-mobile-panel__close"
-    aria-label="Cerrar menú"
-    data-inst-menu-close
-  >
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 14 14"
-      fill="none"
-      aria-hidden="true"
-      focusable="false"
+  <div class="inst-mobile-panel__head">
+    <a href="/" class="inst-mobile-panel__brand" aria-label={`${FARECOH_METADATA.acronym} — Inicio`}>
+      <FarecohLogo variant="stacked" theme="color" size="nav" loading="eager" />
+    </a>
+    <button
+      type="button"
+      class="inst-mobile-panel__close"
+      aria-label="Cerrar menú"
+      data-inst-menu-close
     >
-      <path d="M1 1l12 12M13 1L1 13" stroke="currentColor" stroke-width="1.25" />
-    </svg>
-  </button>
-  <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:1.5rem;">
-    {
-      navItems.map((item) => (
-        <li>
-          <a
-            href={item.href}
-            class="inst-nav__link"
-            style="font-size:1.25rem;padding:0;"
-            aria-current={resolved === item.key ? "page" : undefined}
-          >
-            {item.label}
-          </a>
-        </li>
-      ))
-    }
-  </ul>
-  <a
-    href="/donaciones"
-    class="inst-cta inst-cta--solid"
-    style="margin-top:1rem;justify-content:center;"
-  >
-    Donar
-    <span class="inst-cta__arrow" aria-hidden="true"></span>
-  </a>
+      <svg
+        width="20"
+        height="20"
+        viewBox="0 0 20 20"
+        fill="none"
+        aria-hidden="true"
+        focusable="false"
+      >
+        <path d="M4 4l12 12M16 4L4 16" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+      </svg>
+    </button>
+  </div>
+
+  <div class="inst-mobile-panel__content">
+    <p class="inst-eyebrow inst-eyebrow--accent inst-mobile-panel__section-title">
+      <span class="inst-bar inst-bar--accent" aria-hidden="true"></span>
+      Menú Institucional
+    </p>
+
+    <ul class="inst-mobile-panel__nav">
+      {
+        navItems.map((item) => (
+          <li>
+            <a
+              href={item.href}
+              class="inst-mobile-panel__link"
+              aria-current={resolved === item.key ? "page" : undefined}
+            >
+              <div class="inst-mobile-panel__link-text">
+                <span class="inst-mobile-panel__link-index">{item.index}</span>
+                <span class="inst-mobile-panel__link-label">{item.label}</span>
+              </div>
+              <span class="inst-mobile-panel__link-desc">{item.desc}</span>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+
+    <div class="inst-mobile-panel__footer">
+      <a
+        href="/donaciones"
+        class="inst-cta inst-cta--solid inst-mobile-panel__cta"
+      >
+        Donar a la fundación
+        <span class="inst-cta__arrow" aria-hidden="true"></span>
+      </a>
+
+      <div class="inst-mobile-panel__contact">
+        <a href={`mailto:${FARECOH_CONTACT.email}`} class="inst-mobile-panel__contact-item">
+          {FARECOH_CONTACT.email}
+        </a>
+        <a href={`tel:${FARECOH_CONTACT.phone.replace(/\s/g, "")}`} class="inst-mobile-panel__contact-item">
+          {FARECOH_CONTACT.phone}
+        </a>
+      </div>
+    </div>
+  </div>
 </div>

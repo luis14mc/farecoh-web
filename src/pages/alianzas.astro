@@ -75,7 +75,7 @@ const regionLabels: Record<string, string> = {
 
 <style>
   .partners-header {
-    padding-top: clamp(8rem, 14vw, 12rem);
+    padding-top: clamp(5.5rem, 10vw, 10rem);
     background: var(--color-inst-ivory-bright);
   }
 
@@ -162,6 +162,13 @@ const regionLabels: Record<string, string> = {
     background: var(--color-inst-cyan);
     color: var(--color-inst-deep);
     border-color: var(--color-inst-cyan);
+    width: 100%;
+  }
+
+  @media (min-width: 768px) {
+    .partners-cta .inst-cta {
+      width: auto;
+    }
   }
 
   .partners-cta .inst-cta:hover {

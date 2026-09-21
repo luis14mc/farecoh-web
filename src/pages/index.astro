@@ -1,4 +1,4 @@
-﻿---
+---
 import InstitutionalLayout from "@/layouts/InstitutionalLayout.astro";
 import Orchestra3DCanvas from "@/components/canvas/Orchestra3DCanvas.astro";
 import PhotoStrip from "@/components/institutional/PhotoStrip.astro";
@@ -221,7 +221,7 @@ const stats = INSTITUTIONAL_STATS.map((stat) =>
 <style>
   .hero-inst {
     position: relative;
-    min-height: clamp(720px, 95vh, 1100px);
+    min-height: clamp(560px, 90svh, 1100px);
     background:
       radial-gradient(ellipse 80% 60% at 80% 30%, rgba(79, 195, 245, 0.18) 0%, transparent 60%),
       linear-gradient(180deg, #061a33 0%, #0b2545 55%, #0a1f3a 100%);
@@ -230,7 +230,7 @@ const stats = INSTITUTIONAL_STATS.map((stat) =>
     overflow: hidden;
     display: flex;
     align-items: center;
-    padding-top: 7rem;
+    padding-top: clamp(5.5rem, 12vh, 7rem);
     padding-bottom: 4rem;
   }
 
@@ -260,7 +260,7 @@ const stats = INSTITUTIONAL_STATS.map((stat) =>
   .hero-inst__grid {
     display: flex;
     flex-direction: column;
-    gap: 3rem;
+    gap: 2.5rem;
     align-items: flex-start;
     max-width: 60rem;
   }
@@ -270,8 +270,8 @@ const stats = INSTITUTIONAL_STATS.map((stat) =>
     font-family: var(--font-inst-display);
     font-weight: 700;
     font-variation-settings: "wdth" 105, "wght" 700, "opsz" 72;
-    font-size: clamp(2.25rem, 5.5vw, 5rem);
-    line-height: 1.04;
+    font-size: clamp(1.85rem, 5.5vw, 5rem);
+    line-height: 1.05;
     letter-spacing: -0.028em;
     color: var(--color-inst-ivory);
     text-wrap: balance;
@@ -294,10 +294,27 @@ const stats = INSTITUTIONAL_STATS.map((stat) =>
 
   .hero-inst__actions {
     display: flex;
-    flex-wrap: wrap;
+    flex-direction: column;
     gap: 0.75rem;
+    width: 100%;
     position: relative;
     z-index: 2;
+  }
+
+  .hero-inst__actions .inst-cta {
+    width: 100%;
+  }
+
+  @media (min-width: 640px) {
+    .hero-inst__actions {
+      flex-direction: row;
+      flex-wrap: wrap;
+      width: auto;
+    }
+
+    .hero-inst__actions .inst-cta {
+      width: auto;
+    }
   }
 
   @media (max-width: 1023px) {
@@ -466,16 +483,33 @@ const stats = INSTITUTIONAL_STATS.map((stat) =>
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
-    padding: 0 1.5rem;
+    padding: 1.5rem 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--color-inst-deep) 10%, transparent);
+  }
+
+  .stats-inst__cell:first-child {
+    padding-top: 0;
+  }
+
+  .stats-inst__cell:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
   }
 
   @media (min-width: 768px) {
+    .stats-inst__cell {
+      padding: 0 1.5rem;
+      border-bottom: none;
+    }
+
     .stats-inst__cell:first-child {
       padding-left: 0;
+      padding-top: 0;
     }
 
     .stats-inst__cell:last-child {
       padding-right: 0;
+      padding-bottom: 0;
     }
 
     .stats-inst__cell + .stats-inst__cell {
@@ -532,9 +566,27 @@ const stats = INSTITUTIONAL_STATS.map((stat) =>
 
   .bridge-inst__actions {
     display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
+    flex-direction: column;
+    gap: 0.75rem;
     margin-top: 1rem;
+    width: 100%;
+  }
+
+  .bridge-inst__actions .inst-cta {
+    width: 100%;
+  }
+
+  @media (min-width: 640px) {
+    .bridge-inst__actions {
+      flex-direction: row;
+      flex-wrap: wrap;
+      gap: 1rem;
+      width: auto;
+    }
+
+    .bridge-inst__actions .inst-cta {
+      width: auto;
+    }
   }
 
   @media (prefers-reduced-motion: reduce) {

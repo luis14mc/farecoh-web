@@ -39,6 +39,25 @@ interface Firefly {
 const lerp = (current: number, target: number, factor: number): number =>
   current + (target - current) * factor;
 
+function applyCameraFraming(camera: THREE.PerspectiveCamera, width: number, height: number): void {
+  const aspect = width / height;
+  camera.aspect = aspect;
+  if (aspect < 0.75) {
+    // Mobile vertical (portrait): frame instruments dynamically so they are visible behind/under hero text
+    camera.position.set(5.5, -0.3, 14.5);
+    camera.lookAt(5.5, -0.5, 0);
+  } else if (aspect < 1.1) {
+    // Tablet / square
+    camera.position.set(3.5, 0, 13.0);
+    camera.lookAt(4.0, 0, 0);
+  } else {
+    // Desktop widescreen
+    camera.position.set(0.5, 0.2, 11.5);
+    camera.lookAt(2.5, 0, 0);
+  }
+  camera.updateProjectionMatrix();
+}
+
 const INSTRUMENTS: readonly InstrumentSpec[] = [
   {
     url: "/models/violin.glb",
@@ -128,8 +147,7 @@ export default function Orchestra3D({
     sceneRef.current = scene;
 
     const camera = new THREE.PerspectiveCamera(52, width / height, 0.1, 100);
-    camera.position.set(0.5, 0.2, 11.5);
-    camera.lookAt(2.5, 0, 0);
+    applyCameraFraming(camera, width, height);
     cameraRef.current = camera;
 
     const renderer = new THREE.WebGLRenderer({
@@ -246,6 +264,17 @@ export default function Orchestra3D({
       targetMouseRef.current.y = ny;
     };
 
+    const onTouchMove = (event: TouchEvent): void => {
+      if (event.touches.length > 0) {
+        const touch = event.touches[0];
+        const rect = renderer.domElement.getBoundingClientRect();
+        const nx = ((touch.clientX - rect.left) / rect.width) * 2 - 1;
+        const ny = -(((touch.clientY - rect.top) / rect.height) * 2 - 1);
+        targetMouseRef.current.x = nx;
+        targetMouseRef.current.y = ny;
+      }
+    };
+
     const onPointerLeave = (): void => {
       targetMouseRef.current.x = 0;
       targetMouseRef.current.y = 0;
@@ -253,14 +282,14 @@ export default function Orchestra3D({
 
     renderer.domElement.addEventListener("pointermove", onPointerMove);
     renderer.domElement.addEventListener("pointerleave", onPointerLeave);
+    window.addEventListener("touchmove", onTouchMove, { passive: true });
 
     const handleResize = (): void => {
       if (!container || !rendererRef.current || !cameraRef.current) return;
       const newWidth = container.clientWidth;
       const newHeight = container.clientHeight;
       if (newWidth === 0 || newHeight === 0) return;
-      cameraRef.current.aspect = newWidth / newHeight;
-      cameraRef.current.updateProjectionMatrix();
+      applyCameraFraming(cameraRef.current, newWidth, newHeight);
       rendererRef.current.setSize(newWidth, newHeight);
     };
     const resizeObserver = new ResizeObserver(handleResize);
@@ -360,6 +389,7 @@ export default function Orchestra3D({
       resizeObserver.disconnect();
       renderer.domElement.removeEventListener("pointermove", onPointerMove);
       renderer.domElement.removeEventListener("pointerleave", onPointerLeave);
+      window.removeEventListener("touchmove", onTouchMove);
       dracoLoader.dispose();
 
       for (const inst of instrumentsRef.current) {
