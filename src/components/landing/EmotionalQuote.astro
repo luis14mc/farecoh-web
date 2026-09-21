@@ -2,19 +2,14 @@
 import { homeQuote } from "@/data/home";
 ---
 
-<section class="reveal-section landing-section bg-surface-container-low/40 py-20 lg:py-28 border-b border-outline-variant/30">
+<section class="reveal-section landing-section bg-[#fcfbfa] py-24 lg:py-32 border-b border-[#e4e4e7]">
   <div class="landing-shell">
     <blockquote class="mx-auto max-w-4xl text-center">
-      <div class="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary">
-        <svg class="h-7 w-7" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
-        </svg>
-      </div>
-      <p class="text-2xl sm:text-3xl lg:text-4xl font-semibold leading-relaxed tracking-tight text-on-surface">
+      <p class="font-serif text-2xl sm:text-3xl lg:text-4xl font-normal leading-relaxed text-[#18181B] italic mb-6 max-w-3xl mx-auto">
         "{homeQuote.text}"
       </p>
-      <footer class="mt-8">
-        <cite class="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-xs font-bold uppercase tracking-[0.16em] text-primary not-italic">
+      <footer>
+        <cite class="text-sm font-semibold text-[#0378A6] not-italic">
           {homeQuote.signature}
         </cite>
       </footer>

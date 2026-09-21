@@ -1,0 +1,239 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import { FARECOH_DATA } from "@/data/farecoh";
+import { site } from "@/data/site";
+
+const detailedPrograms = [
+  {
+    id: "orquesta-sinfonica",
+    title: "Orquesta Sinfónica Infantil y Juvenil",
+    category: "Música Clásica y Ensamble Instrumental",
+    lead: "Formación orquestal de alto rigor técnico basada en la práctica colectiva intensiva.",
+    description: "Los estudiantes aprenden a tocar instrumentos sinfónicos desde el primer día en ensambles grupales. El modelo fomenta el trabajo en equipo, la disciplina auditiva, la lectura musical y la sensibilidad estética.",
+    image: "/images/fotografias/IMG_6841.webp",
+    imageAlt: "Estudiantes de violín ensayando en la orquesta juvenil de FARECOH",
+    instruments: ["Violín, Viola, Violonchelo y Contrabajo", "Flauta Traversa, Oboe y Clarinete", "Trompeta, Corno Francés y Trombón", "Percusión Sinfónica y Timbales"],
+    modality: "Presencial &bull; Clases teóricas, técnica seccional y tuttis orquestales",
+    cost: "100% Beca Completa (Instrumento y enseñanza gratuita)"
+  },
+  {
+    id: "coro-manos-blancas",
+    title: "Coro de Manos Blancas",
+    category: "Inclusión y Diversidad Funcional",
+    lead: "Programa pionero en Honduras de integración artística para la comunidad sorda.",
+    description: "A través de guantes blancos y el lenguaje corporal de señas, niños y jóvenes con discapacidad auditiva y diversidad motriz interpretan y dan vida física a las obras vocales y sinfónicas, compartiendo escenario en igualdad de condiciones.",
+    image: "/images/fotografias/IMG_6846.webp",
+    imageAlt: "Solista e intérprete de señas con guantes blancos en el Coro de Manos Blancas",
+    instruments: ["Lenguaje gestual de señas adaptado a música", "Técnica vocal y resonancia corporal", "Expresión corporal y coordinación cinestésica", "Ensamble coral mixto integrado"],
+    modality: "Presencial &bull; Terapia artística y coro integrado",
+    cost: "100% Gratuito para personas con capacidades diversas"
+  },
+  {
+    id: "artes-visuales",
+    title: "Artes Plásticas, Dibujo y Pintura",
+    category: "Educación Visual y Patrimonio",
+    lead: "Desarrollo del pensamiento visual, la creatividad manual y el arraigo cultural.",
+    description: "Talleres diseñados para que niños y adolescentes exploren técnicas de dibujo artístico, acuarela, óleo y modelado, vinculando la identidad local de Valle de Ángeles y sus tradiciones artesanales con el arte universal.",
+    image: "/images/fotografias/IMG_6849.webp",
+    imageAlt: "Niña en taller de artes visuales dibujando y coloreando en FARECOH",
+    instruments: ["Dibujo artístico y perspectiva", "Teoría del color y técnicas pictóricas", "Modelado y escultura básica", "Apreciación del arte e historia visual"],
+    modality: "Presencial &bull; Talleres prácticos y exposiciones comunitarias",
+    cost: "100% Gratuito (Materiales formativos provistos)"
+  },
+  {
+    id: "estimulacion-temprana",
+    title: "Iniciación y Estimulación Temprana",
+    category: "Desarrollo Sensorial y Psicomotriz",
+    lead: "Sensibilización temprana a través del sonido, el ritmo y el movimiento guiado.",
+    description: "Dirigido a la primera infancia para estimular el desarrollo auditivo, neurocognitivo y socioafectivo mediante juegos rítmicos, cantos tradicionales y exploración sonora interactiva junto a sus familias.",
+    image: "/images/fotografias/IMG_6830.webp",
+    imageAlt: "Infante en sesión de estimulación multisensorial y aprendizaje sonoro",
+    instruments: ["Juegos de exploración rítmica y tímbrica", "Desarrollo auditivo y vocal temprano", "Psicomotricidad gruesa y fina asistida", "Socialización y vínculo afectivo familiar"],
+    modality: "Presencial &bull; Sesiones guiadas junto a madres y tutores",
+    cost: "100% Gratuito para familias de la comunidad"
+  }
+];
+---
+
+<Layout
+  title="Programas Pedagógicos | FARECOH - Formación Musical y Artística"
+  description="Explora los programas de orquestas infantiles, Coro de Manos Blancas, estimulación temprana y artes plásticas de FARECOH en Honduras."
+  active="programs"
+>
+  <!-- Encabezado Editorial -->
+  <header class="bg-[#091118] text-white pt-28 pb-20 lg:pt-36 lg:pb-24 border-b border-white/10">
+    <div class="landing-shell">
+      <div class="max-w-3xl">
+        <p class="text-xs font-semibold uppercase tracking-widest text-[#04B2D9] mb-4">
+          Currículo Artístico y Social &bull; Becas al 100%
+        </p>
+        <h1 class="font-serif text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-white leading-[1.08] mb-6">
+          Programas formativos de alto impacto
+        </h1>
+        <p class="text-lg sm:text-xl text-white/80 leading-relaxed font-normal text-pretty">
+          Diseñados bajo metodologías colectivas que fortalecen la autoestima, previenen la exclusión y abren horizontes reales de desarrollo humano a través de la música y las artes.
+        </p>
+      </div>
+    </div>
+  </header>
+
+  <!-- Lista Editorial en Profundidad con Fotografía Real de Cada Programa -->
+  <section class="landing-section bg-white py-24 lg:py-32 border-b border-[#e4e4e7]">
+    <div class="landing-shell space-y-24 lg:space-y-32">
+      {detailedPrograms.map((program, index) => {
+        const isReversed = index % 2 === 1;
+        return (
+          <article id={program.id} class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
+            
+            <!-- Columna Fotográfica -->
+            <div class={`lg:col-span-6 ${isReversed ? "lg:order-2" : "lg:order-1"}`}>
+              <figure class="overflow-hidden border border-[#e4e4e7] bg-[#091118]">
+                <img
+                  src={program.image}
+                  alt={program.imageAlt}
+                  class="w-full aspect-[4/3] object-cover"
+                  loading="lazy"
+                  width="800"
+                  height="600"
+                />
+                <figcaption class="p-4 bg-white border-t border-[#e4e4e7] text-xs text-[#71717a] flex justify-between">
+                  <span class="font-medium text-[#18181B]">{program.title}</span>
+                  <span class="text-[#0378A6] font-semibold">{program.category}</span>
+                </figcaption>
+              </figure>
+            </div>
+
+            <!-- Columna Curricular y Descriptiva -->
+            <div class={`lg:col-span-6 ${isReversed ? "lg:order-1" : "lg:order-2"}`}>
+              <p class="text-xs font-semibold uppercase tracking-widest text-[#0378A6] mb-2">
+                {program.category}
+              </p>
+              
+              <h2 class="font-serif text-3xl sm:text-4xl font-bold tracking-tight text-[#18181B] leading-snug mb-4">
+                {program.title}
+              </h2>
+
+              <p class="text-base sm:text-lg font-medium text-[#18181B] leading-relaxed mb-4">
+                {program.lead}
+              </p>
+
+              <p class="text-sm sm:text-base text-[#3f3f46] leading-relaxed font-normal mb-8">
+                {program.description}
+              </p>
+
+              <!-- Detalles Curriculares -->
+              <div class="bg-[#fcfbfa] border border-[#e4e4e7] p-6 space-y-4 mb-6">
+                <div>
+                  <span class="text-xs font-bold uppercase tracking-wider text-[#0378A6] block mb-1">
+                    Áreas de Formación y Contenidos
+                  </span>
+                  <ul class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-[#3f3f46]">
+                    {program.instruments.map((inst) => (
+                      <li class="flex items-center gap-2">
+                        <span class="h-1 w-1 bg-[#0378A6] rounded-full shrink-0"></span>
+                        <span>{inst}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div class="pt-3 border-t border-[#e4e4e7] flex flex-wrap items-center justify-between gap-2 text-xs">
+                  <span class="text-[#71717a]" set:html={program.modality}></span>
+                  <span class="font-semibold text-[#0378A6]">{program.cost}</span>
+                </div>
+              </div>
+
+              <a
+                href={`mailto:${site.email}?subject=${encodeURIComponent(`Consulta sobre programa: ${program.title}`)}`}
+                class="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[#0378A6] hover:text-[#04B2D9] transition-colors"
+              >
+                <span>Solicitar información de admisión</span>
+                <span aria-hidden="true">&rarr;</span>
+              </a>
+            </div>
+
+          </article>
+        );
+      })}
+    </div>
+  </section>
+
+  <!-- Iniciativa Especial: Becas de Verano & Movilidad Internacional con Fotografía Real -->
+  <section class="landing-section bg-[#fcfbfa] py-24 lg:py-32 border-b border-[#e4e4e7]">
+    <div class="landing-shell">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
+        
+        <div class="lg:col-span-6">
+          <p class="text-xs font-semibold uppercase tracking-widest text-[#04B2D9] mb-3">
+            Movilidad Internacional
+          </p>
+          <h2 class="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-[#18181B] leading-tight mb-6">
+            Intercambios Culturales y Becas de Verano
+          </h2>
+          <p class="text-base sm:text-lg text-[#18181B] leading-relaxed mb-6 font-normal">
+            {FARECOH_DATA.initiatives.description} Nuestros estudiantes más dedicados tienen la oportunidad de audicionar y participar en conservatorios y campamentos sinfónicos internacionales.
+          </p>
+
+          <div class="space-y-4 pt-4 border-t border-[#e4e4e7] text-sm text-[#3f3f46]">
+            <div>
+              <span class="font-bold text-[#18181B] block mb-1">Destinos de Movilidad Estudiantil</span>
+              <p>Alianzas con el International Music Camp en Estados Unidos y encuentros orquestales en México y Centroamérica.</p>
+            </div>
+            <div>
+              <span class="font-bold text-[#18181B] block mb-1">Talleres con Maestros Visitantes</span>
+              <p>Músicos profesionales y directores de renombre internacional imparten clases magistrales gratuitas en Valle de Ángeles.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="lg:col-span-6">
+          <figure class="overflow-hidden border border-[#e4e4e7] bg-[#091118]">
+            <img
+              src="/images/fotografias/IMG_6843.webp"
+              alt="Estudiantes de FARECOH en campamento musical internacional con banderas mundiales"
+              class="w-full aspect-[4/3] object-cover"
+              loading="lazy"
+              width="800"
+              height="600"
+            />
+            <figcaption class="p-4 bg-white border-t border-[#e4e4e7] text-xs text-[#71717a] flex justify-between">
+              <span class="font-medium text-[#18181B]">Estudiantes en Programa de Movilidad</span>
+              <span>Becas de Verano Internacionales</span>
+            </figcaption>
+          </figure>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA para Admisiones y Apadrinamiento de Instrumentos -->
+  <section class="landing-section bg-white py-24 lg:py-32">
+    <div class="landing-shell max-w-3xl mx-auto text-center">
+      <p class="text-xs font-semibold uppercase tracking-widest text-[#0378A6] mb-3">
+        Participación Comunitaria
+      </p>
+      <h2 class="font-serif text-3xl sm:text-4xl font-bold tracking-tight text-[#18181B] mb-6 text-balance">
+        ¿Deseas inscribir a un estudiante o apadrinar un instrumento?
+      </h2>
+      <p class="text-base sm:text-lg text-[#3f3f46] leading-relaxed mb-10 font-normal text-pretty">
+        Nuestras puertas están abiertas permanentemente para niños y jóvenes con vocación artística, así como para personas e instituciones que deseen apadrinar instrumentos musicales o becas de estudio.
+      </p>
+      <div class="flex flex-wrap items-center justify-center gap-4">
+        <a
+          href={`mailto:${site.email}?subject=${encodeURIComponent("Información de inscripción a programas FARECOH")}`}
+          class="inline-flex min-h-[48px] items-center justify-center rounded-lg bg-[#0378A6] px-8 py-3 text-sm font-semibold text-white transition-[background-color,color,transform] duration-200 hover:bg-[#04B2D9] hover:text-[#011e2a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#04B2D9] focus-visible:ring-offset-2 active:scale-[0.98]"
+        >
+          Contactar para Admisión
+        </a>
+        <a
+          href="/nosotros"
+          class="inline-flex min-h-[48px] items-center justify-center rounded-lg border border-[#e4e4e7] bg-[#fcfbfa] px-8 py-3 text-sm font-semibold text-[#18181B] transition-[background-color,border-color,transform] duration-200 hover:border-[#0378A6] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0378A6] focus-visible:ring-offset-2 active:scale-[0.98]"
+        >
+          Conocer la Fundación
+        </a>
+      </div>
+    </div>
+  </section>
+</Layout>
+

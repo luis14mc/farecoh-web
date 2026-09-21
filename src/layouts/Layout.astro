@@ -8,7 +8,7 @@ import { SITE_LANG } from "@/lib/locale";
 interface Props {
   title: string;
   description: string;
-  active?: "home" | "events" | "tickets";
+  active?: "home" | "about" | "programs" | "events" | "tickets";
   variant?: "light" | "dark" | "concert";
   canonicalPath?: string;
   image?: string;
@@ -48,7 +48,7 @@ const mainClass = variant === "light" ? "pt-20" : "";
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=Playfair+Display:ital,wght@0,500;0,600;0,700;0,800;1,400;1,600&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,0&display=swap" rel="stylesheet" />
     <SeoHead
       title={title}
@@ -80,7 +80,7 @@ const mainClass = variant === "light" ? "pt-20" : "";
   .reveal-section {
     opacity: 0;
     transform: translateY(16px);
-    transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: opacity 0.4s var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1)), transform 0.4s var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
     will-change: opacity, transform;
   }
 

@@ -2,72 +2,74 @@
 @plugin "tailwindcss-animate";
 
 @theme {
-  --color-surface: #fff8f8;
-  --color-surface-dim: #e0d8d9;
-  --color-surface-bright: #fff8f8;
+  --color-surface: #fcfbfa;
+  --color-surface-dim: #e4e4e7;
+  --color-surface-bright: #ffffff;
   --color-surface-container-lowest: #ffffff;
-  --color-surface-container-low: #faf2f3;
-  --color-surface-container: #f4eced;
-  --color-surface-container-high: #eee6e7;
-  --color-surface-container-highest: #e8e1e2;
-  --color-on-surface: #1e1b1c;
-  --color-on-surface-variant: #3e484f;
-  --color-inverse-surface: #332f30;
-  --color-inverse-on-surface: #f7eff0;
+  --color-surface-container-low: #f8f9fa;
+  --color-surface-container: #f1f3f5;
+  --color-surface-container-high: #e9ecef;
+  --color-surface-container-highest: #dee2e6;
+  --color-on-surface: #18181B;
+  --color-on-surface-variant: #3f3f46;
+  --color-inverse-surface: #18181B;
+  --color-inverse-on-surface: #f4f4f5;
   
-  --color-primary: #00658b;
+  --color-primary: #0378A6;
   --color-on-primary: #ffffff;
-  --color-primary-container: #00a5df;
-  --color-on-primary-container: #00364c;
-  --color-inverse-primary: #7dd0ff;
-  --color-primary-fixed: #c4e7ff;
-  --color-primary-fixed-dim: #7dd0ff;
-  --color-on-primary-fixed: #001e2c;
-  --color-on-primary-fixed-variant: #004c69;
+  --color-primary-container: #04B2D9;
+  --color-on-primary-container: #011e2a;
+  --color-inverse-primary: #9ad9ee;
+  --color-primary-fixed: #cce4ee;
+  --color-primary-fixed-dim: #9ac9dc;
+  --color-on-primary-fixed: #011e2a;
+  --color-on-primary-fixed-variant: #025a7d;
 
-  --color-secondary: #006496;
-  --color-on-secondary: #ffffff;
-  --color-secondary-container: #66beff;
-  --color-on-secondary-container: #004b73;
-  --color-secondary-fixed: #cbe6ff;
-  --color-secondary-fixed-dim: #90cdff;
-  --color-on-secondary-fixed: #001e31;
-  --color-on-secondary-fixed-variant: #004b72;
+  --color-secondary: #04B2D9;
+  --color-on-secondary: #011e2a;
+  --color-secondary-container: #0385a3;
+  --color-on-secondary-container: #ffffff;
+  --color-secondary-fixed: #cdf0f7;
+  --color-secondary-fixed-dim: #9be0f0;
+  --color-on-secondary-fixed: #012c36;
+  --color-on-secondary-fixed-variant: #02596d;
 
-  --color-tertiary: #036399;
+  --color-tertiary: #8A038C;
   --color-on-tertiary: #ffffff;
-  --color-tertiary-container: #5ba0da;
-  --color-on-tertiary-container: #003555;
-  --color-tertiary-fixed: #cde5ff;
-  --color-tertiary-fixed-dim: #95ccff;
-  --color-on-tertiary-fixed: #001d32;
-  --color-on-tertiary-fixed-variant: #004a75;
+  --color-tertiary-container: #d563d7;
+  --color-on-tertiary-container: #230123;
+  --color-tertiary-fixed: #e8cdea;
+  --color-tertiary-fixed-dim: #d09bd2;
+  --color-on-tertiary-fixed: #230123;
+  --color-on-tertiary-fixed-variant: #680269;
 
   --color-error: #ba1a1a;
   --color-on-error: #ffffff;
   --color-error-container: #ffdad6;
   --color-on-error-container: #93000a;
 
-  --color-outline: #6e7880;
-  --color-outline-variant: #bdc8d1;
-  --color-background: #fff8f8;
-  --color-on-background: #1e1b1c;
+  --color-outline: #71717a;
+  --color-outline-variant: #d4d4d8;
+  --color-background: #fcfbfa;
+  --color-on-background: #18181B;
 
-  --font-montserrat: "Montserrat", ui-sans-serif, system-ui, sans-serif;
-  --font-sans: var(--font-montserrat);
+  --font-serif: "Playfair Display", Georgia, serif;
+  --font-sans: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
 
-  --color-brand-400: #00a5df;
-  --color-brand-500: #007dba;
-  --color-brand-700: #006298;
-  --color-brand-neutral: #454142;
+  --color-brand-400: #04B2D9;
+  --color-brand-500: #0378A6;
+  --color-brand-700: #025a7d;
+  --color-brand-neutral: #18181B;
 
-  --color-concert-deep: #0b0b0b;
-  --color-concert-base: #121212;
-  --color-concert-elevated: #1a1a1a;
-  --color-concert-orange: #ff4d00;
-  --color-concert-orange-mid: #ff7a00;
-  --color-concert-amber: #ffb800;
-  --color-concert-blue: #00a5df;
+  --color-concert-deep: #09090b;
+  --color-concert-base: #18181B;
+  --color-concert-elevated: #27272a;
+  --color-concert-cyan: #04B2D9;
+  --color-concert-purple: #8A038C;
+  --color-concert-blue: #0378A6;
+  --color-concert-orange: #04B2D9;
+  --color-concert-orange-mid: #0378A6;
+  --color-concert-amber: #04B2D9;
   
   --spacing-stack-sm: 8px;
   --spacing-stack-md: 16px;
@@ -79,63 +81,73 @@
   --spacing-section-mobile: 48px;
   --spacing-margin-mobile: 24px;
   
-  --radius-DEFAULT: 0.125rem;
-  --radius-lg: 0.25rem;
-  --radius-xl: 0.5rem;
+  --radius-DEFAULT: 0.25rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
   --radius-full: 9999px;
 
   /* shadcn/ui (admin dashboard) */
-  --color-foreground: hsl(240 10% 3.9%);
-  --color-card: hsl(0 0% 100%);
-  --color-card-foreground: hsl(240 10% 3.9%);
-  --color-popover: hsl(0 0% 100%);
-  --color-popover-foreground: hsl(240 10% 3.9%);
-  --color-primary-foreground: hsl(0 0% 98%);
-  --color-secondary-foreground: hsl(240 5.9% 10%);
-  --color-muted: hsl(240 4.8% 95.9%);
-  --color-muted-foreground: hsl(240 3.8% 46.1%);
-  --color-accent: hsl(240 4.8% 95.9%);
-  --color-accent-foreground: hsl(240 5.9% 10%);
-  --color-destructive: hsl(0 84.2% 60.2%);
-  --color-destructive-foreground: hsl(0 0% 98%);
-  --color-border: hsl(240 5.9% 90%);
-  --color-input: hsl(240 5.9% 90%);
-  --color-ring: hsl(240 5.9% 10%);
-  --color-warning: hsl(38 92% 50%);
-  --color-warning-foreground: hsl(48 96% 89%);
-  --color-success: hsl(142 76% 36%);
-  --color-success-foreground: hsl(0 0% 98%);
-  --color-purple: hsl(271 81% 56%);
-  --color-purple-foreground: hsl(0 0% 98%);
-  --radius-sm: 0.125rem;
-  --radius-md: 0.375rem;
+  --color-foreground: #18181B;
+  --color-card: #ffffff;
+  --color-card-foreground: #18181B;
+  --color-popover: #ffffff;
+  --color-popover-foreground: #18181B;
+  --color-primary-foreground: #ffffff;
+  --color-secondary-foreground: #18181B;
+  --color-muted: #f4f4f5;
+  --color-muted-foreground: #71717a;
+  --color-accent: #f4f4f5;
+  --color-accent-foreground: #18181B;
+  --color-destructive: #dc2626;
+  --color-destructive-foreground: #ffffff;
+  --color-border: #e4e4e7;
+  --color-input: #e4e4e7;
+  --color-ring: #0378A6;
+  --color-warning: #f59e0b;
+  --color-warning-foreground: #18181B;
+  --color-success: #10b981;
+  --color-success-foreground: #ffffff;
+  --color-purple: #8A038C;
+  --color-purple-foreground: #ffffff;
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
 }
 
 :root {
-  --prism-bg: #fff8f8;
+  --prism-bg: #fcfbfa;
   --prism-surface-lowest: #ffffff;
-  --prism-surface-low: #faf2f3;
-  --prism-surface: #f4eced;
-  --prism-surface-high: #eee6e7;
-  --prism-surface-highest: #e8e1e2;
-  --prism-surface-bright: #fff8f8;
-  --prism-text: #1e1b1c;
-  --prism-text-secondary: #3e484f;
-  --prism-outline: #6e7880;
-  --prism-outline-variant: #bdc8d1;
-  --prism-gold: #00658b;
-  --prism-soft-gold: #00a5df;
-  --prism-blue: #007dba;
-  --prism-light-blue: #66beff;
-  --prism-cyan: #00a5df;
-  --prism-divider: #bdc8d1;
-  --prism-border: rgba(110, 120, 128, 0.2);
+  --prism-surface-low: #f8f9fa;
+  --prism-surface: #f1f3f5;
+  --prism-surface-high: #e9ecef;
+  --prism-surface-highest: #dee2e6;
+  --prism-surface-bright: #ffffff;
+  --prism-text: #18181B;
+  --prism-text-secondary: #3f3f46;
+  --prism-outline: #71717a;
+  --prism-outline-variant: #d4d4d8;
+  --prism-gold: #0378A6;
+  --prism-soft-gold: #04B2D9;
+  --prism-blue: #0378A6;
+  --prism-light-blue: #04B2D9;
+  --prism-cyan: #04B2D9;
+  --prism-purple: #8A038C;
+  --prism-divider: #e4e4e7;
+  --prism-border: rgba(24, 24, 27, 0.12);
   --prism-max-width: 1280px;
   --prism-gutter: 24px;
   --prism-margin-desktop: 48px;
-  --prism-margin-mobile: 24px;
   --prism-section-gap: 80px;
   --prism-section-mobile: 48px;
+
+  /* Emil Kowalski Animation Tokens (animate skill) */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+/* Accessible anchor scroll margin (web-design-guidelines) */
+[id] {
+  scroll-margin-top: 5.5rem;
 }
 
 @layer components {
@@ -159,7 +171,7 @@ body {
   min-width: 320px;
   background: var(--prism-bg);
   color: var(--prism-text);
-  font-family: var(--font-montserrat);
+  font-family: var(--font-sans);
   font-weight: 400;
   letter-spacing: 0.01em;
   text-rendering: optimizeLegibility;

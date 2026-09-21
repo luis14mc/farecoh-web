@@ -1,0 +1,101 @@
+---
+import { FARECOH_DATA } from "@/data/farecoh";
+---
+
+<section id="gobernanza-alianzas" class="reveal-section landing-section bg-[#fcfbfa] py-24 lg:py-32 border-b border-[#e4e4e7]">
+  <div class="landing-shell">
+    
+    <!-- Iniciativa Global de Becas e Intercambios: Widescreen Editorial Feature -->
+    <div class="mb-24 overflow-hidden rounded-2xl bg-[#0a151d] text-white border border-white/10 p-8 sm:p-12 lg:p-16 relative">
+      <div class="pointer-events-none absolute -right-20 -top-20 h-72 w-72 rounded-full bg-[#04B2D9]/20 blur-3xl" aria-hidden="true"></div>
+      <div class="pointer-events-none absolute -left-20 -bottom-20 h-72 w-72 rounded-full bg-[#8A038C]/20 blur-3xl" aria-hidden="true"></div>
+
+      <div class="relative z-10 max-w-3xl">
+        <span class="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3.5 py-1 text-xs font-bold uppercase tracking-[0.16em] text-white backdrop-blur-md mb-6">
+          <span class="h-2 w-2 rounded-full bg-[#04B2D9]" aria-hidden="true"></span>
+          {FARECOH_DATA.initiatives.badge}
+        </span>
+
+        <h2 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-white mb-4 leading-tight">
+          {FARECOH_DATA.initiatives.title}
+        </h2>
+
+        <p class="text-base sm:text-lg text-white/80 leading-relaxed max-w-2xl mb-8 font-normal">
+          {FARECOH_DATA.initiatives.description}
+        </p>
+
+        <div class="flex flex-wrap items-center gap-6 text-xs text-white/70 font-semibold tracking-wider uppercase">
+          <div class="flex items-center gap-2">
+            <span class="h-1.5 w-1.5 rounded-full bg-[#04B2D9]"></span>
+            <span>Movilidad Académica Internacional</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="h-1.5 w-1.5 rounded-full bg-[#04B2D9]"></span>
+            <span>Convenios de Cooperación Activos</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="h-1.5 w-1.5 rounded-full bg-[#04B2D9]"></span>
+            <span>Formación Docente y Clases Magistrales</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Alianzas Estratégicas y Cooperación: Roster Editorial Flotante -->
+    <div class="mb-24">
+      <div class="mb-10 max-w-2xl">
+        <span class="text-xs font-mono font-bold uppercase tracking-[0.22em] text-[#0378A6] block mb-2">
+          03 / RED DE COOPERACIÓN
+        </span>
+        <h3 class="text-2xl sm:text-3xl font-bold tracking-tight text-[#18181B]">
+          Alianzas institucionales y convenios
+        </h3>
+        <p class="mt-2 text-sm text-[#71717a]">
+          Respaldan y auditan nuestras metas pedagógicas a nivel multilateral y diplomático.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {FARECOH_DATA.partners.map((partner) => (
+          <div class="border-b border-[#e4e4e7] pb-4 transition-colors hover:border-[#0378A6]">
+            <p class="text-xs font-mono font-semibold uppercase tracking-wider text-[#0378A6]">
+              {partner.type}
+            </p>
+            <h4 class="text-base font-bold text-[#18181B] mt-1">
+              {partner.name}
+            </h4>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    <!-- Junta Directiva: Ledger Editorial de Gobernanza (Playbill / Programa de Concierto) -->
+    <div>
+      <div class="mb-10 max-w-2xl">
+        <span class="text-xs font-mono font-bold uppercase tracking-[0.22em] text-[#0378A6] block mb-2">
+          04 / GOBERNANZA Y ÉTICA
+        </span>
+        <h3 class="text-2xl sm:text-3xl font-bold tracking-tight text-[#18181B]">
+          Junta Directiva de FARECOH
+        </h3>
+        <p class="mt-2 text-sm text-[#71717a]">
+          Cuerpo directivo responsable de la transparencia, sostenibilidad y dirección estratégica de la fundación.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4 divide-y md:divide-y-0 divide-[#e4e4e7]">
+        {FARECOH_DATA.board.map((member) => (
+          <div class="flex items-baseline justify-between py-3 border-b border-[#e4e4e7] group">
+            <span class="text-sm font-bold text-[#18181B] group-hover:text-[#0378A6] transition-colors">
+              {member.name}
+            </span>
+            <span class="text-xs font-mono font-semibold text-[#71717a] uppercase tracking-wider">
+              {member.role}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+
+  </div>
+</section>

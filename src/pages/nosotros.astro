@@ -1,0 +1,302 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import { FARECOH_DATA } from "@/data/farecoh";
+import { homeAbout } from "@/data/home";
+---
+
+<Layout
+  title="Sobre Nosotros | FARECOH - Fundación Artes Educativas"
+  description="Conoce la historia, misión, visión y junta directiva de FARECOH, fundación modelo en educación musical y prevención social en Honduras."
+  active="about"
+>
+  <!-- Encabezado Editorial -->
+  <header class="bg-[#091118] text-white pt-28 pb-20 lg:pt-36 lg:pb-24 border-b border-white/10">
+    <div class="landing-shell">
+      <div class="max-w-3xl">
+        <p class="text-xs font-semibold uppercase tracking-widest text-[#04B2D9] mb-4">
+          Institución &bull; Valle de Ángeles, Francisco Morazán
+        </p>
+        <h1 class="font-serif text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-white leading-[1.08] mb-6">
+          Nuestra historia, causa y gobierno institucional
+        </h1>
+        <p class="text-lg sm:text-xl text-white/80 leading-relaxed font-normal text-pretty">
+          Fundación Artes Educativas, Coros y Orquestas de Honduras (FARECOH) nació con el compromiso ético de ofrecer a la niñez y juventud un espacio de paz, rigor artístico e inserción comunitaria.
+        </p>
+      </div>
+    </div>
+  </header>
+
+  <!-- Sección 1: Historia Institucional con Fotografías Reales -->
+  <section class="landing-section bg-white py-24 lg:py-32 border-b border-[#e4e4e7]">
+    <div class="landing-shell">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20 items-center">
+        
+        <div class="lg:col-span-6">
+          <p class="text-xs font-semibold uppercase tracking-widest text-[#0378A6] mb-3">
+            Trayectoria y Origen
+          </p>
+          <h2 class="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-[#18181B] leading-[1.12] mb-6">
+            Más de una década construyendo armonía comunitaria
+          </h2>
+
+          <p class="text-lg leading-relaxed text-[#18181B] mb-5 font-normal">
+            {homeAbout.body}
+          </p>
+
+          <p class="text-base leading-relaxed text-[#3f3f46] mb-8 font-normal">
+            {homeAbout.bodySecondary}
+          </p>
+
+          <blockquote class="border-l-2 border-[#0378A6] pl-6 py-2 my-8">
+            <p class="font-serif text-base text-[#18181B] leading-relaxed italic">
+              "El rescate pedagógico y ocupacional no es un lujo; es una necesidad urgente para proteger el porvenir de nuestras generaciones frente a los riesgos sociales."
+            </p>
+            <footer class="mt-2 text-xs font-semibold text-[#0378A6] not-italic">
+              Compromiso Permanente desde 2013
+            </footer>
+          </blockquote>
+
+          <!-- Hitos Cronológicos -->
+          <div class="space-y-4 pt-4 border-t border-[#e4e4e7]">
+            <div class="flex items-start gap-4">
+              <span class="font-serif font-bold text-lg text-[#0378A6] shrink-0 w-16">2013</span>
+              <p class="text-sm text-[#3f3f46] leading-relaxed">
+                Nace FARECOH en el municipio de Valle de Ángeles como respuesta ciudadana para abrir espacios formativos de calidad para niños en riesgo de exclusión.
+              </p>
+            </div>
+            <div class="flex items-start gap-4">
+              <span class="font-serif font-bold text-lg text-[#0378A6] shrink-0 w-16">2016</span>
+              <p class="text-sm text-[#3f3f46] leading-relaxed">
+                Implementación pionera del Coro de Manos Blancas en Honduras, integrando lenguaje gestual y coro de señas para niños sordos y con capacidades diversas.
+              </p>
+            </div>
+            <div class="flex items-start gap-4">
+              <span class="font-serif font-bold text-lg text-[#0378A6] shrink-0 w-16">2021</span>
+              <p class="text-sm text-[#3f3f46] leading-relaxed">
+                Consolidación de alianzas multilaterales con AMEXCID, la Organización de los Estados Americanos (OEA) y programas de intercambio en Estados Unidos.
+              </p>
+            </div>
+            <div class="flex items-start gap-4">
+              <span class="font-serif font-bold text-lg text-[#0378A6] shrink-0 w-16">2026</span>
+              <p class="text-sm text-[#3f3f46] leading-relaxed">
+                Más de 1,200 familias impactadas positivamente y producción del gran concierto benéfico tributo sinfónico a Pink Floyd por la salud de José Joaquín Cerrato.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="lg:col-span-6 space-y-6">
+          <figure class="overflow-hidden border border-[#e4e4e7] bg-[#091118]">
+            <img
+              src="/images/fotografias/IMG_6827.webp"
+              alt="Delegación de FARECOH en ceremonia de reconocimiento internacional"
+              class="w-full aspect-[4/3] object-cover"
+              loading="lazy"
+              width="800"
+              height="600"
+            />
+            <figcaption class="p-4 bg-white border-t border-[#e4e4e7] text-xs text-[#71717a] flex justify-between">
+              <span class="font-medium text-[#18181B]">Delegación Oficial de FARECOH</span>
+              <span>Reconocimiento Internacional</span>
+            </figcaption>
+          </figure>
+
+          <figure class="overflow-hidden border border-[#e4e4e7] bg-[#091118]">
+            <img
+              src="/images/fotografias/IMG_6838.webp"
+              alt="Elenco completo de orquesta y coros en concierto de gala"
+              class="w-full aspect-[16/9] object-cover"
+              loading="lazy"
+              width="800"
+              height="450"
+            />
+            <figcaption class="p-4 bg-white border-t border-[#e4e4e7] text-xs text-[#71717a] flex justify-between">
+              <span class="font-medium text-[#18181B]">Concierto de Gala Anual</span>
+              <span>Teatro Nacional</span>
+            </figcaption>
+          </figure>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Sección 2: Misión y Visión Institucional -->
+  <section class="landing-section bg-[#fcfbfa] py-24 lg:py-32 border-b border-[#e4e4e7]">
+    <div class="landing-shell">
+      
+      <header class="mb-16 max-w-3xl">
+        <p class="text-xs font-semibold uppercase tracking-widest text-[#0378A6] mb-3">
+          Principios Rectores
+        </p>
+        <h2 class="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-[#18181B] leading-tight">
+          Misión y Visión que guían nuestras acciones
+        </h2>
+      </header>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16">
+        
+        <!-- Misión -->
+        <div class="bg-white border-t-2 border-[#0378A6] border-x border-b border-[#e4e4e7] p-8 sm:p-12 flex flex-col justify-between">
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-widest text-[#0378A6] mb-4">
+              Misión Institucional
+            </p>
+            <blockquote class="font-serif text-xl sm:text-2xl font-normal leading-relaxed text-[#18181B]">
+              "{FARECOH_DATA.identity.mission}"
+            </blockquote>
+          </div>
+          <div class="mt-8 pt-6 border-t border-[#f1f3f5] text-xs font-medium text-[#71717a]">
+            Valores: Disciplina artística, solidaridad comunitaria, equidad de acceso y rescate social.
+          </div>
+        </div>
+
+        <!-- Visión -->
+        <div class="bg-white border-t-2 border-[#8A038C] border-x border-b border-[#e4e4e7] p-8 sm:p-12 flex flex-col justify-between">
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-widest text-[#8A038C] mb-4">
+              Visión de Futuro
+            </p>
+            <blockquote class="font-serif text-xl sm:text-2xl font-normal leading-relaxed text-[#18181B]">
+              "{FARECOH_DATA.identity.vision}"
+            </blockquote>
+          </div>
+          <div class="mt-8 pt-6 border-t border-[#f1f3f5] text-xs font-medium text-[#71717a]">
+            Objetivo: Modelo de transformación ciudadana e inserción cultural replicable a nivel nacional.
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Sección 3: Junta Directiva Bien Armada (Roster Institucional de Prestigio) -->
+  <section id="junta-directiva" class="landing-section bg-white py-24 lg:py-32 border-b border-[#e4e4e7]">
+    <div class="landing-shell">
+      
+      <header class="mb-16 max-w-3xl">
+        <p class="text-xs font-semibold uppercase tracking-widest text-[#0378A6] mb-3">
+          Gobernanza y Liderazgo
+        </p>
+        <h2 class="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-[#18181B] leading-tight mb-4">
+          Junta Directiva de FARECOH
+        </h2>
+        <p class="text-base sm:text-lg text-[#3f3f46] leading-relaxed">
+          Cuerpo directivo legalmente constituido e inscrito bajo personería jurídica formal en la República de Honduras. Responsable del cumplimiento estatuario, la transparencia financiera y la sostenibilidad del proyecto formativo.
+        </p>
+      </header>
+
+      <!-- Presidencia y Vicepresidencia en Foco Principal -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+        
+        <article class="bg-[#fcfbfa] border-l-4 border-[#0378A6] border-y border-r border-[#e4e4e7] p-8 sm:p-10">
+          <span class="text-xs font-semibold text-[#0378A6] uppercase tracking-wider block mb-2">
+            Presidencia de la Fundación
+          </span>
+          <h3 class="font-serif text-2xl sm:text-3xl font-bold text-[#18181B] mb-2">
+            Vivian Alvarado
+          </h3>
+          <p class="text-xs text-[#71717a] font-medium uppercase tracking-wider mb-4">
+            Representación Legal &bull; Dirección Ejecutiva
+          </p>
+          <p class="text-sm text-[#3f3f46] leading-relaxed font-normal">
+            Lidera la visión estratégica, las relaciones con organismos cooperantes multilaterales y la salvaguarda de los estatutos fundacionales en beneficio de la comunidad.
+          </p>
+        </article>
+
+        <article class="bg-[#fcfbfa] border-l-4 border-[#04B2D9] border-y border-r border-[#e4e4e7] p-8 sm:p-10">
+          <span class="text-xs font-semibold text-[#04B2D9] uppercase tracking-wider block mb-2">
+            Vicepresidencia de la Fundación
+          </span>
+          <h3 class="font-serif text-2xl sm:text-3xl font-bold text-[#18181B] mb-2">
+            Wanayran Alvarez
+          </h3>
+          <p class="text-xs text-[#71717a] font-medium uppercase tracking-wider mb-4">
+            Estrategia de Alianzas &bull; Coordinación Pedagógica
+          </p>
+          <p class="text-sm text-[#3f3f46] leading-relaxed font-normal">
+            Responsable del enlace institucional con programas académicos internacionales, vinculación comunitaria y supervisión de los planes de becas de estudio.
+          </p>
+        </article>
+
+      </div>
+
+      <!-- Roster Completo de Miembros de la Junta Directiva -->
+      <div class="bg-white border border-[#e4e4e7] divide-y divide-[#e4e4e7]">
+        <div class="p-6 bg-[#fcfbfa] flex items-center justify-between">
+          <h4 class="text-xs font-bold uppercase tracking-widest text-[#18181B]">
+            Roster Oficial de Miembros de la Junta Directiva
+          </h4>
+          <span class="text-xs text-[#71717a]">Periodo Estatutario Vigente</span>
+        </div>
+
+        {FARECOH_DATA.board.slice(2).map((member) => (
+          <div class="p-6 sm:px-8 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-[#fcfbfa] transition-colors">
+            <div class="flex items-baseline gap-4">
+              <span class="text-sm font-semibold text-[#0378A6] min-w-[120px]">
+                {member.role}
+              </span>
+              <span class="font-serif text-lg font-bold text-[#18181B]">
+                {member.name}
+              </span>
+            </div>
+            <span class="text-xs text-[#71717a]">
+              Miembro Oficial &bull; FARECOH
+            </span>
+          </div>
+        ))}
+      </div>
+
+      <!-- Certificación Estatutaria -->
+      <div class="mt-8 p-6 bg-[#fcfbfa] border border-[#e4e4e7] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs text-[#71717a]">
+        <div>
+          <span class="font-semibold text-[#18181B] block mb-0.5">Personería Jurídica y Régimen Fiscal</span>
+          <span>Inscrita oficialmente en el Registro de Asociaciones Civiles y Fundaciones de Honduras.</span>
+        </div>
+        <div class="shrink-0 text-xs font-semibold text-[#0378A6]">
+          100% Sin Fines de Lucro
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Sección 4: Red de Cooperación Internacional -->
+  <section class="landing-section bg-[#fcfbfa] py-24 lg:py-32">
+    <div class="landing-shell">
+      
+      <header class="mb-16 max-w-3xl">
+        <p class="text-xs font-semibold uppercase tracking-widest text-[#0378A6] mb-3">
+          Alianzas Estratégicas
+        </p>
+        <h2 class="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-[#18181B] leading-tight mb-4">
+          Red de Cooperación y Avales Internacionales
+        </h2>
+        <p class="text-base text-[#3f3f46] leading-relaxed">
+          Nuestros procesos están respaldados por convenios y alianzas con organismos multilaterales, agencias de cooperación y redes culturales de prestigio.
+        </p>
+      </header>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {FARECOH_DATA.partners.map((partner) => (
+          <div class="border border-[#e4e4e7] bg-white p-8 flex flex-col justify-between hover:border-[#0378A6] transition-colors">
+            <div>
+              <p class="text-xs font-semibold uppercase tracking-wider text-[#0378A6] mb-2">
+                {partner.type}
+              </p>
+              <h3 class="font-serif text-lg font-bold text-[#18181B]">
+                {partner.name}
+              </h3>
+            </div>
+            <div class="mt-6 pt-4 border-t border-[#f1f3f5] text-xs text-[#71717a]">
+              Convenio de Cooperación Activo
+            </div>
+          </div>
+        ))}
+      </div>
+
+    </div>
+  </section>
+</Layout>
+

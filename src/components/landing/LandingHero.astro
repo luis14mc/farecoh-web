@@ -1,52 +1,93 @@
 ---
-import { homeHero } from "@/data/home";
-import LandingButton from "@/components/landing/LandingButton.astro";
-import FarecohLogo from "@/components/layout/FarecohLogo.astro";
+import { FARECOH_DATA } from "@/data/farecoh";
+import SoundHarmonicsCanvas from "@/components/3d/SoundHarmonicsCanvas";
 ---
 
-<section class="hero-parallax relative flex min-h-[92vh] w-full items-end overflow-hidden bg-brand-neutral md:min-h-[92vh] md:items-center">
-  <div class="hero-parallax__media absolute inset-0 z-0 overflow-hidden">
-    <div class="parallax-layer" data-parallax data-parallax-speed="0.42" data-parallax-scale="1.14">
-      <img
-        class="h-full w-full object-cover object-center"
-        src={homeHero.image}
-        alt={homeHero.imageAlt}
-        fetchpriority="high"
-      />
+<section class="relative min-h-[90vh] w-full flex flex-col justify-between overflow-hidden bg-[#091118] text-white pt-28 pb-10 lg:pt-36 lg:pb-14">
+  <!-- 3D WebGL Parametric Harmonic Waves Canvas -->
+  <SoundHarmonicsCanvas client:only="react" className="z-0 opacity-85" />
+
+  <!-- Subtle Lighting Vignette -->
+  <div class="pointer-events-none absolute inset-0 z-[1] bg-gradient-to-t from-[#091118] via-[#091118]/40 to-transparent" aria-hidden="true"></div>
+  <div class="pointer-events-none absolute inset-0 z-[1] bg-[radial-gradient(ellipse_60%_50%_at_50%_0%,rgba(3,120,166,0.25),transparent_70%)]" aria-hidden="true"></div>
+
+  <!-- Hero Content -->
+  <div class="landing-shell relative z-10 w-full my-auto">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
+      
+      <!-- Columna Principal -->
+      <div class="lg:col-span-8">
+        <p class="text-xs font-semibold tracking-widest uppercase text-[#04B2D9] mb-4">
+          {FARECOH_DATA.identity.fullName} &bull; Valle de Ángeles, Honduras
+        </p>
+
+        <h1 class="font-serif text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-white leading-[1.08] mb-6 text-balance">
+          Transformamos vidas a través de la música y el arte sinfónico
+        </h1>
+
+        <p class="text-lg sm:text-xl text-white/80 max-w-2xl leading-relaxed font-normal mb-8 text-pretty">
+          {FARECOH_DATA.identity.heroSubheadline}
+        </p>
+
+        <div class="flex flex-wrap items-center gap-4">
+          <a
+            href="/programas"
+            class="inline-flex min-h-[48px] items-center justify-center rounded-lg bg-[#0378A6] px-7 py-3 text-sm font-semibold text-white transition-[background-color,color,transform] duration-200 hover:bg-[#04B2D9] hover:text-[#011e2a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#04B2D9] focus-visible:ring-offset-2 focus-visible:ring-offset-[#091118] active:scale-[0.98]"
+          >
+            Conocer Programas Formativos
+          </a>
+          <a
+            href="/#concierto-benefico"
+            class="inline-flex min-h-[48px] items-center justify-center rounded-lg border border-white/20 bg-white/[0.04] px-7 py-3 text-sm font-semibold text-white backdrop-blur-sm transition-[background-color,border-color,transform] duration-200 hover:bg-white/10 hover:border-white/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#091118] active:scale-[0.98]"
+          >
+            Concierto Benéfico 2026
+          </a>
+        </div>
+      </div>
+
+      <!-- Columna Lateral: Anuncio Editorial de Temporada -->
+      <div class="lg:col-span-4">
+        <aside class="border-l-2 border-[#04B2D9] pl-6 py-2 bg-gradient-to-r from-white/[0.03] to-transparent">
+          <p class="text-xs font-semibold uppercase tracking-wider text-[#04B2D9] mb-1.5">
+            Causa Solidaria Activa
+          </p>
+          <h2 class="text-xl font-bold text-white leading-snug">
+            Tributo Sinfónico a Pink Floyd
+          </h2>
+          <p class="mt-2 text-sm text-white/70 leading-relaxed font-normal">
+            Concierto a beneficio del trasplante de hígado de José Joaquín Cerrato. Una noche de rock clásico y orquesta en vivo.
+          </p>
+          <a
+            href="/#concierto-benefico"
+            class="mt-4 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[#04B2D9] hover:text-white transition-colors group"
+          >
+            <span>Ver detalles y boletos</span>
+            <span class="group-hover:translate-x-1 transition-transform" aria-hidden="true">&rarr;</span>
+          </a>
+        </aside>
+      </div>
+
     </div>
-    <div class="hero-editorial absolute inset-0"></div>
   </div>
 
-  <div class="landing-section relative z-10 w-full pb-12 pt-32 md:pb-16 md:pt-16">
-    <div class="landing-shell hero-content max-w-4xl text-white">
-      <div class="mb-6 inline-flex items-center gap-3 rounded-full border border-white/20 bg-black/40 px-4 py-2 backdrop-blur-md">
-        <span class="inline-block h-2.5 w-2.5 rounded-full bg-brand-400 animate-pulse" aria-hidden="true"></span>
-        <span class="text-xs font-bold uppercase tracking-[0.18em] text-white/90">Música · Educación · Transformación Social</span>
+  <!-- Franja Editorial Inferior -->
+  <div class="landing-shell relative z-10 w-full mt-12 pt-6 border-t border-white/10">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-6 text-xs text-white/60">
+      <div>
+        <span class="text-white font-semibold block text-sm mb-0.5">Valle de Ángeles</span>
+        <span>Sede permanente desde 2013</span>
       </div>
-
-      <div class="mb-6 flex items-center gap-4">
-        <FarecohLogo variant="stacked" theme="white" size="hero" loading="eager" />
+      <div>
+        <span class="text-white font-semibold block text-sm mb-0.5">Educación Gratuita</span>
+        <span>100% financiada por becas</span>
       </div>
-
-      <h1 class="text-4xl font-extrabold tracking-tight text-white sm:text-5xl md:text-6xl lg:text-7xl leading-[1.08] mb-6 drop-shadow-sm">
-        {homeHero.title}
-      </h1>
-
-      <p class="text-lg md:text-xl font-normal leading-relaxed text-white/90 max-w-2xl mb-4">
-        {homeHero.subtitle}
-      </p>
-
-      <p class="text-sm md:text-base font-medium text-brand-400 max-w-2xl mb-8">
-        {homeHero.body}
-      </p>
-
-      <div class="flex flex-col gap-4 sm:flex-row sm:flex-wrap">
-        <LandingButton href="/#concierto-benefico" variant="primary" class="rounded-xl shadow-lg hover:shadow-cyan-500/25">
-          {homeHero.ctaEvent}
-        </LandingButton>
-        <LandingButton href="/#historia" variant="secondary" class="rounded-xl backdrop-blur-sm">
-          {homeHero.ctaStory}
-        </LandingButton>
+      <div>
+        <span class="text-white font-semibold block text-sm mb-0.5">Inclusión Activa</span>
+        <span>Coro de Manos Blancas</span>
+      </div>
+      <div>
+        <span class="text-white font-semibold block text-sm mb-0.5">Cooperación Global</span>
+        <span>Alianzas OEA, AMEXCID e Iberorquestas</span>
       </div>
     </div>
   </div>

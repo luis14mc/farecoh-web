@@ -1,16 +1,13 @@
 ---
 import Layout from "@/layouts/Layout.astro";
 import LandingHero from "@/components/landing/LandingHero.astro";
-import WhoWeAre from "@/components/landing/WhoWeAre.astro";
-import CauseBlock from "@/components/landing/CauseBlock.astro";
-import MissionVision from "@/components/landing/MissionVision.astro";
-import WhatWeDo from "@/components/landing/WhatWeDo.astro";
 import ImpactBlock from "@/components/landing/ImpactBlock.astro";
 import EmotionalQuote from "@/components/landing/EmotionalQuote.astro";
 import FinalCTA from "@/components/landing/FinalCTA.astro";
+import { FARECOH_DATA } from "@/data/farecoh";
+import { homeAbout } from "@/data/home";
 import { seoPages, organizationJsonLd, webSiteJsonLd } from "@/data/seo";
 import { site } from "@/data/site";
-import Analytics from '@vercel/analytics/astro';
 
 const benefitConcertSubject = encodeURIComponent("Apoyo concierto benéfico FARECOH");
 const benefitConcertBody = encodeURIComponent(
@@ -27,100 +24,283 @@ const benefitConcertMailto = `mailto:${site.email}?subject=${benefitConcertSubje
   jsonLd={[organizationJsonLd(), webSiteJsonLd()]}
   active="home"
 >
+  <!-- Hero con Lienzo 3D en Three.js -->
   <LandingHero />
-  <WhoWeAre />
-  <CauseBlock />
-  <MissionVision />
-  <WhatWeDo />
 
-  <section id="concierto-benefico" class="reveal-section bg-surface-container-lowest py-20 md:py-28" aria-labelledby="benefit-concert-title">
+  <!-- Sección Institucional: Origen y Causa Social (Puente a /nosotros) -->
+  <section class="reveal-section landing-section bg-white py-24 lg:py-32 border-b border-[#e4e4e7]">
     <div class="landing-shell">
-      <div class="grid overflow-hidden rounded-3xl border border-outline-variant/70 bg-surface shadow-xl lg:grid-cols-[0.95fr_1.05fr]">
-        <figure class="relative min-h-[340px] lg:min-h-[520px]">
-          <img
-            src="/images/evento/hero.webp"
-            alt="Escenario preparado para un concierto cultural benéfico"
-            class="h-full min-h-[340px] w-full object-cover lg:min-h-[520px]"
-            loading="lazy"
-            width="1600"
-            height="1067"
-          />
-          <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent" aria-hidden="true"></div>
-          <figcaption class="absolute bottom-0 left-0 right-0 p-6 md:p-8">
-            <span class="inline-flex items-center gap-2 rounded-full bg-black/60 px-3 py-1 text-xs font-semibold text-white/90 backdrop-blur-md mb-2">
-              <span class="h-1.5 w-1.5 rounded-full bg-concert-orange animate-ping"></span>
-              Causa Solidaria
-            </span>
-            <p class="max-w-md text-sm font-medium leading-relaxed text-white/95">
-              Una iniciativa cultural y solidaria impulsada desde el arte para acompañar una causa humana.
-            </p>
-          </figcaption>
-        </figure>
-
-        <div class="flex flex-col justify-center p-8 md:p-12 lg:p-16">
-          <div class="mb-6 flex flex-wrap items-center gap-3">
-            <span class="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/10 px-3.5 py-1 text-xs font-bold uppercase tracking-[0.18em] text-primary">
-              Próximamente
-            </span>
-            <span class="text-xs font-semibold text-on-surface-variant/90">Valle de Ángeles, Honduras</span>
-          </div>
-
-          <p class="mb-2 text-xs font-bold uppercase tracking-[0.2em] text-primary">
-            Concierto benéfico
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
+        
+        <div class="lg:col-span-7">
+          <p class="text-xs font-semibold uppercase tracking-widest text-[#0378A6] mb-3">
+            Nuestra Razón de Ser
           </p>
-
-          <h2 id="benefit-concert-title" class="max-w-3xl text-3xl font-extrabold leading-tight tracking-tight text-on-surface sm:text-4xl lg:text-5xl">
-            Tributo a Pink Floyd a beneficio de José Joaquín Cerrato
+          <h2 class="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-[#18181B] leading-[1.12] mb-6">
+            La música como herramienta de dignidad y convivencia pacífica
           </h2>
-
-          <p class="mt-4 max-w-2xl text-base sm:text-lg leading-relaxed text-on-surface-variant">
-            FARECOH prepara una noche musical en Valle de Ángeles para apoyar la recaudación de fondos destinada al trasplante de hígado de José Joaquín Cerrato.
+          <p class="text-lg leading-relaxed text-[#18181B] mb-6 font-normal text-pretty">
+            {homeAbout.body}
           </p>
-
-          <div class="mt-8 grid gap-3 sm:grid-cols-3">
-            <div class="rounded-xl border border-outline-variant/60 bg-surface-container-low/70 p-4">
-              <p class="text-xs font-bold uppercase tracking-[0.14em] text-on-surface-variant/80">Formato</p>
-              <p class="mt-1 text-sm font-bold text-on-surface">Concierto tributo</p>
-            </div>
-            <div class="rounded-xl border border-outline-variant/60 bg-surface-container-low/70 p-4">
-              <p class="text-xs font-bold uppercase tracking-[0.14em] text-on-surface-variant/80">Lugar</p>
-              <p class="mt-1 text-sm font-bold text-on-surface">Valle de Ángeles</p>
-            </div>
-            <div class="rounded-xl border border-outline-variant/60 bg-surface-container-low/70 p-4">
-              <p class="text-xs font-bold uppercase tracking-[0.14em] text-on-surface-variant/80">Causa</p>
-              <p class="mt-1 text-sm font-bold text-on-surface">Trasplante de hígado</p>
-            </div>
-          </div>
-
-          <div class="mt-8 flex flex-col gap-3 sm:flex-row">
-            <a
-              href={benefitConcertMailto}
-              class="inline-flex min-h-[48px] items-center justify-center rounded-xl bg-primary px-7 py-3 text-xs font-bold uppercase tracking-[0.14em] text-white shadow-md transition-all duration-200 hover:bg-brand-500 hover:shadow-lg hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 active:scale-98"
-            >
-              Quiero apoyar
-            </a>
-            <a
-              href={`mailto:${site.email}`}
-              class="inline-flex min-h-[48px] items-center justify-center rounded-xl border border-outline-variant px-7 py-3 text-xs font-bold uppercase tracking-[0.14em] text-on-surface transition-all duration-200 hover:border-primary hover:text-primary hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 active:scale-98"
-            >
-              Escribir a FARECOH
-            </a>
-          </div>
+          <blockquote class="border-l-2 border-[#0378A6] pl-6 py-2 my-6">
+            <p class="font-serif text-lg text-[#3f3f46] leading-relaxed italic">
+              "{FARECOH_DATA.identity.mission}"
+            </p>
+          </blockquote>
+          <a
+            href="/nosotros"
+            class="inline-flex items-center gap-2 text-sm font-semibold text-[#0378A6] hover:text-[#04B2D9] transition-colors group"
+          >
+            <span>Conoce nuestra historia, misión y junta directiva</span>
+            <span class="group-hover:translate-x-1 transition-transform" aria-hidden="true">&rarr;</span>
+          </a>
         </div>
+
+        <div class="lg:col-span-5">
+          <figure class="relative overflow-hidden bg-[#091118] border border-[#e4e4e7]">
+            <img
+              src="/images/fotografias/IMG_6838.webp"
+              alt="Orquesta y coro de FARECOH en concierto oficial"
+              class="w-full aspect-[4/3] object-cover"
+              loading="lazy"
+              width="800"
+              height="600"
+            />
+            <figcaption class="p-4 bg-white border-t border-[#e4e4e7] flex justify-between items-center text-xs text-[#71717a]">
+              <span class="font-medium text-[#18181B]">Orquesta Sinfónica en Concierto</span>
+              <span>Valle de Ángeles</span>
+            </figcaption>
+          </figure>
+        </div>
+
       </div>
     </div>
   </section>
 
+  <!-- Sección Pilares Pedagógicos con Fotografía Real (Puente a /programas) -->
+  <section id="programas" class="reveal-section landing-section bg-[#fcfbfa] py-24 lg:py-32 border-b border-[#e4e4e7]">
+    <div class="landing-shell">
+      
+      <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-16">
+        <div class="max-w-2xl">
+          <p class="text-xs font-semibold uppercase tracking-widest text-[#0378A6] mb-3">
+            Oferta Académica y Social
+          </p>
+          <h2 class="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-[#18181B] leading-tight">
+            Nuestros cuatro pilares formativos
+          </h2>
+          <p class="mt-3 text-base text-[#3f3f46]">
+            Formación sinfónica, inclusión coral con señas, artes plásticas y estimulación temprana con becas completas.
+          </p>
+        </div>
+        <a
+          href="/programas"
+          class="inline-flex shrink-0 items-center gap-2 rounded-lg bg-[#0378A6] px-6 py-3 text-sm font-semibold text-white hover:bg-[#04B2D9] hover:text-[#011e2a] transition-colors"
+        >
+          <span>Ver programas en detalle</span>
+          <span aria-hidden="true">&rarr;</span>
+        </a>
+      </div>
+
+      <!-- Cuadrícula Editorial con Fotografías Reales de Cada Programa -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        
+        <!-- 1. Orquesta -->
+        <article class="bg-white border border-[#e4e4e7] overflow-hidden flex flex-col justify-between group hover:border-[#0378A6] transition-colors">
+          <div class="relative aspect-[4/3] overflow-hidden bg-[#091118]">
+            <img
+              src="/images/fotografias/IMG_6841.webp"
+              alt="Jóvenes violinistas de FARECOH en ensayo orquestal"
+              class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+              loading="lazy"
+              width="600"
+              height="450"
+            />
+          </div>
+          <div class="p-6 flex-1 flex flex-col justify-between">
+            <div>
+              <p class="text-xs font-semibold text-[#0378A6] uppercase tracking-wider mb-2">Música Sinfónica</p>
+              <h3 class="font-serif text-lg font-bold text-[#18181B] mb-2 leading-snug">
+                Orquesta Infantil y Juvenil
+              </h3>
+              <p class="text-sm text-[#3f3f46] leading-relaxed line-clamp-3">
+                Cuerdas, maderas, metales y percusión bajo metodología de ensamble colectivo.
+              </p>
+            </div>
+            <div class="mt-6 pt-4 border-t border-[#f1f3f5] text-xs font-semibold text-[#18181B]">
+              Beca 100% Gratuita
+            </div>
+          </div>
+        </article>
+
+        <!-- 2. Coro Manos Blancas -->
+        <article class="bg-white border border-[#e4e4e7] overflow-hidden flex flex-col justify-between group hover:border-[#0378A6] transition-colors">
+          <div class="relative aspect-[4/3] overflow-hidden bg-[#091118]">
+            <img
+              src="/images/fotografias/IMG_6846.webp"
+              alt="Coro de Manos Blancas de FARECOH interpretando con guantes blancos"
+              class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+              loading="lazy"
+              width="600"
+              height="450"
+            />
+          </div>
+          <div class="p-6 flex-1 flex flex-col justify-between">
+            <div>
+              <p class="text-xs font-semibold text-[#8A038C] uppercase tracking-wider mb-2">Inclusión Sensorial</p>
+              <h3 class="font-serif text-lg font-bold text-[#18181B] mb-2 leading-snug">
+                Coro de Manos Blancas
+              </h3>
+              <p class="text-sm text-[#3f3f46] leading-relaxed line-clamp-3">
+                Expresión gestual y coral para niños y jóvenes con diversidad funcional auditiva y motriz.
+              </p>
+            </div>
+            <div class="mt-6 pt-4 border-t border-[#f1f3f5] text-xs font-semibold text-[#18181B]">
+              Modelo Pionero
+            </div>
+          </div>
+        </article>
+
+        <!-- 3. Artes Plásticas -->
+        <article class="bg-white border border-[#e4e4e7] overflow-hidden flex flex-col justify-between group hover:border-[#0378A6] transition-colors">
+          <div class="relative aspect-[4/3] overflow-hidden bg-[#091118]">
+            <img
+              src="/images/fotografias/IMG_6849.webp"
+              alt="Estudiante en taller de artes plásticas y dibujo de FARECOH"
+              class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+              loading="lazy"
+              width="600"
+              height="450"
+            />
+          </div>
+          <div class="p-6 flex-1 flex flex-col justify-between">
+            <div>
+              <p class="text-xs font-semibold text-[#0378A6] uppercase tracking-wider mb-2">Expresión Visual</p>
+              <h3 class="font-serif text-lg font-bold text-[#18181B] mb-2 leading-snug">
+                Artes Plásticas y Visuales
+              </h3>
+              <p class="text-sm text-[#3f3f46] leading-relaxed line-clamp-3">
+                Dibujo, pintura, modelado y sensibilización creativa vinculada a las tradiciones locales.
+              </p>
+            </div>
+            <div class="mt-6 pt-4 border-t border-[#f1f3f5] text-xs font-semibold text-[#18181B]">
+              Talleres Abiertos
+            </div>
+          </div>
+        </article>
+
+        <!-- 4. Estimulación Temprana -->
+        <article class="bg-white border border-[#e4e4e7] overflow-hidden flex flex-col justify-between group hover:border-[#0378A6] transition-colors">
+          <div class="relative aspect-[4/3] overflow-hidden bg-[#091118]">
+            <img
+              src="/images/fotografias/IMG_6830.webp"
+              alt="Niña en sesión de estimulación temprana y desarrollo multisensorial"
+              class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+              loading="lazy"
+              width="600"
+              height="450"
+            />
+          </div>
+          <div class="p-6 flex-1 flex flex-col justify-between">
+            <div>
+              <p class="text-xs font-semibold text-[#0378A6] uppercase tracking-wider mb-2">Desarrollo Infantil</p>
+              <h3 class="font-serif text-lg font-bold text-[#18181B] mb-2 leading-snug">
+                Estimulación Temprana
+              </h3>
+              <p class="text-sm text-[#3f3f46] leading-relaxed line-clamp-3">
+                Desarrollo psicomotriz, auditivo y cognitivo desde los primeros años de vida.
+              </p>
+            </div>
+            <div class="mt-6 pt-4 border-t border-[#f1f3f5] text-xs font-semibold text-[#18181B]">
+              Acompañamiento Familiar
+            </div>
+          </div>
+        </article>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Sección Concierto Benéfico 2026: Escenario Teatral Prisma -->
+  <section id="concierto-benefico" class="reveal-section bg-[#091118] py-24 lg:py-32 text-white border-b border-white/10" aria-labelledby="benefit-concert-title">
+    <div class="landing-shell">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
+        
+        <div class="lg:col-span-5">
+          <figure class="overflow-hidden border border-white/15">
+            <img
+              src="/images/evento/hero.webp"
+              alt="Escenario del concierto benéfico tributo sinfónico a Pink Floyd de FARECOH"
+              class="w-full aspect-[4/5] object-cover"
+              loading="lazy"
+              width="1600"
+              height="1067"
+            />
+            <figcaption class="p-4 bg-[#18181B] border-t border-white/10 text-xs text-white/70 flex justify-between items-center">
+              <span>Valle de Ángeles, F.M.</span>
+              <span class="text-[#04B2D9] font-medium">Temporada Solidaria</span>
+            </figcaption>
+          </figure>
+        </div>
+
+        <div class="lg:col-span-7">
+          <p class="text-xs font-semibold uppercase tracking-widest text-[#04B2D9] mb-3">
+            Concierto Benéfico 2026
+          </p>
+
+          <h2 id="benefit-concert-title" class="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold leading-[1.12] tracking-tight text-white mb-6 text-balance">
+            Tributo Sinfónico a Pink Floyd en Valle de Ángeles
+          </h2>
+
+          <p class="text-lg text-white/80 leading-relaxed max-w-2xl mb-8 font-normal text-pretty">
+            Una producción artística donde los jóvenes músicos de FARECOH se unen a instrumentistas de trayectoria para respaldar los fondos del trasplante de hígado de José Joaquín Cerrato.
+          </p>
+
+          <div class="grid grid-cols-3 gap-6 pt-6 border-t border-white/15 text-xs uppercase tracking-wider mb-8">
+            <div>
+              <span class="text-[#04B2D9] font-semibold block mb-1">Formato</span>
+              <span class="text-white text-sm font-semibold">Orquesta y Banda</span>
+            </div>
+            <div>
+              <span class="text-[#04B2D9] font-semibold block mb-1">Sede</span>
+              <span class="text-white text-sm font-semibold">Valle de Ángeles</span>
+            </div>
+            <div>
+              <span class="text-[#8A038C] font-semibold block mb-1">Causa</span>
+              <span class="text-white text-sm font-semibold">Salud y Solidaridad</span>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-4">
+            <a
+              href={benefitConcertMailto}
+              class="inline-flex min-h-[48px] items-center justify-center rounded-lg bg-[#0378A6] px-8 py-3 text-sm font-semibold text-white transition-[background-color,color,transform] duration-200 hover:bg-[#04B2D9] hover:text-[#011e2a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#04B2D9] focus-visible:ring-offset-2 focus-visible:ring-offset-[#091118] active:scale-[0.98]"
+            >
+              Apoyar la Causa
+            </a>
+            <a
+              href={`mailto:${site.email}`}
+              class="inline-flex min-h-[48px] items-center justify-center rounded-lg border border-white/20 bg-white/[0.04] px-8 py-3 text-sm font-semibold text-white backdrop-blur-sm transition-[background-color,border-color,transform] duration-200 hover:bg-white/10 hover:border-white/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#091118] active:scale-[0.98]"
+            >
+              Contacto Directo
+            </a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Métricas de Impacto -->
   <ImpactBlock />
+
+  <!-- Cita Filosófica -->
   <EmotionalQuote />
+
+  <!-- Llamado Final -->
   <FinalCTA />
 </Layout>
-
-<script>
-  import { initParallax } from "@/scripts/parallax";
-
-  initParallax();
-</script>
 
 <script is:inline>
   const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;

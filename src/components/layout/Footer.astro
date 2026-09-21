@@ -24,10 +24,10 @@ const mutedClass =
 
 const linkClass =
   variant === "concert"
-    ? "body-md text-white/65 transition-colors hover:text-concert-amber"
+    ? "body-md text-white/65 transition-colors hover:text-concert-amber focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#04B2D9] focus-visible:ring-offset-2 focus-visible:ring-offset-[#091118] rounded-sm"
     : variant === "dark"
-      ? "body-md text-outline-variant transition-colors hover:text-brand-400"
-      : "body-md text-on-surface-variant transition-colors hover:text-brand-700";
+      ? "body-md text-outline-variant transition-colors hover:text-brand-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#04B2D9] focus-visible:ring-offset-2 focus-visible:ring-offset-[#18181B] rounded-sm"
+      : "body-md text-on-surface-variant transition-colors hover:text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0378A6] focus-visible:ring-offset-2 rounded-sm";
 
 const titleClass =
   variant === "concert"
@@ -55,9 +55,9 @@ const logoTheme = variant === "light" ? "color" : "white";
       <div class="flex flex-col space-y-2.5">
         <h4 class={titleClass}>Navegación</h4>
         <a class={linkClass} href="/">Inicio</a>
-        <a class={linkClass} href="/#historia">Nuestra Historia</a>
-        <a class={linkClass} href="/#programas">Programas</a>
-        <a class={linkClass} href="/#impacto">Impacto</a>
+        <a class={linkClass} href="/nosotros">Sobre Nosotros</a>
+        <a class={linkClass} href="/programas">Programas Formativos</a>
+        <a class={linkClass} href="/nosotros#junta-directiva">Junta Directiva</a>
         <a class={linkClass} href="/#concierto-benefico">Concierto Benéfico</a>
       </div>
       <div class="flex flex-col space-y-2.5">
