@@ -107,16 +107,16 @@ export function EventOverviewCard({
   const total = Math.max(capacity, segments.reduce((a, s) => a + s.count, 0), 1);
 
   return (
-    <section className="relative overflow-hidden rounded-2xl bg-[#08182e] p-6 text-white shadow-sm md:p-7" aria-label="Resumen del evento">
+    <section className="relative overflow-hidden rounded-2xl bg-[#00507c] p-6 text-white shadow-sm md:p-7" aria-label="Resumen del evento">
       <svg className="pointer-events-none absolute -right-10 bottom-0 h-full w-2/3 opacity-[0.07]" viewBox="0 0 400 120" preserveAspectRatio="none" aria-hidden="true">
-        <path d="M0 60 C 50 10, 100 110, 150 60 S 250 10, 300 60 S 380 100, 400 60" fill="none" stroke="#4fc3f5" strokeWidth="2" />
+        <path d="M0 60 C 50 10, 100 110, 150 60 S 250 10, 300 60 S 380 100, 400 60" fill="none" stroke="#83cfff" strokeWidth="2" />
         <path d="M0 75 C 60 40, 110 110, 170 75 S 270 30, 330 75 S 390 95, 400 80" fill="none" stroke="#fff" strokeWidth="1" />
       </svg>
 
       <div className="relative grid gap-6 lg:grid-cols-[1fr_auto] lg:items-end">
         <div className="space-y-4">
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#4fc3f5]">Evento activo</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#83cfff]">Evento activo</p>
             <h2 className="mt-1 text-lg font-semibold tracking-tight md:text-xl">{eventName}</h2>
           </div>
 

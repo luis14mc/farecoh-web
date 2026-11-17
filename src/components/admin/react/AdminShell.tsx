@@ -39,7 +39,7 @@ function NavLinks({
             onClick={onNavigate}
             aria-current={isActive ? "page" : undefined}
             className={cn(
-              "group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4fc3f5]",
+              "group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#83cfff]",
               dark
                 ? isActive
                   ? "bg-white/10 text-white"
@@ -50,12 +50,12 @@ function NavLinks({
             )}
           >
             {isActive && (
-              <span className={cn("absolute inset-y-1.5 left-0 w-0.5 rounded-full", dark ? "bg-[#4fc3f5]" : "bg-primary")} />
+              <span className={cn("absolute inset-y-1.5 left-0 w-0.5 rounded-full", dark ? "bg-[#83cfff]" : "bg-primary")} />
             )}
             <Icon
               className={cn(
                 "h-4 w-4 shrink-0",
-                dark ? (isActive ? "text-[#4fc3f5]" : "text-white/45 group-hover:text-white/80") : isActive ? "text-primary" : "text-muted-foreground",
+                dark ? (isActive ? "text-[#83cfff]" : "text-white/45 group-hover:text-white/80") : isActive ? "text-primary" : "text-muted-foreground",
               )}
             />
             <span>{item.label}</span>
@@ -79,7 +79,7 @@ function ProfileCard({ staffProfile, dark = false }: { staffProfile: UserProfile
   return (
     <div className={cn("flex items-center gap-3 rounded-lg p-2.5", dark ? "bg-white/5" : "border bg-card")}>
       <Avatar className={cn("h-9 w-9", dark ? "ring-1 ring-white/15" : "border border-border")}>
-        <AvatarFallback className={cn("text-xs font-bold", dark ? "bg-[#4fc3f5]/15 text-[#4fc3f5]" : "bg-primary/10 text-primary")}>
+        <AvatarFallback className={cn("text-xs font-bold", dark ? "bg-[#83cfff]/15 text-[#83cfff]" : "bg-primary/10 text-primary")}>
           {initials}
         </AvatarFallback>
       </Avatar>

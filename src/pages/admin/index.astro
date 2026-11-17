@@ -142,7 +142,7 @@ const pendingReservations = countTicketsByStatus(tickets, "reserved");
 const soldCount = countTicketsSold(tickets);
 const validatedCount = countTicketsByStatus(tickets, "validated");
 const overviewSegments = [
-  { label: "Vendidos", count: soldCount, color: "#4fc3f5" },
+  { label: "Vendidos", count: soldCount, color: "#83cfff" },
   { label: "Reservados", count: pendingReservations, color: "#f5b94f" },
   { label: "Asignados", count: countTicketsByStatus(tickets, "assigned"), color: "#8aa4ff" },
   { label: "Disponibles", count: countTicketsByStatus(tickets, "available"), color: "rgba(255,255,255,0.18)" },
