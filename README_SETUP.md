@@ -40,14 +40,7 @@ FARECOH_NOTIFY_WHATSAPP_TO=whatsapp:+504XXXXXXXX
    ```bash
    pnpm db:init
    ```
-   o aplica directamente `database/schema.sql` usando `psql`:
-   ```bash
-   psql "$DATABASE_URL" -f database/schema.sql
-   ```
-4. El esquema creará las tablas, índices, funciones RPC (`create_ticket_order`, `validate_ticket`, `staff_reserve_ticket`, etc.) y el usuario inicial:
-   - **Correo**: `admin@farecoh.org`
-   - **Contraseña inicial**: `Admin2026!farecoh`
-   *(Cambia esta contraseña desde el panel de usuarios tras iniciar sesión)*.
+   Crea tu cuenta con `pnpm db:create-admin -- --email admin@ejemplo.org --name "Administrador FARECOH"` y entra en `/admin/login`.
 
 ## Comandos
 

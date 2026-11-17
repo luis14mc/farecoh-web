@@ -1,0 +1,64 @@
+---
+import InstitutionalLayout from "@/layouts/InstitutionalLayout.astro";
+import EventsHero from "@/components/events-public/EventsHero.astro";
+import EventCard from "@/components/events-public/EventCard.astro";
+import { listPublicEvents } from "@/services/public-events";
+
+const events = await listPublicEvents();
+const today = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Tegucigalpa" }).format(new Date());
+const upcoming = events.filter((event) => event.event_date >= today);
+const past = events.filter((event) => event.event_date < today).sort((a, b) => b.event_date.localeCompare(a.event_date));
+---
+
+<InstitutionalLayout title="Eventos | FARECOH" description="Cartelera cultural de FARECOH: conciertos y presentaciones de nuestros coros y orquestas." canonicalPath="/eventos">
+  <EventsHero
+    eyebrow="Cartelera"
+    title="Eventos y conciertos"
+    lead="Cada boleto apoya la formación artística de niñas, niños y jóvenes en Honduras."
+  />
+
+  <section class="ev-list" aria-labelledby="ev-upcoming">
+    <div class="ev-list__inner">
+      <header class="ev-list__head">
+        <h2 id="ev-upcoming">Próximos eventos</h2>
+        <span>{upcoming.length} {upcoming.length === 1 ? "evento" : "eventos"}</span>
+      </header>
+      {upcoming.length ? (
+        <div class="ev-list__grid">{upcoming.map((event) => <EventCard event={event} />)}</div>
+      ) : (
+        <div class="ev-list__empty">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" /></svg>
+          <p><strong>Pronto anunciaremos nuevos conciertos.</strong></p>
+          <p>Mientras tanto, conoce nuestros <a href="/programas">programas formativos</a>.</p>
+        </div>
+      )}
+
+      {past.length > 0 && (
+        <>
+          <header class="ev-list__head ev-list__head--past">
+            <h2>Eventos pasados</h2>
+          </header>
+          <div class="ev-list__grid">{past.map((event) => <EventCard event={event} past />)}</div>
+        </>
+      )}
+    </div>
+  </section>
+</InstitutionalLayout>
+
+<style>
+  .ev-list { background: #f5fafe; padding-block: clamp(3rem, 6vw, 5rem); font-family: "Inter", system-ui, sans-serif; }
+  .ev-list__inner { width: min(100% - 2.5rem, 1200px); margin-inline: auto; }
+  .ev-list__head { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; margin-bottom: 1.5rem; }
+  .ev-list__head h2 { margin: 0; font-size: clamp(1.5rem, 2.5vw, 2rem); font-weight: 700; letter-spacing: -0.02em; color: #005082; }
+  .ev-list__head span { color: #5b6572; font-size: 0.875rem; }
+  .ev-list__head--past { margin-top: clamp(3rem, 6vw, 4.5rem); }
+  .ev-list__grid { display: grid; gap: 1.5rem; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); }
+  .ev-list__empty {
+    display: grid; justify-items: center; gap: 0.35rem; text-align: center;
+    padding: 3rem 1.5rem; border: 1.5px dashed #c9dbe8; border-radius: 16px; background: #fff; color: #404750;
+  }
+  .ev-list__empty svg { color: #0069a8; margin-bottom: 0.5rem; }
+  .ev-list__empty p { margin: 0; }
+  .ev-list__empty strong { color: #005082; }
+  .ev-list__empty a { color: #005082; font-weight: 600; }
+</style>

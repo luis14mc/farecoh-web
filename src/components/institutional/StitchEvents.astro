@@ -1,30 +1,15 @@
 ---
-import type { EventData } from "@/lib/events";
+import { eventDateLabel, listPublicEvents, salesAreOpen } from "@/services/public-events";
+import { formatSiteCurrency } from "@/lib/locale";
 
 interface Props {
   readonly eyebrow: string;
   readonly headline: string;
   readonly source: string;
-  readonly event: EventData;
-  readonly image: string;
-  readonly imageAlt: string;
-  readonly learnHref: string;
-  readonly ticketsHref: string;
 }
 
-const { eyebrow, headline, source, event, image, imageAlt, learnHref, ticketsHref } = Astro.props;
-
-const eventDate = new Date(event.date);
-const day = Number.isNaN(eventDate.getTime()) ? "—" : String(eventDate.getDate()).padStart(2, "0");
-const month = Number.isNaN(eventDate.getTime())
-  ? "—"
-  : new Intl.DateTimeFormat("es-HN", { month: "short" }).format(eventDate).replace(".", "").toUpperCase();
-
-const lempira = new Intl.NumberFormat("es-HN", {
-  style: "currency",
-  currency: "HNL",
-  maximumFractionDigits: 0,
-}).format(event.ticket_price);
+const { eyebrow, headline, source } = Astro.props;
+const events = (await listPublicEvents()).slice(0, 3);
 ---
 
 <section id="eventos" class="fc-events" aria-labelledby="events-title">
@@ -38,8 +23,8 @@ const lempira = new Intl.NumberFormat("es-HN", {
         <h2 id="events-title" class="fc-events__title">{headline}</h2>
         <p class="fc-events__sub">{source}</p>
       </div>
-      <a href="/eventos/pink-floyd" class="fc-events__link">
-        <span>Ver calendario anual</span>
+      <a href="/eventos" class="fc-events__link">
+        <span>Ver todos los eventos</span>
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <rect x="3" y="5" width="18" height="16" rx="3" />
           <path d="M8 3v4M16 3v4M3 11h18" />
@@ -47,45 +32,53 @@ const lempira = new Intl.NumberFormat("es-HN", {
       </a>
     </header>
 
-    <article class="fc-events__card">
+    {!events.length && <p class="fc-events__sub">Consulta la cartelera para conocer nuestros eventos.</p>}
+    {events.map((event) => {
+      const learnHref = `/eventos/${event.slug}`;
+      const image = event.image_url ?? (event.slug === "pink-floyd" ? "/images/evento/hero.webp" : "/images/farecoh-hero-orchestra.webp");
+      const day = event.event_date.slice(8);
+      const month = new Intl.DateTimeFormat("es-HN", { month: "short", timeZone: "UTC" })
+        .format(new Date(event.event_date)).toUpperCase();
+      return <article class="fc-events__card">
       <div class="fc-events__media">
-        <img src={image} alt={imageAlt} loading="lazy" decoding="async" />
+        <img src={image} alt={event.title} loading="lazy" decoding="async" />
         <span class="fc-events__date" aria-hidden="true">
           <span class="fc-events__date-day">{day}</span>
           <span class="fc-events__date-month">{month}</span>
         </span>
-        <span class="fc-events__pill">{lempira} · Boleto solidario</span>
+        <span class="fc-events__pill">{formatSiteCurrency(event.ticket_price)}</span>
       </div>
 
       <div class="fc-events__body">
-        <h3 class="fc-events__name">{event.name}</h3>
+        <h3 class="fc-events__name">{event.title}</h3>
 
         <p class="fc-events__meta">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z" /><circle cx="12" cy="10" r="3" />
           </svg>
-          <span>{event.venue}</span>
+          <span>{event.location}</span>
         </p>
         <p class="fc-events__meta">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" />
           </svg>
-          <span>{event.dateDisplay} · {event.time}</span>
+          <span>{eventDateLabel(event.event_date)} · {event.event_time}</span>
         </p>
 
-        <p class="fc-events__desc">{event.description}</p>
+        <p class="fc-events__desc">{event.subtitle ?? event.description}</p>
 
         <div class="fc-events__actions">
-          <a href={ticketsHref} class="fc-events__cta">
+          {salesAreOpen(event) && <a href={`${learnHref}/boletos`} class="fc-events__cta">
             <span>Reservar asiento</span>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M5 12h14M12 5l7 7-7 7" />
             </svg>
-          </a>
-          <a href={learnHref} class="fc-events__secondary">Conocer el concierto</a>
+          </a>}
+          <a href={learnHref} class="fc-events__secondary">Detalles del evento</a>
         </div>
       </div>
-    </article>
+    </article>;
+    })}
   </div>
 </section>
 

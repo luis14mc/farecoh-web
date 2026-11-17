@@ -1,0 +1,55 @@
+---
+interface Props {
+  readonly eyebrow: string;
+  readonly title: string;
+  readonly lead?: string;
+  readonly image?: string | null;
+}
+const { eyebrow, title, lead, image } = Astro.props;
+---
+
+<section class:list={["ev-hero", { "ev-hero--image": image }]}>
+  {image && <img class="ev-hero__bg" src={image} alt="" decoding="async" />}
+  <svg class="ev-hero__waves" viewBox="0 0 1440 80" preserveAspectRatio="none" aria-hidden="true">
+    <path d="M0 40 C 180 10, 360 10, 540 40 S 900 70, 1080 40 S 1350 15, 1440 35" />
+    <path d="M0 50 C 220 30, 440 30, 660 50 S 1100 70, 1440 48" />
+  </svg>
+  <div class="ev-hero__inner">
+    <slot name="before" />
+    <p class="ev-hero__eyebrow"><span aria-hidden="true"></span>{eyebrow}</p>
+    <h1 class="ev-hero__title">{title}</h1>
+    {lead && <p class="ev-hero__lead">{lead}</p>}
+    <slot />
+  </div>
+</section>
+
+<style>
+  .ev-hero {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    background: linear-gradient(160deg, #00507c 0%, #003d63 100%);
+    color: #fff;
+    padding: clamp(8rem, 14vw, 10rem) 0 clamp(3.5rem, 7vw, 5rem);
+    font-family: "Inter", system-ui, sans-serif;
+  }
+  .ev-hero__bg {
+    position: absolute; inset: 0; z-index: -2;
+    width: 100%; height: 100%; object-fit: cover; opacity: 0.35;
+  }
+  .ev-hero--image::before {
+    content: ""; position: absolute; inset: 0; z-index: -1;
+    background: linear-gradient(90deg, rgba(0, 61, 99, 0.95) 0%, rgba(0, 80, 124, 0.7) 55%, rgba(0, 80, 124, 0.35) 100%);
+  }
+  .ev-hero__waves { position: absolute; left: 0; bottom: 0; width: 100%; height: 70px; z-index: -1; pointer-events: none; }
+  .ev-hero__waves path { fill: none; stroke: #83cfff; stroke-width: 1.2; opacity: 0.35; vector-effect: non-scaling-stroke; }
+  .ev-hero__waves path + path { stroke: #fff; opacity: 0.12; }
+  .ev-hero__inner { width: min(100% - 2.5rem, 1200px); margin-inline: auto; display: grid; gap: 1rem; justify-items: start; }
+  .ev-hero__eyebrow {
+    display: flex; align-items: center; gap: 0.6rem; margin: 0;
+    font-size: 0.75rem; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: #83cfff;
+  }
+  .ev-hero__eyebrow span { width: 2.25rem; height: 2px; border-radius: 2px; background: currentColor; }
+  .ev-hero__title { color: #fff; margin: 0; max-width: 20ch; font-size: clamp(2.25rem, 5vw, 3.75rem); font-weight: 800; line-height: 1.05; letter-spacing: -0.03em; text-wrap: balance; }
+  .ev-hero__lead { margin: 0; max-width: 46rem; font-size: clamp(1rem, 1.3vw, 1.175rem); line-height: 1.6; color: rgba(255, 255, 255, 0.82); }
+</style>

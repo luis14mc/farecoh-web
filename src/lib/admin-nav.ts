@@ -1,4 +1,5 @@
 export type AdminNavKey =
+  | "events"
   | "dashboard"
   | "users"
   | "sales"
@@ -21,6 +22,7 @@ export interface AdminNavItem {
 
 export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
   { label: "Panel", href: "/admin", icon: "dashboard", key: "dashboard" },
+  { label: "Eventos", href: "/admin/events", icon: "event", key: "events" },
   { label: "Usuarios", href: "/admin/users", icon: "admin_panel_settings", key: "users" },
   { label: "Ventas", href: "/admin/sales", icon: "payments", key: "sales" },
   { label: "Reservas", href: "/admin/reservations", icon: "reservations", key: "reservations" },

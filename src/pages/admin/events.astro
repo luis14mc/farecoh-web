@@ -1,0 +1,16 @@
+---
+import AdminLayout from "@/layouts/AdminLayout.astro";
+import AdminPage from "@/components/admin/ui/AdminPage.astro";
+import { AdminPageHeader } from "@/components/admin/react/AdminPageHeader";
+import { EventsAdminPanel } from "@/components/admin/react/EventsAdminPanel";
+import { formatSiteDate } from "@/lib/locale"; import { listEvents } from "@/services/events";
+
+const events = await listEvents({ includeUnpublished: true });
+---
+<AdminLayout title="Eventos | FARECOH" description="Gestión de eventos" active="events">
+  <AdminPageHeader client:load title="Eventos" section="Cartelera" description="Gestiona los eventos de FARECOH."
+    currentDate={formatSiteDate(new Date(), { dateStyle: "medium" })} staffProfile={Astro.locals.staffProfile} authConfigured={true} />
+  <AdminPage>
+    <EventsAdminPanel client:load initialEvents={events} />
+  </AdminPage>
+</AdminLayout>

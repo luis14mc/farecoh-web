@@ -16,7 +16,7 @@ import { Label } from "@/components/ui/label";
 import { TicketStatusBadge } from "@/components/admin/react/TicketStatusBadge";
 import { TICKET_STATUS_LABELS } from "@/lib/ticket-status";
 
-export function TicketSearchQuick() {
+export function TicketSearchQuick({ eventId }: { eventId?: string }) {
   const [code, setCode] = useState("");
   const [message, setMessage] = useState<{ text: string; variant: "info" | "success" | "warning" | "destructive" } | null>(null);
   const [loading, setLoading] = useState(false);
@@ -45,7 +45,7 @@ export function TicketSearchQuick() {
     setValidated(false);
 
     try {
-      const res = await fetch(`/api/admin/tickets/search?code=${encodeURIComponent(clean)}`);
+      const res = await fetch(`/api/admin/tickets/search?code=${encodeURIComponent(clean)}${eventId ? `&event=${encodeURIComponent(eventId)}` : ""}`);
       setLoading(false);
 
       if (!res.ok) {

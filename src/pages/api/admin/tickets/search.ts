@@ -12,6 +12,10 @@ export const GET: APIRoute = async (context) => {
   const url = new URL(context.request.url);
   const codeParam = url.searchParams.get("code")?.trim();
   const tokenParam = url.searchParams.get("token")?.trim();
+  const eventId = url.searchParams.get("event");
+  if (eventId && !/^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i.test(eventId)) {
+    return Response.json({ ok: false, error: "Evento inválido." }, { status: 400 });
+  }
 
   if (!codeParam && !tokenParam) {
     return Response.json({ ok: false, error: "Indique código o token." }, { status: 400 });
@@ -26,9 +30,9 @@ export const GET: APIRoute = async (context) => {
                 seller_id, seller_name, sale_location, payment_method, payment_reference,
                 sold_at, validated_at, reserved_at, created_at, batch_id
          FROM tickets
-         WHERE ticket_code = $1
+         WHERE ticket_code = $1 AND ($2::uuid IS NULL OR event_id = $2)
          LIMIT 1;`,
-        [cleanCode]
+        [cleanCode, eventId]
       );
     } else if (tokenParam) {
       ticket = await queryOne(
@@ -36,9 +40,9 @@ export const GET: APIRoute = async (context) => {
                 seller_id, seller_name, sale_location, payment_method, payment_reference,
                 sold_at, validated_at, reserved_at, created_at, batch_id
          FROM tickets
-         WHERE qr_token = $1
+         WHERE qr_token = $1 AND ($2::uuid IS NULL OR event_id = $2)
          LIMIT 1;`,
-        [tokenParam]
+        [tokenParam, eventId]
       );
     }
 

@@ -1,5 +1,6 @@
 import {
   BarChart3,
+  CalendarDays,
   Bookmark,
   CreditCard,
   LayoutDashboard,
@@ -19,6 +20,7 @@ import type { AdminNavKey } from "@/lib/admin-nav";
 
 export const ADMIN_NAV_ICONS: Record<AdminNavKey, LucideIcon> = {
   dashboard: LayoutDashboard,
+  events: CalendarDays,
   users: Shield,
   sales: CreditCard,
   reservations: Bookmark,

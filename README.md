@@ -45,7 +45,7 @@ Abre [localhost:4321](http://localhost:4321). El servidor escucha en las interfa
    ```
 
 4. Ejecuta `npm run dev` y entra en `/admin/login`.
-5. El esquema contiene un usuario inicial `admin@farecoh.org`. Su contraseña inicial figura en [configuración de base de datos](docs/database-setup.md). **Cámbiala antes de exponer el panel públicamente** y no reutilices el secreto de ejemplo.
+5. Ejecuta `pnpm db:init` y crea tu cuenta con `pnpm db:create-admin -- --email admin@ejemplo.org --name "Administrador FARECOH"`. Consulta la [guía de Railway](docs/railway-deploy.md).
 
 Los scripts ejecutados directamente con Node no cargan `.env` automáticamente. Usa `--env-file=.env` o proporciona las variables en el entorno del proceso.
 

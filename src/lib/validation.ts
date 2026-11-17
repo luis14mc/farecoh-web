@@ -1,11 +1,11 @@
-﻿import { z } from "zod";
+import { z } from "zod";
 import { PINK_FLOYD_EVENT_SLUG } from "@/types/events";
 import { isTicketCode, normalizeTicketCode } from "@/services/ticket-code";
 
 export const eventSlugSchema = z
   .string()
   .trim()
-  .min(3)
+  .min(1)
   .max(80)
   .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "El slug del evento no es válido.");
 
