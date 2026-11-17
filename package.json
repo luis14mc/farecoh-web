@@ -16,6 +16,7 @@
         "test:ticketing": "node --experimental-strip-types --test tests/ticketing.test.ts",
         "test:ticket-print": "node --experimental-strip-types --test tests/ticket-print.test.ts",
         "db:init": "pnpm db:migrate && pnpm db:seed",
+        "db:deploy": "pnpm db:migrate && pnpm db:seed",
         "astro": "astro",
         "generate:ticket-assets": "node --experimental-strip-types scripts/generate-ticket-assets.ts",
         "export:canva-tickets": "node --experimental-strip-types scripts/export-canva-tickets.ts",
