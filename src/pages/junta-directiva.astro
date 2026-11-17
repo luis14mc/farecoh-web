@@ -4,6 +4,29 @@ import { FARECOH_BOARD } from "@/data/farecoh";
 
 const title = `Junta Directiva · FARECOH`;
 const description = "Gobierno institucional de FARECOH: cuerpo directivo voluntario.";
+
+const tones = [
+  "var(--color-brand-blue)",
+  "var(--color-accent-plum)",
+  "var(--color-accent-ruby)",
+  "var(--color-accent-sage)",
+  "var(--color-brand-cyan)",
+];
+
+function initials(name: string): string {
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((word) => word[0]?.toUpperCase() ?? "")
+    .join("");
+}
+
+function toneFor(index: number): string {
+  return tones[index % tones.length] ?? "var(--color-brand-blue)";
+}
+
+const boardCount = String(FARECOH_BOARD.length).padStart(2, "0");
 ---
 
 <InstitutionalLayout
@@ -12,51 +35,65 @@ const description = "Gobierno institucional de FARECOH: cuerpo directivo volunta
   canonicalPath="/junta-directiva"
   active="board"
 >
-  <section class="inst-section board-header">
-    <div class="inst-shell">
-      <p class="inst-eyebrow inst-eyebrow--accent board-header__eyebrow">
-        <span class="inst-bar inst-bar--accent" aria-hidden="true"></span>
-        Gobierno institucional
-      </p>
-      <h1 class="inst-display inst-display--hero board-header__title">
-        La junta directiva que sostiene la misión.
-      </h1>
-      <p class="inst-body--lead board-header__lead">
-        Cargos ad-honorem ejercidos por profesionales y ciudadanos comprometidos
-        con el desarrollo humano a través del arte.
-      </p>
+  <section class="board-hero">
+    <div class="board-hero__shell">
+      <aside class="board-hero__rail" aria-hidden="true">
+        <span class="board-hero__rail-eyebrow">Gobierno</span>
+        <span class="board-hero__rail-line"></span>
+        <span class="board-hero__rail-meta">Cuerpo directivo</span>
+      </aside>
+
+      <div class="board-hero__content">
+        <p class="board-hero__eyebrow">
+          <span class="board-hero__bar"></span>
+          Junta directiva
+        </p>
+        <h1 class="board-hero__title">
+          La <em>junta directiva</em> que sostiene la misión.
+        </h1>
+        <p class="board-hero__lead">
+          Cargos ad-honorem ejercidos por profesionales y ciudadanos comprometidos
+          con el desarrollo humano a través del arte.
+        </p>
+      </div>
     </div>
   </section>
 
-  <hr class="inst-rule" />
-
-  <section class="inst-section board-list" aria-labelledby="board-list-title">
-    <div class="inst-shell">
+  <section class="board-list" aria-labelledby="board-list-title">
+    <div class="board-list__shell">
       <h2 id="board-list-title" class="sr-only">Listado de la junta directiva</h2>
 
+      <aside class="board-list__rail" aria-hidden="true">
+        <span class="board-list__rail-eyebrow">Cargos</span>
+        <span class="board-list__rail-num">{boardCount}</span>
+        <span class="board-list__rail-line"></span>
+        <span class="board-list__rail-meta">Ad-honorem</span>
+      </aside>
+
       <ol class="board-list__items" role="list">
-        {
-          FARECOH_BOARD.map((member, idx) => (
-            <li class="inst-board-item">
-              <span class="inst-board-item__index">
-                {String(idx + 1).padStart(2, "0")}
-              </span>
-              <div class="board-list__cell">
-                <p class="inst-display board-list__name">{member.name}</p>
-                <p class="inst-eyebrow inst-eyebrow--ink board-list__role">
-                  {member.role}
-                </p>
+        {FARECOH_BOARD.map((member, idx) => {
+          const tone = toneFor(idx);
+          const num = String(idx + 1).padStart(2, "0");
+          return (
+            <li class="board-list__item" style={`--member-tone: ${tone};`}>
+              <span class="board-list__num">{num}</span>
+              <div class="board-list__monogram" aria-hidden="true">
+                <span>{initials(member.name)}</span>
+              </div>
+              <div class="board-list__copy">
+                <h3 class="board-list__name">{member.name}</h3>
+                <p class="board-list__role">{member.role}</p>
               </div>
             </li>
-          ))
-        }
+          );
+        })}
       </ol>
     </div>
   </section>
 
-  <section class="inst-section board-note">
-    <div class="inst-shell">
-      <p class="inst-body--lead board-note__text">
+  <section class="board-note">
+    <div class="board-note__shell">
+      <p class="board-note__text">
         La junta directiva sesiona periódicamente y sus cargos son ejercidos de
         forma voluntaria. Toda la operación institucional se sostiene gracias a
         la cooperación internacional, los aportes solidarios y el trabajo de
@@ -67,71 +104,298 @@ const description = "Gobierno institucional de FARECOH: cuerpo directivo volunta
 </InstitutionalLayout>
 
 <style>
-  .board-header {
-    padding-top: clamp(5.5rem, 10vw, 10rem);
-    background: var(--color-inst-ivory-bright);
+  .board-hero {
+    background: var(--color-bg-canvas);
+    padding-block: clamp(7rem, 12vw, 10rem) clamp(3rem, 5vw, 4rem);
   }
 
-  .board-header__eyebrow {
+  .board-hero__shell {
+    width: min(100% - calc(var(--gutter) * 2), var(--shell));
+    margin-inline: auto;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: clamp(2rem, 4vw, 3rem);
+  }
+
+  @media (min-width: 1024px) {
+    .board-hero__shell {
+      grid-template-columns: 3.5rem minmax(0, 1fr);
+    }
+  }
+
+  .board-hero__rail {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.85rem;
+    padding-top: 0.5rem;
+  }
+
+  @media (min-width: 1024px) { .board-hero__rail { display: flex; } }
+
+  .board-hero__rail-eyebrow {
+    font-family: var(--font-heading);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    color: var(--color-accent-ruby);
+  }
+
+  .board-hero__rail-line {
+    width: 1px;
+    height: 3rem;
+    background: var(--color-accent-ruby);
+    opacity: 0.5;
+  }
+
+  .board-hero__rail-meta {
+    font-family: var(--font-heading);
+    font-size: 0.625rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    color: var(--color-text-secondary);
+  }
+
+  .board-hero__content {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .board-hero__eyebrow {
     display: inline-flex;
     align-items: center;
     gap: 0.85rem;
+    margin: 0;
+    font-family: var(--font-heading);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--color-accent-ruby);
   }
 
-  .board-header__title {
-    margin: 1.5rem 0 0;
+  .board-hero__bar {
+    display: inline-block;
+    width: 2rem;
+    height: 2px;
+    background: var(--color-accent-ruby);
+  }
+
+  .board-hero__title {
+    margin: 0;
+    color: var(--color-text-primary);
+    font-family: var(--font-heading);
+    font-size: clamp(2rem, 4.8vw, 3.5rem);
+    line-height: 1.05;
+    font-weight: 700;
+    letter-spacing: -0.022em;
+    text-wrap: balance;
     max-width: 22ch;
-    color: var(--color-inst-deep);
   }
 
-  .board-header__lead {
-    margin: 2rem 0 0;
-    max-width: 44rem;
+  .board-hero__title em {
+    font-family: var(--font-editorial);
+    font-style: italic;
+    font-weight: 400;
+    color: var(--color-brand-blue);
   }
 
+  .board-hero__lead {
+    margin: 0;
+    font-family: var(--font-body);
+    font-size: clamp(1.0625rem, 1.2vw, 1.125rem);
+    line-height: 1.7;
+    color: var(--color-text-secondary);
+    max-width: 38rem;
+  }
+
+  /* Lista */
   .board-list {
-    background: var(--color-inst-ivory);
+    background: var(--color-bg-subtle);
+    padding-block: clamp(6rem, 10vw, 9rem);
+  }
+
+  .board-list__shell {
+    width: min(100% - calc(var(--gutter) * 2), var(--shell));
+    margin-inline: auto;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: clamp(2rem, 4vw, 3rem);
+  }
+
+  @media (min-width: 1024px) {
+    .board-list__shell {
+      grid-template-columns: 3.5rem minmax(0, 1fr);
+    }
+  }
+
+  .board-list__rail {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.85rem;
+    padding-top: 0.5rem;
+  }
+
+  @media (min-width: 1024px) { .board-list__rail { display: flex; } }
+
+  .board-list__rail-eyebrow {
+    font-family: var(--font-heading);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    color: var(--color-accent-ruby);
+  }
+
+  .board-list__rail-num {
+    font-family: var(--font-heading);
+    font-size: 2.5rem;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.04em;
+    color: var(--color-accent-ruby);
+  }
+
+  .board-list__rail-line {
+    width: 1px;
+    height: 3rem;
+    background: var(--color-accent-ruby);
+    opacity: 0.5;
+  }
+
+  .board-list__rail-meta {
+    font-family: var(--font-heading);
+    font-size: 0.625rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    color: var(--color-text-secondary);
   }
 
   .board-list__items {
     list-style: none;
     padding: 0;
     margin: 0;
-  }
-
-  .board-list__cell {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
   }
 
   @media (min-width: 768px) {
-    .board-list__cell {
-      display: grid;
-      grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
-      align-items: baseline;
-      gap: 2rem;
+    .board-list__items {
+      grid-template-columns: repeat(2, 1fr);
+      column-gap: 1rem;
     }
+  }
+
+  .board-list__item {
+    position: relative;
+    display: grid;
+    grid-template-columns: 2.25rem clamp(56px, 7vw, 80px) minmax(0, 1fr);
+    gap: clamp(0.85rem, 1.5vw, 1.25rem);
+    padding: 1.1rem 1.1rem 1.1rem 1.25rem;
+    background: var(--color-bg-surface);
+    border: 1px solid var(--color-border-subtle);
+    border-left: 3px solid var(--member-tone);
+    border-radius: var(--radius-sm) var(--radius-md) var(--radius-md) var(--radius-sm);
+    align-items: center;
+    transition: box-shadow 280ms ease, transform 280ms ease;
+  }
+
+  .board-list__item:hover {
+    box-shadow: var(--shadow-card-hover);
+    transform: translateX(3px);
+  }
+
+  .board-list__num {
+    font-family: var(--font-heading);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--color-text-secondary);
+    text-align: center;
+  }
+
+  .board-list__monogram {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    display: grid;
+    place-items: center;
+    background: var(--member-tone);
+    color: #FFFFFF;
+    font-family: var(--font-heading);
+    font-size: clamp(1.25rem, 1.8vw, 1.625rem);
+    font-weight: 800;
+    line-height: 1;
+    border-radius: 12px;
+    transition: transform 280ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .board-list__item:hover .board-list__monogram {
+    transform: scale(1.06) rotate(-4deg);
+  }
+
+  .board-list__copy {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    min-width: 0;
   }
 
   .board-list__name {
     margin: 0;
-    font-size: clamp(1.5rem, 2.5vw, 2rem);
-    color: var(--color-inst-deep);
+    font-family: var(--font-heading);
+    font-size: clamp(1.0625rem, 1.6vw, 1.25rem);
+    line-height: 1.2;
+    font-weight: 700;
+    letter-spacing: -0.008em;
+    color: var(--color-text-primary);
     text-wrap: balance;
   }
 
   .board-list__role {
-    color: var(--color-inst-cyan-deep);
+    margin: 0;
+    font-family: var(--font-heading);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--member-tone);
   }
 
+  /* Nota */
   .board-note {
-    background: var(--color-inst-ivory-bright);
-    border-top: 1px solid color-mix(in srgb, var(--color-inst-deep) 8%, transparent);
+    background: var(--color-bg-canvas);
+    padding-block: clamp(4rem, 7vw, 6rem);
+    border-top: 1px solid var(--color-border-subtle);
+  }
+
+  .board-note__shell {
+    width: min(100% - calc(var(--gutter) * 2), var(--shell));
+    margin-inline: auto;
   }
 
   .board-note__text {
-    max-width: 48rem;
     margin: 0;
+    font-family: var(--font-editorial);
+    font-style: italic;
+    font-size: clamp(1.125rem, 1.4vw, 1.375rem);
+    line-height: 1.5;
+    color: var(--color-text-secondary);
+    max-width: 56rem;
+    padding-left: 1.25rem;
+    border-left: 3px solid var(--color-accent-ruby);
   }
 </style>

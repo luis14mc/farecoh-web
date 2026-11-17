@@ -1,19 +1,40 @@
 ---
 import InstitutionalLayout from "@/layouts/InstitutionalLayout.astro";
 import Orchestra3DCanvas from "@/components/canvas/Orchestra3DCanvas.astro";
-import PhotoStrip from "@/components/institutional/PhotoStrip.astro";
-import { FARECOH_METADATA, FARECOH_NARRATIVE, FARECOH_PROGRAMS, INSTITUTIONAL_STATS } from "@/data/farecoh";
+import StitchPillars from "@/components/institutional/StitchPillars.astro";
+import StitchPrograms from "@/components/institutional/StitchPrograms.astro";
+import StitchAbout from "@/components/institutional/StitchAbout.astro";
+import StitchImpact from "@/components/institutional/StitchImpact.astro";
+import StitchEvents from "@/components/institutional/StitchEvents.astro";
+import StitchCta from "@/components/institutional/StitchCta.astro";
+
+import {
+  FARECOH_METADATA,
+  FARECOH_NARRATIVE,
+  FARECOH_PROGRAMS,
+  INSTITUTIONAL_STATS,
+} from "@/data/farecoh";
+import { pinkFloydEvent } from "@/data/event";
 
 const title = `${FARECOH_METADATA.acronym} · ${FARECOH_METADATA.fullName}`;
 const description = FARECOH_METADATA.tagline;
+
 const foundationYear = FARECOH_METADATA.established;
 const yearsOfService = new Date().getFullYear() - foundationYear;
 
-const stats = INSTITUTIONAL_STATS.map((stat) =>
-  stat.label === "Años de trayectoria"
-    ? { ...stat, value: `+${yearsOfService}` }
-    : stat,
-);
+const stats = [
+  ...INSTITUTIONAL_STATS.filter((stat) => stat.label !== "Años de trayectoria").map((stat) => stat),
+  {
+    value: "+" + yearsOfService,
+    label: "Años de trayectoria",
+    caption: "Formando generaciones con arte y disciplina en Honduras.",
+  },
+  {
+    value: "100%",
+    label: "Becas gratuitas",
+    caption: "Acceso sin barreras económicas ni costos para las familias.",
+  },
+];
 ---
 
 <InstitutionalLayout
@@ -68,152 +89,72 @@ const stats = INSTITUTIONAL_STATS.map((stat) =>
   </section>
 
   <!-- ───────────────────────────────────────────────────────────────
-       NARRATIVA — Misión & Visión asimétricas
+       PILARES — Barra de cuatro valores institucionales
   ──────────────────────────────────────────────────────────────── -->
-  <section class="inst-section narrative-inst" aria-labelledby="narrative-title">
-    <div class="inst-shell narrative-inst__grid">
-      <header class="narrative-inst__header">
-        <p class="inst-eyebrow inst-eyebrow--accent inst-shift-r">
-          <span class="inst-bar inst-bar--accent" aria-hidden="true"></span>
-          01 — Propósito
-        </p>
-        <h2 id="narrative-title" class="inst-display inst-display--xl narrative-inst__title">
-          Construimos comunidad desde la práctica artística rigurosa.
-        </h2>
-      </header>
-
-      <div class="narrative-inst__body">
-        <article class="narrative-inst__mission">
-          <h3 class="inst-eyebrow inst-eyebrow--ink">Misión</h3>
-          <p class="inst-body--lead">{FARECOH_NARRATIVE.mission}</p>
-        </article>
-
-        <article class="narrative-inst__vision">
-          <h3 class="inst-eyebrow inst-eyebrow--ink">Visión</h3>
-          <p class="inst-body--lead">{FARECOH_NARRATIVE.vision}</p>
-        </article>
-      </div>
-    </div>
-  </section>
+  <StitchPillars />
 
   <!-- ───────────────────────────────────────────────────────────────
-       PROGRAMAS — Lista editorial numerada, no grid simétrico
+       PROGRAMAS — Cuatro tarjetas fotográficas
   ──────────────────────────────────────────────────────────────── -->
-  <section class="inst-section programs-inst" aria-labelledby="programs-title">
-    <div class="inst-shell">
-      <header class="inst-section-head">
-        <p class="inst-eyebrow inst-eyebrow--accent">
-          <span class="inst-bar inst-bar--accent" aria-hidden="true"></span>
-          02 — Programas activos
-        </p>
-        <h2 id="programs-title" class="inst-display inst-display--xl inst-section-head__title">
-          Cuatro disciplinas para una formación integral.
-        </h2>
-      </header>
-
-      <ol class="programs-inst__list" role="list">
-        {
-          FARECOH_PROGRAMS.map((program) => (
-            <li class="programs-inst__item">
-              <article class="inst-program-card">
-                <header class="programs-inst__card-head">
-                  <span class="inst-mono-index">{program.index}</span>
-                  <span class="inst-badge">{program.badge}</span>
-                </header>
-                <h3 class="inst-display inst-display--lg programs-inst__card-title">
-                  {program.title}
-                </h3>
-                <p class="inst-eyebrow inst-program-card__category">
-                  {program.category}
-                </p>
-                <p class="inst-body">{program.description}</p>
-              </article>
-            </li>
-          ))
-        }
-      </ol>
-    </div>
-  </section>
-
-  <!-- ───────────────────────────────────────────────────────────────
-       GALERÍA — fotografías reales de los programas
-  ──────────────────────────────────────────────────────────────── -->
-  <PhotoStrip
-    eyebrow="03 — Memoria visual"
-    caption="La formación artística en imágenes."
-    photos={[
-      { src: "/images/fotografias/IMG_6827.webp", alt: "Estudiante de coro en ensayo", span: "wide" },
-      { src: "/images/fotografias/IMG_6829.webp", alt: "Docente trabajando con alumnos en clase", span: "square" },
-      { src: "/images/fotografias/IMG_6832.webp", alt: "Orquesta infantil en concierto", span: "tall" },
-      { src: "/images/fotografias/IMG_6835.webp", alt: "Sección de cuerdas en presentación", span: "square" },
-      { src: "/images/fotografias/IMG_6840.webp", alt: "Taller de estimulación temprana", span: "wide" },
-      { src: "/images/fotografias/IMG_6843.webp", alt: "Coro de Manos Blancas en concierto", span: "tall" },
-      { src: "/images/fotografias/IMG_6847.webp", alt: "Ensayo orquestal con director invitado", span: "square" },
-      { src: "/images/fotografias/IMG_6850.webp", alt: "Presentación de cierre de temporada", span: "wide" },
-    ]}
+  <StitchPrograms
+    eyebrow="Nuestros Programas"
+    headline="Espacios para crecer a través del arte"
+    source="Programas educativos que desarrollan talento, valores cívicos y nuevas oportunidades de vida para Honduras."
+    programs={FARECOH_PROGRAMS}
   />
 
   <!-- ───────────────────────────────────────────────────────────────
-       CIFRAS — barra minimalista con tipografía mono
+       QUIÉNES SOMOS — Relato institucional + placa fotográfica
   ──────────────────────────────────────────────────────────────── -->
-  <section class="inst-section stats-inst" aria-labelledby="stats-title">
-    <div class="inst-shell">
-      <h2 id="stats-title" class="sr-only">Cifras institucionales</h2>
-      <dl class="stats-inst__row">
-        {
-          stats.map((stat, index) => (
-            <div class="stats-inst__cell">
-              <dt class="inst-eyebrow inst-eyebrow--ink stats-inst__label">
-                <span aria-hidden="true">0{index + 1}</span>
-                <span>{stat.label}</span>
-              </dt>
-              <dd class="inst-display inst-display--xl stats-inst__value">
-                {stat.value}
-              </dd>
-              <dd class="inst-body--small">{stat.caption}</dd>
-            </div>
-          ))
-        }
-      </dl>
-    </div>
-  </section>
+  <StitchAbout
+    eyebrow="Quiénes Somos"
+    headline="Música y arte como herramientas de cambio social"
+    paragraphs={[
+      FARECOH_NARRATIVE.about,
+      `Niñas, niños y jóvenes de comunidades vulnerables de Honduras descubren su disciplina, afianzan su autoestima y construyen un porvenir lleno de esperanza, dignidad y nuevas metas profesionales.`,
+    ]}
+    values={[
+      { title: "Excelencia", body: "Métodos pedagógicos de conservatorio global.", icon: "school" },
+      { title: "Accesibilidad", body: "100% gratuito y con becas instrumentales.", icon: "infinity" },
+      { title: "Empatía", body: "Acompañamiento familiar y comunitario.", icon: "handshake" },
+    ]}
+    image="/images/farecoh-hero-orchestra.webp"
+    imageAlt="Orquesta juvenil de FARECOH en ensayo con su director"
+    quote={FARECOH_NARRATIVE.vision}
+    quoteAttribution="Visión institucional · FARECOH"
+    ctaHref="/sobre-nosotros"
+  />
 
   <!-- ───────────────────────────────────────────────────────────────
-       CIERRE — Puente al evento solidario
+       IMPACTO — Cifras y testimonio institucional
   ──────────────────────────────────────────────────────────────── -->
-  <section class="inst-section bridge-inst" aria-labelledby="bridge-title">
-    <div class="inst-shell bridge-inst__inner">
-      <p class="inst-eyebrow inst-eyebrow--inverse">
-        <span class="inst-bar inst-bar--inverse" aria-hidden="true"></span>
-        Próximo concierto solidario
-      </p>
-      <h2 id="bridge-title" class="inst-display inst-display--xl bridge-inst__title">
-        Apoya los programas reservando un boleto para el Tributo a Pink Floyd.
-      </h2>
-      <p class="inst-body--inverse bridge-inst__lead">
-        Una producción sinfónica benéfica cuya recaudación financia los programas
-        formativos de la fundación durante todo el año.
-      </p>
-      <div class="bridge-inst__actions">
-        <a
-          href="/eventos/pink-floyd"
-          class="inst-cta inst-cta--solid"
-          style="background:#fff;color:#0b2545;border-color:#fff;"
-        >
-          Conocer el concierto
-          <span class="inst-cta__arrow" aria-hidden="true"></span>
-        </a>
-        <a
-          href="/eventos/pink-floyd/boletos"
-          class="inst-cta"
-          style="color:#fff;border-color:rgba(255,255,255,0.5);"
-        >
-          Reservar boletos
-          <span class="inst-cta__arrow" aria-hidden="true"></span>
-        </a>
-      </div>
-    </div>
-  </section>
+  <StitchImpact
+    eyebrow="Resultados Tangibles"
+    headline="Nuestro impacto en números"
+    source="Sembrando armonía, disciplina y cohesión social en cada rincón comunitario de Honduras."
+    stats={stats}
+    quote={FARECOH_NARRATIVE.mission}
+    attribution="Misión institucional · FARECOH"
+  />
+
+  <!-- ───────────────────────────────────────────────────────────────
+       CARTELERA — Próximo concierto benéfico
+  ──────────────────────────────────────────────────────────────── -->
+  <StitchEvents
+    eyebrow="Cartelera Cultural"
+    headline="Nuestra música y arte en vivo"
+    source="Acompáñanos a celebrar los logros de nuestros jóvenes artistas en los principales escenarios de Honduras."
+    event={pinkFloydEvent}
+    image="/images/evento/hero.webp"
+    imageAlt="Producción sinfónica benéfica FARECOH"
+    learnHref="/eventos/pink-floyd"
+    ticketsHref="/eventos/pink-floyd/boletos"
+  />
+
+  <!-- ───────────────────────────────────────────────────────────────
+       CTA — Únete a nuestra misión
+  ──────────────────────────────────────────────────────────────── -->
+  <StitchCta donateHref="/donaciones" volunteerHref="/sobre-nosotros" />
 </InstitutionalLayout>
 
 <style>
@@ -358,236 +299,106 @@ const stats = INSTITUTIONAL_STATS.map((stat) =>
     50% { transform: translateY(6px); opacity: 1; }
   }
 
-  /* ── Narrativa ── */
-  .narrative-inst {
-    background: var(--color-inst-ivory-bright);
-  }
-
-  .narrative-inst__grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 3rem;
-  }
-
-  @media (min-width: 1024px) {
-    .narrative-inst__grid {
-      grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
-      gap: 5rem 6rem;
-    }
-  }
-
-  .narrative-inst__header {
-    align-self: start;
-  }
-
-  .narrative-inst__title {
-    margin: 1.5rem 0 0;
-    max-width: 22ch;
-  }
-
-  .narrative-inst__body {
-    display: grid;
-    gap: 2.5rem;
-    align-content: start;
-    padding-top: 0.5rem;
-  }
-
-  @media (min-width: 768px) {
-    .narrative-inst__body {
-      grid-template-columns: 1fr;
-    }
-  }
-
-  .narrative-inst__mission,
-  .narrative-inst__vision {
-    padding-top: 1.5rem;
-    border-top: 1px solid color-mix(in srgb, var(--color-inst-deep) 14%, transparent);
-  }
-
-  .narrative-inst__mission h3,
-  .narrative-inst__vision h3 {
-    margin: 0 0 1.25rem;
-  }
-
-  /* ── Programas ── */
-  .programs-inst {
-    background: var(--color-inst-ivory);
-  }
-
-  .programs-inst__list {
-    list-style: none;
-    padding: 0;
-    margin: 3rem 0 0;
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
-  }
-
-  @media (min-width: 768px) {
-    .programs-inst__list {
-      grid-template-columns: repeat(2, 1fr);
-      gap: 2rem;
-    }
-  }
-
-  .programs-inst__item {
-    height: 100%;
-  }
-
-  .programs-inst__item .inst-program-card {
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-  }
-
-  .programs-inst__card-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-  }
-
-  .programs-inst__card-title {
-    margin: 0;
-    color: var(--color-inst-deep);
-    text-wrap: balance;
-  }
-
-  /* ── Stats ── */
-  .stats-inst {
-    background: var(--color-inst-ivory-bright);
-    border-top: 1px solid color-mix(in srgb, var(--color-inst-deep) 8%, transparent);
-  }
-
-  .stats-inst__row {
-    margin: 0;
-    padding: 0;
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 3rem;
-  }
-
-  @media (min-width: 768px) {
-    .stats-inst__row {
-      grid-template-columns: repeat(3, 1fr);
-      gap: 0;
-    }
-  }
-
-  .stats-inst__cell {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-    padding: 1.5rem 0;
-    border-bottom: 1px solid color-mix(in srgb, var(--color-inst-deep) 10%, transparent);
-  }
-
-  .stats-inst__cell:first-child {
-    padding-top: 0;
-  }
-
-  .stats-inst__cell:last-child {
-    border-bottom: none;
-    padding-bottom: 0;
-  }
-
-  @media (min-width: 768px) {
-    .stats-inst__cell {
-      padding: 0 1.5rem;
-      border-bottom: none;
-    }
-
-    .stats-inst__cell:first-child {
-      padding-left: 0;
-      padding-top: 0;
-    }
-
-    .stats-inst__cell:last-child {
-      padding-right: 0;
-      padding-bottom: 0;
-    }
-
-    .stats-inst__cell + .stats-inst__cell {
-      border-left: 1px solid color-mix(in srgb, var(--color-inst-deep) 12%, transparent);
-    }
-  }
-
-  .stats-inst__value {
-    margin: 0;
-    color: var(--color-inst-deep);
-    font-variation-settings: "opsz" 144, "SOFT" 30, "WONK" 0;
-  }
-
-  .stats-inst__label {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    color: var(--color-inst-cyan-deep);
-  }
-
-  .stats-inst__label span:first-child {
-    font-family: var(--font-inst-mono);
-    font-size: 0.6875rem;
-    letter-spacing: 0.1em;
-    color: var(--color-inst-graphite-muted);
-  }
-
-  /* ── Bridge ── */
-  .bridge-inst {
-    background:
-      radial-gradient(ellipse 60% 50% at 90% 10%, rgba(79, 195, 245, 0.2) 0%, transparent 55%),
-      linear-gradient(180deg, #0b2545 0%, #061a33 100%);
-    color: var(--color-inst-ivory);
-  }
-
-  .bridge-inst__inner {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-    max-width: 60rem;
-  }
-
-  .bridge-inst__title {
-    margin: 0;
-    color: var(--color-inst-ivory);
-    text-wrap: balance;
-    max-width: 26ch;
-  }
-
-  .bridge-inst__lead {
-    margin: 0;
-    max-width: 44rem;
-  }
-
-  .bridge-inst__actions {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-    margin-top: 1rem;
-    width: 100%;
-  }
-
-  .bridge-inst__actions .inst-cta {
-    width: 100%;
-  }
-
-  @media (min-width: 640px) {
-    .bridge-inst__actions {
-      flex-direction: row;
-      flex-wrap: wrap;
-      gap: 1rem;
-      width: auto;
-    }
-
-    .bridge-inst__actions .inst-cta {
-      width: auto;
-    }
-  }
-
   @media (prefers-reduced-motion: reduce) {
     .hero-inst__scrollbar span {
       animation: none;
     }
   }
 </style>
+
+<script>
+  import { animate, inView } from "@motionone/dom";
+
+  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  // ── Marquee pacing (pause on hover for focus) ─────────────────────
+  document.querySelectorAll<HTMLElement>("[data-marquee]").forEach((track) => {
+    if (prefersReducedMotion) return;
+    const pace = Number(track.dataset["marqueePace"] ?? "40");
+    const halfWidth = track.scrollWidth / 2;
+    if (!halfWidth) return;
+
+    const animation = animate(
+      track,
+      { transform: ["translateX(0)", `translateX(-${halfWidth}px)`] },
+      { duration: pace, easing: "linear", direction: "normal", repeat: Infinity },
+    );
+
+    track.addEventListener("mouseenter", () => animation.pause());
+    track.addEventListener("mouseleave", () => animation.play());
+    track.addEventListener("focusin", () => animation.pause());
+    track.addEventListener("focusout", () => animation.play());
+  });
+
+  // ── Reveal on scroll (stagger 300-450ms per skill guidelines) ─────
+  document.querySelectorAll<HTMLElement>("[data-reveal]").forEach((node) => {
+    if (prefersReducedMotion) {
+      node.style.opacity = "1";
+      node.style.transform = "none";
+      return;
+    }
+    node.style.opacity = "0";
+    node.style.transform = "translateY(20px)";
+    node.style.willChange = "transform, opacity";
+  });
+
+  document.querySelectorAll<HTMLElement>("[data-reveal]").forEach((node) => {
+    const delay = Number(node.dataset["revealDelay"] ?? "0");
+    inView(
+      node,
+      () => {
+        if (prefersReducedMotion) {
+          node.style.opacity = "1";
+          node.style.transform = "none";
+          return;
+        }
+        animate(
+          node,
+          { opacity: [0, 1], transform: ["translateY(20px)", "translateY(0)"] },
+          { duration: 0.4, delay: delay / 1000, easing: [0.22, 1, 0.36, 1] },
+        );
+        return () => {
+          node.style.opacity = "0";
+          node.style.transform = "translateY(20px)";
+        };
+      },
+      { amount: 0.15 },
+    );
+  });
+
+  // ── Animated counters (rAF tween) ─────────────────────────────────
+  const easeOutQuart = (t: number): number => 1 - Math.pow(1 - t, 4);
+
+  document.querySelectorAll<HTMLElement>("[data-counter]").forEach((node) => {
+    const target = Number(node.dataset["counterTarget"] ?? "0");
+    const suffix = node.dataset["counterSuffix"] ?? "";
+    if (!Number.isFinite(target)) {
+      node.textContent = `${target}${suffix}`;
+      return;
+    }
+
+    inView(
+      node,
+      () => {
+        if (prefersReducedMotion) {
+          node.textContent = `${target}${suffix}`;
+          return;
+        }
+        const duration = 1400;
+        const start = performance.now();
+        const tick = (now: number) => {
+          const elapsed = now - start;
+          const progress = Math.min(elapsed / duration, 1);
+          const value = easeOutQuart(progress) * target;
+          node.textContent = `${Math.round(value)}${suffix}`;
+          if (progress < 1) requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+        return () => {
+          node.textContent = `0${suffix}`;
+        };
+      },
+      { amount: 0.4 },
+    );
+  });
+</script>

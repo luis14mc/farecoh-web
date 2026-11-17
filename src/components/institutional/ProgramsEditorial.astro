@@ -1,0 +1,379 @@
+---
+import type { ProgramItem } from "@/data/farecoh";
+
+interface Props {
+  readonly eyebrow: string;
+  readonly headline: string;
+  readonly accent?: string;
+  readonly source?: string;
+  readonly programs: readonly ProgramItem[];
+}
+
+const { eyebrow, headline, accent, source, programs } = Astro.props;
+
+const disciplinePalette: Record<string, { accent: string; tag: string }> = {
+  music: { accent: "var(--color-brand-blue)", tag: "Música coral e instrumental" },
+  inclusion: { accent: "var(--color-accent-sage)", tag: "Educación especial e inclusión" },
+  "early-childhood": { accent: "var(--color-accent-plum)", tag: "Primera infancia y neurodesarrollo" },
+  "visual-arts": { accent: "var(--color-brand-cyan)", tag: "Artes visuales y expresión plástica" },
+};
+
+function toneFor(discipline?: ProgramItem["discipline"]): { accent: string; tag: string } {
+  if (!discipline) return { accent: "var(--color-primary-base)", tag: "Programa institucional" };
+  return disciplinePalette[discipline];
+}
+
+const programImages: Record<string, { src: string; alt: string }> = {
+  musica: {
+    src: "/images/fotografias/IMG_6841.webp",
+    alt: "Jóvenes violinistas de FARECOH durante un ensayo orquestal",
+  },
+  "manos-blancas": {
+    src: "/images/fotografias/IMG_6837.webp",
+    alt: "Participantes del Coro de Manos Blancas en una actividad inclusiva",
+  },
+  estimulacion: {
+    src: "/images/fotografias/IMG_6839.webp",
+    alt: "Niña participando en una sesión de estimulación temprana",
+  },
+  "artes-visuales": {
+    src: "/images/fotografias/IMG_6849.webp",
+    alt: "Estudiante trabajando en un taller de artes visuales",
+  },
+};
+
+function imageFor(id: string): { src: string; alt: string } {
+  return (
+    programImages[id] ?? {
+      src: "/images/fotografias/IMG_6827.webp",
+      alt: "Participantes de los programas de FARECOH",
+    }
+  );
+}
+---
+
+<section class="programs-editorial" data-reveal-section aria-labelledby="programs-title">
+  <header class="programs-editorial__head shell">
+    <div class="programs-editorial__head-lead">
+      <p class="tag programs-editorial__eyebrow" data-reveal>
+        <span class="bar" aria-hidden="true"></span>
+        {eyebrow}
+      </p>
+      <h2 id="programs-title" class="programs-editorial__headline" data-reveal data-reveal-delay="120">
+        {headline}
+        {accent && <span class="programs-editorial__accent">{accent}</span>}
+      </h2>
+      {source && (
+        <p class="programs-editorial__source" data-reveal data-reveal-delay="220">{source}</p>
+      )}
+    </div>
+  </header>
+
+  <div class="programs-editorial__grid shell">
+    {programs.map((program, index) => {
+      const tone = toneFor(program.discipline);
+      const image = imageFor(program.id);
+      const num = String(index + 1).padStart(2, "0");
+      return (
+        <article
+          class={`programs-editorial__card ${index === 0 ? "programs-editorial__card--feature" : ""}`}
+          data-reveal
+          data-reveal-delay={100 + index * 120}
+          style={`--program-accent: ${tone.accent};`}
+        >
+          <figure class="programs-editorial__media">
+            <img src={image.src} alt={image.alt} loading="lazy" decoding="async" />
+            <span class="programs-editorial__num" aria-hidden="true">{num}</span>
+          </figure>
+
+          <div class="programs-editorial__body">
+            <div class="programs-editorial__card-head">
+              <div class="programs-editorial__badge">
+                <span class="programs-editorial__category">{program.category}</span>
+              </div>
+            </div>
+
+            <h3 class="programs-editorial__title">{program.title}</h3>
+            <p class="programs-editorial__description">{program.description}</p>
+
+            <div class="programs-editorial__foot">
+              <span class="programs-editorial__index">{program.index ?? num}</span>
+              <span class="programs-editorial__rule" aria-hidden="true"></span>
+              <span class="programs-editorial__caption">{program.badge}</span>
+            </div>
+          </div>
+        </article>
+      );
+    })}
+  </div>
+</section>
+
+<style>
+  .programs-editorial {
+    position: relative;
+    background: var(--color-bg-subtle);
+    padding-block: clamp(6rem, 10vw, 9rem);
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  .programs-editorial::before {
+    content: "";
+    position: absolute;
+    top: -10%;
+    right: -10%;
+    width: 40%;
+    height: 120%;
+    background: radial-gradient(circle, rgba(59, 31, 71, 0.04) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .programs-editorial__head {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    margin-bottom: clamp(2.5rem, 5vw, 4rem);
+    max-width: 56rem;
+  }
+
+  .programs-editorial__eyebrow {
+    color: var(--color-accent-ruby);
+    margin: 0;
+  }
+
+  .programs-editorial__headline {
+    margin: 0;
+    color: var(--color-text-primary);
+    font-family: var(--font-heading);
+    font-size: clamp(1.875rem, 3vw + 1rem, 3rem);
+    line-height: 1.15;
+    font-weight: 700;
+    letter-spacing: -0.022em;
+    text-wrap: balance;
+  }
+
+  .programs-editorial__accent {
+    display: block;
+    margin-top: 0.5rem;
+    font-family: var(--font-editorial);
+    font-style: italic;
+    font-weight: 400;
+    font-size: clamp(1.35rem, 2vw + 0.5rem, 1.85rem);
+    color: var(--color-accent-ruby);
+    line-height: 1.4;
+    letter-spacing: -0.008em;
+  }
+
+  .programs-editorial__source {
+    font-family: var(--font-body);
+    font-size: clamp(1rem, 1.2vw, 1.125rem);
+    line-height: 1.65;
+    color: var(--color-text-secondary);
+    max-width: 40rem;
+    margin: 0;
+  }
+
+  .programs-editorial__grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+
+  @media (min-width: 768px) {
+    .programs-editorial__grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .programs-editorial__grid {
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+    }
+  }
+
+  .programs-editorial__card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    padding: 0;
+    background: var(--color-bg-surface);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: 2px;
+    box-shadow: var(--shadow-editorial);
+    overflow: hidden;
+    transition: box-shadow 280ms ease, transform 280ms ease, border-color 280ms ease;
+  }
+
+  .programs-editorial__card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--program-accent);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 400ms ease;
+  }
+
+  .programs-editorial__card:hover {
+    box-shadow: var(--shadow-card-hover);
+    transform: translateY(-4px);
+    border-color: var(--program-accent);
+  }
+
+  .programs-editorial__card:hover::before {
+    transform: scaleX(1);
+  }
+
+  @media (min-width: 1024px) {
+    .programs-editorial__card--feature {
+      grid-column: span 1;
+    }
+  }
+
+  .programs-editorial__media {
+    position: relative;
+    margin: 0;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    background: var(--color-bg-stage);
+  }
+
+  .programs-editorial__media::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(6, 26, 51, 0.05) 0%, rgba(6, 26, 51, 0.65) 100%);
+    pointer-events: none;
+  }
+
+  .programs-editorial__media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .programs-editorial__card:hover .programs-editorial__media img {
+    transform: scale(1.05);
+  }
+
+  .programs-editorial__body {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: clamp(1.35rem, 2vw, 1.75rem);
+    flex: 1;
+  }
+
+  .programs-editorial__card-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .programs-editorial__num {
+    position: absolute;
+    z-index: 1;
+    left: clamp(1rem, 2vw, 1.35rem);
+    bottom: 0.9rem;
+    font-family: var(--font-heading);
+    font-size: 2.75rem;
+    font-weight: 800;
+    line-height: 0.85;
+    letter-spacing: -0.05em;
+    color: var(--color-text-on-dark);
+    text-shadow: 0 2px 18px rgba(0, 0, 0, 0.35);
+    transition: transform 400ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .programs-editorial__card:hover .programs-editorial__num {
+    transform: scale(1.05);
+  }
+
+  .programs-editorial__badge {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
+    font-family: var(--font-heading);
+    font-size: 0.625rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--program-accent);
+    padding: 0;
+    border-radius: 0;
+    align-self: center;
+  }
+
+  .programs-editorial__separator {
+    opacity: 0.5;
+  }
+
+  .programs-editorial__category {
+    color: var(--color-text-primary);
+    font-weight: 700;
+  }
+
+  .programs-editorial__title {
+    font-family: var(--font-heading);
+    font-size: clamp(1.25rem, 1.5vw + 0.6rem, 1.5rem);
+    line-height: 1.3;
+    font-weight: 700;
+    letter-spacing: -0.012em;
+    margin: 0;
+    color: var(--color-text-primary);
+    text-wrap: balance;
+  }
+
+  .programs-editorial__description {
+    font-family: var(--font-body);
+    font-size: 1rem;
+    line-height: 1.65;
+    color: var(--color-text-primary);
+    margin: 0;
+    flex: 1;
+  }
+
+  .programs-editorial__foot {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding-top: 1rem;
+    border-top: 1px dashed var(--color-border-subtle);
+  }
+
+  .programs-editorial__index {
+    font-family: var(--font-heading);
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    color: var(--color-text-secondary);
+  }
+
+  .programs-editorial__rule {
+    flex: 1;
+    height: 1px;
+    background: var(--color-border-subtle);
+  }
+
+  .programs-editorial__caption {
+    font-family: var(--font-heading);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--program-accent);
+    background: color-mix(in srgb, var(--program-accent) 10%, transparent);
+    padding: 0.3rem 0.6rem;
+    border-radius: 4px;
+  }
+</style>

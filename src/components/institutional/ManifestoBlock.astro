@@ -1,0 +1,459 @@
+---
+interface Block {
+  readonly index: string;
+  readonly label: string;
+  readonly title: string;
+  readonly body: string;
+  readonly icon?: string;
+}
+
+interface Props {
+  readonly eyebrow: string;
+  readonly headline: string;
+  readonly accent?: string;
+  readonly source: string;
+  readonly blocks: readonly Block[];
+  readonly tone?: "bone" | "ink";
+}
+
+const { eyebrow, headline, accent, source, blocks, tone = "ink" } = Astro.props;
+const blockCount = String(blocks.length).padStart(2, "0");
+---
+
+<section
+  class={`manifesto manifesto--${tone}`}
+  data-reveal-section
+  aria-labelledby="manifesto-title"
+>
+  <div class="manifesto__grid">
+    <aside class="manifesto__rail" aria-hidden="true">
+      <span class="manifesto__rail-eyebrow">Manifiesto</span>
+      <span class="manifesto__rail-num">{blockCount}</span>
+      <span class="manifesto__rail-line"></span>
+      <span class="manifesto__rail-meta">Bloques</span>
+    </aside>
+
+    <div class="manifesto__content">
+      <div class="manifesto__lead">
+        <p class="tag manifesto__eyebrow" data-reveal>
+          <span class="bar" aria-hidden="true"></span>
+          {eyebrow}
+        </p>
+
+        <div class="manifesto__lead-copy">
+          <h2 id="manifesto-title" class="manifesto__headline" data-reveal data-reveal-delay="100">
+            {headline}
+            {accent && <span class="manifesto__accent">{accent}</span>}
+          </h2>
+
+          <p class="manifesto__source" data-reveal data-reveal-delay="200">
+            {source}
+          </p>
+        </div>
+      </div>
+
+      <div class="manifesto__body">
+        <ol class="manifesto__list" role="list">
+          {blocks.map((block, index) => (
+            <li class="manifesto__item" data-reveal data-reveal-delay={300 + index * 140} style={`--item-delay: ${index * 140}ms;`}>
+              <div class="manifesto__item-mark" aria-hidden="true">
+                <span class="manifesto__item-index">{block.index}</span>
+                <span class="manifesto__item-line"></span>
+              </div>
+              <div class="manifesto__item-body">
+                <span class="manifesto__item-label">{block.label}</span>
+                <h3 class="manifesto__item-title">{block.title}</h3>
+                <p class="manifesto__item-copy">{block.body}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+
+        <figure class="manifesto__media" data-reveal data-reveal-delay="200">
+          <img
+            src="/images/fotografias/IMG_6829.webp"
+            alt="Ensayo del coro de FARECOH en Tegucigalpa"
+            loading="lazy"
+            decoding="async"
+          />
+          <figcaption class="manifesto__media-cap">
+            <span>Archivo FARECOH · Ensayo coral</span>
+            <span>Tegucigalpa, Honduras</span>
+          </figcaption>
+        </figure>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .manifesto {
+    position: relative;
+    padding-block: clamp(6rem, 10vw, 9rem);
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  .manifesto::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background-image:
+      radial-gradient(circle at 90% 10%, rgba(158, 42, 71, 0.04) 0%, transparent 50%),
+      radial-gradient(circle at 5% 95%, rgba(59, 31, 71, 0.04) 0%, transparent 55%);
+    pointer-events: none;
+  }
+
+  .manifesto--bone {
+    background: var(--color-bg-canvas);
+    color: var(--color-text-primary);
+  }
+
+  .manifesto--ink {
+    background: var(--color-bg-stage);
+    color: var(--color-text-on-dark);
+  }
+
+  .manifesto__grid {
+    width: min(100% - calc(var(--gutter) * 2), var(--shell));
+    margin-inline: auto;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: clamp(2.5rem, 5vw, 4rem);
+  }
+
+  @media (min-width: 1024px) {
+    .manifesto__grid {
+      grid-template-columns: 4rem minmax(0, 1fr);
+      gap: clamp(2rem, 4vw, 3.5rem);
+      align-items: start;
+    }
+  }
+
+  .manifesto__content {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(2.5rem, 5vw, 4rem);
+    min-width: 0;
+  }
+
+  /* Rail numérico lateral */
+  .manifesto__rail {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.85rem;
+    padding-top: 0.5rem;
+    position: sticky;
+    top: 6rem;
+  }
+
+  @media (min-width: 1024px) {
+    .manifesto__rail {
+      display: flex;
+    }
+  }
+
+  .manifesto__rail-eyebrow {
+    font-family: var(--font-heading);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    color: var(--color-accent-ruby);
+  }
+
+  .manifesto__rail-num {
+    font-family: var(--font-heading);
+    font-size: 2.5rem;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.04em;
+    color: var(--color-accent-ruby);
+  }
+
+  .manifesto__rail-line {
+    width: 1px;
+    height: 4rem;
+    background: var(--color-accent-ruby);
+    opacity: 0.5;
+  }
+
+  .manifesto__rail-meta {
+    font-family: var(--font-heading);
+    font-size: 0.625rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    color: var(--color-text-secondary);
+  }
+
+  .manifesto--ink .manifesto__rail-meta {
+    color: rgba(248, 250, 252, 0.5);
+  }
+
+  /* Lead */
+  .manifesto__lead {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .manifesto__lead-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  @media (min-width: 1024px) {
+    .manifesto__lead-copy {
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(0, 0.65fr);
+      gap: clamp(2rem, 4vw, 4rem);
+      align-items: end;
+    }
+  }
+
+  .manifesto__body {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: clamp(1.5rem, 3vw, 2.5rem);
+    align-items: start;
+  }
+
+  @media (min-width: 1024px) {
+    .manifesto__body {
+      grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+    }
+  }
+
+  .manifesto__eyebrow {
+    color: var(--color-accent-ruby);
+    margin: 0;
+  }
+
+  .manifesto__headline {
+    margin: 0;
+    font-family: var(--font-heading);
+    font-size: clamp(1.875rem, 3vw + 1rem, 3rem);
+    line-height: 1.15;
+    font-weight: 700;
+    letter-spacing: -0.022em;
+    color: var(--color-text-primary);
+    text-wrap: balance;
+  }
+
+  .manifesto--ink .manifesto__headline {
+    color: var(--color-text-on-dark);
+  }
+
+  /* Acento editorial (italic Playfair) — rompe la rigidez */
+  .manifesto__accent {
+    display: block;
+    margin-top: 0.5rem;
+    font-family: var(--font-editorial);
+    font-style: italic;
+    font-weight: 400;
+    color: var(--color-accent-ruby);
+    font-size: clamp(1.35rem, 2vw + 0.5rem, 1.85rem);
+    line-height: 1.4;
+    letter-spacing: -0.008em;
+  }
+
+  .manifesto__source {
+    margin: 0;
+    font-family: var(--font-body);
+    font-size: 1.0625rem;
+    line-height: 1.7;
+    color: var(--color-text-secondary);
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--color-border-subtle);
+    max-width: 36rem;
+  }
+
+  .manifesto--ink .manifesto__source {
+    color: rgba(248, 250, 252, 0.78);
+    border-top-color: rgba(248, 250, 252, 0.18);
+  }
+
+  /* Lista de bloques (Misión/Visión) */
+  .manifesto__list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .manifesto__item {
+    position: relative;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: clamp(1rem, 2vw, 1.5rem);
+    padding: clamp(1.5rem, 2.5vw, 2rem);
+    background: var(--color-bg-surface);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-editorial);
+    transition: box-shadow 280ms ease, transform 280ms ease, border-color 280ms ease;
+  }
+
+  .manifesto__item:hover {
+    box-shadow: var(--shadow-card-hover);
+    transform: translateY(-2px);
+    border-color: var(--color-accent-ruby);
+  }
+
+  .manifesto--ink .manifesto__item {
+    background: rgba(248, 250, 252, 0.04);
+    border-color: rgba(248, 250, 252, 0.14);
+    box-shadow: none;
+  }
+
+  .manifesto--ink .manifesto__item:hover {
+    border-color: var(--color-accent-ruby);
+    background: rgba(248, 250, 252, 0.08);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 32px -16px rgba(0, 0, 0, 0.5);
+  }
+
+  .manifesto__item-mark {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .manifesto__item-index {
+    font-family: var(--font-heading);
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    color: var(--color-accent-ruby);
+    background: rgba(158, 42, 71, 0.1);
+    padding: 0.4rem 0.65rem;
+    border-radius: 4px;
+    line-height: 1;
+  }
+
+  .manifesto__item-line {
+    width: 2rem;
+    height: 2px;
+    background: var(--color-accent-ruby);
+    margin-top: auto;
+  }
+
+  .manifesto__item-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+  }
+
+  .manifesto__item-label {
+    font-family: var(--font-heading);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--color-accent-ruby);
+  }
+
+  .manifesto__item-title {
+    font-family: var(--font-heading);
+    font-size: clamp(1.25rem, 1.5vw + 0.6rem, 1.5rem);
+    line-height: 1.3;
+    font-weight: 700;
+    letter-spacing: -0.012em;
+    margin: 0;
+    color: var(--color-text-primary);
+  }
+
+  .manifesto--ink .manifesto__item-title {
+    color: var(--color-text-on-dark);
+  }
+
+  .manifesto__item-copy {
+    font-family: var(--font-body);
+    font-size: 1rem;
+    line-height: 1.7;
+    margin: 0;
+    color: var(--color-text-primary);
+    max-width: 38rem;
+  }
+
+  .manifesto--ink .manifesto__item-copy {
+    color: rgba(248, 250, 252, 0.85);
+  }
+
+  /* Placa documental — fotografía de archivo */
+  .manifesto__media {
+    margin: 0;
+    position: relative;
+    overflow: hidden;
+    border-radius: 2px;
+    aspect-ratio: 4 / 5;
+    background: var(--color-bg-stage);
+    align-self: stretch;
+  }
+
+  @media (min-width: 1024px) {
+    .manifesto__media {
+      aspect-ratio: auto;
+      min-height: 100%;
+      height: 100%;
+    }
+  }
+
+  .manifesto__media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 35%;
+    display: block;
+    filter: saturate(0.92) contrast(1.04);
+    transition: transform 900ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .manifesto__media:hover img {
+    transform: scale(1.025);
+  }
+
+  .manifesto__media::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, transparent 45%, rgba(6, 26, 51, 0.82) 100%);
+    pointer-events: none;
+  }
+
+  .manifesto__media-cap {
+    position: absolute;
+    inset: auto 0 0;
+    z-index: 1;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.5rem 1.5rem;
+    padding: 1.25rem clamp(1rem, 2vw, 1.75rem);
+    font-family: var(--font-heading);
+    font-size: 0.625rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: rgba(248, 250, 252, 0.78);
+  }
+
+  @media (max-width: 767px) {
+    .manifesto__media {
+      aspect-ratio: 4 / 3;
+    }
+  }
+</style>

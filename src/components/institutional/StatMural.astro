@@ -1,0 +1,294 @@
+---
+import type { InstitutionalStat } from "@/data/farecoh";
+
+interface Props {
+  readonly eyebrow: string;
+  readonly headline: string;
+  readonly accent?: string;
+  readonly stats: readonly InstitutionalStat[];
+}
+
+const { eyebrow, headline, accent, stats } = Astro.props;
+const statCount = String(stats.length).padStart(2, "0");
+---
+
+<section class="stat-mural" data-reveal-section aria-labelledby="stats-title">
+  <div class="stat-mural__panel">
+    <aside class="stat-mural__rail" aria-hidden="true">
+      <span class="stat-mural__rail-eyebrow">Cifras</span>
+      <span class="stat-mural__rail-num">{statCount}</span>
+      <span class="stat-mural__rail-line"></span>
+      <span class="stat-mural__rail-meta">Indicadores</span>
+    </aside>
+
+    <div class="stat-mural__body">
+      <header class="stat-mural__head">
+        <p class="tag stat-mural__eyebrow" data-reveal style="color: var(--color-accent-bronze);">
+          <span class="bar" aria-hidden="true"></span>
+          {eyebrow}
+        </p>
+        <h2 id="stats-title" class="stat-mural__headline" data-reveal data-reveal-delay="120">
+          {headline}
+          {accent && <span class="stat-mural__accent">{accent}</span>}
+        </h2>
+      </header>
+
+      <dl class="stat-mural__grid" role="list">
+        {stats.map((stat, index) => {
+          const numeric = Number(stat.value.replace(/[^\d.-]/g, ""));
+          const suffix = stat.value.replace(/[\d.\-\s]/g, "");
+          const target = Number.isFinite(numeric) ? numeric : null;
+          const num = String(index + 1).padStart(2, "0");
+          return (
+            <div
+              class="stat-mural__cell"
+              data-reveal
+              data-reveal-delay={200 + index * 140}
+              role="listitem"
+            >
+              <span class="stat-mural__cell-index" aria-hidden="true">{num}</span>
+              <dt class="stat-mural__label">{stat.label}</dt>
+              <dd class="stat-mural__value">
+                {target !== null ? (
+                  <span
+                    class="stat-mural__num"
+                    data-counter
+                    data-counter-target={target}
+                    data-counter-suffix={suffix}
+                  >0</span>
+                ) : (
+                  <span class="stat-mural__num">{stat.value}</span>
+                )}
+              </dd>
+              <dd class="stat-mural__caption">{stat.caption}</dd>
+            </div>
+          );
+        })}
+      </dl>
+    </div>
+  </div>
+</section>
+
+<style>
+  .stat-mural {
+    background:
+      radial-gradient(ellipse at 12% 0%, rgba(0, 158, 226, 0.14) 0%, transparent 55%),
+      radial-gradient(ellipse at 100% 100%, rgba(158, 42, 71, 0.16) 0%, transparent 55%),
+      var(--color-bg-stage);
+    padding-block: clamp(5rem, 9vw, 7.5rem);
+    border-top: 1px solid rgba(79, 195, 245, 0.16);
+    border-bottom: 1px solid rgba(79, 195, 245, 0.16);
+  }
+
+  .stat-mural__panel {
+    position: relative;
+    width: min(100% - calc(var(--gutter) * 2), var(--shell));
+    margin-inline: auto;
+    background: transparent;
+    color: var(--color-text-on-dark);
+    padding-block: 0;
+    border-radius: 0;
+    box-shadow: none;
+    overflow: visible;
+    isolation: isolate;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+
+  @media (min-width: 1024px) {
+    .stat-mural__panel {
+      grid-template-columns: 4rem minmax(0, 1fr);
+      gap: clamp(2rem, 4vw, 3.5rem);
+      padding: 0;
+    }
+  }
+
+  .stat-mural__panel::before {
+    display: none;
+  }
+
+  /* Rail numérico lateral */
+  .stat-mural__rail {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.85rem;
+    padding-top: 0.5rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  @media (min-width: 1024px) {
+    .stat-mural__rail {
+      display: flex;
+    }
+  }
+
+  .stat-mural__rail-eyebrow {
+    font-family: var(--font-heading);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    color: var(--color-accent-ruby);
+  }
+
+  .stat-mural__rail-num {
+    font-family: var(--font-heading);
+    font-size: 2.5rem;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.04em;
+    color: var(--color-accent-ruby);
+  }
+
+  .stat-mural__rail-line {
+    width: 1px;
+    height: 4rem;
+    background: var(--color-accent-ruby);
+    opacity: 0.5;
+  }
+
+  .stat-mural__rail-meta {
+    font-family: var(--font-heading);
+    font-size: 0.625rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    color: rgba(248, 250, 252, 0.55);
+  }
+
+  .stat-mural__body {
+    position: relative;
+    z-index: 1;
+  }
+
+  .stat-mural__head {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    margin-bottom: clamp(2.5rem, 5vw, 4rem);
+    padding-bottom: clamp(2rem, 3vw, 2.5rem);
+    border-bottom: 1px solid rgba(248, 250, 252, 0.15);
+  }
+
+  .stat-mural__eyebrow {
+    margin: 0;
+  }
+
+  .stat-mural__headline {
+    margin: 0;
+    color: var(--color-text-on-dark);
+    font-family: var(--font-heading);
+    font-size: clamp(1.875rem, 3vw + 1rem, 3rem);
+    line-height: 1.15;
+    font-weight: 700;
+    letter-spacing: -0.022em;
+    text-wrap: balance;
+    max-width: 22ch;
+  }
+
+  .stat-mural__accent {
+    display: block;
+    margin-top: 0.4rem;
+    font-family: var(--font-editorial);
+    font-style: italic;
+    font-weight: 400;
+    color: var(--color-accent-ruby);
+    font-size: clamp(1.35rem, 2vw + 0.5rem, 1.85rem);
+    line-height: 1.4;
+  }
+
+  .stat-mural__grid {
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  @media (min-width: 768px) {
+    .stat-mural__grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.5rem 2rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .stat-mural__grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  .stat-mural__cell {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.5rem 0 0.5rem clamp(1rem, 2vw, 1.75rem);
+    background: transparent;
+    border: 0;
+    border-left: 1px solid rgba(248, 250, 252, 0.18);
+    border-radius: 0;
+    transition: border-color 280ms ease;
+  }
+
+  .stat-mural__cell:hover {
+    background: transparent;
+    border-left-color: var(--color-brand-cyan);
+    transform: none;
+  }
+
+  .stat-mural__cell-index {
+    position: absolute;
+    top: 0.5rem;
+    right: 0;
+    font-family: var(--font-heading);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: rgba(248, 250, 252, 0.35);
+  }
+
+  .stat-mural__label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+    color: var(--color-accent-ruby);
+    font-family: var(--font-heading);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .stat-mural__value {
+    margin: 0.25rem 0;
+  }
+
+  .stat-mural__num {
+    font-family: var(--font-heading);
+    font-size: clamp(4rem, 8vw, 6.5rem);
+    line-height: 0.9;
+    letter-spacing: -0.04em;
+    color: var(--color-brand-cyan);
+    display: inline-block;
+    font-variant-numeric: tabular-nums;
+    font-weight: 800;
+  }
+
+  .stat-mural__caption {
+    font-family: var(--font-body);
+    font-size: 0.9375rem;
+    line-height: 1.55;
+    margin: 0;
+    color: rgba(248, 250, 252, 0.78);
+    max-width: 26rem;
+  }
+</style>

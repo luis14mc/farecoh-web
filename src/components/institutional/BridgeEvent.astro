@@ -1,0 +1,300 @@
+---
+import type { EventData } from "@/lib/events";
+
+interface Props {
+  readonly eyebrow: string;
+  readonly headline: string;
+  readonly accent?: string;
+  readonly event: EventData;
+  readonly image: string;
+  readonly imageAlt: string;
+  readonly learnHref: string;
+  readonly ticketsHref: string;
+}
+
+const { eyebrow, headline, accent, event, image, imageAlt, learnHref, ticketsHref } = Astro.props;
+
+const lempira = new Intl.NumberFormat("es-HN", {
+  style: "currency",
+  currency: "HNL",
+  maximumFractionDigits: 0,
+}).format(event.ticket_price);
+---
+
+<section class="bridge-event" data-reveal-section aria-labelledby="bridge-title">
+  <div class="bridge-event__media" aria-hidden="true">
+    <img src={image} alt={imageAlt} class="bridge-event__image" loading="lazy" decoding="async" />
+    <div class="bridge-event__veil"></div>
+  </div>
+
+  <div class="bridge-event__shell">
+    <header class="bridge-event__head">
+      <p class="tag bridge-event__eyebrow" data-reveal style="color: var(--color-accent-ruby);">
+        <span class="bar" aria-hidden="true"></span>
+        Próximo concierto solidario
+      </p>
+      <h2 id="bridge-title" class="bridge-event__headline" data-reveal data-reveal-delay="120">
+        {headline}
+        {accent && <span class="bridge-event__accent">{accent}</span>}
+      </h2>
+    </header>
+
+    <div class="bridge-event__grid">
+      <aside class="bridge-event__poster" aria-hidden="false">
+        <div class="bridge-event__poster-inner">
+          <span class="bridge-event__poster-tag">{eyebrow}</span>
+          <div class="bridge-event__poster-mark">F</div>
+          <span class="bridge-event__poster-meta">
+            <span class="bridge-event__poster-meta-key">Reserva</span>
+            <span class="bridge-event__poster-meta-val">{event.dateDisplay}</span>
+          </span>
+        </div>
+      </aside>
+
+      <article class="bridge-event__content">
+        <p class="bridge-event__sub">
+          Producción sinfónica benéfica cuya recaudación financia los programas
+          formativos de la fundación durante todo el año.
+        </p>
+
+        <dl class="bridge-event__details">
+          <div class="bridge-event__detail">
+            <dt>Fecha</dt>
+            <dd>{event.dateDisplay}</dd>
+          </div>
+          <div class="bridge-event__detail">
+            <dt>Hora</dt>
+            <dd>{event.time}</dd>
+          </div>
+          <div class="bridge-event__detail">
+            <dt>Lugar</dt>
+            <dd>{event.venue}</dd>
+          </div>
+          <div class="bridge-event__detail bridge-event__detail--price">
+            <dt>Boleto desde</dt>
+            <dd class="bridge-event__price">{lempira}</dd>
+          </div>
+        </dl>
+
+        <div class="bridge-event__actions">
+          <a href={ticketsHref} class="btn btn--donate">
+            Reservar boletos
+            <span class="btn__arrow" aria-hidden="true"></span>
+          </a>
+          <a href={learnHref} class="btn bridge-event__btn-secondary">
+            Conocer el concierto
+            <span class="btn__arrow" aria-hidden="true"></span>
+          </a>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<style>
+  .bridge-event {
+    position: relative;
+    background: var(--color-bg-stage, #061a33);
+    color: var(--color-text-on-dark);
+    padding-block: clamp(6rem, 10vw, 9rem);
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  .bridge-event__media {
+    position: absolute;
+    inset: 0 0 0 46%;
+    z-index: 0;
+    opacity: 1;
+  }
+
+  .bridge-event__image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 35%;
+    filter: contrast(1.05) saturate(0.95);
+  }
+
+  .bridge-event__veil {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 50% 60% at 85% 25%, rgba(158, 42, 71, 0.22) 0%, transparent 60%),
+      linear-gradient(90deg, #0b1320 0%, rgba(11, 19, 32, 0.92) 38%, rgba(11, 19, 32, 0.42) 72%, rgba(11, 19, 32, 0.2) 100%);
+  }
+
+  .bridge-event__shell {
+    position: relative;
+    z-index: 1;
+    width: min(100% - calc(var(--gutter) * 2), var(--shell));
+    margin-inline: auto;
+  }
+
+  .bridge-event__head {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    margin-bottom: clamp(2.5rem, 4vw, 3.5rem);
+    max-width: 56rem;
+  }
+
+  .bridge-event__eyebrow {
+    color: var(--color-accent-ruby);
+    margin: 0;
+  }
+
+  .bridge-event__headline {
+    margin: 0;
+    color: var(--color-text-on-dark);
+    font-family: var(--font-heading);
+    font-size: clamp(1.875rem, 3.5vw + 1rem, 3.5rem);
+    line-height: 1.1;
+    font-weight: 700;
+    letter-spacing: -0.022em;
+    text-wrap: balance;
+  }
+
+  .bridge-event__accent {
+    display: block;
+    margin-top: 0.5rem;
+    font-family: var(--font-editorial);
+    font-style: italic;
+    font-weight: 400;
+    color: var(--color-accent-ruby);
+    font-size: clamp(1.35rem, 2vw + 0.5rem, 1.85rem);
+    line-height: 1.4;
+  }
+
+  .bridge-event__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+    background: transparent;
+    border-radius: 0;
+    overflow: visible;
+    box-shadow: none;
+  }
+
+  @media (min-width: 1024px) {
+    .bridge-event__grid {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 0.72fr);
+      gap: clamp(2rem, 4vw, 4rem);
+      align-items: end;
+    }
+  }
+
+  /* Cartel vertical: se oculta en el corte cinematográfico */
+  .bridge-event__poster {
+    display: none;
+  }
+
+  /* Contenido izquierdo sobre el fondo escénico */
+  .bridge-event__content {
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1.75rem;
+    color: var(--color-text-on-dark);
+    max-width: 42rem;
+  }
+
+  .bridge-event__sub {
+    font-family: var(--font-body);
+    font-size: clamp(1.0625rem, 0.4vw + 1rem, 1.25rem);
+    line-height: 1.7;
+    color: rgba(248, 250, 252, 0.82);
+    margin: 0;
+    max-width: 34rem;
+  }
+
+  .bridge-event__details {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem 2rem;
+    margin: 0.5rem 0 0;
+    padding-block: 1.5rem;
+    border-top: 1px solid rgba(248, 250, 252, 0.18);
+    border-bottom: 1px solid rgba(248, 250, 252, 0.18);
+  }
+
+  @media (min-width: 768px) {
+    .bridge-event__details {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+
+  .bridge-event__detail {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .bridge-event__detail dt {
+    font-family: var(--font-heading);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: rgba(248, 250, 252, 0.6);
+    margin: 0;
+  }
+
+  .bridge-event__detail dd {
+    font-family: var(--font-body);
+    font-size: 1rem;
+    line-height: 1.4;
+    color: var(--color-text-on-dark);
+    margin: 0;
+    font-weight: 600;
+  }
+
+  .bridge-event__price {
+    font-family: var(--font-heading);
+    font-size: clamp(1.5rem, 1.5vw + 1rem, 2rem);
+    font-weight: 800;
+    letter-spacing: -0.022em;
+    color: var(--color-brand-cyan) !important;
+  }
+
+  .bridge-event__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+  }
+
+  .bridge-event__actions .btn {
+    flex: 1 1 auto;
+  }
+
+  @media (min-width: 640px) {
+    .bridge-event__actions .btn {
+      flex: 0 0 auto;
+    }
+  }
+
+  .bridge-event__btn-secondary {
+    background: transparent;
+    color: var(--color-text-on-dark);
+    border-color: rgba(248, 250, 252, 0.55);
+  }
+
+  .bridge-event__btn-secondary:hover {
+    background: var(--color-text-on-dark);
+    color: var(--color-bg-stage);
+    border-color: var(--color-text-on-dark);
+  }
+
+  @media (max-width: 1023px) {
+    .bridge-event__media {
+      inset: 0;
+      opacity: 0.32;
+    }
+
+    .bridge-event__veil {
+      background:
+        linear-gradient(180deg, rgba(6, 26, 51, 0.9) 0%, rgba(6, 26, 51, 0.82) 55%, rgba(6, 26, 51, 0.95) 100%);
+    }
+  }
+</style>

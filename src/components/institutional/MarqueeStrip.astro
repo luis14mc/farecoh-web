@@ -1,0 +1,140 @@
+---
+interface Props {
+  readonly items: readonly string[];
+  readonly tone?: "ink" | "bone" | "bronze";
+  readonly pace?: number;
+  readonly separator?: string;
+}
+
+const {
+  items,
+  tone = "ink",
+  pace = 38,
+  separator = "✻",
+} = Astro.props;
+
+const itemsA = items;
+const itemsB = items;
+---
+
+<section
+  class={`marquee-strip marquee-strip--${tone}`}
+  aria-hidden="true"
+  data-marquee-section
+>
+  <div class="marquee-strip__track" data-marquee data-marquee-pace={pace}>
+    <div class="marquee-strip__lane">
+      {itemsA.map((item) => (
+        <span class="marquee-strip__item">
+          <span class="marquee-strip__text">{item}</span>
+          <span class="marquee-strip__sep">{separator}</span>
+        </span>
+      ))}
+    </div>
+    <div class="marquee-strip__lane" aria-hidden="true">
+      {itemsB.map((item) => (
+        <span class="marquee-strip__item">
+          <span class="marquee-strip__text">{item}</span>
+          <span class="marquee-strip__sep">{separator}</span>
+        </span>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .marquee-strip {
+    --marquee-fg: var(--color-bg-stage);
+    --marquee-sep: var(--color-accent-ruby);
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    padding-block: clamp(1.5rem, 2.5vw, 2.25rem);
+    background: var(--marquee-fg);
+    color: var(--color-text-on-dark);
+    border-block: 1px solid color-mix(in srgb, var(--color-accent-ruby) 30%, transparent);
+  }
+
+  .marquee-strip--bone {
+    --marquee-fg: var(--color-bg-subtle);
+    --marquee-sep: var(--color-accent-ruby);
+    color: var(--color-text-primary);
+    border-block-color: color-mix(in srgb, var(--color-accent-ruby) 25%, transparent);
+  }
+
+  .marquee-strip--bronze {
+    --marquee-fg: var(--color-accent-ruby);
+    --marquee-sep: #FFFFFF;
+    color: #FFFFFF;
+    border-block-color: rgba(255, 255, 255, 0.3);
+  }
+
+  .marquee-strip__track {
+    display: flex;
+    width: max-content;
+    animation: marquee-scroll linear infinite;
+  }
+
+  .marquee-strip__lane {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  .marquee-strip__item {
+    display: inline-flex;
+    align-items: center;
+    gap: clamp(1.5rem, 3vw, 3rem);
+    padding-inline: clamp(0.75rem, 1.5vw, 1.5rem);
+  }
+
+  .marquee-strip__text {
+    font-family: var(--font-heading);
+    font-size: clamp(1.5rem, 3.5vw, 2.5rem);
+    line-height: 1;
+    font-weight: 700;
+    letter-spacing: -0.005em;
+    white-space: nowrap;
+  }
+
+  .marquee-strip__item:nth-child(3n) .marquee-strip__text {
+    font-weight: 700;
+    color: var(--color-accent-ruby);
+  }
+
+  .marquee-strip--bronze .marquee-strip__item:nth-child(3n) .marquee-strip__text {
+    color: var(--color-bg-stage);
+  }
+
+  .marquee-strip__item:nth-child(2n) .marquee-strip__text {
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: clamp(1.25rem, 3vw, 2rem);
+  }
+
+  .marquee-strip__item:nth-child(4n) .marquee-strip__text {
+    font-style: italic;
+    font-family: var(--font-editorial);
+    font-weight: 400;
+    color: inherit;
+  }
+
+  .marquee-strip__sep {
+    font-family: var(--font-heading);
+    font-size: clamp(1.1rem, 2.2vw, 1.5rem);
+    font-weight: 700;
+    color: var(--marquee-sep);
+    opacity: 0.9;
+  }
+
+  @keyframes marquee-scroll {
+    to { transform: translateX(-50%); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .marquee-strip__track {
+      animation: none;
+      transform: translateX(0);
+    }
+  }
+</style>

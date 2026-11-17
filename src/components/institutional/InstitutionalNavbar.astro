@@ -1,18 +1,17 @@
 ---
-import FarecohLogo from "@/components/layout/FarecohLogo.astro";
-import { FARECOH_METADATA, FARECOH_CONTACT } from "@/data/farecoh";
+import { FARECOH_METADATA } from "@/data/farecoh";
 
 interface Props {
   readonly active?: "home" | "about" | "programs" | "board" | "partners" | "donations";
   readonly transparent?: boolean;
 }
 
-const { active = "home", transparent = false } = Astro.props;
+const { active = "home" } = Astro.props;
 
 const path = Astro.url.pathname;
 const resolveActive = (): Props["active"] => {
   if (path === "/") return "home";
-  if (path.startsWith("/sobre-nosotros")) return "about";
+  if (path.startsWith("/sobre-nosotros") || path.startsWith("/nosotros")) return "about";
   if (path.startsWith("/programas")) return "programs";
   if (path.startsWith("/junta-directiva")) return "board";
   if (path.startsWith("/alianzas")) return "partners";
@@ -25,72 +24,96 @@ const resolved = resolveActive();
 const navItems: ReadonlyArray<{
   readonly label: string;
   readonly href: string;
-  readonly key: NonNullable<Props["active"]>;
-  readonly index: string;
+  readonly key?: NonNullable<Props["active"]>;
   readonly desc: string;
 }> = [
-  { label: "Inicio", href: "/", key: "home", index: "01", desc: "Portada institucional" },
-  { label: "Nosotros", href: "/sobre-nosotros", key: "about", index: "02", desc: "Misión y causa social" },
-  { label: "Programas", href: "/programas", key: "programs", index: "03", desc: "Formación orquestal y coral" },
-  { label: "Junta Directiva", href: "/junta-directiva", key: "board", index: "04", desc: "Gobierno y liderazgo" },
-  { label: "Alianzas", href: "/alianzas", key: "partners", index: "05", desc: "Convenios y cooperación" },
+  { label: "Inicio", href: "/", key: "home", desc: "Portada institucional" },
+  { label: "Nosotros", href: "/sobre-nosotros", key: "about", desc: "Misión y causa social" },
+  { label: "Programas", href: "/programas", key: "programs", desc: "Formación orquestal y coral" },
+  { label: "Impacto", href: "/#impacto", desc: "Resultados y cifras" },
+  { label: "Eventos", href: "/eventos/pink-floyd", desc: "Cartelera cultural" },
+  { label: "Junta Directiva", href: "/junta-directiva", key: "board", desc: "Gobierno y liderazgo" },
+  { label: "Alianzas", href: "/alianzas", key: "partners", desc: "Convenios y cooperación" },
+];
+
+const programLinks = [
+  { label: "Todos los programas", href: "/programas" },
+  { label: "Coros y Orquestas", href: "/programas" },
+  { label: "Coro de Manos Blancas", href: "/programas" },
+  { label: "Artes Plásticas", href: "/programas" },
 ];
 ---
 
-<header
-  class={`inst-nav ${transparent ? "inst-nav--transparent" : ""}`}
-  id="main-header"
->
-  <div class="inst-shell inst-nav__inner">
-    <a href="/" class="inst-nav__brand" aria-label={`${FARECOH_METADATA.acronym} — Inicio`}>
-      <FarecohLogo variant="stacked" theme="color" size="nav" loading="eager" />
+<header class="site-nav" id="main-header" data-nav>
+  <div class="site-nav__inner">
+    <a href="/" class="site-nav__brand" aria-label={`${FARECOH_METADATA.acronym} — Inicio`}>
+      <img src="/images/Logos/logo.png" alt="" class="site-nav__logo" width="2221" height="708" />
+      <span class="site-nav__brand-name">{FARECOH_METADATA.acronym}</span>
     </a>
 
-    <nav aria-label="Navegación institucional" class="inst-nav__list-wrap">
-      <ul class="inst-nav__list">
+    <nav class="site-nav__nav" aria-label="Navegación institucional">
+      <ul class="site-nav__list">
         {
-          navItems.map((item) => (
-            <li>
-              <a
-                href={item.href}
-                class="inst-nav__link"
-                aria-current={resolved === item.key ? "page" : undefined}
-              >
-                {item.label}
-              </a>
-            </li>
-          ))
+          navItems.map((item) =>
+            item.label === "Programas" ? (
+              <li class="site-nav__item site-nav__item--has-menu">
+                <a
+                  href={item.href}
+                  class="site-nav__link"
+                  aria-current={resolved === item.key ? "page" : undefined}
+                >
+                  {item.label}
+                  <svg class="site-nav__caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="m6 9 6 6 6-6" />
+                  </svg>
+                </a>
+                <div class="site-nav__menu">
+                  <ul>
+                    {programLinks.map((link) => (
+                      <li><a href={link.href}>{link.label}</a></li>
+                    ))}
+                  </ul>
+                </div>
+              </li>
+            ) : (
+              <li class="site-nav__item">
+                <a
+                  href={item.href}
+                  class="site-nav__link"
+                  aria-current={resolved === item.key ? "page" : undefined}
+                >
+                  {item.label}
+                </a>
+              </li>
+            ),
+          )
         }
       </ul>
     </nav>
 
-    <div class="inst-nav__actions">
-      <a
-        href="/donaciones"
-        class="inst-cta inst-cta--solid inst-nav__cta"
-        aria-label="Donar a FARECOH"
-      >
-        Donar
-        <span class="inst-cta__arrow" aria-hidden="true"></span>
+    <div class="site-nav__actions">
+      <a href="/donaciones" class="site-nav__donate">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M12 21s-7.6-4.7-9.6-9A5.5 5.5 0 0 1 12 5.6 5.5 5.5 0 0 1 21.6 12c-2 4.3-9.6 9-9.6 9Z" />
+        </svg>
+        <span>Apoya a FARECOH</span>
+      </a>
+      <a href="/admin/login" class="site-nav__account" aria-label="Acceso administrativo">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M12 12a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9Zm0 2c-4.4 0-8 2.2-8 5v1h16v-1c0-2.8-3.6-5-8-5Z" />
+        </svg>
       </a>
       <button
         type="button"
-        class="inst-nav__menu-btn"
+        class="site-nav__burger"
         aria-label="Abrir menú de navegación"
         aria-expanded="false"
-        aria-controls="inst-mobile-panel"
-        data-inst-menu-open
+        aria-controls="mobile-panel"
+        data-mobile-open
       >
         <span class="sr-only">Menú</span>
-        <svg
-          width="22"
-          height="16"
-          viewBox="0 0 22 16"
-          fill="none"
-          aria-hidden="true"
-          focusable="false"
-        >
-          <path d="M1 2h20M1 8h20M1 14h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+        <svg width="24" height="18" viewBox="0 0 24 18" fill="none" aria-hidden="true" focusable="false">
+          <path d="M1 2h22M1 9h22M1 16h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
         </svg>
       </button>
     </div>
@@ -98,87 +121,447 @@ const navItems: ReadonlyArray<{
 </header>
 
 <!-- Mobile Navigation Drawer -->
-<div
-  class="inst-mobile-backdrop"
-  data-inst-mobile-backdrop
-  aria-hidden="true"
-></div>
+<div class="mobile-backdrop" data-mobile-backdrop aria-hidden="true"></div>
 
 <div
-  class="inst-mobile-panel"
-  id="inst-mobile-panel"
+  class="mobile-panel"
+  id="mobile-panel"
   role="dialog"
   aria-modal="true"
   aria-label="Menú principal de navegación"
-  data-inst-mobile-panel
+  data-mobile-panel
   data-open="false"
 >
-  <div class="inst-mobile-panel__head">
-    <a href="/" class="inst-mobile-panel__brand" aria-label={`${FARECOH_METADATA.acronym} — Inicio`}>
-      <FarecohLogo variant="stacked" theme="color" size="nav" loading="eager" />
+  <div class="mobile-panel__head">
+    <a href="/" class="mobile-panel__brand" aria-label={`${FARECOH_METADATA.acronym} — Inicio`}>
+      <img src="/images/Logos/logo.png" alt="" class="mobile-panel__logo" />
     </a>
-    <button
-      type="button"
-      class="inst-mobile-panel__close"
-      aria-label="Cerrar menú"
-      data-inst-menu-close
-    >
-      <svg
-        width="20"
-        height="20"
-        viewBox="0 0 20 20"
-        fill="none"
-        aria-hidden="true"
-        focusable="false"
-      >
+    <button type="button" class="mobile-panel__close" aria-label="Cerrar menú" data-mobile-close>
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true" focusable="false">
         <path d="M4 4l12 12M16 4L4 16" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
       </svg>
     </button>
   </div>
 
-  <div class="inst-mobile-panel__content">
-    <p class="inst-eyebrow inst-eyebrow--accent inst-mobile-panel__section-title">
-      <span class="inst-bar inst-bar--accent" aria-hidden="true"></span>
-      Menú Institucional
-    </p>
-
-    <ul class="inst-mobile-panel__nav">
+  <div class="mobile-panel__content">
+    <ul class="mobile-panel__nav">
       {
         navItems.map((item) => (
           <li>
             <a
               href={item.href}
-              class="inst-mobile-panel__link"
+              class="mobile-panel__link"
               aria-current={resolved === item.key ? "page" : undefined}
             >
-              <div class="inst-mobile-panel__link-text">
-                <span class="inst-mobile-panel__link-index">{item.index}</span>
-                <span class="inst-mobile-panel__link-label">{item.label}</span>
-              </div>
-              <span class="inst-mobile-panel__link-desc">{item.desc}</span>
+              <span class="mobile-panel__link-label">{item.label}</span>
+              <span class="mobile-panel__link-desc">{item.desc}</span>
             </a>
           </li>
         ))
       }
     </ul>
 
-    <div class="inst-mobile-panel__footer">
-      <a
-        href="/donaciones"
-        class="inst-cta inst-cta--solid inst-mobile-panel__cta"
-      >
-        Donar a la fundación
-        <span class="inst-cta__arrow" aria-hidden="true"></span>
+    <div class="mobile-panel__footer">
+      <a href="/donaciones" class="mobile-panel__donate">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M12 21s-7.6-4.7-9.6-9A5.5 5.5 0 0 1 12 5.6 5.5 5.5 0 0 1 21.6 12c-2 4.3-9.6 9-9.6 9Z" />
+        </svg>
+        Apoya a FARECOH
       </a>
-
-      <div class="inst-mobile-panel__contact">
-        <a href={`mailto:${FARECOH_CONTACT.email}`} class="inst-mobile-panel__contact-item">
-          {FARECOH_CONTACT.email}
-        </a>
-        <a href={`tel:${FARECOH_CONTACT.phone.replace(/\s/g, "")}`} class="inst-mobile-panel__contact-item">
-          {FARECOH_CONTACT.phone}
-        </a>
-      </div>
     </div>
   </div>
 </div>
+
+<style>
+  .site-nav {
+    position: fixed;
+    inset: 0 0 auto 0;
+    z-index: 50;
+    background: #ffffff;
+    border-bottom: 1px solid rgba(8, 46, 82, 0.06);
+    box-shadow: 0 1px 8px rgba(0, 0, 0, 0.04);
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+
+  .site-nav__inner {
+    width: min(100% - 2rem, 1280px);
+    margin-inline: auto;
+    height: 76px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+  }
+
+  @media (min-width: 1024px) {
+    .site-nav__inner {
+      width: min(100% - 6rem, 1280px);
+      height: 80px;
+    }
+  }
+
+  .site-nav__brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    text-decoration: none;
+    flex-shrink: 0;
+  }
+
+  .site-nav__logo {
+    height: 2rem;
+    width: auto;
+    object-fit: contain;
+  }
+
+  @media (min-width: 1024px) {
+    .site-nav__logo { height: 2.35rem; }
+  }
+
+  /* El logotipo ya incluye el wordmark; la etiqueta es solo para lectores de pantalla */
+  .site-nav__brand-name {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+
+  .site-nav__nav {
+    display: none;
+    flex: 1 1 auto;
+    justify-content: flex-end;
+  }
+
+  @media (min-width: 1180px) {
+    .site-nav__nav { display: flex; }
+  }
+
+  .site-nav__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    gap: clamp(1rem, 1.5vw, 1.6rem);
+  }
+
+  .site-nav__item {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  .site-nav__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding-block: 1.7rem;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    line-height: 1.2;
+    color: #404750;
+    text-decoration: none;
+    position: relative;
+    transition: color 200ms ease;
+    white-space: nowrap;
+  }
+
+  .site-nav__link:hover {
+    color: #171c1f;
+  }
+
+  .site-nav__link[aria-current="page"] {
+    color: #005082;
+  }
+
+  .site-nav__link::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 3px;
+    border-radius: 9999px;
+    background: #0069a8;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 220ms ease;
+  }
+
+  .site-nav__link[aria-current="page"]::after,
+  .site-nav__link:hover::after {
+    transform: scaleX(1);
+  }
+
+  .site-nav__caret {
+    transition: transform 200ms ease;
+  }
+
+  .site-nav__item--has-menu:hover .site-nav__caret,
+  .site-nav__item--has-menu:focus-within .site-nav__caret {
+    transform: rotate(180deg);
+  }
+
+  .site-nav__menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    padding-top: 0.5rem;
+    min-width: 16rem;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-6px);
+    transition: opacity 180ms ease, transform 180ms ease, visibility 180ms ease;
+  }
+
+  .site-nav__item--has-menu:hover .site-nav__menu,
+  .site-nav__item--has-menu:focus-within .site-nav__menu {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+
+  .site-nav__menu ul {
+    list-style: none;
+    margin: 0;
+    padding: 0.6rem;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(8, 46, 82, 0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+
+  .site-nav__menu a {
+    display: block;
+    padding: 0.6rem 0.9rem;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #404750;
+    text-decoration: none;
+    transition: background-color 160ms ease, color 160ms ease;
+  }
+
+  .site-nav__menu a:hover {
+    background: #eff4f8;
+    color: #005082;
+  }
+
+  .site-nav__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    flex-shrink: 0;
+  }
+
+  .site-nav__donate {
+    display: none;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.7rem 1.4rem;
+    border-radius: 9999px;
+    background: #0069a8;
+    color: #ffffff;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    text-decoration: none;
+    box-shadow: 0 4px 16px rgba(8, 46, 82, 0.08);
+    transition: background-color 220ms ease, box-shadow 220ms ease, transform 220ms ease;
+  }
+
+  @media (min-width: 640px) {
+    .site-nav__donate { display: inline-flex; }
+  }
+
+  .site-nav__donate:hover {
+    background: #005082;
+    box-shadow: 0 8px 24px rgba(8, 46, 82, 0.16);
+    transform: translateY(-1px);
+  }
+
+  .site-nav__account {
+    display: none;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 9999px;
+    background: #005082;
+    color: #ffffff;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    transition: background-color 200ms ease;
+  }
+
+  @media (min-width: 640px) {
+    .site-nav__account { display: inline-flex; }
+  }
+
+  .site-nav__account:hover { background: #0069a8; }
+
+  .site-nav__burger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border: 1px solid rgba(8, 46, 82, 0.12);
+    border-radius: 10px;
+    background: transparent;
+    color: #005082;
+    cursor: pointer;
+    transition: background-color 200ms ease, border-color 200ms ease;
+  }
+
+  .site-nav__burger:hover {
+    background: #eff4f8;
+    border-color: #0069a8;
+  }
+
+  @media (min-width: 1180px) {
+    .site-nav__burger { display: none; }
+  }
+
+  /* ── Drawer móvil ── */
+  .mobile-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 65;
+    background: rgba(11, 19, 32, 0.45);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 260ms ease;
+  }
+
+  .mobile-backdrop[data-open="true"] {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .mobile-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: min(100vw, 420px);
+    height: 100dvh;
+    z-index: 70;
+    display: flex;
+    flex-direction: column;
+    background: #ffffff;
+    transform: translateX(100%);
+    transition: transform 320ms cubic-bezier(0.16, 1, 0.3, 1);
+    overflow: hidden;
+    box-shadow: -10px 0 40px -10px rgba(8, 46, 82, 0.28);
+  }
+
+  .mobile-panel[data-open="true"] {
+    transform: translateX(0);
+  }
+
+  .mobile-panel__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #e3e9ef;
+    flex-shrink: 0;
+  }
+
+  .mobile-panel__logo {
+    height: 2rem;
+    width: auto;
+  }
+
+  .mobile-panel__close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border: 1px solid #e3e9ef;
+    border-radius: 10px;
+    background: transparent;
+    color: #005082;
+    cursor: pointer;
+    transition: background-color 200ms ease;
+  }
+
+  .mobile-panel__close:hover { background: #eff4f8; }
+
+  .mobile-panel__content {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .mobile-panel__nav {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .mobile-panel__link {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    padding: 0.85rem 1rem;
+    border-radius: 10px;
+    text-decoration: none;
+    color: #171c1f;
+    transition: background-color 180ms ease;
+  }
+
+  .mobile-panel__link:hover,
+  .mobile-panel__link[aria-current="page"] {
+    background: #eff4f8;
+  }
+
+  .mobile-panel__link[aria-current="page"] .mobile-panel__link-label {
+    color: #005082;
+  }
+
+  .mobile-panel__link-label {
+    font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #171c1f;
+  }
+
+  .mobile-panel__link-desc {
+    font-size: 0.8125rem;
+    color: #5b6572;
+  }
+
+  .mobile-panel__footer {
+    margin-top: auto;
+    padding-top: 1.25rem;
+    border-top: 1px solid #e3e9ef;
+  }
+
+  .mobile-panel__donate {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.9rem 1.4rem;
+    border-radius: 9999px;
+    background: #0069a8;
+    color: #ffffff;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    text-decoration: none;
+  }
+</style>

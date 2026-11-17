@@ -1,0 +1,348 @@
+---
+import type { EventData } from "@/lib/events";
+
+interface Props {
+  readonly eyebrow: string;
+  readonly headline: string;
+  readonly source: string;
+  readonly event: EventData;
+  readonly image: string;
+  readonly imageAlt: string;
+  readonly learnHref: string;
+  readonly ticketsHref: string;
+}
+
+const { eyebrow, headline, source, event, image, imageAlt, learnHref, ticketsHref } = Astro.props;
+
+const eventDate = new Date(event.date);
+const day = Number.isNaN(eventDate.getTime()) ? "—" : String(eventDate.getDate()).padStart(2, "0");
+const month = Number.isNaN(eventDate.getTime())
+  ? "—"
+  : new Intl.DateTimeFormat("es-HN", { month: "short" }).format(eventDate).replace(".", "").toUpperCase();
+
+const lempira = new Intl.NumberFormat("es-HN", {
+  style: "currency",
+  currency: "HNL",
+  maximumFractionDigits: 0,
+}).format(event.ticket_price);
+---
+
+<section class="fc-events" aria-labelledby="events-title">
+  <div class="fc-events__inner">
+    <header class="fc-events__head">
+      <div class="fc-events__headline-group">
+        <p class="fc-events__eyebrow">
+          <span>{eyebrow}</span>
+          <span class="fc-events__rule" aria-hidden="true"></span>
+        </p>
+        <h2 id="events-title" class="fc-events__title">{headline}</h2>
+        <p class="fc-events__sub">{source}</p>
+      </div>
+      <a href="/eventos/pink-floyd" class="fc-events__link">
+        <span>Ver calendario anual</span>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="3" y="5" width="18" height="16" rx="3" />
+          <path d="M8 3v4M16 3v4M3 11h18" />
+        </svg>
+      </a>
+    </header>
+
+    <article class="fc-events__card">
+      <div class="fc-events__media">
+        <img src={image} alt={imageAlt} loading="lazy" decoding="async" />
+        <span class="fc-events__date" aria-hidden="true">
+          <span class="fc-events__date-day">{day}</span>
+          <span class="fc-events__date-month">{month}</span>
+        </span>
+        <span class="fc-events__pill">{lempira} · Boleto solidario</span>
+      </div>
+
+      <div class="fc-events__body">
+        <h3 class="fc-events__name">{event.name}</h3>
+
+        <p class="fc-events__meta">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z" /><circle cx="12" cy="10" r="3" />
+          </svg>
+          <span>{event.venue}</span>
+        </p>
+        <p class="fc-events__meta">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" />
+          </svg>
+          <span>{event.dateDisplay} · {event.time}</span>
+        </p>
+
+        <p class="fc-events__desc">{event.description}</p>
+
+        <div class="fc-events__actions">
+          <a href={ticketsHref} class="fc-events__cta">
+            <span>Reservar asiento</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M5 12h14M12 5l7 7-7 7" />
+            </svg>
+          </a>
+          <a href={learnHref} class="fc-events__secondary">Conocer el concierto</a>
+        </div>
+      </div>
+    </article>
+  </div>
+</section>
+
+<style>
+  .fc-events {
+    background: #f5fafe;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    padding-block: clamp(3.5rem, 7vw, 6rem);
+  }
+
+  .fc-events__inner {
+    width: min(100% - 2rem, 1280px);
+    margin-inline: auto;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(1.75rem, 3vw, 2.5rem);
+  }
+
+  @media (min-width: 1024px) {
+    .fc-events__inner { width: min(100% - 6rem, 1280px); }
+  }
+
+  .fc-events__head {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+
+  @media (min-width: 768px) {
+    .fc-events__head {
+      flex-direction: row;
+      align-items: flex-end;
+      gap: 2rem;
+    }
+  }
+
+  .fc-events__headline-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    max-width: 42rem;
+  }
+
+  .fc-events__eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+    font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: #0069a8;
+  }
+
+  .fc-events__rule {
+    display: inline-block;
+    width: 2.5rem;
+    height: 2px;
+    border-radius: 9999px;
+    background: #0069a8;
+  }
+
+  .fc-events__title {
+    margin: 0;
+    font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: clamp(1.75rem, 3vw + 0.5rem, 2.5rem);
+    line-height: 1.2;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    color: #005082;
+    text-wrap: balance;
+  }
+
+  .fc-events__sub {
+    margin: 0;
+    font-size: 1rem;
+    line-height: 1.6;
+    color: #404750;
+  }
+
+  .fc-events__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: #005082;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: color 180ms ease;
+  }
+
+  .fc-events__link:hover { color: #0069a8; }
+
+  .fc-events__link svg { transition: transform 180ms ease; }
+  .fc-events__link:hover svg { transform: translateX(4px); }
+
+  .fc-events__card {
+    display: grid;
+    grid-template-columns: 1fr;
+    background: #ffffff;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(8, 46, 82, 0.08);
+    transition: box-shadow 260ms ease;
+  }
+
+  .fc-events__card:hover {
+    box-shadow: 0 16px 40px -16px rgba(8, 46, 82, 0.32);
+  }
+
+  @media (min-width: 900px) {
+    .fc-events__card { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); }
+  }
+
+  .fc-events__media {
+    position: relative;
+    min-height: 15rem;
+    overflow: hidden;
+  }
+
+  @media (min-width: 900px) {
+    .fc-events__media { min-height: 21rem; }
+  }
+
+  .fc-events__media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .fc-events__card:hover .fc-events__media img {
+    transform: scale(1.04);
+  }
+
+  .fc-events__date {
+    position: absolute;
+    top: 0.85rem;
+    left: 0.85rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0.4rem 0.7rem;
+    border-radius: 10px;
+    background: #005082;
+    color: #ffffff;
+    box-shadow: 0 6px 16px rgba(8, 46, 82, 0.3);
+    line-height: 1;
+  }
+
+  .fc-events__date-day {
+    font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 1.25rem;
+    font-weight: 800;
+  }
+
+  .fc-events__date-month {
+    margin-top: 0.2rem;
+    font-size: 0.625rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+  }
+
+  .fc-events__pill {
+    position: absolute;
+    right: 0.85rem;
+    bottom: 0.85rem;
+    padding: 0.35rem 0.75rem;
+    border-radius: 9999px;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(6px);
+    color: #005082;
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+
+  .fc-events__body {
+    padding: clamp(1.5rem, 3vw, 2.25rem);
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    justify-content: center;
+  }
+
+  .fc-events__name {
+    margin: 0 0 0.25rem;
+    font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: clamp(1.375rem, 2vw + 0.5rem, 1.75rem);
+    line-height: 1.25;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: #005082;
+  }
+
+  .fc-events__meta {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.45rem;
+    margin: 0;
+    font-size: 0.9375rem;
+    line-height: 1.5;
+    color: #5b6572;
+  }
+
+  .fc-events__meta svg {
+    flex-shrink: 0;
+    margin-top: 0.15rem;
+    color: #0069a8;
+  }
+
+  .fc-events__desc {
+    margin: 0.4rem 0 0;
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    color: #404750;
+    max-width: 34rem;
+  }
+
+  .fc-events__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem 1.5rem;
+    margin-top: 1rem;
+  }
+
+  .fc-events__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.8rem 1.4rem;
+    border-radius: 10px;
+    background: #005082;
+    color: #ffffff;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background-color 200ms ease, transform 200ms ease;
+  }
+
+  .fc-events__cta:hover {
+    background: #0069a8;
+    transform: translateY(-1px);
+  }
+
+  .fc-events__secondary {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: #005082;
+    text-decoration: none;
+  }
+
+  .fc-events__secondary:hover { text-decoration: underline; text-underline-offset: 3px; }
+</style>

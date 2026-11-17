@@ -1,0 +1,286 @@
+---
+interface Photo {
+  readonly src: string;
+  readonly alt: string;
+  readonly span?: "wide" | "tall" | "square" | "feature";
+  readonly credit?: string;
+}
+
+interface Props {
+  readonly eyebrow: string;
+  readonly caption: string;
+  readonly accent?: string;
+  readonly source?: string;
+  readonly photos: readonly Photo[];
+}
+
+const { eyebrow, caption, accent, source, photos } = Astro.props;
+const photoCount = String(photos.length).padStart(2, "0");
+---
+
+<section class="gallery-asym" data-reveal-section aria-label={caption}>
+  <header class="gallery-asym__head shell">
+    <div class="gallery-asym__head-lead">
+      <p class="tag gallery-asym__eyebrow" data-reveal>
+        <span class="bar" aria-hidden="true"></span>
+        {eyebrow}
+      </p>
+      <h2 class="gallery-asym__caption" data-reveal data-reveal-delay="120">
+        {caption}
+        {accent && <span class="gallery-asym__accent">{accent}</span>}
+      </h2>
+    </div>
+
+    {source && (
+      <p class="gallery-asym__source" data-reveal data-reveal-delay="220">{source}</p>
+    )}
+  </header>
+
+  <div class="gallery-asym__grid shell" role="list">
+    {photos.map((photo, index) => {
+      const spanClass = photo.span ?? "square";
+      return (
+        <figure
+          class={`gallery-asym__figure gallery-asym__figure--${spanClass}`}
+          data-reveal
+          data-reveal-delay={index * 90}
+          role="listitem"
+          style={`--gallery-index: ${String(index + 1).padStart(2, "0")};`}
+        >
+          <div class="gallery-asym__frame">
+            <img
+              src={photo.src}
+              alt={photo.alt}
+              loading="lazy"
+              decoding="async"
+              class="gallery-asym__image"
+            />
+          </div>
+          <figcaption class="gallery-asym__cap">
+            <span class="gallery-asym__cap-num">{String(index + 1).padStart(2, "0")} / {photoCount}</span>
+            <span class="gallery-asym__cap-text">{photo.alt}</span>
+            {photo.credit && (
+              <span class="gallery-asym__cap-credit">{photo.credit}</span>
+            )}
+          </figcaption>
+        </figure>
+      );
+    })}
+  </div>
+</section>
+
+<style>
+  .gallery-asym {
+    position: relative;
+    background: var(--color-bg-subtle);
+    padding-block: clamp(6rem, 10vw, 9rem);
+    overflow: hidden;
+  }
+
+  .gallery-asym__head {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    margin-bottom: clamp(2.5rem, 5vw, 4rem);
+    align-items: end;
+  }
+
+  @media (min-width: 1024px) {
+    .gallery-asym__head {
+      grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+      gap: 4rem;
+    }
+  }
+
+  .gallery-asym__head-lead {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .gallery-asym__eyebrow {
+    color: var(--color-accent-ruby);
+    margin: 0;
+  }
+
+  .gallery-asym__caption {
+    margin: 0;
+    color: var(--color-text-primary);
+    font-family: var(--font-heading);
+    font-size: clamp(1.875rem, 3vw + 1rem, 3rem);
+    line-height: 1.15;
+    font-weight: 700;
+    letter-spacing: -0.022em;
+    text-wrap: balance;
+    max-width: 22ch;
+  }
+
+  .gallery-asym__accent {
+    display: block;
+    margin-top: 0.4rem;
+    font-family: var(--font-editorial);
+    font-style: italic;
+    font-weight: 400;
+    font-size: clamp(1.25rem, 1.8vw, 1.5rem);
+    color: var(--color-accent-ruby);
+    line-height: 1.4;
+    letter-spacing: -0.008em;
+  }
+
+  .gallery-asym__source {
+    font-family: var(--font-body);
+    font-size: 1rem;
+    line-height: 1.65;
+    color: var(--color-text-secondary);
+    margin: 0;
+    max-width: 28rem;
+    padding: 1.25rem 0 0;
+    border-top: 1px solid var(--color-border-subtle);
+  }
+
+  .gallery-asym__grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: clamp(0.75rem, 1.5vw, 1rem);
+    grid-auto-flow: dense;
+  }
+
+  @media (min-width: 640px) {
+    .gallery-asym__grid {
+      grid-template-columns: repeat(6, 1fr);
+      gap: clamp(1rem, 2vw, 1.5rem);
+    }
+  }
+
+  .gallery-asym__figure {
+    position: relative;
+    margin: 0;
+    background: transparent;
+    isolation: isolate;
+    border-radius: 0;
+    box-shadow: none;
+    display: flex;
+    flex-direction: column;
+    transition: transform 280ms ease;
+  }
+
+  .gallery-asym__figure:hover {
+    transform: translateY(-3px);
+  }
+
+  .gallery-asym__frame {
+    position: relative;
+    overflow: hidden;
+    background: var(--color-bg-stage);
+    border-radius: 2px;
+    aspect-ratio: 1 / 1;
+    width: 100%;
+  }
+
+  .gallery-asym__frame::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, transparent 62%, rgba(6, 26, 51, 0.38) 100%);
+    pointer-events: none;
+  }
+
+  .gallery-asym__image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .gallery-asym__figure:hover .gallery-asym__image {
+    transform: scale(1.05);
+  }
+
+  .gallery-asym__figure--square {
+    grid-column: span 1;
+  }
+
+  .gallery-asym__figure--square .gallery-asym__frame {
+    aspect-ratio: 1 / 1;
+  }
+
+  @media (min-width: 640px) {
+    .gallery-asym__figure--square { grid-column: span 2; }
+  }
+
+  .gallery-asym__figure--wide {
+    grid-column: span 1;
+  }
+
+  .gallery-asym__figure--wide .gallery-asym__frame {
+    aspect-ratio: 16 / 10;
+  }
+
+  @media (min-width: 640px) {
+    .gallery-asym__figure--wide { grid-column: span 4; }
+  }
+
+  .gallery-asym__figure--tall {
+    grid-column: span 1;
+  }
+
+  .gallery-asym__figure--tall .gallery-asym__frame {
+    aspect-ratio: 3 / 4;
+  }
+
+  @media (min-width: 640px) {
+    .gallery-asym__figure--tall { grid-column: span 2; }
+  }
+
+  .gallery-asym__figure--feature {
+    grid-column: span 1;
+  }
+
+  .gallery-asym__figure--feature .gallery-asym__frame {
+    aspect-ratio: 4 / 5;
+  }
+
+  @media (min-width: 640px) {
+    .gallery-asym__figure--feature { grid-column: span 3; }
+  }
+
+  .gallery-asym__cap {
+    position: static;
+    z-index: 2;
+    padding: 0.7rem 0 0;
+    color: var(--color-text-primary);
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 0.2rem 0.75rem;
+    align-items: baseline;
+    border-top: 1px solid var(--color-border-subtle);
+    margin-top: 0.75rem;
+  }
+
+  .gallery-asym__cap-num {
+    font-family: var(--font-heading);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    color: var(--color-accent-ruby);
+    grid-row: span 2;
+  }
+
+  .gallery-asym__cap-text {
+    font-family: var(--font-body);
+    font-size: 0.875rem;
+    line-height: 1.4;
+    font-weight: 500;
+    color: var(--color-text-primary);
+  }
+
+  .gallery-asym__cap-credit {
+    font-family: var(--font-heading);
+    font-size: 0.625rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-text-secondary);
+  }
+</style>

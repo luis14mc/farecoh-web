@@ -1,0 +1,415 @@
+---
+import type { BoardMember } from "@/data/farecoh";
+import { FARECOH_METADATA } from "@/data/farecoh";
+
+interface Props {
+  readonly eyebrow: string;
+  readonly headline: string;
+  readonly accent?: string;
+  readonly board: readonly BoardMember[];
+}
+
+const { eyebrow, headline, accent, board } = Astro.props;
+
+function initials(name: string): string {
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((word) => word[0]?.toUpperCase() ?? "")
+    .join("");
+}
+
+const tones = [
+  "var(--color-brand-blue)",
+  "var(--color-accent-plum)",
+  "var(--color-accent-ruby)",
+  "var(--color-accent-sage)",
+  "var(--color-brand-cyan)",
+];
+
+function toneFor(index: number): string {
+  return tones[index % tones.length] ?? "var(--color-brand-blue)";
+}
+
+const boardCount = String(board.length).padStart(2, "0");
+---
+
+<section class="board-mural" data-reveal-section aria-labelledby="board-title">
+  <div class="board-mural__grid">
+    <aside class="board-mural__rail" aria-hidden="true">
+      <span class="board-mural__rail-eyebrow">Gobierno</span>
+      <span class="board-mural__rail-num">{boardCount}</span>
+      <span class="board-mural__rail-line"></span>
+      <span class="board-mural__rail-meta">Integrantes</span>
+    </aside>
+
+    <div class="board-mural__main">
+      <header class="board-mural__head">
+        <p class="tag board-mural__eyebrow" data-reveal>
+          <span class="bar" aria-hidden="true"></span>
+          {eyebrow}
+        </p>
+        <h2 id="board-title" class="board-mural__headline" data-reveal data-reveal-delay="120">
+          {headline}
+          {accent && <span class="board-mural__accent">{accent}</span>}
+        </h2>
+      </header>
+
+      <div class="board-mural__layout">
+        <ol class="board-mural__list" role="list">
+          {board.map((member, index) => {
+            const tone = toneFor(index);
+            const num = String(index + 1).padStart(2, "0");
+            return (
+              <li
+                class="board-mural__item"
+                data-reveal
+                data-reveal-delay={200 + index * 90}
+                role="listitem"
+                style={`--member-tone: ${tone};`}
+              >
+                <span class="board-mural__num">{num}</span>
+                <div class="board-mural__monogram" aria-hidden="true">
+                  <span>{initials(member.name)}</span>
+                </div>
+                <div class="board-mural__copy">
+                  <h3 class="board-mural__name">{member.name}</h3>
+                  <p class="board-mural__role">{member.role}</p>
+                </div>
+              </li>
+            );
+          })}
+        </ol>
+
+        <aside class="board-mural__note" data-reveal data-reveal-delay="260">
+          <p class="board-mural__note-eyebrow">Gobernanza</p>
+          <p class="board-mural__note-title">Dirección estratégica y servicio institucional.</p>
+          <dl class="board-mural__note-list">
+            <div>
+              <dt>Sede legal</dt>
+              <dd>{FARECOH_METADATA.legalSeat}</dd>
+            </div>
+            <div>
+              <dt>Fundación</dt>
+              <dd>{FARECOH_METADATA.established}</dd>
+            </div>
+            <div>
+              <dt>Integrantes</dt>
+              <dd>{String(board.length).padStart(2, "0")}</dd>
+            </div>
+          </dl>
+          <a href="/junta-directiva" class="board-mural__note-link">
+            Conocer la junta directiva
+            <span aria-hidden="true">→</span>
+          </a>
+        </aside>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .board-mural {
+    position: relative;
+    background: var(--color-bg-subtle);
+    padding-block: clamp(6rem, 10vw, 9rem);
+  }
+
+  .board-mural__grid {
+    width: min(100% - calc(var(--gutter) * 2), var(--shell));
+    margin-inline: auto;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: clamp(2rem, 4vw, 3rem);
+  }
+
+  @media (min-width: 1024px) {
+    .board-mural__grid {
+      grid-template-columns: 5rem minmax(0, 1fr);
+      gap: clamp(2rem, 4vw, 3rem);
+    }
+  }
+
+  /* Rail numérico lateral */
+  .board-mural__rail {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.85rem;
+    padding-top: 0.5rem;
+  }
+
+  @media (min-width: 1024px) {
+    .board-mural__rail {
+      display: flex;
+    }
+  }
+
+  .board-mural__rail-eyebrow {
+    font-family: var(--font-heading);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    color: var(--color-accent-ruby);
+  }
+
+  .board-mural__rail-num {
+    font-family: var(--font-heading);
+    font-size: 2.5rem;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.04em;
+    color: var(--color-accent-ruby);
+  }
+
+  .board-mural__rail-line {
+    width: 1px;
+    height: 4rem;
+    background: var(--color-accent-ruby);
+    opacity: 0.5;
+  }
+
+  .board-mural__rail-meta {
+    font-family: var(--font-heading);
+    font-size: 0.625rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    color: var(--color-text-secondary);
+  }
+
+  /* Main */
+  .board-mural__main {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(2.5rem, 4vw, 3.5rem);
+  }
+
+  .board-mural__head {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .board-mural__eyebrow {
+    color: var(--color-accent-ruby);
+    margin: 0;
+  }
+
+  .board-mural__headline {
+    margin: 0;
+    color: var(--color-text-primary);
+    font-family: var(--font-heading);
+    font-size: clamp(1.875rem, 3vw + 1rem, 3rem);
+    line-height: 1.15;
+    font-weight: 700;
+    letter-spacing: -0.022em;
+    text-wrap: balance;
+    max-width: 22ch;
+  }
+
+  .board-mural__accent {
+    display: block;
+    margin-top: 0.4rem;
+    font-family: var(--font-editorial);
+    font-style: italic;
+    font-weight: 400;
+    color: var(--color-accent-ruby);
+    font-size: clamp(1.25rem, 1.8vw, 1.5rem);
+    line-height: 1.4;
+  }
+
+  /* Lista */
+  .board-mural__layout {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: clamp(1.5rem, 3vw, 2.5rem);
+    align-items: start;
+  }
+
+  @media (min-width: 1024px) {
+    .board-mural__layout {
+      grid-template-columns: minmax(0, 1.55fr) minmax(0, 0.75fr);
+    }
+  }
+
+  .board-mural__note {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: clamp(1.5rem, 2.4vw, 2rem);
+    background: var(--color-bg-stage);
+    color: var(--color-text-on-dark);
+    border-top: 2px solid var(--color-brand-cyan);
+    border-radius: 2px;
+    position: sticky;
+    top: 6.5rem;
+  }
+
+  .board-mural__note-eyebrow {
+    margin: 0;
+    font-family: var(--font-heading);
+    font-size: 0.625rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--color-brand-cyan);
+  }
+
+  .board-mural__note-title {
+    margin: 0;
+    font-family: var(--font-editorial);
+    font-style: italic;
+    font-size: 1.4rem;
+    line-height: 1.35;
+    color: var(--color-text-on-dark);
+  }
+
+  .board-mural__note-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin: 0.25rem 0 0;
+    border-top: 1px solid rgba(248, 250, 252, 0.16);
+  }
+
+  .board-mural__note-list > div {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-block: 0.65rem;
+    border-bottom: 1px solid rgba(248, 250, 252, 0.12);
+  }
+
+  .board-mural__note-list dt {
+    font-family: var(--font-heading);
+    font-size: 0.625rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(248, 250, 252, 0.55);
+  }
+
+  .board-mural__note-list dd {
+    margin: 0;
+    font-family: var(--font-body);
+    font-size: 0.875rem;
+    color: rgba(248, 250, 252, 0.88);
+  }
+
+  .board-mural__note-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    font-family: var(--font-heading);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--color-brand-cyan);
+    text-decoration: none;
+  }
+
+  .board-mural__note-link:hover {
+    color: var(--color-text-on-dark);
+  }
+
+  .board-mural__list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  @media (min-width: 768px) {
+    .board-mural__list {
+      grid-template-columns: repeat(2, 1fr);
+      column-gap: 1rem;
+      row-gap: 0.75rem;
+    }
+  }
+
+  .board-mural__item {
+    position: relative;
+    display: grid;
+    grid-template-columns: 2.25rem clamp(56px, 7vw, 80px) minmax(0, 1fr);
+    gap: clamp(0.85rem, 1.5vw, 1.25rem);
+    padding: 1.1rem 1.1rem 1.1rem 1.25rem;
+    background: var(--color-bg-surface);
+    border: 1px solid var(--color-border-subtle);
+    border-left: 3px solid var(--member-tone);
+    border-radius: var(--radius-sm) var(--radius-md) var(--radius-md) var(--radius-sm);
+    align-items: center;
+    transition: box-shadow 280ms ease, transform 280ms ease;
+  }
+
+  .board-mural__item:hover {
+    box-shadow: var(--shadow-card-hover);
+    transform: translateX(3px);
+  }
+
+  .board-mural__num {
+    font-family: var(--font-heading);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--color-text-secondary);
+    text-align: center;
+  }
+
+  .board-mural__monogram {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    display: grid;
+    place-items: center;
+    background: var(--member-tone);
+    color: #FFFFFF;
+    font-family: var(--font-heading);
+    font-size: clamp(1.25rem, 1.8vw, 1.625rem);
+    font-weight: 800;
+    line-height: 1;
+    border-radius: 12px;
+    transition: transform 280ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .board-mural__item:hover .board-mural__monogram {
+    transform: scale(1.06) rotate(-4deg);
+  }
+
+  .board-mural__copy {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    min-width: 0;
+  }
+
+  .board-mural__name {
+    font-family: var(--font-heading);
+    font-size: clamp(1.0625rem, 1.6vw, 1.25rem);
+    line-height: 1.2;
+    font-weight: 700;
+    letter-spacing: -0.008em;
+    margin: 0;
+    color: var(--color-text-primary);
+    text-wrap: balance;
+  }
+
+  .board-mural__role {
+    font-family: var(--font-heading);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--member-tone);
+    margin: 0;
+  }
+</style>

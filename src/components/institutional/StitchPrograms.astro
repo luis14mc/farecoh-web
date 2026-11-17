@@ -1,0 +1,304 @@
+---
+import type { ProgramItem } from "@/data/farecoh";
+
+interface Props {
+  readonly eyebrow: string;
+  readonly headline: string;
+  readonly source: string;
+  readonly programs: readonly ProgramItem[];
+  readonly ctaHref?: string;
+  readonly ctaLabel?: string;
+}
+
+const {
+  eyebrow,
+  headline,
+  source,
+  programs,
+  ctaHref = "/programas",
+  ctaLabel = "Ver catálogo académico completo",
+} = Astro.props;
+
+const images: Record<string, string> = {
+  music: "/images/farecoh-hero-orchestra.webp",
+  inclusion: "/images/fotografias/IMG_6846.webp",
+  "early-childhood": "/images/fotografias/IMG_6837.webp",
+  "visual-arts": "/images/fotografias/IMG_6849.webp",
+};
+
+const fallbackImage = "/images/farecoh-hero-orchestra.webp";
+---
+
+<section class="fc-programs" aria-labelledby="programs-title">
+  <div class="fc-programs__inner">
+    <header class="fc-programs__head">
+      <div class="fc-programs__headline-group">
+        <p class="fc-programs__eyebrow">
+          <span>{eyebrow}</span>
+          <span class="fc-programs__rule" aria-hidden="true"></span>
+        </p>
+        <h2 id="programs-title" class="fc-programs__title">{headline}</h2>
+        <p class="fc-programs__sub">{source}</p>
+      </div>
+      <a href={ctaHref} class="fc-programs__link">
+        <span>{ctaLabel}</span>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M5 12h14M12 5l7 7-7 7" />
+        </svg>
+      </a>
+    </header>
+
+    <div class="fc-programs__grid">
+      {
+        programs.map((program) => (
+          <a href={`${ctaHref}#${program.id}`} class="fc-programs__card">
+            <img
+              src={images[program.discipline ?? "music"] ?? fallbackImage}
+              alt={program.title}
+              class="fc-programs__image"
+              loading="lazy"
+              decoding="async"
+            />
+            <span class="fc-programs__scrim" aria-hidden="true"></span>
+            <span class="fc-programs__body">
+              <span class="fc-programs__badge" aria-hidden="true">
+                {program.discipline === "music" && (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M20 3.5a1 1 0 0 0-1.2-.98l-9 2A1 1 0 0 0 9 5.5v9.1A4 4 0 1 0 11 18V8.28l7-1.56v5.88A4 4 0 1 0 20 16V3.5Z" />
+                  </svg>
+                )}
+                {program.discipline === "inclusion" && (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M8 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Zm8 0a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM2 19c0-3 2.7-5 6-5s6 2 6 5v1H2v-1Zm14.5-4c2.5.4 4.5 2.1 4.5 4v1h-6v-1c0-1.5-.6-2.9-1.6-4 .9-.1 1.9 0 3.1 0Z" />
+                  </svg>
+                )}
+                {program.discipline === "early-childhood" && (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2a5 5 0 0 0-5 5c0 1.7.8 3.2 2 4.2V13H7a3 3 0 0 0-3 3v1h16v-1a3 3 0 0 0-3-3h-2v-1.8c1.2-1 2-2.5 2-4.2a5 5 0 0 0-5-5Zm-3 16v3h2v-3h2v3h2v-3H9Z" />
+                  </svg>
+                )}
+                {program.discipline === "visual-arts" && (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2a10 10 0 0 0 0 20c1.2 0 2-.9 2-2 0-.5-.2-1-.5-1.3-.3-.4-.5-.8-.5-1.2 0-1 .8-1.8 1.8-1.8H16a6 6 0 0 0 6-6c0-4.4-4.5-7.7-10-7.7Zm-5.5 9a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Zm3-4.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Zm5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Zm3 4.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Z" />
+                  </svg>
+                )}
+              </span>
+              <span class="fc-programs__card-title">{program.title}</span>
+              <span class="fc-programs__accent" aria-hidden="true"></span>
+              <span class="fc-programs__desc">{program.description}</span>
+            </span>
+          </a>
+        ))
+      }
+    </div>
+  </div>
+</section>
+
+<style>
+  .fc-programs {
+    background: #f5fafe;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    padding-block: clamp(3.5rem, 6vw, 5.5rem);
+  }
+
+  .fc-programs__inner {
+    width: min(100% - 2rem, 1280px);
+    margin-inline: auto;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(1.75rem, 3vw, 2.5rem);
+  }
+
+  @media (min-width: 1024px) {
+    .fc-programs__inner { width: min(100% - 6rem, 1280px); }
+  }
+
+  .fc-programs__head {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+
+  @media (min-width: 768px) {
+    .fc-programs__head {
+      flex-direction: row;
+      align-items: flex-end;
+      gap: 2rem;
+    }
+  }
+
+  .fc-programs__headline-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    max-width: 42rem;
+  }
+
+  .fc-programs__eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+    font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: #0069a8;
+  }
+
+  .fc-programs__rule {
+    display: inline-block;
+    width: 2.5rem;
+    height: 2px;
+    border-radius: 9999px;
+    background: #0069a8;
+  }
+
+  .fc-programs__title {
+    margin: 0;
+    font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: clamp(1.75rem, 3vw + 0.5rem, 2.5rem);
+    line-height: 1.2;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    color: #005082;
+    text-wrap: balance;
+  }
+
+  .fc-programs__sub {
+    margin: 0;
+    font-size: 1rem;
+    line-height: 1.6;
+    color: #404750;
+  }
+
+  .fc-programs__link {
+    display: none;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: #005082;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: color 180ms ease;
+  }
+
+  @media (min-width: 640px) {
+    .fc-programs__link { display: inline-flex; }
+  }
+
+  .fc-programs__link:hover { color: #0069a8; }
+
+  .fc-programs__link svg { transition: transform 180ms ease; }
+
+  .fc-programs__link:hover svg { transform: translateX(4px); }
+
+  .fc-programs__grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  @media (min-width: 640px) {
+    .fc-programs__grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  @media (min-width: 1024px) {
+    .fc-programs__grid { grid-template-columns: repeat(4, 1fr); }
+  }
+
+  .fc-programs__card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    height: 24rem;
+    border-radius: 12px;
+    overflow: hidden;
+    text-decoration: none;
+    color: #ffffff;
+    box-shadow: 0 1px 3px rgba(8, 46, 82, 0.08);
+    transition: box-shadow 280ms ease, transform 280ms ease;
+    isolation: isolate;
+  }
+
+  .fc-programs__card:hover {
+    box-shadow: 0 16px 32px -12px rgba(8, 46, 82, 0.35);
+    transform: translateY(-4px);
+  }
+
+  .fc-programs__image {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 0;
+    transition: transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .fc-programs__card:hover .fc-programs__image {
+    transform: scale(1.05);
+  }
+
+  .fc-programs__scrim {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: linear-gradient(180deg, rgba(0, 80, 130, 0.05) 0%, rgba(0, 80, 130, 0.55) 52%, rgba(0, 72, 117, 0.97) 100%);
+  }
+
+  .fc-programs__body {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.45rem;
+    padding: 1.5rem;
+  }
+
+  .fc-programs__badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 9px;
+    background: #0069a8;
+    color: #ffffff;
+    margin-bottom: 0.35rem;
+  }
+
+  .fc-programs__card-title {
+    font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 1.375rem;
+    line-height: 1.25;
+    font-weight: 700;
+    letter-spacing: -0.015em;
+    color: #ffffff;
+  }
+
+  .fc-programs__accent {
+    display: block;
+    width: 2rem;
+    height: 4px;
+    border-radius: 9999px;
+    background: #83cfff;
+    margin-block: 0.25rem;
+  }
+
+  .fc-programs__desc {
+    font-size: 0.875rem;
+    line-height: 1.45;
+    color: #d7ecff;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+</style>

@@ -1,0 +1,369 @@
+---
+interface Props {
+  readonly eyebrow: string;
+  readonly headline: string;
+  readonly accent: string;
+  readonly subhead: string;
+  readonly image: string;
+  readonly imageAlt: string;
+  readonly primaryCta: { readonly label: string; readonly href: string };
+  readonly secondaryCta?: { readonly label: string; readonly href: string };
+  readonly meta?: ReadonlyArray<{ readonly label: string; readonly value: string }>;
+}
+
+const {
+  eyebrow,
+  headline,
+  accent,
+  subhead,
+  image,
+  imageAlt,
+  primaryCta,
+  secondaryCta,
+  meta,
+} = Astro.props;
+---
+
+<section class="hero-mural grain" data-reveal-section aria-labelledby="hero-mural-title">
+  <div class="hero-mural__media" aria-hidden="false">
+    <img
+      src={image}
+      alt={imageAlt}
+      class="hero-mural__image"
+      loading="eager"
+      decoding="async"
+      fetchpriority="high"
+    />
+    <div class="hero-mural__veil" aria-hidden="true"></div>
+    <div class="hero-mural__tone" aria-hidden="true"></div>
+  </div>
+
+  <div class="hero-mural__index" aria-hidden="true">
+    <span class="hero-mural__index-num">01</span>
+    <span class="hero-mural__index-line"></span>
+    <span class="hero-mural__index-label">Portada institucional</span>
+  </div>
+
+  <div class="hero-mural__mark" aria-hidden="true">
+    <span>F</span>
+  </div>
+
+  <div class="shell hero-mural__shell">
+    <div class="hero-mural__content">
+      <p class="tag hero-mural__eyebrow" data-reveal>
+        <span class="bar" aria-hidden="true"></span>
+        {eyebrow}
+      </p>
+
+      <h1 id="hero-mural-title" class="t-display t-display--hero hero-mural__title" data-reveal data-reveal-delay="120">
+        {headline}<br />
+        <span class="hero-mural__accent">{accent}</span>
+      </h1>
+
+      <p class="hero-mural__subhead" data-reveal data-reveal-delay="220">
+        {subhead}
+      </p>
+
+      <div class="hero-mural__actions" data-reveal data-reveal-delay="320">
+        <a href={primaryCta.href} class="btn btn--solid">
+          {primaryCta.label}
+          <span class="btn__arrow" aria-hidden="true"></span>
+        </a>
+        {secondaryCta && (
+          <a href={secondaryCta.href} class="btn btn--bone">
+            {secondaryCta.label}
+            <span class="btn__arrow" aria-hidden="true"></span>
+          </a>
+        )}
+      </div>
+
+      {meta && meta.length > 0 && (
+        <dl class="hero-mural__meta" data-reveal data-reveal-delay="440">
+          {meta.map((item) => (
+            <div class="hero-mural__meta-item">
+              <dt class="t-mono">{item.label}</dt>
+              <dd class="hero-mural__meta-value">{item.value}</dd>
+            </div>
+          ))}
+        </dl>
+      )}
+    </div>
+  </div>
+
+  <div class="hero-mural__scroll" aria-hidden="true">
+    <span>Desplazar</span>
+    <span class="hero-mural__scroll-line"></span>
+  </div>
+</section>
+
+<style>
+  .hero-mural {
+    position: relative;
+    min-height: clamp(640px, 100svh, 1100px);
+    color: var(--color-bone-bright);
+    overflow: hidden;
+    isolation: isolate;
+    display: flex;
+    align-items: flex-end;
+    padding-top: clamp(6rem, 14vh, 9rem);
+    padding-bottom: clamp(3rem, 6vw, 5rem);
+  }
+
+  .hero-mural__media {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+  }
+
+  .hero-mural__image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 30%;
+    transform: scale(1.04);
+    transition: transform 1800ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .hero-mural:hover .hero-mural__image {
+    transform: scale(1.0);
+  }
+
+  .hero-mural__veil {
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(180deg,
+        rgba(10, 14, 26, 0.55) 0%,
+        rgba(10, 14, 26, 0.35) 30%,
+        rgba(10, 14, 26, 0.85) 100%),
+      radial-gradient(ellipse 60% 80% at 75% 40%, rgba(110, 20, 20, 0.4) 0%, transparent 65%);
+    mix-blend-mode: multiply;
+  }
+
+  .hero-mural__tone {
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(180deg,
+        rgba(212, 160, 23, 0.12) 0%,
+        transparent 40%,
+        transparent 60%,
+        rgba(110, 20, 20, 0.18) 100%);
+    mix-blend-mode: overlay;
+  }
+
+  .hero-mural__index {
+    position: absolute;
+    top: 0;
+    left: var(--gutter);
+    bottom: 0;
+    z-index: 1;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    padding-bottom: clamp(3rem, 6vw, 5rem);
+    color: rgba(250, 246, 238, 0.65);
+    pointer-events: none;
+  }
+
+  @media (min-width: 1024px) {
+    .hero-mural__index {
+      display: flex;
+    }
+  }
+
+  .hero-mural__index-num {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+  }
+
+  .hero-mural__index-line {
+    flex: 1;
+    width: 1px;
+    background: currentColor;
+    opacity: 0.4;
+    margin: 1rem 0;
+  }
+
+  .hero-mural__index-label {
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+  }
+
+  .hero-mural__mark {
+    position: absolute;
+    top: 50%;
+    right: var(--gutter);
+    transform: translateY(-50%);
+    width: clamp(120px, 18vw, 240px);
+    height: clamp(120px, 18vw, 240px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(250, 246, 238, 0.32);
+    border-radius: 50%;
+    font-family: var(--font-display);
+    font-size: clamp(4rem, 9vw, 8rem);
+    color: var(--color-saffron-bright);
+    z-index: 2;
+    pointer-events: none;
+    animation: hero-rotate 28s linear infinite;
+  }
+
+  @media (min-width: 1024px) {
+    .hero-mural__mark { display: flex; }
+  }
+
+  @keyframes hero-rotate {
+    to { transform: translateY(-50%) rotate(360deg); }
+  }
+
+  .hero-mural__shell {
+    position: relative;
+    z-index: 3;
+    width: 100%;
+  }
+
+  .hero-mural__content {
+    display: flex;
+    flex-direction: column;
+    gap: 1.75rem;
+    max-width: 64rem;
+  }
+
+  .hero-mural__eyebrow {
+    color: var(--color-saffron-bright);
+    margin: 0;
+  }
+
+  .hero-mural__title {
+    margin: 0;
+    color: var(--color-bone-bright);
+    text-shadow: 0 1px 0 rgba(10, 14, 26, 0.4);
+  }
+
+  .hero-mural__accent {
+    display: block;
+    color: var(--color-saffron-bright);
+    font-style: italic;
+    font-family: var(--font-serif);
+    font-variation-settings: "opsz" 144, "SOFT" 100, "WONK" 1;
+    font-weight: 320;
+    line-height: 0.9;
+    letter-spacing: -0.012em;
+    margin-top: -0.05em;
+  }
+
+  .hero-mural__subhead {
+    font-family: var(--font-serif);
+    font-variation-settings: "opsz" 24, "SOFT" 30;
+    font-size: clamp(1.0625rem, 1.4vw, 1.375rem);
+    line-height: 1.5;
+    color: color-mix(in srgb, var(--color-bone-bright) 88%, transparent);
+    margin: 0;
+    max-width: 38rem;
+    text-wrap: pretty;
+  }
+
+  .hero-mural__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+
+  .hero-mural__actions .btn {
+    flex: 1 1 auto;
+  }
+
+  @media (min-width: 640px) {
+    .hero-mural__actions .btn {
+      flex: 0 0 auto;
+    }
+  }
+
+  .hero-mural__meta {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1.5rem 2.5rem;
+    margin: clamp(2rem, 4vw, 3rem) 0 0;
+    padding-top: 1.75rem;
+    border-top: 1px solid color-mix(in srgb, var(--color-bone-bright) 28%, transparent);
+    max-width: 42rem;
+  }
+
+  .hero-mural__meta-item dt {
+    color: var(--color-saffron-bright);
+    margin-bottom: 0.5rem;
+  }
+
+  .hero-mural__meta-value {
+    font-family: var(--font-display);
+    font-size: clamp(1.5rem, 2.5vw, 2.25rem);
+    line-height: 1;
+    margin: 0;
+    color: var(--color-bone-bright);
+    letter-spacing: -0.005em;
+  }
+
+  .hero-mural__scroll {
+    position: absolute;
+    bottom: 1.5rem;
+    right: var(--gutter);
+    z-index: 3;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    color: rgba(250, 246, 238, 0.6);
+  }
+
+  @media (min-width: 1024px) {
+    .hero-mural__scroll { display: flex; }
+  }
+
+  .hero-mural__scroll span:first-child {
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+  }
+
+  .hero-mural__scroll-line {
+    width: 1px;
+    height: 36px;
+    background: currentColor;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero-mural__scroll-line::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: var(--color-saffron-bright);
+    animation: scroll-pulse 2.4s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+  }
+
+  @keyframes scroll-pulse {
+    0% { transform: translateY(-100%); }
+    60% { transform: translateY(100%); }
+    100% { transform: translateY(100%); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero-mural__image,
+    .hero-mural__mark,
+    .hero-mural__scroll-line::after {
+      transition: none;
+      animation: none;
+    }
+  }
+</style>

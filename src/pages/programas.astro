@@ -1,6 +1,5 @@
 ---
 import InstitutionalLayout from "@/layouts/InstitutionalLayout.astro";
-import Orchestra3DCanvas from "@/components/canvas/Orchestra3DCanvas.astro";
 import PhotoStrip from "@/components/institutional/PhotoStrip.astro";
 import { FARECOH_PROGRAMS, FARECOH_MOBILITY } from "@/data/farecoh";
 
@@ -13,6 +12,13 @@ const disciplineLabels: Record<string, string> = {
   "early-childhood": "Primera Infancia",
   "visual-arts": "Artes Visuales",
 };
+
+const disciplineAccents: Record<string, string> = {
+  music: "var(--color-brand-blue)",
+  inclusion: "var(--color-accent-sage)",
+  "early-childhood": "var(--color-accent-plum)",
+  "visual-arts": "var(--color-brand-cyan)",
+};
 ---
 
 <InstitutionalLayout
@@ -21,73 +27,67 @@ const disciplineLabels: Record<string, string> = {
   canonicalPath="/programas"
   active="programs"
 >
-  <!-- Encabezado con canvas sutil -->
-  <section class="inst-section programs-header">
-    <div class="programs-header__canvas" aria-hidden="true">
-      <Orchestra3DCanvas />
-    </div>
-    <div class="inst-shell programs-header__inner">
-      <p class="inst-eyebrow inst-eyebrow--inverse">
-        <span class="inst-bar inst-bar--inverse" aria-hidden="true"></span>
-        Programas
-      </p>
-      <h1 class="inst-display inst-display--hero programs-header__title">
-        Cuatro disciplinas, una sola <em>coherencia pedagógica.</em>
-      </h1>
-      <p class="inst-body--inverse programs-header__lead">
-        Cada programa responde a un momento del desarrollo humano: la primera
-        escucha, la inclusión radical, el dominio instrumental y la expresión
-        plástica.
-      </p>
+  <section class="programs-hero">
+    <div class="programs-hero__shell">
+      <aside class="programs-hero__rail" aria-hidden="true">
+        <span class="programs-hero__rail-eyebrow">Catálogo</span>
+        <span class="programs-hero__rail-line"></span>
+        <span class="programs-hero__rail-meta">04 Programas</span>
+      </aside>
+
+      <div class="programs-hero__content">
+        <p class="programs-hero__eyebrow">
+          <span class="programs-hero__bar"></span>
+          Programas activos
+        </p>
+        <h1 class="programs-hero__title">
+          Cuatro disciplinas, una sola <em>coherencia pedagógica.</em>
+        </h1>
+        <p class="programs-hero__lead">
+          Cada programa responde a un momento del desarrollo humano: la primera
+          escucha, la inclusión radical, el dominio instrumental y la expresión
+          plástica.
+        </p>
+      </div>
     </div>
   </section>
 
-  <!-- Lista editorial de programas -->
-  <section class="inst-section programs-list" aria-labelledby="programs-list-title">
-    <div class="inst-shell">
+  <section class="programs-list" aria-labelledby="programs-list-title">
+    <div class="programs-list__shell">
       <h2 id="programs-list-title" class="sr-only">Lista de programas</h2>
 
       <ol class="programs-list__items" role="list">
-        {
-          FARECOH_PROGRAMS.map((program, idx) => (
-            <li class="programs-list__item">
+        {FARECOH_PROGRAMS.map((program, idx) => {
+          const accent = disciplineAccents[program.discipline ?? ""];
+          const num = String(idx + 1).padStart(2, "0");
+          return (
+            <li class="programs-list__item" style={`--program-accent: ${accent};`}>
               <article class="programs-list__card">
                 <header class="programs-list__card-head">
-                  <span class="inst-mono-index" aria-hidden="true">{program.index}</span>
-                  <span class="inst-eyebrow inst-eyebrow--accent">
-                    {disciplineLabels[program.discipline]}
+                  <span class="programs-list__num">{num}</span>
+                  <span class="programs-list__tag">
+                    {disciplineLabels[program.discipline ?? ""]}
                   </span>
                 </header>
 
                 <div class="programs-list__card-body">
-                  <h3 class="inst-display inst-display--lg programs-list__card-title">
-                    {program.title}
-                  </h3>
-                  <p class="inst-eyebrow inst-eyebrow--ink programs-list__card-category">
-                    {program.category}
-                  </p>
-                  <p class="inst-body">{program.description}</p>
-                  <span class="inst-badge">{program.badge}</span>
+                  <h3 class="programs-list__card-title">{program.title}</h3>
+                  <p class="programs-list__card-category">{program.category}</p>
+                  <p class="programs-list__card-desc">{program.description}</p>
                 </div>
 
                 <footer class="programs-list__card-foot">
-                  <span class="inst-mono programs-list__card-serial">
-                    No. {String(idx + 1).padStart(2, "0")} / 04
-                  </span>
-                  <a href="/sobre-nosotros" class="inst-link">
-                    Conocer el marco institucional
-                    <span aria-hidden="true">→</span>
-                  </a>
+                  <span class="programs-list__serial">No. {num} / 04</span>
+                  <span class="programs-list__badge">{program.badge}</span>
                 </footer>
               </article>
             </li>
-          ))
-        }
+          );
+        })}
       </ol>
     </div>
   </section>
 
-  <!-- Galería fotográfica de los programas -->
   <PhotoStrip
     eyebrow="Galería · prácticas formativas"
     caption="La música, la inclusión y la plástica en imágenes."
@@ -102,95 +102,183 @@ const disciplineLabels: Record<string, string> = {
     ]}
   />
 
-  <!-- Intercambios & becas -->
-  <section
-    id="intercambios"
-    class="inst-section programs-mobility"
-    aria-labelledby="mobility-title"
-  >
-    <div class="inst-shell programs-mobility__grid">
-      <div class="programs-mobility__head">
-        <p class="inst-eyebrow inst-eyebrow--accent">
-          <span class="inst-bar inst-bar--accent" aria-hidden="true"></span>
-          05 — Intercambios
-        </p>
-        <h2 id="mobility-title" class="inst-display inst-display--xl programs-mobility__title">
-          {FARECOH_MOBILITY.title}
-        </h2>
-        <p class="inst-body--lead">{FARECOH_MOBILITY.description}</p>
-        <span class="inst-badge">{FARECOH_MOBILITY.badge}</span>
-      </div>
+  <section id="intercambios" class="programs-mobility" aria-labelledby="mobility-title">
+    <div class="programs-mobility__shell">
+      <aside class="programs-mobility__rail" aria-hidden="true">
+        <span class="programs-mobility__rail-eyebrow">Movilidad</span>
+        <span class="programs-mobility__rail-line"></span>
+        <span class="programs-mobility__rail-meta">Internacional</span>
+      </aside>
 
-      <ul class="programs-mobility__destinations" role="list">
-        {
-          FARECOH_MOBILITY.destinations.map((destination, idx) => (
-            <li class="programs-mobility__destination">
-              <span class="inst-mono programs-mobility__destination-index">
-                {String(idx + 1).padStart(2, "0")}
-              </span>
-              <div>
-                <p class="programs-mobility__destination-name">{destination.institution}</p>
-                <p class="inst-body--small">{destination.country}</p>
-              </div>
-            </li>
-          ))
-        }
-      </ul>
+      <div class="programs-mobility__main">
+        <header class="programs-mobility__head">
+          <p class="tag programs-mobility__eyebrow">
+            <span class="bar" aria-hidden="true"></span>
+            05 — Intercambios
+          </p>
+          <h2 id="mobility-title" class="programs-mobility__title">
+            {FARECOH_MOBILITY.title}
+          </h2>
+          <p class="programs-mobility__desc">{FARECOH_MOBILITY.description}</p>
+          <span class="programs-mobility__badge">{FARECOH_MOBILITY.badge}</span>
+        </header>
+
+        <ul class="programs-mobility__destinations" role="list">
+          {FARECOH_MOBILITY.destinations.map((destination, idx) => {
+            const num = String(idx + 1).padStart(2, "0");
+            return (
+              <li class="programs-mobility__destination">
+                <span class="programs-mobility__destination-num">{num}</span>
+                <div class="programs-mobility__destination-body">
+                  <p class="programs-mobility__destination-name">{destination.institution}</p>
+                  <p class="programs-mobility__destination-country">{destination.country}</p>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
     </div>
   </section>
 </InstitutionalLayout>
 
 <style>
-  .programs-header {
+  .programs-hero {
+    background: var(--gradient-stage);
+    color: var(--color-text-on-dark);
+    padding-block: clamp(7rem, 12vw, 10rem) clamp(3.5rem, 6vw, 5rem);
     position: relative;
-    isolation: isolate;
     overflow: hidden;
-    background:
-      radial-gradient(ellipse 70% 60% at 20% 30%, rgba(79, 195, 245, 0.16) 0%, transparent 55%),
-      linear-gradient(180deg, #061a33 0%, #0b2545 100%);
-    color: var(--color-inst-ivory);
-    padding-top: clamp(5.5rem, 10vw, 10rem);
-    min-height: 60vh;
-    display: flex;
-    align-items: center;
   }
 
-  .programs-header__canvas {
+  .programs-hero::before {
+    content: "";
     position: absolute;
     inset: 0;
-    z-index: 0;
-    opacity: 0.85;
+    background:
+      radial-gradient(ellipse 60% 50% at 80% 20%, rgba(158, 42, 71, 0.25) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 40% at 10% 80%, rgba(59, 31, 71, 0.18) 0%, transparent 60%);
+    pointer-events: none;
   }
 
-  .programs-header__inner {
+  .programs-hero__shell {
     position: relative;
     z-index: 1;
+    width: min(100% - calc(var(--gutter) * 2), var(--shell));
+    margin-inline: auto;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: clamp(2rem, 4vw, 3rem);
+  }
+
+  @media (min-width: 1024px) {
+    .programs-hero__shell {
+      grid-template-columns: 3.5rem minmax(0, 1fr);
+    }
+  }
+
+  .programs-hero__rail {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.85rem;
+    padding-top: 0.5rem;
+  }
+
+  @media (min-width: 1024px) { .programs-hero__rail { display: flex; } }
+
+  .programs-hero__rail-eyebrow {
+    font-family: var(--font-heading);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    color: var(--color-accent-ruby);
+  }
+
+  .programs-hero__rail-line {
+    width: 1px;
+    height: 3rem;
+    background: var(--color-accent-ruby);
+    opacity: 0.5;
+  }
+
+  .programs-hero__rail-meta {
+    font-family: var(--font-heading);
+    font-size: 0.625rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    color: rgba(248, 250, 252, 0.6);
+  }
+
+  .programs-hero__content {
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
-    max-width: 60rem;
   }
 
-  .programs-header__title {
+  .programs-hero__eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.85rem;
     margin: 0;
-    color: var(--color-inst-ivory);
+    font-family: var(--font-heading);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--color-accent-ruby);
+  }
+
+  .programs-hero__bar {
+    display: inline-block;
+    width: 2rem;
+    height: 2px;
+    background: var(--color-accent-ruby);
+  }
+
+  .programs-hero__title {
+    margin: 0;
+    color: var(--color-text-on-dark);
+    font-family: var(--font-heading);
+    font-size: clamp(2.25rem, 5vw, 3.75rem);
+    line-height: 1.04;
+    font-weight: 700;
+    letter-spacing: -0.022em;
+    text-wrap: balance;
     max-width: 22ch;
   }
 
-  .programs-header__title em {
+  .programs-hero__title em {
+    font-family: var(--font-editorial);
     font-style: italic;
-    font-weight: 700;
-    color: var(--color-inst-cyan);
-    font-variation-settings: "wdth" 110, "wght" 700;
+    font-weight: 400;
+    color: var(--color-accent-ruby);
   }
 
-  .programs-header__lead {
+  .programs-hero__lead {
     margin: 0;
+    font-family: var(--font-body);
+    font-size: clamp(1.0625rem, 1.2vw, 1.125rem);
+    line-height: 1.7;
+    color: rgba(248, 250, 252, 0.85);
     max-width: 44rem;
   }
 
+  /* Lista de programas */
   .programs-list {
-    background: var(--color-inst-ivory-bright);
+    background: var(--color-bg-subtle);
+    padding-block: clamp(6rem, 10vw, 9rem);
+  }
+
+  .programs-list__shell {
+    width: min(100% - calc(var(--gutter) * 2), var(--shell));
+    margin-inline: auto;
   }
 
   .programs-list__items {
@@ -198,114 +286,270 @@ const disciplineLabels: Record<string, string> = {
     padding: 0;
     margin: 0;
     display: grid;
-    gap: 1.5rem;
-  }
-
-  @media (min-width: 1024px) {
-    .programs-list__items {
-      gap: 2rem;
-    }
-  }
-
-  .programs-list__card {
-    display: grid;
-    gap: 1.5rem;
-    padding: clamp(1.5rem, 3.5vw, 2.5rem);
-    background: var(--color-inst-ivory);
-    border: 1px solid color-mix(in srgb, var(--color-inst-deep) 10%, transparent);
-    border-left: 3px solid var(--color-inst-deep);
+    gap: 1rem;
   }
 
   @media (min-width: 768px) {
-    .programs-list__card {
-      grid-template-columns: 6rem 1fr;
-      align-items: start;
-      gap: 2.5rem;
+    .programs-list__items {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
     }
+  }
+
+  .programs-list__item {
+    list-style: none;
+  }
+
+  .programs-list__card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    padding: 2rem 1.75rem;
+    background: var(--color-bg-surface);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-editorial);
+    height: 100%;
+    overflow: hidden;
+    transition: box-shadow 280ms ease, transform 280ms ease, border-color 280ms ease;
+  }
+
+  .programs-list__card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: var(--program-accent);
+    transform: scaleY(0);
+    transform-origin: top;
+    transition: transform 400ms ease;
+  }
+
+  .programs-list__card:hover {
+    box-shadow: var(--shadow-card-hover);
+    transform: translateY(-3px);
+    border-color: var(--program-accent);
+  }
+
+  .programs-list__card:hover::before {
+    transform: scaleY(1);
   }
 
   .programs-list__card-head {
     display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .programs-list__num {
+    font-family: var(--font-heading);
+    font-size: 2.75rem;
+    font-weight: 800;
+    line-height: 0.85;
+    letter-spacing: -0.05em;
+    color: var(--program-accent);
+  }
+
+  .programs-list__tag {
+    font-family: var(--font-heading);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--program-accent);
+    background: color-mix(in srgb, var(--program-accent) 12%, transparent);
+    padding: 0.4rem 0.85rem;
+    border-radius: var(--radius-pill);
+    align-self: center;
   }
 
   .programs-list__card-body {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 0.75rem;
+    flex: 1;
   }
 
   .programs-list__card-title {
     margin: 0;
-    color: var(--color-inst-deep);
+    color: var(--color-text-primary);
+    font-family: var(--font-heading);
+    font-size: clamp(1.375rem, 2.2vw, 1.75rem);
+    line-height: 1.18;
+    font-weight: 700;
+    letter-spacing: -0.014em;
     text-wrap: balance;
   }
 
   .programs-list__card-category {
-    color: var(--color-inst-graphite-soft);
+    margin: 0;
+    font-family: var(--font-heading);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-accent-plum);
+  }
+
+  .programs-list__card-desc {
+    margin: 0;
+    font-family: var(--font-body);
+    font-size: 1rem;
+    line-height: 1.65;
+    color: var(--color-text-primary);
   }
 
   .programs-list__card-foot {
     display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
     padding-top: 1rem;
-    border-top: 1px solid color-mix(in srgb, var(--color-inst-deep) 10%, transparent);
-    grid-column: 1 / -1;
+    border-top: 1px dashed var(--color-border-subtle);
+    flex-wrap: wrap;
   }
 
-  @media (min-width: 768px) {
-    .programs-list__card-foot {
-      flex-direction: row;
-      justify-content: space-between;
-      align-items: center;
-      grid-column: 2 / -1;
-    }
-  }
-
-  .programs-list__card-serial {
+  .programs-list__serial {
+    font-family: var(--font-heading);
     font-size: 0.75rem;
-    color: var(--color-inst-graphite-soft);
+    font-weight: 700;
     letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-text-secondary);
   }
 
-  /* Movilidad */
+  .programs-list__badge {
+    font-family: var(--font-heading);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-text-primary);
+    background: rgba(0, 92, 158, 0.08);
+    padding: 0.3rem 0.65rem;
+    border-radius: 4px;
+  }
+
+  /* Movilidad / intercambios */
   .programs-mobility {
-    background:
-      linear-gradient(180deg, var(--color-inst-ivory) 0%, var(--color-inst-ivory-bright) 100%);
+    background: var(--color-bg-canvas);
+    padding-block: clamp(6rem, 10vw, 9rem);
   }
 
-  .programs-mobility__grid {
+  .programs-mobility__shell {
+    width: min(100% - calc(var(--gutter) * 2), var(--shell));
+    margin-inline: auto;
     display: grid;
     grid-template-columns: 1fr;
-    gap: 3rem;
-    align-items: start;
+    gap: clamp(2rem, 4vw, 3rem);
   }
 
   @media (min-width: 1024px) {
-    .programs-mobility__grid {
+    .programs-mobility__shell {
+      grid-template-columns: 3.5rem minmax(0, 1fr);
+    }
+  }
+
+  .programs-mobility__rail {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.85rem;
+    padding-top: 0.5rem;
+  }
+
+  @media (min-width: 1024px) { .programs-mobility__rail { display: flex; } }
+
+  .programs-mobility__rail-eyebrow {
+    font-family: var(--font-heading);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    color: var(--color-accent-ruby);
+  }
+
+  .programs-mobility__rail-line {
+    width: 1px;
+    height: 3rem;
+    background: var(--color-accent-ruby);
+    opacity: 0.5;
+  }
+
+  .programs-mobility__rail-meta {
+    font-family: var(--font-heading);
+    font-size: 0.625rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    color: var(--color-text-secondary);
+  }
+
+  .programs-mobility__main {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: clamp(2rem, 4vw, 3rem);
+  }
+
+  @media (min-width: 1024px) {
+    .programs-mobility__main {
       grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-      gap: 5rem 6rem;
+      gap: clamp(2.5rem, 5vw, 4rem);
     }
   }
 
   .programs-mobility__head {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 1.25rem;
   }
 
-  .programs-mobility__head .inst-eyebrow {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.85rem;
+  .programs-mobility__eyebrow {
+    color: var(--color-accent-ruby);
+    margin: 0;
   }
 
   .programs-mobility__title {
     margin: 0;
-    max-width: 20ch;
-    color: var(--color-inst-deep);
+    color: var(--color-text-primary);
+    font-family: var(--font-heading);
+    font-size: clamp(1.875rem, 3vw + 1rem, 3rem);
+    line-height: 1.15;
+    font-weight: 700;
+    letter-spacing: -0.022em;
+    text-wrap: balance;
+    max-width: 22ch;
+  }
+
+  .programs-mobility__desc {
+    margin: 0;
+    font-family: var(--font-body);
+    font-size: 1rem;
+    line-height: 1.65;
+    color: var(--color-text-secondary);
+    max-width: 38rem;
+  }
+
+  .programs-mobility__badge {
+    align-self: flex-start;
+    font-family: var(--font-heading);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--color-text-on-dark);
+    background: var(--color-accent-ruby);
+    padding: 0.4rem 0.85rem;
+    border-radius: var(--radius-pill);
   }
 
   .programs-mobility__destinations {
@@ -314,43 +558,55 @@ const disciplineLabels: Record<string, string> = {
     margin: 0;
     display: flex;
     flex-direction: column;
-    gap: 0;
+    gap: 0.5rem;
   }
 
   .programs-mobility__destination {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
+    display: grid;
+    grid-template-columns: 3rem minmax(0, 1fr);
+    gap: 1.25rem;
+    align-items: baseline;
     padding: 1.25rem 0;
-    border-top: 1px solid color-mix(in srgb, var(--color-inst-deep) 14%, transparent);
-  }
-
-  @media (min-width: 640px) {
-    .programs-mobility__destination {
-      display: grid;
-      grid-template-columns: 4rem 1fr;
-      gap: 1.5rem;
-      align-items: baseline;
-      padding: 1.5rem 0;
-    }
+    border-top: 1px solid var(--color-border-subtle);
+    transition: padding-left 280ms ease;
   }
 
   .programs-mobility__destination:last-child {
-    border-bottom: 1px solid color-mix(in srgb, var(--color-inst-deep) 14%, transparent);
+    border-bottom: 1px solid var(--color-border-subtle);
   }
 
-  .programs-mobility__destination-index {
-    font-size: 0.75rem;
-    color: var(--color-inst-cyan-deep);
-    letter-spacing: 0.1em;
+  .programs-mobility__destination:hover {
+    padding-left: 0.5rem;
+  }
+
+  .programs-mobility__destination-num {
+    font-family: var(--font-heading);
+    font-size: 1.25rem;
+    font-weight: 800;
+    line-height: 1;
+    color: var(--color-accent-ruby);
+  }
+
+  .programs-mobility__destination-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
   }
 
   .programs-mobility__destination-name {
-    margin: 0 0 0.25rem;
-    font-family: var(--font-inst-display);
-    font-weight: 600;
-    font-size: 1.375rem;
-    color: var(--color-inst-deep);
-    letter-spacing: -0.015em;
+    margin: 0;
+    font-family: var(--font-heading);
+    font-size: clamp(1.0625rem, 1.4vw, 1.1875rem);
+    font-weight: 700;
+    letter-spacing: -0.008em;
+    line-height: 1.2;
+    color: var(--color-text-primary);
+  }
+
+  .programs-mobility__destination-country {
+    margin: 0;
+    font-family: var(--font-body);
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
   }
 </style>
