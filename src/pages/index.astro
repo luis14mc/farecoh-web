@@ -9,9 +9,11 @@ import StitchEvents from "@/components/institutional/StitchEvents.astro";
 import StitchCta from "@/components/institutional/StitchCta.astro";
 
 import {
+  FARECOH_CONTEXT,
   FARECOH_METADATA,
   FARECOH_NARRATIVE,
   FARECOH_PROGRAMS,
+  FARECOH_WHY_SUPPORT,
   INSTITUTIONAL_STATS,
 } from "@/data/farecoh";
 
@@ -22,17 +24,12 @@ const foundationYear = FARECOH_METADATA.established;
 const yearsOfService = new Date().getFullYear() - foundationYear;
 
 const stats = [
-  ...INSTITUTIONAL_STATS.filter((stat) => stat.label !== "Años de trayectoria").map((stat) => stat),
   {
     value: "+" + yearsOfService,
     label: "Años de trayectoria",
-    caption: "Formando generaciones con arte y disciplina en Honduras.",
+    caption: `Desde ${foundationYear}, formando generaciones con arte y música en Honduras.`,
   },
-  {
-    value: "100%",
-    label: "Becas gratuitas",
-    caption: "Acceso sin barreras económicas ni costos para las familias.",
-  },
+  ...INSTITUTIONAL_STATS,
 ];
 ---
 
@@ -96,9 +93,10 @@ const stats = [
        PROGRAMAS — Cuatro tarjetas fotográficas
   ──────────────────────────────────────────────────────────────── -->
   <StitchPrograms
-    eyebrow="Nuestros Programas"
-    headline="Espacios para crecer a través del arte"
-    source="Programas educativos que desarrollan talento, valores cívicos y nuevas oportunidades de vida para Honduras."
+    eyebrow="Lo que hacemos"
+    headline="Programas que combinan educación, arte y desarrollo comunitario"
+    source="Desarrollamos programas innovadores para que cada niño y joven descubra su potencial y fortalezca sus valores."
+    ctaLabel="Conoce todos los programas"
     programs={FARECOH_PROGRAMS}
   />
 
@@ -107,15 +105,15 @@ const stats = [
   ──────────────────────────────────────────────────────────────── -->
   <StitchAbout
     eyebrow="Quiénes Somos"
-    headline="Música y arte como herramientas de cambio social"
+    headline="Creemos que el arte puede cambiar la realidad de Honduras"
     paragraphs={[
+      FARECOH_CONTEXT.problem,
       FARECOH_NARRATIVE.about,
-      `Niñas, niños y jóvenes de comunidades vulnerables de Honduras descubren su disciplina, afianzan su autoestima y construyen un porvenir lleno de esperanza, dignidad y nuevas metas profesionales.`,
     ]}
     values={[
-      { title: "Excelencia", body: "Métodos pedagógicos de conservatorio global.", icon: "school" },
-      { title: "Accesibilidad", body: "100% gratuito y con becas instrumentales.", icon: "infinity" },
-      { title: "Empatía", body: "Acompañamiento familiar y comunitario.", icon: "handshake" },
+      { title: "Formación integral", body: "Valores, disciplina y talento a través del arte.", icon: "school" },
+      { title: "Oportunidades", body: "Becas e instrumentos para jóvenes de escasos recursos.", icon: "infinity" },
+      { title: "Comunidad", body: "Integración familiar y participación ciudadana.", icon: "handshake" },
     ]}
     image="/images/farecoh-hero-orchestra.webp"
     imageAlt="Orquesta juvenil de FARECOH en ensayo con su director"
@@ -128,27 +126,32 @@ const stats = [
        IMPACTO — Cifras y testimonio institucional
   ──────────────────────────────────────────────────────────────── -->
   <StitchImpact
-    eyebrow="Resultados Tangibles"
-    headline="Nuestro impacto en números"
-    source="Sembrando armonía, disciplina y cohesión social en cada rincón comunitario de Honduras."
+    eyebrow="Nuestro Impacto"
+    headline="Cada clase y cada concierto son una oportunidad de transformación"
+    source="Cada instrumento entregado, cada clase impartida y cada presentación artística representa una oportunidad de transformación."
     stats={stats}
-    quote={FARECOH_NARRATIVE.mission}
-    attribution="Misión institucional · FARECOH"
+    quote={FARECOH_CONTEXT.quote}
+    attribution="FARECOH"
   />
 
   <!-- ───────────────────────────────────────────────────────────────
        CARTELERA — Próximo concierto benéfico
   ──────────────────────────────────────────────────────────────── -->
   <StitchEvents
-    eyebrow="Cartelera Cultural"
-    headline="Nuestra música y arte en vivo"
-    source="Acompáñanos a celebrar los logros de nuestros jóvenes artistas en los principales escenarios de Honduras."
+    eyebrow="Nuestros conciertos"
+    headline="Un concierto puede durar unas horas. Su impacto, toda una vida."
+    source="Cada boleto, patrocinio y aporte financia becas, instrumentos y programas para la niñez y juventud hondureña."
   />
 
   <!-- ───────────────────────────────────────────────────────────────
        CTA — Únete a nuestra misión
   ──────────────────────────────────────────────────────────────── -->
-  <StitchCta donateHref="/donaciones" volunteerHref="/sobre-nosotros" />
+  <StitchCta
+    headline="Únase a nuestra misión"
+    body={FARECOH_WHY_SUPPORT.join}
+    donateHref="/sobre-nosotros#apoyar"
+    volunteerHref="mailto:info@farecoh.org?subject=Quiero%20ser%20voluntario%20de%20FARECOH"
+  />
 </InstitutionalLayout>
 
 <style>
