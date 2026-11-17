@@ -9,7 +9,7 @@
     "preDeployCommand": [
       "pnpm db:migrate && pnpm db:seed"
     ],
-    "healthcheckPath": "/",
+    "healthcheckPath": "/health",
     "healthcheckTimeout": 100,
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 5

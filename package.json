@@ -30,7 +30,8 @@
         "optimize:site-images": "node --experimental-strip-types scripts/optimize-site-images.ts",
         "db:migrate": "node --experimental-strip-types scripts/migrate.ts",
         "db:seed": "node --experimental-strip-types scripts/seed.ts",
-        "db:create-admin": "node --experimental-strip-types scripts/create-admin.ts"
+        "db:create-admin": "node --experimental-strip-types scripts/create-admin.ts",
+        "db:import-supabase": "node --experimental-strip-types scripts/import-supabase.ts"
     },
     "dependencies": {
         "@astrojs/node": "^11.1.6",
