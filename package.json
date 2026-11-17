@@ -10,6 +10,7 @@
         "dev": "astro dev",
         "build": "astro build",
         "start": "node ./dist/server/entry.mjs",
+        "start:railway": "pnpm db:deploy && pnpm start",
         "preview": "astro preview",
         "test": "node --experimental-strip-types --test tests/*.test.ts",
         "test:rbac": "node --experimental-strip-types --test tests/rbac.test.ts",
