@@ -61,7 +61,7 @@ const stats = [
     <div class="inst-shell hero-inst__shell">
       <div class="hero-inst__grid">
         <h1 id="hero-title" class="hero-inst__title">
-          Transformando vidas a través del
+          Transformando vidas a través del{" "}
           <span class="hero-inst__title-accent">arte, la educación y la esperanza.</span>
         </h1>
 
@@ -169,8 +169,7 @@ const stats = [
     overflow: hidden;
     display: flex;
     align-items: center;
-    padding-top: clamp(5.5rem, 12vh, 7rem);
-    padding-bottom: 4rem;
+    padding-block: clamp(7rem, 14vh, 9rem) clamp(4rem, 8vh, 6rem);
   }
 
   .hero-inst__canvas {
@@ -193,7 +192,6 @@ const stats = [
   .hero-inst__shell {
     position: relative;
     z-index: 2;
-    width: 100%;
   }
 
   .hero-inst__grid {

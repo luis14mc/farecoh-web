@@ -75,66 +75,12 @@ const descriptionMeta = `${FARECOH_METADATA.fullName} — ${FARECOH_METADATA.tag
   <body class="inst-root">
     <a class="skip-link" href="#main-content">Saltar al contenido principal</a>
     <InstitutionalNavbar active={active} />
-    <main id="main-content">
+    <main id="main-content" class={Astro.url.pathname === "/" ? undefined : "stitch-page"}>
       <slot />
     </main>
     <InstitutionalFooter />
 
     <script>
-      const header = document.querySelector("[data-nav]");
-      if (header instanceof HTMLElement) {
-        const handleScroll = () => {
-          header.classList.toggle("nav--condensed", window.scrollY > 32);
-        };
-        handleScroll();
-        window.addEventListener("scroll", handleScroll, { passive: true });
-      }
-
-      const menuBtn = document.querySelector("[data-mobile-open]");
-      const closeBtn = document.querySelector("[data-mobile-close]");
-      const panel = document.querySelector("[data-mobile-panel]");
-      const backdrop = document.querySelector("[data-mobile-backdrop]");
-      if (
-        menuBtn instanceof HTMLButtonElement &&
-        panel instanceof HTMLElement
-      ) {
-        const open = () => {
-          panel.dataset["open"] = "true";
-          if (backdrop instanceof HTMLElement) backdrop.dataset["open"] = "true";
-          menuBtn.setAttribute("aria-expanded", "true");
-          document.body.style.overflow = "hidden";
-          const focusable = panel.querySelector<HTMLElement>(
-            "a, button:not([disabled])",
-          );
-          focusable?.focus();
-        };
-        const close = () => {
-          panel.dataset["open"] = "false";
-          if (backdrop instanceof HTMLElement) backdrop.dataset["open"] = "false";
-          menuBtn.setAttribute("aria-expanded", "false");
-          document.body.style.overflow = "";
-          menuBtn.focus();
-        };
-        menuBtn.addEventListener("click", open);
-        if (closeBtn instanceof HTMLButtonElement) {
-          closeBtn.addEventListener("click", close);
-        }
-        if (backdrop instanceof HTMLElement) {
-          backdrop.addEventListener("click", close);
-        }
-        panel.addEventListener("click", (event) => {
-          const target = event.target;
-          if (target instanceof HTMLAnchorElement || (target instanceof HTMLElement && target.closest("a"))) {
-            close();
-          }
-        });
-        document.addEventListener("keydown", (event) => {
-          if (event.key === "Escape" && panel.dataset["open"] === "true") {
-            close();
-          }
-        });
-      }
-
       // ──── Theme toggle (delegación para todos los data-theme-toggle) ────
       const syncToggleState = (isDark: boolean) => {
         document

@@ -65,7 +65,7 @@ const INSTRUMENTS: readonly InstrumentSpec[] = [
     url: "/models/guitar.glb",
     position: [6.0, 0.5, 0.2],
     rotation: [0, 0, 0],
-    scale: 0.4,
+    scale: 0.28,
     spinSpeed: -0.35,
     floatAmplitude: 0,
     floatSpeed: 0,
@@ -75,7 +75,7 @@ const INSTRUMENTS: readonly InstrumentSpec[] = [
     url: "/models/harp.glb",
     position: [4.6, -2.7, -0.6],
     rotation: [0, 0, 0],
-    scale: 0.95,
+    scale: 0.665,
     spinSpeed: 0.25,
     floatAmplitude: 0,
     floatSpeed: 0,
@@ -234,21 +234,6 @@ function buildGrandPiano(
     root.add(key);
   }
   disposables.geometries.push(blackKeyGeo);
-
-  // ─── Cuerdas (líneas finas cyan) ───
-  const stringCount = 18;
-  for (let i = 0; i < stringCount; i++) {
-    const stringGeo = new THREE.CylinderGeometry(0.006, 0.006, 2.5, 4);
-    const string = new THREE.Mesh(stringGeo, stringMat);
-    // Distribuidas en abanico en la placa de sonido
-    const t = i / (stringCount - 1);
-    const xPos = -1.1 + t * 2.6;
-    const zPos = 0.1 + t * 0.05;
-    string.position.set(xPos, 0.5, zPos);
-    string.rotation.x = Math.PI / 2;
-    root.add(string);
-    disposables.geometries.push(stringGeo);
-  }
 
   // ─── Placa de sonido (soundboard) ───
   const soundboardGeo = new THREE.PlaneGeometry(2.8, 1.2);
@@ -492,7 +477,7 @@ export default function Orchestra3D({
       disposablesRef.current,
       [8.5, -1.8, 0.6],       // misma posición que el violín
       [0, -0.18, 0],          // leve yaw para vista 3/4 del teclado y la cola
-      1.6,                    // escala mayor porque el piano procedural ya viene grande
+      1.12,                   // -30% vs. 1.6; escala mayor porque el piano procedural ya viene grande
     );
     if (pianoRef) {
       instrumentsRef.current = [pianoRef];

@@ -1636,3 +1636,66 @@ html.inst-root-html {
   background: var(--fc-primary-container);
   color: #ffffff;
 }
+
+
+/* ────────────────────────────────────────────────────────────────
+ * Páginas internas alineadas al diseño Stitch de la portada:
+ * azul FARECOH, Inter, fondos fríos claros (sin rubí ni serif).
+ * ──────────────────────────────────────────────────────────────── */
+.stitch-page {
+  --color-accent-ruby: #005082;
+  --color-accent-ruby-dark: #003d63;
+  --color-accent-plum: #0069a8;
+  --color-accent-sage: #0b7fa8;
+  --color-brand-blue: #005082;
+  --color-brand-cyan: #0098d9;
+  --color-bg-canvas: #f5fafe;
+  --color-bg-surface: #ffffff;
+  --color-bg-subtle: #eff4f8;
+  --color-bg-stage: #00507c;
+  --color-text-primary: #171c1f;
+  --color-text-secondary: #5b6572;
+  --color-border-subtle: #dfe7ee;
+  --font-heading: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-editorial: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-body: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --gradient-ruby: linear-gradient(135deg, #005082 0%, #0069a8 100%);
+  --gradient-plum: linear-gradient(135deg, #00507c 0%, #0069a8 100%);
+  --gradient-stage: linear-gradient(180deg, #00507c 0%, #003d63 100%);
+  --shadow-ruby: 0 10px 24px -6px rgba(0, 80, 130, 0.35);
+  --shadow-editorial: 0 12px 32px -8px rgba(0, 40, 70, 0.08);
+  background: var(--color-bg-canvas);
+  font-family: var(--font-body);
+}
+
+/* Los acentos en cursiva serif pasan a cursiva Inter en celeste/azul */
+.stitch-page em {
+  font-family: inherit;
+  font-weight: 800;
+}
+
+/* Secciones oscuras: acentos en celeste para mantener contraste */
+.stitch-page .programs-hero,
+.stitch-page .about-cta,
+.stitch-page .partners-cta {
+  --color-accent-ruby: #83cfff;
+  --color-accent-ruby-dark: #cfe5ff;
+  --color-brand-blue: #83cfff;
+  --color-brand-cyan: #83cfff;
+}
+.stitch-page .programs-hero em,
+.stitch-page .about-cta em,
+.stitch-page .partners-cta em {
+  color: #83cfff !important;
+}
+
+.stitch-page .about-cta .btn,
+.stitch-page .partners-cta .btn {
+  background: #ffffff !important;
+  color: #005082 !important;
+  border-color: #ffffff !important;
+}
+.stitch-page .about-cta .btn:hover,
+.stitch-page .partners-cta .btn:hover {
+  background: #eff4f8 !important;
+}

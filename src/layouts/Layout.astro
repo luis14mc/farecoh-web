@@ -1,6 +1,6 @@
 ---
 import "../styles/global.css";
-import Navbar from "@/components/layout/Navbar.astro";
+import InstitutionalNavbar from "@/components/institutional/InstitutionalNavbar.astro";
 import Footer from "@/components/layout/Footer.astro";
 import SeoHead from "@/components/seo/SeoHead.astro";
 import { SITE_LANG } from "@/lib/locale";
@@ -36,7 +36,7 @@ const bodyClass =
       ? "min-h-screen bg-brand-neutral text-surface-bright selection:bg-primary-container selection:text-on-primary-container"
       : "min-h-screen bg-surface text-on-surface selection:bg-primary-container selection:text-on-primary-container";
 
-const mainClass = variant === "light" ? "pt-20" : "";
+const mainClass = "pt-20";
 ---
 
 <!doctype html>
@@ -68,7 +68,7 @@ const mainClass = variant === "light" ? "pt-20" : "";
     >
       Saltar al contenido
     </a>
-    <Navbar active={active} variant={variant} />
+    <InstitutionalNavbar active={active === "events" || active === "tickets" ? "events" : active === "about" || active === "programs" || active === "home" ? active : undefined} />
     <main id="main-content" class={mainClass}>
       <slot />
     </main>
