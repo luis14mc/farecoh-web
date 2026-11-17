@@ -3,9 +3,10 @@ import InstitutionalLayout from "@/layouts/InstitutionalLayout.astro";
 import EventsHero from "@/components/events-public/EventsHero.astro";
 import { eventDateLabel, getPublicEvent, salesAreOpen } from "@/services/public-events";
 import { formatSiteCurrency } from "@/lib/locale";
+import { eventDescription, musicEventJsonLd } from "@/data/seo";
 
 const event = await getPublicEvent(Astro.params.slug ?? "");
-if (!event) return new Response("Evento no encontrado", { status: 404 });
+if (!event) return Astro.rewrite("/404");
 const image = event.image_url ?? (event.slug === "pink-floyd" ? "/images/evento/hero.webp" : "/images/farecoh-hero-orchestra.webp");
 const today = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Tegucigalpa" }).format(new Date());
 const isPast = event.event_date < today;
@@ -19,8 +20,16 @@ const facts = [
 ];
 ---
 
-<InstitutionalLayout title={`${event.title} | FARECOH`} description={event.subtitle ?? event.description ?? event.title}
-  canonicalPath={`/eventos/${event.slug}`} image={image}>
+<InstitutionalLayout
+  title={`${event.title}: ${eventDateLabel(event.event_date)} | FARECOH`}
+  description={eventDescription(event, eventDateLabel(event.event_date))}
+  canonicalPath={`/eventos/${event.slug}`}
+  image={image}
+  imageAlt={`${event.title} — concierto de FARECOH`}
+  ogType="article"
+  breadcrumbs={[{ name: "Eventos", path: "/eventos" }, { name: event.title, path: `/eventos/${event.slug}` }]}
+  jsonLd={musicEventJsonLd(event)}
+>
   <EventsHero eyebrow={isPast ? "Evento finalizado" : "Próximo evento"} title={event.title} lead={event.subtitle ?? undefined} image={image}>
     <a slot="before" href="/eventos" class="ev-back">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7" /></svg>

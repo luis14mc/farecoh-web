@@ -4,6 +4,7 @@ import EventsHero from "@/components/events-public/EventsHero.astro";
 import EventCard from "@/components/events-public/EventCard.astro";
 import { listPublicEvents } from "@/services/public-events";
 import { FARECOH_CONCERTS } from "@/data/farecoh";
+import { eventListJsonLd, seoPages } from "@/data/seo";
 
 const events = await listPublicEvents();
 const today = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Tegucigalpa" }).format(new Date());
@@ -11,7 +12,14 @@ const upcoming = events.filter((event) => event.event_date >= today);
 const past = events.filter((event) => event.event_date < today).sort((a, b) => b.event_date.localeCompare(a.event_date));
 ---
 
-<InstitutionalLayout title="Eventos | FARECOH" description="Cartelera cultural de FARECOH: conciertos y presentaciones de nuestros coros y orquestas." canonicalPath="/eventos">
+<InstitutionalLayout
+  title={seoPages.events.title}
+  description={seoPages.events.description}
+  canonicalPath="/eventos"
+  imageAlt={seoPages.events.imageAlt}
+  breadcrumbs={[{ name: "Eventos", path: "/eventos" }]}
+  jsonLd={events.length ? eventListJsonLd(events) : undefined}
+>
   <EventsHero
     eyebrow="Cartelera"
     title="Eventos y conciertos"

@@ -1,8 +1,10 @@
 User-agent: *
 Allow: /
 
-Disallow: /admin/
+Disallow: /admin
+Disallow: /api/
 Disallow: /auth/
 Disallow: /t/
+Disallow: /eventos/*/boletos
 
 Sitemap: https://farecoh.org/sitemap.xml

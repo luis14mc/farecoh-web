@@ -16,9 +16,9 @@ import {
   FARECOH_WHY_SUPPORT,
   INSTITUTIONAL_STATS,
 } from "@/data/farecoh";
+import { seoPages } from "@/data/seo";
 
-const title = `${FARECOH_METADATA.acronym} · ${FARECOH_METADATA.fullName}`;
-const description = FARECOH_METADATA.tagline;
+const { title, description, imageAlt } = seoPages.home;
 
 const foundationYear = FARECOH_METADATA.established;
 const yearsOfService = new Date().getFullYear() - foundationYear;
@@ -36,6 +36,7 @@ const stats = [
 <InstitutionalLayout
   title={title}
   description={description}
+  imageAlt={imageAlt}
   canonicalPath="/"
   active="home"
   transparentHeader={true}

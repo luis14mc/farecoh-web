@@ -1,9 +1,9 @@
 ---
+import { seoPages } from "@/data/seo";
 import InstitutionalLayout from "@/layouts/InstitutionalLayout.astro";
 import { FARECOH_PARTNERS } from "@/data/farecoh";
 
-const title = `Alianzas Estratégicas · FARECOH`;
-const description = "Cooperación multilateral, agencias y redes artísticas que acompañan la misión de FARECOH.";
+const { title, description } = seoPages.partners;
 
 const regionLabels: Record<string, string> = {
   multilateral: "Cooperación multilateral",
@@ -25,6 +25,7 @@ const partnerCount = String(FARECOH_PARTNERS.length).padStart(2, "0");
 <InstitutionalLayout
   title={title}
   description={description}
+  breadcrumbs={[{ name: "Alianzas", path: "/alianzas" }]}
   canonicalPath="/alianzas"
   active="partners"
 >

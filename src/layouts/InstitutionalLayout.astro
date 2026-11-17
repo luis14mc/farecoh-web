@@ -4,7 +4,6 @@ import InstitutionalNavbar from "@/components/institutional/InstitutionalNavbar.
 import InstitutionalFooter from "@/components/institutional/InstitutionalFooter.astro";
 import SeoHead from "@/components/seo/SeoHead.astro";
 import { SITE_LANG } from "@/lib/locale";
-import { FARECOH_METADATA } from "@/data/farecoh";
 
 interface Props {
   readonly title: string;
@@ -14,6 +13,8 @@ interface Props {
   readonly ogType?: string;
   readonly noindex?: boolean;
   readonly jsonLd?: Record<string, unknown> | Record<string, unknown>[];
+  readonly imageAlt?: string;
+  readonly breadcrumbs?: ReadonlyArray<{ name: string; path: string }>;
   readonly active?:
     | "home"
     | "about"
@@ -33,9 +34,10 @@ const {
   noindex,
   jsonLd,
   active,
+  imageAlt,
+  breadcrumbs,
 } = Astro.props;
 
-const descriptionMeta = `${FARECOH_METADATA.fullName} — ${FARECOH_METADATA.tagline}`;
 ---
 
 <!doctype html>
@@ -45,6 +47,9 @@ const descriptionMeta = `${FARECOH_METADATA.fullName} — ${FARECOH_METADATA.tag
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="generator" content={Astro.generator} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link
@@ -59,7 +64,6 @@ const descriptionMeta = `${FARECOH_METADATA.fullName} — ${FARECOH_METADATA.tag
 
     <meta name="theme-color" content="#005082" />
     <meta name="color-scheme" content="light" />
-    <meta name="description" content={descriptionMeta} />
 
     <SeoHead
       title={title}
@@ -69,6 +73,8 @@ const descriptionMeta = `${FARECOH_METADATA.fullName} — ${FARECOH_METADATA.tag
       ogType={ogType}
       noindex={noindex}
       jsonLd={jsonLd}
+      imageAlt={imageAlt}
+      breadcrumbs={breadcrumbs}
     />
     <title>{title}</title>
   </head>

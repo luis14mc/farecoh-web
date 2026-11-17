@@ -1,9 +1,9 @@
 ---
+import { seoPages } from "@/data/seo";
 import InstitutionalLayout from "@/layouts/InstitutionalLayout.astro";
 import { FARECOH_BOARD } from "@/data/farecoh";
 
-const title = `Junta Directiva · FARECOH`;
-const description = "Gobierno institucional de FARECOH: cuerpo directivo voluntario.";
+const { title, description } = seoPages.board;
 
 const tones = [
   "var(--color-brand-blue)",
@@ -32,6 +32,7 @@ const boardCount = String(FARECOH_BOARD.length).padStart(2, "0");
 <InstitutionalLayout
   title={title}
   description={description}
+  breadcrumbs={[{ name: "Junta Directiva", path: "/junta-directiva" }]}
   canonicalPath="/junta-directiva"
   active="board"
 >

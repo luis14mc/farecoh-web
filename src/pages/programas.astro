@@ -2,9 +2,9 @@
 import InstitutionalLayout from "@/layouts/InstitutionalLayout.astro";
 import PhotoStrip from "@/components/institutional/PhotoStrip.astro";
 import { FARECOH_PROGRAMS, FARECOH_MOBILITY, FARECOH_METHODOLOGY } from "@/data/farecoh";
+import { programsJsonLd, seoPages } from "@/data/seo";
 
-const title = `Programas · FARECOH`;
-const description = "Seis programas que combinan educación, arte y desarrollo comunitario para la niñez y juventud de Honduras.";
+const { title, description, imageAlt } = seoPages.programs;
 
 const disciplineLabels: Record<string, string> = {
   music: "Música",
@@ -28,6 +28,9 @@ const disciplineAccents: Record<string, string> = {
 <InstitutionalLayout
   title={title}
   description={description}
+  imageAlt={imageAlt}
+  breadcrumbs={[{ name: "Programas", path: "/programas" }]}
+  jsonLd={programsJsonLd()}
   canonicalPath="/programas"
   active="programs"
 >
