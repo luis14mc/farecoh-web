@@ -1,3 +1,4 @@
+-- Referencia histórica. Para instalar, usar pnpm db:init.
 -- ============================================================
 -- FARECOH Web - Unified PostgreSQL Production Schema
 -- Designed for Railway PostgreSQL Deployment
@@ -39,19 +40,6 @@ CREATE TABLE IF NOT EXISTS public.users (
 CREATE INDEX IF NOT EXISTS users_email_idx ON public.users(email);
 CREATE INDEX IF NOT EXISTS users_role_id_idx ON public.users(role_id);
 CREATE INDEX IF NOT EXISTS users_active_idx ON public.users(active);
-
--- Default Super Admin User (password: Admin2026!farecoh)
--- Generated with Node.js crypto.scryptSync
-INSERT INTO public.users (email, password_hash, full_name, role_id, active)
-SELECT
-  'admin@farecoh.org',
-  '79c0a6bbf0ae2da3df1f2c27b0b2e8a7:42f8c5cf05df082729938e55e0fef4d896ee84c3ee25eb578a58a98444a7f7663aa9b380dbcbdf51800fbc51a1d13f9f4625ae15df68b64e0374e2aee2ec46fb',
-  'Administrador FARECOH',
-  r.id,
-  true
-FROM public.roles r
-WHERE r.name = 'super_admin'
-ON CONFLICT (email) DO NOTHING;
 
 -- ============================================================
 -- 3. events

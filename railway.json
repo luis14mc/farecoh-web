@@ -2,10 +2,11 @@
   "$schema": "https://railway.com/railway.schema.json",
   "build": {
     "builder": "NIXPACKS",
-    "buildCommand": "pnpm build"
+    "buildCommand": "pnpm install --frozen-lockfile && pnpm build"
   },
   "deploy": {
-    "startCommand": "node ./dist/server/entry.mjs",
+    "startCommand": "pnpm start",
+    "preDeployCommand": ["pnpm db:migrate"],
     "healthcheckPath": "/",
     "healthcheckTimeout": 100,
     "restartPolicyType": "ON_FAILURE",

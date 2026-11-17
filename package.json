@@ -15,7 +15,7 @@
         "test:rbac": "node --experimental-strip-types --test tests/rbac.test.ts",
         "test:ticketing": "node --experimental-strip-types --test tests/ticketing.test.ts",
         "test:ticket-print": "node --experimental-strip-types --test tests/ticket-print.test.ts",
-        "db:init": "node --experimental-strip-types scripts/init-db.ts",
+        "db:init": "pnpm db:migrate && pnpm db:seed",
         "astro": "astro",
         "generate:ticket-assets": "node --experimental-strip-types scripts/generate-ticket-assets.ts",
         "export:canva-tickets": "node --experimental-strip-types scripts/export-canva-tickets.ts",
@@ -27,7 +27,10 @@
         "verify:ticket-immutability": "node --experimental-strip-types scripts/verify-ticket-immutability.ts",
         "verify:digital-ticket": "node --experimental-strip-types scripts/verify-digital-ticket.ts",
         "optimize:foundation-photos": "node --experimental-strip-types scripts/optimize-foundation-photos.ts",
-        "optimize:site-images": "node --experimental-strip-types scripts/optimize-site-images.ts"
+        "optimize:site-images": "node --experimental-strip-types scripts/optimize-site-images.ts",
+        "db:migrate": "node --experimental-strip-types scripts/migrate.ts",
+        "db:seed": "node --experimental-strip-types scripts/seed.ts",
+        "db:create-admin": "node --experimental-strip-types scripts/create-admin.ts"
     },
     "dependencies": {
         "@astrojs/node": "^11.1.6",

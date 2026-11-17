@@ -11,11 +11,11 @@ export default defineConfig({
     mode: "standalone",
   }),
   server: {
-    host: true,
+    host: "0.0.0.0",
     port: Number(process.env.PORT) || 4321,
   },
   integrations: [react()],
   vite: {
     plugins: [tailwindcss()],
   },
-});
+});
