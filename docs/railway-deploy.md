@@ -31,6 +31,6 @@ pg_dump --no-owner --no-acl --file=farecoh-backup.sql "$SOURCE_DATABASE_URL"
 psql --set=ON_ERROR_STOP=1 --single-transaction --file=farecoh-backup.sql "$TARGET_DATABASE_URL"
 ```
 
-Usa la URL pública del destino si ejecutas estos comandos desde tu equipo. Tras restaurar, despliega el servicio para aplicar las migraciones pendientes y ejecuta el seed base. Si el respaldo incluye un administrador anterior, restablece su clave con `db:create-admin`.
+Usa la URL pública del destino si ejecutas estos comandos desde tu equipo. Tras restaurar, despliega el servicio para aplicar las migraciones pendientes y ejecuta el seed base. Si el respaldo incluye un administrador anterior, restablece su clave con `db:create-admin -- --email ... --name ... --reset-password`.
 
 Referencias: [Configuración como código](https://docs.railway.com/config-as-code/reference), [PostgreSQL](https://docs.railway.com/databases/postgresql), [railway run](https://docs.railway.com/cli/run).

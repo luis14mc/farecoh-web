@@ -5,7 +5,7 @@ import { getDbPool } from "../src/lib/db.ts";
 
 const { values } = parseArgs({
   args: process.argv.slice(2).filter((arg, index) => index !== 0 || arg !== "--"),
-  options: { email: { type: "string" }, name: { type: "string" } },
+  options: { email: { type: "string" }, name: { type: "string" }, "reset-password": { type: "boolean" } },
 });
 const email = values.email?.trim().toLowerCase();
 const name = values.name?.trim();
@@ -19,6 +19,10 @@ if (suppliedPassword !== undefined && !suppliedPassword.trim()) {
 const password = suppliedPassword ?? randomBytes(24).toString("base64url");
 const pool = getDbPool();
 try {
+  const existing = await pool.query("SELECT 1 FROM public.users WHERE email = $1", [email]);
+  if (existing.rowCount && !values["reset-password"]) {
+    throw new Error(`El usuario ${email} ya existe. Usa --reset-password para reemplazar su contraseña.`);
+  }
   const result = await pool.query(
     `INSERT INTO public.users (email, password_hash, full_name, role_id)
      SELECT $1, $2, $3, id FROM public.roles WHERE name = 'super_admin'

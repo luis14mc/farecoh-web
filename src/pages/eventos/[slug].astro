@@ -1,28 +1,122 @@
 ---
 import InstitutionalLayout from "@/layouts/InstitutionalLayout.astro";
+import EventsHero from "@/components/events-public/EventsHero.astro";
 import { eventDateLabel, getPublicEvent, salesAreOpen } from "@/services/public-events";
 import { formatSiteCurrency } from "@/lib/locale";
 
 const event = await getPublicEvent(Astro.params.slug ?? "");
 if (!event) return new Response("Evento no encontrado", { status: 404 });
-const image = event.image_url ?? (event.slug === "pink-floyd" ? "/images/evento/hero.webp" : null);
+const image = event.image_url ?? (event.slug === "pink-floyd" ? "/images/evento/hero.webp" : "/images/farecoh-hero-orchestra.webp");
+const today = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Tegucigalpa" }).format(new Date());
+const isPast = event.event_date < today;
+const open = !isPast && salesAreOpen(event);
+const price = event.ticket_price > 0 ? formatSiteCurrency(event.ticket_price) : "Entrada libre";
+const facts = [
+  { label: "Fecha", value: eventDateLabel(event.event_date), icon: "M8 3v4M16 3v4M3 11h18M5 5h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z" },
+  { label: "Hora", value: event.event_time, icon: "M12 7v5l3 2M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" },
+  { label: "Lugar", value: [event.location, event.city && !event.location.includes(event.city) ? event.city : null].filter(Boolean).join(", "), icon: "M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0ZM12 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" },
+  { label: "Entrada", value: price, icon: "M3 9a3 3 0 0 0 0 6v3a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-3a3 3 0 0 0 0-6V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v3ZM13 4v16" },
+];
 ---
+
 <InstitutionalLayout title={`${event.title} | FARECOH`} description={event.subtitle ?? event.description ?? event.title}
-  canonicalPath={`/eventos/${event.slug}`} image={image ?? undefined}>
-  <article class="bg-[#f5fafe] font-[Inter] text-[#00507c]">
-    <div class="mx-auto max-w-5xl space-y-6 px-6 py-16">
-      <a class="underline" href="/eventos">Todos los eventos</a>
-      <h1 class="text-4xl font-bold md:text-5xl">{event.title}</h1>
-      {event.subtitle && <p class="text-xl">{event.subtitle}</p>}
-      {image && <img src={image} alt={event.title} class="max-h-[30rem] w-full rounded-xl object-cover" />}
-      <div class="space-y-2 rounded-xl border-l-4 border-[#83cfff] bg-[#eff4f8] p-6">
-        <p>{eventDateLabel(event.event_date)} · {event.event_time}</p>
-        <p>{event.location}{event.city ? ` · ${event.city}` : ""}</p>
-        <p>{formatSiteCurrency(event.ticket_price)}</p>
+  canonicalPath={`/eventos/${event.slug}`} image={image}>
+  <EventsHero eyebrow={isPast ? "Evento finalizado" : "Próximo evento"} title={event.title} lead={event.subtitle ?? undefined} image={image}>
+    <a slot="before" href="/eventos" class="ev-back">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7" /></svg>
+      Todos los eventos
+    </a>
+    {open && (
+      <a href={`/eventos/${event.slug}/boletos`} class="ev-btn ev-btn--light">
+        Reservar boletos
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
+      </a>
+    )}
+  </EventsHero>
+
+  <section class="ev-detail">
+    <div class="ev-detail__inner">
+      <dl class="ev-facts">
+        {facts.map((fact) => (
+          <div class="ev-fact">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d={fact.icon} /></svg>
+            <dt>{fact.label}</dt>
+            <dd>{fact.value}</dd>
+          </div>
+        ))}
+      </dl>
+
+      <div class="ev-detail__grid">
+        <div class="ev-detail__text">
+          <h2>Sobre el evento</h2>
+          {event.description
+            ? <p class="ev-detail__desc">{event.description}</p>
+            : <p class="ev-detail__desc">Un encuentro con la música de los coros y orquestas de FARECOH.</p>}
+        </div>
+
+        <aside class="ev-side">
+          {open ? (
+            <>
+              <p class="ev-side__label">Boletería abierta</p>
+              <p class="ev-side__price">{price}</p>
+              <p class="ev-side__note">Reserva en línea y confirma tu pago con nuestro equipo.</p>
+              <a href={`/eventos/${event.slug}/boletos`} class="ev-btn">Reservar boletos</a>
+            </>
+          ) : isPast ? (
+            <>
+              <p class="ev-side__label">Evento finalizado</p>
+              <p class="ev-side__note">Gracias a todas las personas que nos acompañaron.</p>
+              <a href="/eventos" class="ev-btn ev-btn--ghost">Ver próximos eventos</a>
+            </>
+          ) : (
+            <>
+              <p class="ev-side__label">Boletería próximamente</p>
+              <p class="ev-side__price">{price}</p>
+              <p class="ev-side__note">Escríbenos para apartar tus entradas.</p>
+              <a href="mailto:info@farecoh.org" class="ev-btn ev-btn--ghost">info@farecoh.org</a>
+            </>
+          )}
+        </aside>
       </div>
-      {event.description && <p class="whitespace-pre-line">{event.description}</p>}
-      {salesAreOpen(event) && <a class="inline-block rounded-lg bg-[#005082] px-5 py-3 font-semibold text-white"
-        href={`/eventos/${event.slug}/boletos`}>Reservar boletos</a>}
     </div>
-  </article>
+  </section>
 </InstitutionalLayout>
+
+<style>
+  .ev-back { display: inline-flex; align-items: center; gap: 0.4rem; margin-bottom: 0.5rem; color: rgba(255, 255, 255, 0.8); font-size: 0.875rem; font-weight: 600; text-decoration: none; }
+  .ev-back:hover { color: #fff; }
+  .ev-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+    margin-top: 0.75rem; padding: 0.85rem 1.4rem; border-radius: 10px;
+    background: #005082; color: #fff; font-weight: 600; font-size: 0.9375rem; text-decoration: none;
+    transition: background-color 180ms ease, transform 180ms ease;
+  }
+  .ev-btn:hover { background: #0069a8; transform: translateY(-1px); }
+  .ev-btn--light { background: #fff; color: #005082; }
+  .ev-btn--light:hover { background: #eff4f8; }
+  .ev-btn--ghost { background: #eff4f8; color: #005082; }
+  .ev-btn--ghost:hover { background: #dcebf5; }
+
+  .ev-detail { background: #f5fafe; padding-block: 0 clamp(3.5rem, 7vw, 6rem); font-family: "Inter", system-ui, sans-serif; }
+  .ev-detail__inner { width: min(100% - 2.5rem, 1200px); margin-inline: auto; }
+  .ev-facts {
+    position: relative; z-index: 1;
+    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1px; margin: -2.5rem 0 0; overflow: hidden;
+    border-radius: 16px; background: #e4ecf2; box-shadow: 0 18px 40px -24px rgba(8, 46, 82, 0.45);
+  }
+  .ev-fact { display: grid; gap: 0.2rem; padding: 1.25rem 1.4rem; background: #fff; }
+  .ev-fact svg { color: #0069a8; margin-bottom: 0.4rem; }
+  .ev-fact dt { font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #5b6572; }
+  .ev-fact dd { margin: 0; font-weight: 600; color: #171c1f; line-height: 1.4; }
+  @media (min-width: 900px) { .ev-facts { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+  @media (max-width: 420px) { .ev-fact { padding: 1rem; } }
+  .ev-detail__grid { display: grid; gap: 2.5rem; margin-top: clamp(2.5rem, 5vw, 4rem); }
+  @media (min-width: 900px) { .ev-detail__grid { grid-template-columns: minmax(0, 1.6fr) minmax(280px, 1fr); align-items: start; } }
+  .ev-detail__text h2 { margin: 0 0 1rem; font-size: 1.5rem; font-weight: 700; color: #005082; letter-spacing: -0.02em; }
+  .ev-detail__desc { margin: 0; white-space: pre-line; color: #404750; font-size: 1.0625rem; line-height: 1.75; max-width: 65ch; }
+  .ev-side { display: grid; gap: 0.4rem; padding: 1.75rem; border-radius: 16px; background: #fff; border: 1px solid #e4ecf2; position: sticky; top: 6.5rem; }
+  .ev-side__label { margin: 0; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #0069a8; }
+  .ev-side__price { margin: 0; font-size: 2rem; font-weight: 800; color: #005082; letter-spacing: -0.02em; }
+  .ev-side__note { margin: 0; color: #5b6572; font-size: 0.9375rem; line-height: 1.55; }
+</style>

@@ -1,31 +1,117 @@
 ---
 import InstitutionalLayout from "@/layouts/InstitutionalLayout.astro";
-import { getPublicEvent, salesAreOpen } from "@/services/public-events";
+import EventsHero from "@/components/events-public/EventsHero.astro";
+import { eventDateLabel, getPublicEvent, salesAreOpen } from "@/services/public-events";
+import { formatSiteCurrency } from "@/lib/locale";
 
 const event = await getPublicEvent(Astro.params.slug ?? "");
 if (!event || !salesAreOpen(event)) return new Response("Boletería no disponible", { status: 404 });
 ---
 <InstitutionalLayout title={`Boletos · ${event.title}`} description="Reserva de boletos" noindex>
-  <section class="mx-auto max-w-xl space-y-6 px-6 py-16 text-[#005082]">
-    <a class="underline" href={`/eventos/${event.slug}`}>Volver al evento</a>
-    <h1 class="text-3xl font-bold">Boletos para {event.title}</h1>
-    <form id="event-reservation" data-slug={event.slug} class="grid gap-4 rounded-xl bg-[#eff4f8] p-6">
-      <label class="grid gap-1">Nombre completo <input class="rounded border p-2" name="fullName" required /></label>
-      <label class="grid gap-1">Teléfono <input class="rounded border p-2" name="phone" type="tel" required /></label>
-      <label class="grid gap-1">Correo electrónico <input class="rounded border p-2" name="email" type="email" /></label>
-      <label class="grid gap-1">Cantidad <input class="rounded border p-2" name="quantity" type="number" min="1" max="10" value="1" required /></label>
-      <button class="rounded bg-[#005082] p-3 font-semibold text-white" type="submit">Reservar</button>
-      <p role="status"></p>
-    </form>
+  <EventsHero eyebrow="Reserva de boletos" title={event.title}
+    lead={`${eventDateLabel(event.event_date)} · ${event.event_time} · ${event.location}`}>
+    <a slot="before" href={`/eventos/${event.slug}`} class="tk-back">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7" /></svg>
+      Volver al evento
+    </a>
+  </EventsHero>
+
+  <section class="tk">
+    <div class="tk__inner">
+      <form id="event-reservation" data-slug={event.slug} data-price={event.ticket_price} class="tk-form">
+        <h2>Tus datos</h2>
+        <label class="tk-field">Nombre completo
+          <input name="fullName" autocomplete="name" required />
+        </label>
+        <div class="tk-row">
+          <label class="tk-field">Teléfono
+            <input name="phone" type="tel" autocomplete="tel" inputmode="tel" placeholder="9999-9999" required />
+          </label>
+          <label class="tk-field">Correo electrónico <small>(opcional)</small>
+            <input name="email" type="email" autocomplete="email" />
+          </label>
+        </div>
+        <label class="tk-field tk-field--qty">Cantidad de boletos
+          <input name="quantity" type="number" min="1" max="10" value="1" required />
+        </label>
+        <div class="tk-total">
+          <span>Total estimado</span>
+          <strong data-total>{formatSiteCurrency(event.ticket_price)}</strong>
+        </div>
+        <button class="tk-submit" type="submit">Reservar boletos</button>
+        <p class="tk-status" role="status" aria-live="polite"></p>
+      </form>
+
+      <aside class="tk-info">
+        <h3>¿Cómo funciona?</h3>
+        <ol>
+          <li><strong>Reserva</strong> tus boletos con este formulario.</li>
+          <li><strong>Te contactamos</strong> por teléfono o WhatsApp para confirmar el pago.</li>
+          <li><strong>Recibe</strong> tus boletos digitales con código QR.</li>
+        </ol>
+        <p>Máximo 10 boletos por reserva. ¿Dudas? <a href="mailto:info@farecoh.org">info@farecoh.org</a></p>
+      </aside>
+    </div>
   </section>
 </InstitutionalLayout>
+
+<style>
+  .tk-back { display: inline-flex; align-items: center; gap: 0.4rem; margin-bottom: 0.5rem; color: rgba(255, 255, 255, 0.8); font-size: 0.875rem; font-weight: 600; text-decoration: none; }
+  .tk-back:hover { color: #fff; }
+  .tk { background: #f5fafe; padding-block: 0 clamp(3.5rem, 7vw, 6rem); font-family: "Inter", system-ui, sans-serif; }
+  .tk__inner { width: min(100% - 2.5rem, 1100px); margin-inline: auto; display: grid; gap: 1.5rem; }
+  @media (min-width: 900px) { .tk__inner { grid-template-columns: minmax(0, 1.5fr) minmax(260px, 1fr); align-items: start; } }
+  .tk-form {
+    position: relative; z-index: 1; margin-top: -2.5rem;
+    display: grid; gap: 1.1rem; padding: clamp(1.5rem, 3vw, 2.25rem);
+    background: #fff; border-radius: 16px; box-shadow: 0 18px 40px -24px rgba(8, 46, 82, 0.45);
+  }
+  .tk-form h2 { margin: 0; font-size: 1.25rem; font-weight: 700; color: #005082; }
+  .tk-row { display: grid; gap: 1.1rem; }
+  @media (min-width: 640px) { .tk-row { grid-template-columns: 1fr 1fr; } }
+  .tk-field { display: grid; gap: 0.4rem; font-size: 0.875rem; font-weight: 600; color: #171c1f; }
+  .tk-field small { font-weight: 400; color: #5b6572; }
+  .tk-field input {
+    width: 100%; padding: 0.75rem 0.9rem; border: 1px solid #cfdce6; border-radius: 10px;
+    font: inherit; font-weight: 400; color: #171c1f; background: #fff; transition: border-color 160ms ease, box-shadow 160ms ease;
+  }
+  .tk-field input:focus { outline: none; border-color: #0069a8; box-shadow: 0 0 0 3px rgba(0, 105, 168, 0.15); }
+  .tk-field--qty input { max-width: 8rem; }
+  .tk-total { display: flex; justify-content: space-between; align-items: baseline; padding: 1rem 1.1rem; border-radius: 10px; background: #eff4f8; color: #404750; }
+  .tk-total strong { font-size: 1.375rem; color: #005082; }
+  .tk-submit {
+    padding: 0.95rem 1.2rem; border: 0; border-radius: 10px; background: #005082; color: #fff;
+    font: inherit; font-weight: 700; cursor: pointer; transition: background-color 180ms ease;
+  }
+  .tk-submit:hover { background: #0069a8; }
+  .tk-submit:disabled { opacity: 0.6; cursor: progress; }
+  .tk-status { margin: 0; font-size: 0.9375rem; line-height: 1.5; }
+  .tk-status:empty { display: none; }
+  .tk-status[data-tone="ok"] { padding: 0.9rem 1rem; border-radius: 10px; background: #e6f6ee; color: #135c3a; }
+  .tk-status[data-tone="error"] { padding: 0.9rem 1rem; border-radius: 10px; background: #fdecef; color: #8a1c33; }
+  .tk-info { padding: 1.5rem; border-radius: 16px; border: 1px solid #e4ecf2; background: #fff; color: #404750; font-size: 0.9375rem; line-height: 1.55; }
+  .tk-info h3 { margin: 0 0 0.75rem; font-size: 1rem; color: #005082; }
+  .tk-info ol { margin: 0 0 1rem; padding-left: 1.2rem; display: grid; gap: 0.5rem; }
+  .tk-info strong { color: #171c1f; }
+  .tk-info p { margin: 0; }
+  .tk-info a { color: #005082; font-weight: 600; }
+</style>
 <script>
   const form = document.querySelector<HTMLFormElement>("#event-reservation");
+  const totalNode = form?.querySelector<HTMLElement>("[data-total]");
+  const money = new Intl.NumberFormat("es-HN", { style: "currency", currency: "HNL", maximumFractionDigits: 0 });
+  function updateTotal() {
+    if (!form || !totalNode) return;
+    const qty = Math.min(10, Math.max(1, Number(new FormData(form).get("quantity")) || 1));
+    totalNode.textContent = money.format(qty * Number(form.dataset.price ?? 0)).replace("HNL", "L");
+  }
+  form?.addEventListener("input", updateTotal);
   form?.addEventListener("submit", async (submission) => {
     submission.preventDefault();
     const status = form.querySelector<HTMLElement>("[role=status]")!;
     const button = form.querySelector("button")!;
     button.disabled = true;
+    status.dataset.tone = "";
     status.textContent = "Enviando reserva…";
     try {
       const data = Object.fromEntries(new FormData(form));
@@ -36,9 +122,12 @@ if (!event || !salesAreOpen(event)) return new Response("Boletería no disponibl
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error);
-      status.textContent = `Reserva registrada. Tus códigos son ${result.ticketCodes.join(", ")}.`;
+      status.dataset.tone = "ok";
+      status.textContent = `¡Reserva registrada! Tus códigos son ${result.ticketCodes.join(", ")}. Te contactaremos para confirmar el pago.`;
       form.reset();
+      updateTotal();
     } catch (error) {
+      status.dataset.tone = "error";
       status.textContent = error instanceof Error ? error.message : "No se pudo registrar la reserva.";
     } finally {
       button.disabled = false;
