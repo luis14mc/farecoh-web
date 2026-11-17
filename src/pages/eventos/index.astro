@@ -1,0 +1,30 @@
+---
+import InstitutionalLayout from "@/layouts/InstitutionalLayout.astro";
+import { eventDateLabel, listPublicEvents } from "@/services/public-events";
+
+const events = await listPublicEvents();
+const today = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Tegucigalpa" }).format(new Date());
+const groups = [
+  { title: "Próximos eventos", events: events.filter((event) => event.event_date >= today) },
+  { title: "Eventos pasados", events: events.filter((event) => event.event_date < today) },
+];
+---
+<InstitutionalLayout title="Eventos | FARECOH" description="Cartelera cultural de FARECOH" canonicalPath="/eventos">
+  <section class="mx-auto max-w-6xl space-y-10 px-6 py-16 font-[Inter] text-[#005082]">
+    <h1 class="text-4xl font-bold">Eventos</h1>
+    {groups.map((group) => (
+      <section class="space-y-4">
+        <h2 class="text-2xl font-bold">{group.title}</h2>
+        {group.events.length ? <ul class="grid gap-4 md:grid-cols-2">
+          {group.events.map((event) => (
+            <li class="rounded-xl bg-[#eff4f8] p-6">
+              <a class="text-xl font-semibold underline" href={`/eventos/${event.slug}`}>{event.title}</a>
+              <p>{eventDateLabel(event.event_date)} · {event.location}</p>
+              {event.subtitle && <p>{event.subtitle}</p>}
+            </li>
+          ))}
+        </ul> : <p>No hay eventos en esta sección.</p>}
+      </section>
+    ))}
+  </section>
+</InstitutionalLayout>

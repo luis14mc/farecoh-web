@@ -7,7 +7,8 @@ const PUBLIC_ADMIN_PATHS = new Set(["/admin/login", "/admin/no-autorizado", "/ad
 export const onRequest = defineMiddleware(async (context, next) => {
   const { pathname } = context.url;
 
-  if (!pathname.startsWith("/admin")) return next();
+  const apiEvents = /^\/api\/admin\/events(?:\/|$)/.test(pathname);
+  if (!apiEvents && !pathname.startsWith("/admin")) return next();
 
   if (!isAuthConfigured()) {
     if (PUBLIC_ADMIN_PATHS.has(pathname)) return next();
@@ -19,11 +20,18 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
   if (PUBLIC_ADMIN_PATHS.has(pathname)) return next();
 
-  const access = await requireAdminAccess(context, pathname).catch(() => ({
+  const access = await requireAdminAccess(context, apiEvents ? "/admin/events" : pathname).catch(() => ({
     ok: false as const,
     profile: null,
     reason: "unauthenticated" as const,
   }));
+
+  if (apiEvents && !access.ok) {
+    const unauthorized = access.reason === "unauthenticated";
+    return Response.json({ error: unauthorized ? "Inicia sesión." : "Acceso denegado." }, {
+      status: unauthorized ? 401 : 403,
+    });
+  }
 
   if (!access.ok && access.reason === "unauthenticated") {
     const redirectTo = encodeURIComponent(`${pathname}${context.url.search}`);

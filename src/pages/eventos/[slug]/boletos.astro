@@ -1,0 +1,47 @@
+---
+import InstitutionalLayout from "@/layouts/InstitutionalLayout.astro";
+import { getPublicEvent, salesAreOpen } from "@/services/public-events";
+
+const event = await getPublicEvent(Astro.params.slug ?? "");
+if (!event || !salesAreOpen(event)) return new Response("Boletería no disponible", { status: 404 });
+---
+<InstitutionalLayout title={`Boletos · ${event.title}`} description="Reserva de boletos" noindex>
+  <section class="mx-auto max-w-xl space-y-6 px-6 py-16 text-[#005082]">
+    <a class="underline" href={`/eventos/${event.slug}`}>Volver al evento</a>
+    <h1 class="text-3xl font-bold">Boletos para {event.title}</h1>
+    <form id="event-reservation" data-slug={event.slug} class="grid gap-4 rounded-xl bg-[#eff4f8] p-6">
+      <label class="grid gap-1">Nombre completo <input class="rounded border p-2" name="fullName" required /></label>
+      <label class="grid gap-1">Teléfono <input class="rounded border p-2" name="phone" type="tel" required /></label>
+      <label class="grid gap-1">Correo electrónico <input class="rounded border p-2" name="email" type="email" /></label>
+      <label class="grid gap-1">Cantidad <input class="rounded border p-2" name="quantity" type="number" min="1" max="10" value="1" required /></label>
+      <button class="rounded bg-[#005082] p-3 font-semibold text-white" type="submit">Reservar</button>
+      <p role="status"></p>
+    </form>
+  </section>
+</InstitutionalLayout>
+<script>
+  const form = document.querySelector<HTMLFormElement>("#event-reservation");
+  form?.addEventListener("submit", async (submission) => {
+    submission.preventDefault();
+    const status = form.querySelector<HTMLElement>("[role=status]")!;
+    const button = form.querySelector("button")!;
+    button.disabled = true;
+    status.textContent = "Enviando reserva…";
+    try {
+      const data = Object.fromEntries(new FormData(form));
+      const response = await fetch("/api/tickets/reserve", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...data, email: data.email || undefined, quantity: Number(data.quantity), eventSlug: form.dataset.slug }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error);
+      status.textContent = `Reserva registrada. Tus códigos son ${result.ticketCodes.join(", ")}.`;
+      form.reset();
+    } catch (error) {
+      status.textContent = error instanceof Error ? error.message : "No se pudo registrar la reserva.";
+    } finally {
+      button.disabled = false;
+    }
+  });
+</script>

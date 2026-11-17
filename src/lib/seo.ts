@@ -37,8 +37,8 @@ export const SITEMAP_ENTRIES: SitemapEntry[] = [
   { path: "/", changefreq: "weekly", priority: "1.0" },
 ];
 
-export function buildSitemapXml(lastmod: string): string {
-  const urls = SITEMAP_ENTRIES.map(
+export function buildSitemapXml(lastmod: string, events: SitemapEntry[] = []): string {
+  const urls = [...SITEMAP_ENTRIES, ...events].map(
     (entry) => `  <url>
     <loc>${absoluteUrl(entry.path)}</loc>
     <lastmod>${lastmod}</lastmod>

@@ -29,6 +29,7 @@ export function resolveAdminAccess(params: {
 export const routePermissions: Record<string, StaffRole[]> = {
   "/admin": ["super_admin", "event_manager"],
   "/admin/dashboard": ["super_admin", "event_manager"],
+  "/admin/events": ["super_admin", "event_manager"],
   "/admin/users": ["super_admin"],
   "/admin/delivery": ["super_admin", "event_manager", "seller"],
   "/admin/tickets": ["super_admin", "event_manager", "seller"],

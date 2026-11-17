@@ -4,22 +4,19 @@ import AdminPage from "@/components/admin/ui/AdminPage.astro";
 import { AdminPageHeader } from "@/components/admin/react/AdminPageHeader";
 import { BatchesAdminPanel } from "@/components/admin/react/BatchesAdminPanel";
 import type { UserProfile } from "@/lib/auth";
-import { getPinkFloydEventFallback } from "@/lib/events";
+import { getEventById, getEventBySlug } from "@/services/events";
 import { formatSiteDate } from "@/lib/locale";
-import { formatTicketCode, parseTicketSequence } from "@/services/ticket-code";
+import { parseTicketSequence } from "@/services/ticket-code";
 import { countTicketsByStatus, countTicketsSold } from "@/services/admin-stats";
-import { query, queryRows, queryOne } from "@/lib/db";
+import { getDbPool, queryRows } from "@/lib/db";
 
 const staffProfile = Astro.locals.staffProfile as UserProfile | undefined;
 const authConfigured = true;
 const currentDate = formatSiteDate(new Date(), { month: "short", day: "numeric", year: "numeric" });
-const event = getPinkFloydEventFallback();
-
-const pinkFloydEvent = await queryOne<{ id: string }>(
-  "SELECT id FROM events WHERE slug = $1 LIMIT 1;",
-  ["pink-floyd"]
-);
-const eventId = pinkFloydEvent?.id;
+const requestedId = Astro.url.searchParams.get("event");
+const event = requestedId ? await getEventById(requestedId) : await getEventBySlug("pink-floyd");
+const eventId = event?.id;
+if (requestedId && !event) return new Response("Evento no encontrado", { status: 404 });
 
 let formMessage = "";
 let formError = false;
@@ -31,92 +28,83 @@ function normalizeTicketCode(ticketCode: string): string {
 if (Astro.request.method === "POST") {
   try {
     const data = await Astro.request.formData();
-    const startCode = normalizeTicketCode(String(data.get("start_code") || ""));
-    const endCode = normalizeTicketCode(String(data.get("end_code") || ""));
-    const sellerId = String(data.get("seller_id") || "");
-    const location = String(data.get("location") || "").trim();
-
-    const startSeq = parseTicketSequence(startCode);
-    const endSeq = parseTicketSequence(endCode);
-
-    if (startSeq === null || endSeq === null || startSeq > endSeq) {
-      throw new Error("Rango de boletos inválido. Use el formato PF-000001 a PF-000500.");
-    }
-
-    if (!sellerId) {
-      throw new Error("Seleccione un vendedor registrado.");
-    }
-
-    if (!location) {
-      throw new Error("Especifique un punto físico o ubicación.");
-    }
-
-    const seller = await queryOne<{ id: string; name: string; active: boolean }>(
-      "SELECT id, name, active FROM sellers WHERE id = $1 LIMIT 1;",
-      [sellerId]
-    );
-
-    if (!seller) {
-      throw new Error("El vendedor seleccionado no existe.");
-    }
-
-    if (!seller.active) {
-      throw new Error("El vendedor seleccionado está inactivo.");
-    }
-
-    if (!pinkFloydEvent) {
-      throw new Error("Evento Pink Floyd no encontrado.");
-    }
-
-    const ticketsInRange = await queryRows<{ id: string; ticket_code: string; status: string }>(
-      "SELECT id, ticket_code, status FROM tickets WHERE event_id = $1;",
-      [pinkFloydEvent.id]
-    );
-
-    const matchedTickets = ticketsInRange.filter((t) => {
-      const seq = parseTicketSequence(t.ticket_code);
-      return seq !== null && seq >= startSeq && seq <= endSeq;
-    });
-
-    if (matchedTickets.length === 0) {
-      throw new Error("No se encontraron boletos en el rango especificado.");
-    }
-
-    const unavailableTickets = matchedTickets.filter((t) => t.status !== "available" && t.status !== "assigned");
-    if (unavailableTickets.length > 0) {
-      throw new Error(
-        `Hay boletos vendidos, validados o anulados en este rango (ej. ${unavailableTickets[0].ticket_code}).`,
+    if (!eventId) throw new Error("No se encontró el evento.");
+    const client = await getDbPool().connect();
+    try {
+      await client.query("BEGIN");
+      const { rows: [lockedEvent] } = await client.query<{ capacity: number; slug: string }>(
+        "SELECT capacity, slug FROM events WHERE id = $1 FOR UPDATE", [eventId],
       );
+      const actor = staffProfile?.email ?? "Admin";
+      if (data.get("action") === "generate") {
+        await client.query("SELECT pg_advisory_xact_lock($1)", [652027]);
+        const { rows: [inventory] } = await client.query<{ total: number }>(
+          "SELECT count(*)::int AS total FROM tickets WHERE event_id = $1", [eventId],
+        );
+        const quantity = lockedEvent.capacity - inventory.total;
+        if (quantity <= 0) throw new Error("El inventario ya alcanzó la capacidad del evento.");
+        const { rows: [{ last }] } = await client.query<{ last: number }>(
+          "SELECT greatest(500, coalesce(max(substring(ticket_code from 4)::int), 0)) AS last FROM tickets WHERE ticket_code ~ $1",
+          ["^PF-[0-9]{6}$"],
+        );
+        const first = lockedEvent.slug === "pink-floyd" && inventory.total === 0 && quantity <= 500 ? 1 : last + 1;
+        if (first + quantity - 1 > 999999) throw new Error("Se agotaron los códigos de boleto disponibles.");
+        const generated = await client.query(
+          `INSERT INTO tickets (event_id, ticket_code, status)
+           SELECT $1, 'PF-' || lpad(code::text, 6, '0'), 'available'
+           FROM generate_series($2::int, $3::int) AS code`,
+          [eventId, first, first + quantity - 1],
+        );
+        await client.query(
+          "INSERT INTO audit_logs (action, entity, entity_id, performed_by) VALUES ($1, $2, $3, $4)",
+          ["tickets.generated", "events", eventId, actor],
+        );
+        formMessage = `${generated.rowCount} boletos generados.`;
+      } else {
+        const startCode = normalizeTicketCode(String(data.get("start_code") || ""));
+        const endCode = normalizeTicketCode(String(data.get("end_code") || ""));
+        const sellerId = String(data.get("seller_id") || "");
+        const location = String(data.get("location") || "").trim();
+        const startSeq = parseTicketSequence(startCode);
+        const endSeq = parseTicketSequence(endCode);
+        if (startSeq === null || endSeq === null || startSeq > endSeq) throw new Error("Rango de boletos inválido.");
+        if (!sellerId || !location) throw new Error("Selecciona un vendedor y especifica el punto de venta.");
+
+        const { rows: [seller] } = await client.query<{ id: string; name: string }>(
+          "SELECT id, name FROM sellers WHERE id = $1 AND active", [sellerId],
+        );
+        if (!seller) throw new Error("El vendedor no existe o está inactivo.");
+        const { rows: tickets } = await client.query<{ id: string; status: string }>(
+          "SELECT id, status FROM tickets WHERE event_id = $1 AND ticket_code BETWEEN $2 AND $3 FOR UPDATE",
+          [eventId, startCode, endCode],
+        );
+        if (!tickets.length) throw new Error("No se encontraron boletos en el rango especificado.");
+        if (tickets.some((ticket) => !["available", "assigned"].includes(ticket.status))) {
+          throw new Error("El rango incluye boletos que no se pueden asignar.");
+        }
+        const { rows: [batch] } = await client.query<{ id: string }>(
+          `INSERT INTO ticket_batches (event_id, name, from_code, to_code, count, seller_id, location)
+           VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
+          [eventId, `Lote ${startCode} - ${endCode}`, startCode, endCode, tickets.length, seller.id, location],
+        );
+        await client.query(
+          `UPDATE tickets SET status = 'assigned', batch_id = $1, seller_id = $2, seller_name = $3, sale_location = $4
+           WHERE id = ANY($5::uuid[])`,
+          [batch.id, seller.id, seller.name, location, tickets.map((ticket) => ticket.id)],
+        );
+        await client.query(
+          "INSERT INTO audit_logs (action, entity, entity_id, performed_by) VALUES ($1, $2, $3, $4)",
+          ["batch.assigned", "ticket_batches", batch.id, actor],
+        );
+        formMessage = `${tickets.length} boletos asignados a ${seller.name} en ${location}.`;
+      }
+      await client.query("COMMIT");
+    } catch (error) {
+      await client.query("ROLLBACK");
+      throw error;
+    } finally {
+      client.release();
     }
-
-    const batchName = `Lote ${startCode} - ${endCode}`;
-    const newBatch = await queryOne<{ id: string }>(
-      `INSERT INTO ticket_batches (event_id, name, start_code, end_code, total_tickets, assigned_seller_id, location)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
-       RETURNING id;`,
-      [pinkFloydEvent.id, batchName, startCode, endCode, matchedTickets.length, sellerId, location]
-    );
-
-    if (!newBatch) throw new Error("Error al crear el lote en la base de datos.");
-
-    const ticketIds = matchedTickets.map((t) => t.id);
-    await query(
-      `UPDATE tickets SET
-        status = 'assigned',
-        batch_id = $1,
-        seller_name = $2,
-        sale_location = $3
-       WHERE id = ANY($4);`,
-      [newBatch.id, seller.name, location, ticketIds]
-    );
-
-    const userEmail = Astro.locals.staffProfile?.email || "Admin";
-    await query(
-      "INSERT INTO audit_logs (action, entity, entity_id, performed_by) VALUES ($1, $2, $3, $4);",
-      ["batch.assigned", "ticket_batches", newBatch.id, userEmail]
-    );
-
-    formMessage = `${matchedTickets.length} boletos asignados correctamente a ${seller.name} en ${location}.`;
   } catch (err: unknown) {
     formError = true;
     formMessage = err instanceof Error ? err.message : "Error al procesar la asignación.";
@@ -124,7 +112,7 @@ if (Astro.request.method === "POST") {
 }
 
 const tickets = eventId
-  ? await queryRows<{ status: string }>("SELECT status FROM tickets WHERE event_id = $1;", [eventId])
+  ? await queryRows<{ status: string; ticket_code: string }>("SELECT status, ticket_code FROM tickets WHERE event_id = $1 ORDER BY ticket_code;", [eventId])
   : [];
 
 const sellers = await queryRows<{ id: string; name: string; type: string }>(
@@ -132,7 +120,7 @@ const sellers = await queryRows<{ id: string; name: string; type: string }>(
 );
 
 const batches = await queryRows<{ id: string; name: string; start_code: string; end_code: string; location: string; created_at: string }>(
-  "SELECT id, name, start_code, end_code, location, created_at FROM ticket_batches ORDER BY created_at DESC;"
+  "SELECT id, name, from_code AS start_code, to_code AS end_code, location, assigned_at AS created_at FROM ticket_batches WHERE event_id = $1 ORDER BY assigned_at DESC;", [eventId ?? null]
 );
 
 const stats = {
@@ -145,8 +133,8 @@ const stats = {
   total: tickets.length,
 };
 
-const rangeStart = formatTicketCode(1);
-const rangeEnd = formatTicketCode(event.total_tickets);
+const rangeStart = tickets[0]?.ticket_code ?? "—";
+const rangeEnd = tickets.at(-1)?.ticket_code ?? "—";
 ---
 
 <AdminLayout title="Lotes de Boletos | FARECOH" description="Administración de lotes físicos" active="batches">
@@ -161,9 +149,16 @@ const rangeEnd = formatTicketCode(event.total_tickets);
   />
 
   <AdminPage>
+    {event && <form method="POST" class="mb-4 flex items-center gap-3">
+      <input type="hidden" name="action" value="generate" />
+      <button type="submit" disabled={stats.total >= event.capacity} class="rounded bg-primary px-4 py-2 text-primary-foreground disabled:opacity-50">
+        Generar boletos
+      </button>
+      <span>{stats.total} / {event.capacity} boletos generados</span>
+    </form>}
     <BatchesAdminPanel
       client:load
-      lotLabel="LOTE GENERAL 001"
+      lotLabel={event?.title ?? "Sin evento"}
       rangeStart={rangeStart}
       rangeEnd={rangeEnd}
       sellers={sellers}

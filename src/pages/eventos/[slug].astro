@@ -1,0 +1,28 @@
+---
+import InstitutionalLayout from "@/layouts/InstitutionalLayout.astro";
+import { eventDateLabel, getPublicEvent, salesAreOpen } from "@/services/public-events";
+import { formatSiteCurrency } from "@/lib/locale";
+
+const event = await getPublicEvent(Astro.params.slug ?? "");
+if (!event) return new Response("Evento no encontrado", { status: 404 });
+const image = event.image_url ?? (event.slug === "pink-floyd" ? "/images/evento/hero.webp" : null);
+---
+<InstitutionalLayout title={`${event.title} | FARECOH`} description={event.subtitle ?? event.description ?? event.title}
+  canonicalPath={`/eventos/${event.slug}`} image={image ?? undefined}>
+  <article class="bg-[#f5fafe] font-[Inter] text-[#00507c]">
+    <div class="mx-auto max-w-5xl space-y-6 px-6 py-16">
+      <a class="underline" href="/eventos">Todos los eventos</a>
+      <h1 class="text-4xl font-bold md:text-5xl">{event.title}</h1>
+      {event.subtitle && <p class="text-xl">{event.subtitle}</p>}
+      {image && <img src={image} alt={event.title} class="max-h-[30rem] w-full rounded-xl object-cover" />}
+      <div class="space-y-2 rounded-xl border-l-4 border-[#83cfff] bg-[#eff4f8] p-6">
+        <p>{eventDateLabel(event.event_date)} · {event.event_time}</p>
+        <p>{event.location}{event.city ? ` · ${event.city}` : ""}</p>
+        <p>{formatSiteCurrency(event.ticket_price)}</p>
+      </div>
+      {event.description && <p class="whitespace-pre-line">{event.description}</p>}
+      {salesAreOpen(event) && <a class="inline-block rounded-lg bg-[#005082] px-5 py-3 font-semibold text-white"
+        href={`/eventos/${event.slug}/boletos`}>Reservar boletos</a>}
+    </div>
+  </article>
+</InstitutionalLayout>

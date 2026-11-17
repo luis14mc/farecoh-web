@@ -8,14 +8,18 @@ import { SalesHistoryTable } from "@/components/admin/react/SalesHistoryTable";
 import { TicketSearchQuick } from "@/components/admin/react/TicketSearchQuick";
 import type { UserProfile } from "@/lib/auth";
 import { formatSiteCurrency, formatSiteDate, formatSiteNumber } from "@/lib/locale";
-import { getPinkFloydEventFallback } from "@/lib/events";
+import { listEvents } from "@/services/events";
 import { countTicketsByStatus, countTicketsSold, resolveGrossRevenue } from "@/services/admin-stats";
 import { queryRows } from "@/lib/db";
 
 const staffProfile = Astro.locals.staffProfile as UserProfile | undefined;
 const authConfigured = true;
 const currentDate = formatSiteDate(new Date(), { month: "short", day: "numeric", year: "numeric" });
-const CAPACITY = getPinkFloydEventFallback().total_tickets;
+const events = await listEvents({ includeUnpublished: true });
+const requestedSlug = Astro.url.searchParams.get("event") ?? "pink-floyd";
+const selectedEvent = events.find((event) => event.slug === requestedSlug) ?? events[0];
+const eventId = selectedEvent?.id ?? null;
+const CAPACITY = selectedEvent?.capacity ?? 0;
 
 let rawSales: Array<{
   amount: number | string;
@@ -43,18 +47,18 @@ try {
            t.ticket_code, t.buyer_name, t.buyer_phone, t.buyer_email
     FROM sales s
     LEFT JOIN tickets t ON s.ticket_id = t.id
-    ORDER BY s.created_at DESC;
-  `);
+    WHERE t.event_id = $1 ORDER BY s.created_at DESC;
+  `, [eventId]);
 
-  tickets = await queryRows(`SELECT status FROM tickets;`);
+  tickets = await queryRows("SELECT status FROM tickets WHERE event_id = $1", [eventId]);
 
   reservations = await queryRows(`
     SELECT ticket_code, buyer_name, buyer_phone
     FROM tickets
-    WHERE status = 'reserved'
+    WHERE status = 'reserved' AND event_id = $1
     ORDER BY ticket_code DESC
     LIMIT 8;
-  `);
+  `, [eventId]);
 
   const rawCheckins = await queryRows<{
     validated_by: string | null;
@@ -65,9 +69,9 @@ try {
     SELECT c.validated_by, c.validated_at, t.ticket_code, t.buyer_name
     FROM checkins c
     LEFT JOIN tickets t ON c.ticket_id = t.id
-    ORDER BY c.validated_at DESC
+    WHERE t.event_id = $1 ORDER BY c.validated_at DESC
     LIMIT 8;
-  `);
+  `, [eventId]);
 
   checkins = rawCheckins.map((row) => ({
     validated_by: row.validated_by,
@@ -126,7 +130,7 @@ const maxPointSales = Math.max(...salesByPoint.map(([, amt]) => amt), 1);
 const totalRevenue = resolveGrossRevenue({
   salesAmounts: sales.map((sale) => sale.amount),
   ticketsSold: countTicketsSold(tickets),
-  ticketPrice: getPinkFloydEventFallback().ticket_price,
+  ticketPrice: (selectedEvent?.ticket_price ?? 0),
 });
 
 const kpis = [
@@ -154,16 +158,23 @@ const overviewSegments = [
     client:load
     title="Panel de control"
     section="Dashboard"
-    description="Resumen operativo del evento Pink Floyd."
+    description="Resumen operativo del evento seleccionado."
     currentDate={currentDate}
     staffProfile={staffProfile}
     authConfigured={authConfigured}
   />
 
   <AdminPage>
+    <form method="GET" class="mb-4 flex flex-wrap items-center gap-2">
+      <label for="dashboard-event">Evento</label>
+      <select id="dashboard-event" name="event" class="rounded border bg-background p-2">
+        {events.map((event) => <option value={event.slug} selected={event.id === eventId}>{event.title}</option>)}
+      </select>
+      <button class="rounded border px-3 py-2" type="submit">Ver evento</button>
+    </form>
     <EventOverviewCard
       client:load
-      eventName={getPinkFloydEventFallback().name ?? "Tributo a Pink Floyd"}
+      eventName={selectedEvent?.title ?? "Sin eventos"}
       capacity={CAPACITY}
       sold={soldCount}
       validated={validatedCount}
@@ -241,7 +252,7 @@ const overviewSegments = [
 
     <div class="grid grid-cols-1 items-start gap-4 lg:grid-cols-3">
       <section class="lg:col-span-1">
-        <TicketSearchQuick client:load />
+        <TicketSearchQuick client:load eventId={selectedEvent?.id} />
       </section>
       <section class="lg:col-span-2">
         <SalesHistoryTable client:load sales={sales ?? []} />
