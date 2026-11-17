@@ -46,7 +46,9 @@ export function organizationJsonLd() {
     url: absoluteUrl("/"),
     logo: absoluteUrl("/images/Logos/logo.png"),
     email: site.email,
-    description: site.tagline.es,
+    description:
+      "Organización sin fines de lucro que utiliza la música, las artes y la educación como herramientas de transformación social para la niñez y juventud de Honduras.",
+    foundingDate: "2013",
     areaServed: {
       "@type": "Country",
       name: "Honduras",

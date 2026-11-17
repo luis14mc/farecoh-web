@@ -1,7 +1,17 @@
 ---
 import InstitutionalLayout from "@/layouts/InstitutionalLayout.astro";
 import PhotoStrip from "@/components/institutional/PhotoStrip.astro";
-import { FARECOH_METADATA, FARECOH_NARRATIVE, INSTITUTIONAL_STATS } from "@/data/farecoh";
+import {
+  FARECOH_CONTEXT,
+  FARECOH_HISTORY,
+  FARECOH_IMPACT,
+  FARECOH_IMPORTANCE,
+  FARECOH_METADATA,
+  FARECOH_METHODOLOGY,
+  FARECOH_NARRATIVE,
+  FARECOH_WHY_SUPPORT,
+  INSTITUTIONAL_STATS,
+} from "@/data/farecoh";
 
 const title = `Sobre nosotros · ${FARECOH_METADATA.acronym}`;
 const description = FARECOH_NARRATIVE.about;
@@ -30,10 +40,10 @@ const yearCount = String(yearsOfService).padStart(2, "0");
           Sobre la fundación
         </p>
         <h1 class="about-header__title">
-          Una práctica <em>artística rigurosa</em> al servicio de la formación ciudadana.
+          Transformando vidas a través del <em>arte, la educación</em> y la esperanza.
         </h1>
         <p class="about-header__lead">
-          {FARECOH_METADATA.tagline}
+          {FARECOH_CONTEXT.problem}
         </p>
       </div>
 
@@ -50,12 +60,13 @@ const yearCount = String(yearsOfService).padStart(2, "0");
     <div class="about-manifesto__shell">
       <p class="tag about-manifesto__eyebrow">
         <span class="bar" aria-hidden="true"></span>
-        Manifiesto
+        Quiénes somos
       </p>
       <blockquote class="about-manifesto__quote">
         <span class="about-manifesto__quote-mark" aria-hidden="true">&ldquo;</span>
         {FARECOH_NARRATIVE.about}
       </blockquote>
+      <p class="about-manifesto__after">{FARECOH_CONTEXT.purpose}</p>
     </div>
   </section>
 
@@ -83,9 +94,70 @@ const yearCount = String(yearsOfService).padStart(2, "0");
     </div>
   </section>
 
+  <section class="ab-story" aria-labelledby="historia-title" id="historia">
+    <div class="ab-shell ab-story__grid">
+      <div class="ab-story__year" aria-hidden="true">
+        <span>Desde</span>
+        <strong>{foundationYear}</strong>
+        <ul>{FARECOH_HISTORY.regions.map((region) => <li>{region}</li>)}</ul>
+      </div>
+      <div>
+        <p class="ab-eyebrow"><span aria-hidden="true"></span>Nuestra historia</p>
+        <h2 id="historia-title" class="ab-title">{FARECOH_HISTORY.title}</h2>
+        <div class="ab-prose">
+          {FARECOH_HISTORY.paragraphs.map((paragraph) => <p>{paragraph}</p>)}
+        </div>
+        <p class="ab-story__closing">{FARECOH_HISTORY.closing}</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="ab-why" aria-labelledby="importancia-title">
+    <div class="ab-shell">
+      <p class="ab-eyebrow ab-eyebrow--light"><span aria-hidden="true"></span>Honduras</p>
+      <h2 id="importancia-title" class="ab-title ab-title--light">¿Por qué es importante FARECOH para Honduras?</h2>
+      <ol class="ab-why__list">
+        {FARECOH_IMPORTANCE.reasons.map((reason, index) => (
+          <li><span class="ab-why__num">{String(index + 1).padStart(2, "0")}</span><p>{reason}</p></li>
+        ))}
+      </ol>
+      <p class="ab-why__body">{FARECOH_IMPORTANCE.body}</p>
+    </div>
+  </section>
+
+  <section class="ab-method" aria-labelledby="metodologia-title">
+    <div class="ab-shell ab-method__grid">
+      <div>
+        <p class="ab-eyebrow"><span aria-hidden="true"></span>Nuestra metodología</p>
+        <h2 id="metodologia-title" class="ab-title">{FARECOH_METHODOLOGY.lead}</h2>
+        <p class="ab-lead">{FARECOH_METHODOLOGY.body}</p>
+      </div>
+      <figure class="ab-method__card">
+        <p>{FARECOH_METHODOLOGY.statement}</p>
+        <strong>{FARECOH_METHODOLOGY.emphasis}</strong>
+      </figure>
+    </div>
+  </section>
+
+  <section class="ab-impact" aria-labelledby="impacto-title">
+    <div class="ab-shell">
+      <p class="ab-eyebrow"><span aria-hidden="true"></span>Nuestro impacto</p>
+      <h2 id="impacto-title" class="ab-title">Contribuimos a…</h2>
+      <p class="ab-lead">{FARECOH_IMPACT.intro}</p>
+      <ul class="ab-impact__grid">
+        {FARECOH_IMPACT.contributions.map((item) => (
+          <li>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10" /><path d="m8 12 3 3 5-6" /></svg>
+            <span>{item}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
   <PhotoStrip
     eyebrow="Galería institucional"
-    caption="Veintitrés años formando con el arte."
+    caption={`Desde ${foundationYear}, formando con el arte en Honduras.`}
     photos={[
       { src: "/images/fotografias/IMG_6835.webp", alt: "Orquesta en concierto", span: "wide" },
       { src: "/images/fotografias/IMG_6837.webp", alt: "Coro institucional", span: "square" },
@@ -108,12 +180,18 @@ const yearCount = String(yearsOfService).padStart(2, "0");
         <header class="about-foundation__head">
           <p class="tag about-foundation__eyebrow">
             <span class="bar" aria-hidden="true"></span>
-            03 — Datos fundamentales
+            Datos fundamentales
           </p>
-          <h2 class="about-foundation__title">Lo que somos, <em>sin adornos</em>.</h2>
+          <h2 class="about-foundation__title">FARECOH en <em>cifras</em>.</h2>
         </header>
 
         <dl class="about-foundation__grid">
+          <div class="about-foundation__cell">
+            <span class="about-foundation__cell-rule" aria-hidden="true"></span>
+            <dt class="about-foundation__label">Años de trayectoria</dt>
+            <dd class="about-foundation__value">+{yearsOfService}</dd>
+            <dd class="about-foundation__caption">Fundada en {foundationYear} · {FARECOH_METADATA.legalSeat}</dd>
+          </div>
           {INSTITUTIONAL_STATS.map((stat) => (
             <div class="about-foundation__cell">
               <span class="about-foundation__cell-rule" aria-hidden="true"></span>
@@ -124,14 +202,31 @@ const yearCount = String(yearsOfService).padStart(2, "0");
               <dd class="about-foundation__caption">{stat.caption}</dd>
             </div>
           ))}
-          <div class="about-foundation__cell">
-            <span class="about-foundation__cell-rule" aria-hidden="true"></span>
-            <dt class="about-foundation__label">Sede legal</dt>
-            <dd class="about-foundation__seat">{FARECOH_METADATA.legalSeat}</dd>
-            <dd class="about-foundation__caption">Fundada en {foundationYear}</dd>
-          </div>
+
         </dl>
       </div>
+    </div>
+  </section>
+
+  <section class="ab-support" id="apoyar" aria-labelledby="apoyar-title">
+    <div class="ab-shell ab-support__grid">
+      <div>
+        <p class="ab-eyebrow"><span aria-hidden="true"></span>Únase a nuestra misión</p>
+        <h2 id="apoyar-title" class="ab-title">¿Por qué apoyar a FARECOH?</h2>
+        <ul class="ab-support__reasons">
+          {FARECOH_WHY_SUPPORT.reasons.map((reason) => <li>{reason}</li>)}
+        </ul>
+        <p class="ab-lead">{FARECOH_WHY_SUPPORT.body}</p>
+        <p class="ab-lead">{FARECOH_WHY_SUPPORT.join}</p>
+        <div class="ab-support__actions">
+          <a class="ab-btn" href="mailto:info@farecoh.org?subject=Quiero%20apoyar%20a%20FARECOH">Quiero apoyar</a>
+          <a class="ab-btn ab-btn--ghost" href="/eventos">Ver conciertos</a>
+        </div>
+      </div>
+      <figure class="ab-support__quote">
+        <blockquote>{FARECOH_CONTEXT.quote}</blockquote>
+        <figcaption>{FARECOH_CONTEXT.pillars}</figcaption>
+      </figure>
     </div>
   </section>
 
@@ -656,4 +751,62 @@ const yearCount = String(yearsOfService).padStart(2, "0");
     color: var(--color-text-on-dark);
     border-color: var(--color-bg-stage);
   }
+
+  /* ── Secciones nuevas (historia, importancia, metodología, impacto, apoyo) ── */
+  .ab-shell { width: min(100% - calc(var(--gutter) * 2), var(--shell)); margin-inline: auto; }
+  .ab-eyebrow { display: flex; align-items: center; gap: 0.6rem; margin: 0 0 0.75rem; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: #0069a8; }
+  .ab-eyebrow span { width: 2.25rem; height: 2px; border-radius: 2px; background: currentColor; }
+  .ab-eyebrow--light { color: #83cfff; }
+  .ab-title { margin: 0 0 1.25rem; font-size: clamp(1.75rem, 3.2vw, 2.6rem); font-weight: 800; line-height: 1.12; letter-spacing: -0.025em; color: #005082; text-wrap: balance; max-width: 26ch; }
+  .ab-title--light { color: #fff; }
+  .ab-lead { margin: 0 0 1rem; font-size: 1.0625rem; line-height: 1.7; color: #404750; max-width: 62ch; }
+  .ab-prose p { margin: 0 0 1.1rem; font-size: 1.0625rem; line-height: 1.75; color: #404750; max-width: 68ch; }
+
+  .ab-story { padding-block: clamp(4rem, 8vw, 6.5rem); background: #fff; }
+  .ab-story__grid { display: grid; gap: 2.5rem; }
+  @media (min-width: 960px) { .ab-story__grid { grid-template-columns: 18rem minmax(0, 1fr); gap: 4rem; } }
+  .ab-story__year { align-self: start; position: sticky; top: 7rem; display: grid; gap: 0.25rem; padding: 2rem; border-radius: 18px; background: linear-gradient(160deg, #00507c, #003d63); color: #fff; }
+  .ab-story__year span { font-size: 0.8125rem; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: #83cfff; }
+  .ab-story__year strong { font-size: clamp(3.5rem, 7vw, 5rem); font-weight: 800; line-height: 1; letter-spacing: -0.04em; }
+  .ab-story__year ul { list-style: none; margin: 1.25rem 0 0; padding: 1rem 0 0; border-top: 1px solid rgba(255,255,255,0.2); display: grid; gap: 0.35rem; font-size: 0.9375rem; color: rgba(255,255,255,0.85); }
+  .ab-story__year li::before { content: "♪"; margin-right: 0.5rem; color: #83cfff; }
+  @media (max-width: 959px) { .ab-story__year { position: static; } }
+  .ab-story__closing { margin: 1.5rem 0 0; padding-left: 1rem; border-left: 3px solid #83cfff; font-size: 1.125rem; font-weight: 600; line-height: 1.6; color: #005082; max-width: 60ch; }
+
+  .ab-why { padding-block: clamp(4rem, 8vw, 6.5rem); background: linear-gradient(160deg, #00507c 0%, #003d63 100%); color: #fff; }
+  .ab-why__list { list-style: none; margin: 1rem 0 2rem; padding: 0; display: grid; gap: 1px; background: rgba(255,255,255,0.12); border-radius: 16px; overflow: hidden; }
+  @media (min-width: 768px) { .ab-why__list { grid-template-columns: 1fr 1fr; } }
+  .ab-why__list li { display: flex; gap: 1rem; padding: 1.5rem 1.6rem; background: #00507c; }
+  .ab-why__num { font-size: 0.875rem; font-weight: 800; color: #83cfff; padding-top: 0.15rem; }
+  .ab-why__list p { margin: 0; line-height: 1.6; color: rgba(255,255,255,0.9); }
+  .ab-why__body { margin: 0; max-width: 70ch; font-size: 1.0625rem; line-height: 1.7; color: rgba(255,255,255,0.85); }
+
+  .ab-method { padding-block: clamp(4rem, 8vw, 6.5rem); background: #f5fafe; }
+  .ab-method__grid { display: grid; gap: 2rem; align-items: center; }
+  @media (min-width: 960px) { .ab-method__grid { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 4rem; } }
+  .ab-method__card { margin: 0; padding: clamp(1.75rem, 3vw, 2.5rem); border-radius: 18px; background: #fff; border: 1px solid #dfe7ee; box-shadow: 0 18px 40px -28px rgba(8,46,82,0.45); }
+  .ab-method__card p { margin: 0 0 0.75rem; font-size: 1.125rem; color: #5b6572; }
+  .ab-method__card strong { display: block; font-size: clamp(1.35rem, 2.3vw, 1.75rem); line-height: 1.3; letter-spacing: -0.015em; color: #005082; }
+
+  .ab-impact { padding-block: clamp(4rem, 8vw, 6.5rem); background: #fff; }
+  .ab-impact__grid { list-style: none; margin: 2rem 0 0; padding: 0; display: grid; gap: 0.85rem; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); }
+  .ab-impact__grid li { display: flex; gap: 0.75rem; align-items: flex-start; padding: 1.1rem 1.2rem; border-radius: 12px; background: #f5fafe; border: 1px solid #e4ecf2; line-height: 1.5; color: #171c1f; }
+  .ab-impact__grid svg { flex-shrink: 0; color: #0069a8; margin-top: 0.1rem; }
+
+  .ab-support { padding-block: clamp(4rem, 8vw, 6.5rem); background: #eff4f8; scroll-margin-top: 5rem; }
+  .ab-support__grid { display: grid; gap: 2.5rem; align-items: center; }
+  @media (min-width: 960px) { .ab-support__grid { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 4rem; } }
+  .ab-support__reasons { list-style: none; margin: 0 0 1.5rem; padding: 0; display: grid; gap: 0.6rem; }
+  .ab-support__reasons li { position: relative; padding-left: 1.6rem; font-size: 1.0625rem; font-weight: 600; color: #171c1f; }
+  .ab-support__reasons li::before { content: "♪"; position: absolute; left: 0; color: #0069a8; }
+  .ab-support__actions { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 1.5rem; }
+  .ab-btn { display: inline-flex; align-items: center; padding: 0.85rem 1.4rem; border-radius: 10px; background: #005082; color: #fff; font-weight: 600; text-decoration: none; transition: background-color 180ms ease; }
+  .ab-btn:hover { background: #0069a8; }
+  .ab-btn--ghost { background: #fff; color: #005082; border: 1px solid #cfdce6; }
+  .ab-btn--ghost:hover { background: #f5fafe; }
+  .ab-support__quote { margin: 0; padding: clamp(2rem, 4vw, 3rem); border-radius: 20px; background: linear-gradient(160deg, #00507c, #003d63); color: #fff; }
+  .ab-support__quote blockquote { margin: 0 0 1.25rem; font-size: clamp(1.25rem, 2.2vw, 1.6rem); font-weight: 700; line-height: 1.4; letter-spacing: -0.01em; }
+  .ab-support__quote figcaption { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: #83cfff; }
+
+  .about-manifesto__after { margin: 1.5rem 0 0; max-width: 62ch; font-size: 1.0625rem; line-height: 1.7; color: var(--color-text-secondary); }
 </style>

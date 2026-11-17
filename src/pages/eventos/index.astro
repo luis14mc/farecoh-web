@@ -3,6 +3,7 @@ import InstitutionalLayout from "@/layouts/InstitutionalLayout.astro";
 import EventsHero from "@/components/events-public/EventsHero.astro";
 import EventCard from "@/components/events-public/EventCard.astro";
 import { listPublicEvents } from "@/services/public-events";
+import { FARECOH_CONCERTS } from "@/data/farecoh";
 
 const events = await listPublicEvents();
 const today = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Tegucigalpa" }).format(new Date());
@@ -14,7 +15,7 @@ const past = events.filter((event) => event.event_date < today).sort((a, b) => b
   <EventsHero
     eyebrow="Cartelera"
     title="Eventos y conciertos"
-    lead="Cada boleto apoya la formación artística de niñas, niños y jóvenes en Honduras."
+    lead={FARECOH_CONCERTS.intro}
   />
 
   <section class="ev-list" aria-labelledby="ev-upcoming">
@@ -43,6 +44,42 @@ const past = events.filter((event) => event.event_date < today).sort((a, b) => b
       )}
     </div>
   </section>
+
+  <section class="ev-why" aria-labelledby="ev-why-title">
+    <div class="ev-why__inner">
+      <div class="ev-why__head">
+        <p class="ev-why__eyebrow"><span aria-hidden="true"></span>¿Por qué apoyar nuestros conciertos?</p>
+        <h2 id="ev-why-title">{FARECOH_CONCERTS.title}</h2>
+        <p>{FARECOH_CONCERTS.support}</p>
+      </div>
+      <p class="ev-why__label">Los fondos recaudados permiten:</p>
+      <ul class="ev-why__grid">
+        {FARECOH_CONCERTS.funds.map((fund) => (
+          <li>
+            <span class="ev-why__icon" aria-hidden="true">
+              {fund.icon === "music" && <svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13M9 18a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm12-2a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg>}
+              {fund.icon === "violin" && <svg viewBox="0 0 24 24"><path d="M14 3l7 7M17.5 6.5l-6 6M9 9a3.5 3.5 0 0 0-5 5l1.5 1.5a2 2 0 0 1 0 2.8L5 19l1 1 .7-.5a2 2 0 0 1 2.8 0L11 21a3.5 3.5 0 0 0 5-5c-.8-.8-.8-2 0-2.8L15 12" /></svg>}
+              {fund.icon === "teacher" && <svg viewBox="0 0 24 24"><path d="M22 10 12 5 2 10l10 5 10-5ZM6 12v5c3 2 9 2 12 0v-5" /></svg>}
+              {fund.icon === "school" && <svg viewBox="0 0 24 24"><path d="M3 21h18M5 21V10l7-5 7 5v11M9 21v-6h6v6" /></svg>}
+              {fund.icon === "sprout" && <svg viewBox="0 0 24 24"><path d="M12 22V12M12 12C12 7 8 4 3 4c0 5 4 8 9 8Zm0 0c0-4 3-7 8-7 0 4-3 7-8 7" /></svg>}
+              {fund.icon === "globe" && <svg viewBox="0 0 24 24"><path d="M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20ZM2 12h20M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20Z" /></svg>}
+            </span>
+            {fund.text}
+          </li>
+        ))}
+      </ul>
+      <div class="ev-why__bottom">
+        <div>
+          <p>{FARECOH_CONCERTS.investment}</p>
+          <p>{FARECOH_CONCERTS.ally}</p>
+        </div>
+        <blockquote>
+          <span>{FARECOH_CONCERTS.closing[0]}</span>
+          <strong>{FARECOH_CONCERTS.closing[1]}</strong>
+        </blockquote>
+      </div>
+    </div>
+  </section>
 </InstitutionalLayout>
 
 <style>
@@ -61,4 +98,22 @@ const past = events.filter((event) => event.event_date < today).sort((a, b) => b
   .ev-list__empty p { margin: 0; }
   .ev-list__empty strong { color: #005082; }
   .ev-list__empty a { color: #005082; font-weight: 600; }
+  .ev-why { background: #fff; padding-block: clamp(3.5rem, 7vw, 6rem); font-family: "Inter", system-ui, sans-serif; }
+  .ev-why__inner { width: min(100% - 2.5rem, 1200px); margin-inline: auto; }
+  .ev-why__head { max-width: 46rem; }
+  .ev-why__eyebrow { display: flex; align-items: center; gap: 0.6rem; margin: 0 0 0.75rem; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: #0069a8; }
+  .ev-why__eyebrow span { width: 2.25rem; height: 2px; background: currentColor; border-radius: 2px; }
+  .ev-why__head h2 { margin: 0 0 1rem; font-size: clamp(1.75rem, 3vw, 2.4rem); font-weight: 800; letter-spacing: -0.025em; line-height: 1.15; color: #005082; }
+  .ev-why__head p { margin: 0; font-size: 1.0625rem; line-height: 1.7; color: #404750; }
+  .ev-why__label { margin: 2.25rem 0 1rem; font-weight: 700; color: #171c1f; }
+  .ev-why__grid { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.85rem; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); }
+  .ev-why__grid li { display: flex; gap: 0.9rem; align-items: flex-start; padding: 1.15rem 1.25rem; border-radius: 14px; background: #f5fafe; border: 1px solid #e4ecf2; line-height: 1.5; color: #171c1f; }
+  .ev-why__icon { flex-shrink: 0; display: grid; place-items: center; width: 2.25rem; height: 2.25rem; border-radius: 10px; background: #005082; color: #fff; }
+  .ev-why__icon svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .ev-why__bottom { display: grid; gap: 2rem; margin-top: clamp(2.5rem, 5vw, 3.5rem); align-items: center; }
+  @media (min-width: 900px) { .ev-why__bottom { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 3rem; } }
+  .ev-why__bottom p { margin: 0 0 1rem; font-size: 1.0625rem; line-height: 1.7; color: #404750; }
+  .ev-why__bottom blockquote { margin: 0; display: grid; gap: 0.5rem; padding: clamp(1.75rem, 3vw, 2.5rem); border-radius: 18px; background: linear-gradient(160deg, #00507c, #003d63); color: #fff; }
+  .ev-why__bottom blockquote span { font-size: 1.125rem; color: rgba(255,255,255,0.8); }
+  .ev-why__bottom blockquote strong { font-size: clamp(1.35rem, 2.4vw, 1.75rem); line-height: 1.25; letter-spacing: -0.015em; }
 </style>

@@ -1,23 +1,27 @@
 ---
 import InstitutionalLayout from "@/layouts/InstitutionalLayout.astro";
 import PhotoStrip from "@/components/institutional/PhotoStrip.astro";
-import { FARECOH_PROGRAMS, FARECOH_MOBILITY } from "@/data/farecoh";
+import { FARECOH_PROGRAMS, FARECOH_MOBILITY, FARECOH_METHODOLOGY } from "@/data/farecoh";
 
 const title = `Programas · FARECOH`;
-const description = "Cuatro programas activos: coros y orquestas, inclusión, primera infancia y artes visuales.";
+const description = "Seis programas que combinan educación, arte y desarrollo comunitario para la niñez y juventud de Honduras.";
 
 const disciplineLabels: Record<string, string> = {
   music: "Música",
-  inclusion: "Inclusión",
-  "early-childhood": "Primera Infancia",
-  "visual-arts": "Artes Visuales",
+  community: "Comunidad",
+  arts: "Artes",
+  peace: "Cultura de paz",
+  exchange: "Intercambios",
+  family: "Familia",
 };
 
 const disciplineAccents: Record<string, string> = {
-  music: "var(--color-brand-blue)",
-  inclusion: "var(--color-accent-sage)",
-  "early-childhood": "var(--color-accent-plum)",
-  "visual-arts": "var(--color-brand-cyan)",
+  music: "#005082",
+  community: "#0069a8",
+  arts: "#0098d9",
+  peace: "#0b7fa8",
+  exchange: "#00507c",
+  family: "#3b8fc4",
 };
 ---
 
@@ -32,21 +36,19 @@ const disciplineAccents: Record<string, string> = {
       <aside class="programs-hero__rail" aria-hidden="true">
         <span class="programs-hero__rail-eyebrow">Catálogo</span>
         <span class="programs-hero__rail-line"></span>
-        <span class="programs-hero__rail-meta">04 Programas</span>
+        <span class="programs-hero__rail-meta">{String(FARECOH_PROGRAMS.length).padStart(2, "0")} Programas</span>
       </aside>
 
       <div class="programs-hero__content">
         <p class="programs-hero__eyebrow">
           <span class="programs-hero__bar"></span>
-          Programas activos
+          Lo que hacemos
         </p>
         <h1 class="programs-hero__title">
-          Cuatro disciplinas, una sola <em>coherencia pedagógica.</em>
+          Programas que combinan <em>educación, arte y desarrollo comunitario.</em>
         </h1>
         <p class="programs-hero__lead">
-          Cada programa responde a un momento del desarrollo humano: la primera
-          escucha, la inclusión radical, el dominio instrumental y la expresión
-          plástica.
+          {FARECOH_METHODOLOGY.lead} {FARECOH_METHODOLOGY.statement} {FARECOH_METHODOLOGY.emphasis}
         </p>
       </div>
     </div>
@@ -61,7 +63,7 @@ const disciplineAccents: Record<string, string> = {
           const accent = disciplineAccents[program.discipline ?? ""];
           const num = String(idx + 1).padStart(2, "0");
           return (
-            <li class="programs-list__item" style={`--program-accent: ${accent};`}>
+            <li class="programs-list__item" id={program.id} style={`--program-accent: ${accent};`}>
               <article class="programs-list__card">
                 <header class="programs-list__card-head">
                   <span class="programs-list__num">{num}</span>
@@ -77,8 +79,7 @@ const disciplineAccents: Record<string, string> = {
                 </div>
 
                 <footer class="programs-list__card-foot">
-                  <span class="programs-list__serial">No. {num} / 04</span>
-                  <span class="programs-list__badge">{program.badge}</span>
+                  <span class="programs-list__serial">No. {num} / {String(FARECOH_PROGRAMS.length).padStart(2, "0")}</span>
                 </footer>
               </article>
             </li>
@@ -90,15 +91,15 @@ const disciplineAccents: Record<string, string> = {
 
   <PhotoStrip
     eyebrow="Galería · prácticas formativas"
-    caption="La música, la inclusión y la plástica en imágenes."
+    caption="La música, las artes y la comunidad en imágenes."
     photos={[
-      { src: "/images/fotografias/IMG_6827.webp", alt: "Ensayo coral", span: "square" },
-      { src: "/images/fotografias/IMG_6830.webp", alt: "Práctica orquestal", span: "tall" },
-      { src: "/images/fotografias/IMG_6836.webp", alt: "Sesión de estimulación", span: "wide" },
+      { src: "/images/fotografias/IMG_6827.webp", alt: "Encuentro de la fundación", span: "square" },
+      { src: "/images/fotografias/IMG_6830.webp", alt: "Actividad con la primera infancia", span: "tall" },
+      { src: "/images/fotografias/IMG_6836.webp", alt: "Clase de música", span: "wide" },
       { src: "/images/fotografias/IMG_6838.webp", alt: "Coro infantil", span: "square" },
-      { src: "/images/fotografias/IMG_6842.webp", alt: "Taller de plástica", span: "square" },
-      { src: "/images/fotografias/IMG_6846.webp", alt: "Manos Blancas en concierto", span: "tall" },
-      { src: "/images/fotografias/IMG_6849.webp", alt: "Repertorio contemporáneo", span: "wide" },
+      { src: "/images/fotografias/IMG_6842.webp", alt: "Práctica de piano", span: "square" },
+      { src: "/images/fotografias/IMG_6846.webp", alt: "Presentación en concierto", span: "tall" },
+      { src: "/images/fotografias/IMG_6849.webp", alt: "Taller de artes", span: "wide" },
     ]}
   />
 
@@ -114,7 +115,7 @@ const disciplineAccents: Record<string, string> = {
         <header class="programs-mobility__head">
           <p class="tag programs-mobility__eyebrow">
             <span class="bar" aria-hidden="true"></span>
-            05 — Intercambios
+            Intercambios y festivales
           </p>
           <h2 id="mobility-title" class="programs-mobility__title">
             {FARECOH_MOBILITY.title}
@@ -281,6 +282,8 @@ const disciplineAccents: Record<string, string> = {
     margin-inline: auto;
   }
 
+  .programs-list__item { scroll-margin-top: 6rem; }
+
   .programs-list__items {
     list-style: none;
     padding: 0;
@@ -290,7 +293,9 @@ const disciplineAccents: Record<string, string> = {
   }
 
   @media (min-width: 768px) {
-    .programs-list__items {
+    .programs-list__item { scroll-margin-top: 6rem; }
+
+  .programs-list__items {
       grid-template-columns: repeat(2, 1fr);
       gap: 1rem;
     }
