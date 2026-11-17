@@ -6,7 +6,9 @@
   },
   "deploy": {
     "startCommand": "pnpm start",
-    "preDeployCommand": ["pnpm db:migrate"],
+    "preDeployCommand": [
+      "pnpm db:migrate && pnpm db:seed"
+    ],
     "healthcheckPath": "/",
     "healthcheckTimeout": 100,
     "restartPolicyType": "ON_FAILURE",

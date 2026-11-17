@@ -12,10 +12,15 @@ export function getDbPool(): pg.Pool {
       throw new Error("DATABASE_URL is not configured.");
     }
 
+    // sslmode=disable (o PGSSLMODE=disable) desactiva SSL explícitamente;
+    // si no, se usa SSL con hosts públicos de Railway, sslmode=require o en producción.
+    const sslDisabled =
+      /[?&]sslmode=disable\b/.test(databaseUrl) || process.env.PGSSLMODE === "disable";
     const isSslRequired =
-      databaseUrl.includes("sslmode=require") ||
-      databaseUrl.includes("roundhouse.proxy.rlwy.net") ||
-      process.env.NODE_ENV === "production";
+      !sslDisabled &&
+      (databaseUrl.includes("sslmode=require") ||
+        databaseUrl.includes(".proxy.rlwy.net") ||
+        process.env.NODE_ENV === "production");
 
     pool = new Pool({
       connectionString: databaseUrl,
