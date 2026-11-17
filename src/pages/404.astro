@@ -1,0 +1,24 @@
+---
+import InstitutionalLayout from "@/layouts/InstitutionalLayout.astro";
+import EventsHero from "@/components/events-public/EventsHero.astro";
+import { seoPages } from "@/data/seo";
+
+Astro.response.status = 404;
+---
+
+<InstitutionalLayout title={seoPages.notFound.title} description={seoPages.notFound.description} noindex>
+  <EventsHero eyebrow="Error 404" title="Esta página no existe" lead="Puede que el enlace haya cambiado o que el evento ya no esté publicado.">
+    <div class="nf-actions">
+      <a href="/" class="nf-btn">Ir al inicio</a>
+      <a href="/eventos" class="nf-btn nf-btn--ghost">Ver eventos</a>
+      <a href="/programas" class="nf-btn nf-btn--ghost">Programas</a>
+    </div>
+  </EventsHero>
+</InstitutionalLayout>
+
+<style>
+  .nf-actions { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 0.75rem; }
+  .nf-btn { padding: 0.8rem 1.3rem; border-radius: 10px; background: #fff; color: #005082; font-weight: 600; text-decoration: none; font-family: "Inter", system-ui, sans-serif; }
+  .nf-btn--ghost { background: rgba(255, 255, 255, 0.12); color: #fff; border: 1px solid rgba(255, 255, 255, 0.35); }
+  .nf-btn:hover { opacity: 0.9; }
+</style>

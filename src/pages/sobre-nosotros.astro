@@ -12,9 +12,9 @@ import {
   FARECOH_WHY_SUPPORT,
   INSTITUTIONAL_STATS,
 } from "@/data/farecoh";
+import { aboutPageJsonLd, seoPages } from "@/data/seo";
 
-const title = `Sobre nosotros · ${FARECOH_METADATA.acronym}`;
-const description = FARECOH_NARRATIVE.about;
+const { title, description, imageAlt } = seoPages.about;
 const foundationYear = FARECOH_METADATA.established;
 const yearsOfService = new Date().getFullYear() - foundationYear;
 const yearCount = String(yearsOfService).padStart(2, "0");
@@ -23,6 +23,9 @@ const yearCount = String(yearsOfService).padStart(2, "0");
 <InstitutionalLayout
   title={title}
   description={description}
+  imageAlt={imageAlt}
+  breadcrumbs={[{ name: "Sobre nosotros", path: "/sobre-nosotros" }]}
+  jsonLd={aboutPageJsonLd()}
   canonicalPath="/sobre-nosotros"
   active="about"
 >

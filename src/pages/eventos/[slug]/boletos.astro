@@ -5,9 +5,9 @@ import { eventDateLabel, getPublicEvent, salesAreOpen } from "@/services/public-
 import { formatSiteCurrency } from "@/lib/locale";
 
 const event = await getPublicEvent(Astro.params.slug ?? "");
-if (!event || !salesAreOpen(event)) return new Response("Boletería no disponible", { status: 404 });
+if (!event || !salesAreOpen(event)) return Astro.rewrite("/404");
 ---
-<InstitutionalLayout title={`Boletos · ${event.title}`} description="Reserva de boletos" noindex>
+<InstitutionalLayout title={`Reservar boletos: ${event.title} | FARECOH`} description={`Reserva tus boletos para ${event.title} (${eventDateLabel(event.event_date)}). Tu entrada apoya la formación artística de la niñez hondureña.`} noindex>
   <EventsHero eyebrow="Reserva de boletos" title={event.title}
     lead={`${eventDateLabel(event.event_date)} · ${event.event_time} · ${event.location}`}>
     <a slot="before" href={`/eventos/${event.slug}`} class="tk-back">
