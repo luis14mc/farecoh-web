@@ -1,0 +1,246 @@
+---
+/**
+ * Footer único del sitio: siempre oscuro, compacto, con ondas sonoras
+ * y un pentagrama sutil como fondo musical.
+ */
+import { FARECOH_CONTACT } from "@/data/farecoh";
+import { site } from "@/data/site";
+import FarecohLogo from "@/components/layout/FarecohLogo.astro";
+
+const year = new Date().getFullYear();
+
+const links = [
+  { href: "/sobre-nosotros", label: "Nosotros" },
+  { href: "/programas", label: "Programas" },
+  { href: "/junta-directiva", label: "Junta" },
+  { href: "/alianzas", label: "Alianzas" },
+  { href: "/eventos/pink-floyd", label: "Eventos" },
+];
+
+// Barras del ecualizador: alturas fijas, animación desfasada vía CSS
+const bars = [0.35, 0.6, 0.9, 0.5, 0.75, 0.4, 0.65, 0.3];
+---
+
+<footer class="site-footer" aria-labelledby="site-footer-title">
+  <!-- Ondas sonoras superiores: líneas finas con desplazamiento lento -->
+  <svg class="site-footer__waves" viewBox="0 0 1440 56" preserveAspectRatio="none" aria-hidden="true">
+    <path class="w w1" d="M0 28 C 120 8, 240 8, 360 28 S 600 48, 720 28 S 960 8, 1080 28 S 1320 48, 1440 28" />
+    <path class="w w2" d="M0 30 C 160 50, 320 50, 480 30 S 800 10, 960 30 S 1280 50, 1440 30" />
+    <path class="w w3" d="M0 28 C 90 18, 180 18, 270 28 S 450 38, 540 28 S 720 18, 810 28 S 990 38, 1080 28 S 1260 18, 1440 28" />
+  </svg>
+
+  <!-- Pentagrama + notas, apenas visibles -->
+  <svg class="site-footer__staff" viewBox="0 0 600 80" preserveAspectRatio="xMaxYMid meet" aria-hidden="true">
+    <g stroke="currentColor" stroke-width="1">
+      <line x1="0" x2="600" y1="16" y2="16" />
+      <line x1="0" x2="600" y1="28" y2="28" />
+      <line x1="0" x2="600" y1="40" y2="40" />
+      <line x1="0" x2="600" y1="52" y2="52" />
+      <line x1="0" x2="600" y1="64" y2="64" />
+    </g>
+    <g fill="currentColor">
+      <ellipse cx="120" cy="46" rx="6" ry="4.5" transform="rotate(-20 120 46)" />
+      <rect x="125" y="14" width="1.4" height="32" />
+      <ellipse cx="220" cy="34" rx="6" ry="4.5" transform="rotate(-20 220 34)" />
+      <ellipse cx="262" cy="28" rx="6" ry="4.5" transform="rotate(-20 262 28)" />
+      <rect x="225" y="4" width="1.4" height="30" />
+      <rect x="267" y="-2" width="1.4" height="30" />
+      <rect x="225" y="2" width="43.4" height="4" />
+      <ellipse cx="380" cy="52" rx="6" ry="4.5" transform="rotate(-20 380 52)" />
+      <rect x="385" y="20" width="1.4" height="32" />
+      <ellipse cx="470" cy="40" rx="6" ry="4.5" transform="rotate(-20 470 40)" />
+      <rect x="475" y="8" width="1.4" height="32" />
+    </g>
+  </svg>
+
+  <div class="site-footer__inner">
+    <div class="site-footer__brand">
+      <a href="/" aria-label="Inicio FARECOH" class="site-footer__logo">
+        <FarecohLogo variant="horizontal" theme="white" size="footer" />
+      </a>
+      <p id="site-footer-title" class="site-footer__tag">
+        Arte y música para la cohesión social de Honduras.
+      </p>
+    </div>
+
+    <nav class="site-footer__nav" aria-label="Enlaces del pie de página">
+      {links.map((l) => <a href={l.href}>{l.label}</a>)}
+    </nav>
+
+    <div class="site-footer__contact">
+      <a href={`mailto:${FARECOH_CONTACT.email}`}>{FARECOH_CONTACT.email}</a>
+      <a href={`tel:${FARECOH_CONTACT.phone.replace(/\s/g, "")}`}>{FARECOH_CONTACT.phone}</a>
+    </div>
+  </div>
+
+  <div class="site-footer__bottom">
+    <span>© {year} {site.name}</span>
+    <span class="site-footer__eq" aria-hidden="true">
+      {bars.map((h, i) => <i style={`--h:${h};--d:${i * 0.13}s`} />)}
+    </span>
+    <a href="/admin/login" class="site-footer__staff-link">Acceso staff</a>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    --sf-bg: #08182e;
+    --sf-ink: #faf6ee;
+    --sf-muted: rgba(250, 246, 238, 0.6);
+    --sf-accent: #4fc3f5;
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    background: var(--sf-bg);
+    color: var(--sf-ink);
+    padding: 3.5rem 0 1.25rem;
+    font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+  }
+
+  .site-footer__waves {
+    position: absolute;
+    left: -5%;
+    top: 0;
+    width: 110%;
+    height: 56px;
+    pointer-events: none;
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 15%, #000 85%, transparent);
+    mask-image: linear-gradient(90deg, transparent, #000 15%, #000 85%, transparent);
+  }
+  .site-footer__waves .w {
+    fill: none;
+    stroke-linecap: round;
+    vector-effect: non-scaling-stroke;
+  }
+  .site-footer__waves .w1 { stroke: var(--sf-accent); stroke-width: 1.25; opacity: 0.45; animation: sf-drift 14s ease-in-out infinite alternate; }
+  .site-footer__waves .w2 { stroke: var(--sf-ink); stroke-width: 1; opacity: 0.12; animation: sf-drift 20s ease-in-out infinite alternate-reverse; }
+  .site-footer__waves .w3 { stroke: var(--sf-accent); stroke-width: 0.75; opacity: 0.18; animation: sf-drift 26s ease-in-out infinite alternate; }
+
+  @keyframes sf-drift {
+    from { transform: translateX(-3%); }
+    to   { transform: translateX(3%); }
+  }
+
+  .site-footer__staff {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    width: min(560px, 70%);
+    height: auto;
+    transform: translateY(-55%);
+    color: var(--sf-ink);
+    opacity: 0.05;
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  .site-footer__inner,
+  .site-footer__bottom {
+    width: min(100% - 2.5rem, 72rem);
+    margin-inline: auto;
+  }
+
+  .site-footer__inner {
+    display: grid;
+    gap: 1.75rem;
+    align-items: center;
+  }
+  @media (min-width: 900px) {
+    .site-footer__inner {
+      grid-template-columns: 1.2fr auto auto;
+      gap: 3rem;
+    }
+  }
+
+  .site-footer__brand { display: grid; gap: 0.6rem; }
+  .site-footer__logo { display: inline-block; width: fit-content; }
+  .site-footer__logo :global(.farecoh-logo-slot) {
+    display: inline-flex;
+    overflow: hidden;
+    width: 12.5rem;
+    height: 3.25rem;
+  }
+  .site-footer__logo :global(.farecoh-logo-slot .farecoh-logo) {
+    height: 3.25rem !important;
+    width: auto;
+    max-width: none;
+    max-height: none;
+    transform: scale(2.85);
+    transform-origin: left center;
+  }
+  .site-footer__tag {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--sf-muted);
+    max-width: 32ch;
+  }
+
+  .site-footer__nav,
+  .site-footer__contact {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 1.25rem;
+    font-size: 0.875rem;
+  }
+  .site-footer__contact { flex-direction: column; gap: 0.25rem; }
+
+  .site-footer a {
+    color: var(--sf-muted);
+    text-decoration: none;
+    transition: color 160ms ease;
+    border-radius: 2px;
+  }
+  .site-footer a:hover { color: var(--sf-accent); }
+  .site-footer a:focus-visible {
+    outline: 2px solid var(--sf-accent);
+    outline-offset: 3px;
+  }
+
+  .site-footer__bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(250, 246, 238, 0.1);
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 0.6875rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(250, 246, 238, 0.45);
+  }
+  .site-footer__staff-link { color: rgba(250, 246, 238, 0.45) !important; }
+  .site-footer__staff-link:hover { color: var(--sf-accent) !important; }
+
+  .site-footer__eq {
+    display: inline-flex;
+    align-items: flex-end;
+    gap: 3px;
+    height: 14px;
+  }
+  .site-footer__eq i {
+    display: block;
+    width: 2px;
+    height: 100%;
+    border-radius: 1px;
+    background: var(--sf-accent);
+    opacity: 0.55;
+    transform-origin: bottom;
+    transform: scaleY(var(--h));
+    animation: sf-eq 1.6s ease-in-out var(--d) infinite alternate;
+  }
+  @keyframes sf-eq {
+    0% { transform: scaleY(calc(var(--h) * 0.4)); }
+    100% { transform: scaleY(var(--h)); }
+  }
+
+  @media (max-width: 520px) {
+    .site-footer__eq { display: none; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .site-footer__waves .w,
+    .site-footer__eq i { animation: none; }
+  }
+</style>

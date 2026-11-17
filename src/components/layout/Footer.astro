@@ -1,78 +1,10 @@
 ---
-import { site } from "@/data/site";
-import FarecohLogo from "@/components/layout/FarecohLogo.astro";
+import SiteFooter from "@/components/layout/SiteFooter.astro";
 
 interface Props {
+  /** Se conserva por compatibilidad; el footer es siempre oscuro. */
   variant?: "light" | "dark" | "concert";
 }
-
-const { variant = "light" } = Astro.props;
-
-const footerClass =
-  variant === "concert"
-    ? "landing-section border-t border-concert-orange/20 bg-concert-deep text-white"
-    : variant === "dark"
-      ? "landing-section border-t border-outline/10 bg-on-background text-white"
-      : "landing-section border-t border-outline-variant bg-surface-container-highest";
-
-const mutedClass =
-  variant === "concert"
-    ? "body-md text-white/60"
-    : variant === "dark"
-      ? "body-md text-outline-variant/70"
-      : "body-md text-on-surface-variant";
-
-const linkClass =
-  variant === "concert"
-    ? "body-md text-white/65 transition-colors hover:text-concert-amber focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#04B2D9] focus-visible:ring-offset-2 focus-visible:ring-offset-[#091118] rounded-sm"
-    : variant === "dark"
-      ? "body-md text-outline-variant transition-colors hover:text-brand-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#04B2D9] focus-visible:ring-offset-2 focus-visible:ring-offset-[#18181B] rounded-sm"
-      : "body-md text-on-surface-variant transition-colors hover:text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0378A6] focus-visible:ring-offset-2 rounded-sm";
-
-const titleClass =
-  variant === "concert"
-    ? "landing-eyebrow text-concert-amber"
-    : variant === "dark"
-      ? "landing-eyebrow text-surface-bright"
-      : "landing-eyebrow text-on-surface";
-
-const taglineClass =
-  variant === "concert" ? "landing-eyebrow text-concert-blue" : "landing-eyebrow text-brand-500";
-
-const logoTheme = variant === "light" ? "color" : "white";
 ---
 
-<footer class={footerClass}>
-  <div class="landing-shell flex flex-col justify-between gap-stack-lg lg:flex-row">
-    <div class="max-w-md space-y-4">
-      <FarecohLogo variant="horizontal" theme={logoTheme} size="footer" />
-      <p class={taglineClass}>{site.tagline.es}</p>
-      <p class={`${mutedClass} leading-relaxed`}>{site.footerNote}</p>
-      <p class="label-caps text-outline-variant">© {site.year} {site.name}. Todos los derechos reservados.</p>
-    </div>
-
-    <div class="grid grid-cols-2 gap-8 sm:flex sm:gap-12 lg:gap-16">
-      <div class="flex flex-col space-y-2.5">
-        <h4 class={titleClass}>Navegación</h4>
-        <a class={linkClass} href="/">Inicio</a>
-        <a class={linkClass} href="/nosotros">Sobre Nosotros</a>
-        <a class={linkClass} href="/programas">Programas Formativos</a>
-        <a class={linkClass} href="/nosotros#junta-directiva">Junta Directiva</a>
-        <a class={linkClass} href="/#concierto-benefico">Concierto Benéfico</a>
-      </div>
-      <div class="flex flex-col space-y-2.5">
-        <h4 class={titleClass}>Contacto</h4>
-        <a class={linkClass} href={`mailto:${site.email}`}>{site.email}</a>
-        <span class={`${mutedClass} text-xs leading-relaxed max-w-[200px]`}>Valle de Ángeles, Francisco Morazán, Honduras</span>
-        <div class="pt-4 mt-2 border-t border-outline-variant/30">
-          <a class={`${linkClass} text-xs opacity-75 hover:opacity-100 flex items-center gap-1.5`} href="/admin/login">
-            <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-            </svg>
-            Acceso Staff
-          </a>
-        </div>
-      </div>
-    </div>
-  </div>
-</footer>
+<SiteFooter />

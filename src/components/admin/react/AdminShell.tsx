@@ -20,13 +20,15 @@ function NavLinks({
   items,
   active,
   onNavigate,
+  dark = false,
 }: {
   items: AdminNavItem[];
   active: AdminNavKey;
   onNavigate?: () => void;
+  dark?: boolean;
 }) {
   return (
-    <nav className="flex-1 space-y-1 overflow-y-auto py-2" aria-label="Menú administrativo">
+    <nav className="flex-1 space-y-0.5 overflow-y-auto py-2 pr-1" aria-label="Menú administrativo">
       {items.map((item) => {
         const Icon = ADMIN_NAV_ICONS[item.key];
         const isActive = active === item.key;
@@ -35,18 +37,28 @@ function NavLinks({
             key={item.key}
             href={item.href}
             onClick={onNavigate}
+            aria-current={isActive ? "page" : undefined}
             className={cn(
-              "group flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-              isActive
-                ? "bg-primary text-primary-foreground shadow-xs font-semibold"
-                : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+              "group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4fc3f5]",
+              dark
+                ? isActive
+                  ? "bg-white/10 text-white"
+                  : "text-white/60 hover:bg-white/5 hover:text-white"
+                : isActive
+                  ? "bg-primary/10 text-primary font-semibold"
+                  : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
             )}
           >
-            <div className="flex items-center gap-3">
-              <Icon className={cn("h-4 w-4 shrink-0 transition-transform duration-150 group-hover:scale-110", isActive ? "text-primary-foreground" : "text-muted-foreground")} />
-              <span>{item.label}</span>
-            </div>
-            {isActive && <div className="h-1.5 w-1.5 rounded-full bg-primary-foreground" />}
+            {isActive && (
+              <span className={cn("absolute inset-y-1.5 left-0 w-0.5 rounded-full", dark ? "bg-[#4fc3f5]" : "bg-primary")} />
+            )}
+            <Icon
+              className={cn(
+                "h-4 w-4 shrink-0",
+                dark ? (isActive ? "text-[#4fc3f5]" : "text-white/45 group-hover:text-white/80") : isActive ? "text-primary" : "text-muted-foreground",
+              )}
+            />
+            <span>{item.label}</span>
           </a>
         );
       })}
@@ -54,7 +66,7 @@ function NavLinks({
   );
 }
 
-function ProfileCard({ staffProfile }: { staffProfile: UserProfile }) {
+function ProfileCard({ staffProfile, dark = false }: { staffProfile: UserProfile; dark?: boolean }) {
   const initials = staffProfile.full_name
     ? staffProfile.full_name
         .split(" ")
@@ -65,23 +77,18 @@ function ProfileCard({ staffProfile }: { staffProfile: UserProfile }) {
     : "ST";
 
   return (
-    <div className="mb-5 rounded-lg border bg-card p-3 shadow-xs">
-      <div className="flex items-center gap-3">
-        <Avatar className="h-10 w-10 border border-border">
-          <AvatarFallback className="bg-primary/10 text-primary font-bold text-xs">
-            {initials}
-          </AvatarFallback>
-        </Avatar>
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold text-foreground">{staffProfile.full_name}</p>
-          <p className="truncate text-xs text-muted-foreground">{staffProfile.email}</p>
-          <div className="mt-1.5 flex items-center gap-1.5">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-            <Badge variant="secondary" className="px-1.5 py-0 text-[10px] font-medium">
-              {ROLE_LABELS[staffProfile.role]}
-            </Badge>
-          </div>
-        </div>
+    <div className={cn("flex items-center gap-3 rounded-lg p-2.5", dark ? "bg-white/5" : "border bg-card")}>
+      <Avatar className={cn("h-9 w-9", dark ? "ring-1 ring-white/15" : "border border-border")}>
+        <AvatarFallback className={cn("text-xs font-bold", dark ? "bg-[#4fc3f5]/15 text-[#4fc3f5]" : "bg-primary/10 text-primary")}>
+          {initials}
+        </AvatarFallback>
+      </Avatar>
+      <div className="min-w-0 flex-1">
+        <p className={cn("truncate text-sm font-semibold", dark ? "text-white" : "text-foreground")}>{staffProfile.full_name}</p>
+        <p className={cn("flex items-center gap-1.5 truncate text-[11px]", dark ? "text-white/50" : "text-muted-foreground")}>
+          <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" />
+          {ROLE_LABELS[staffProfile.role]}
+        </p>
       </div>
     </div>
   );
@@ -95,11 +102,21 @@ async function signOutAndRedirect(_authConfigured: boolean) {
   }
 }
 
-function LogoutButton({ authConfigured, className }: { authConfigured: boolean; className?: string }) {
+function LogoutButton({ authConfigured, className, dark = false }: { authConfigured: boolean; className?: string; dark?: boolean }) {
   return (
-    <Button variant="outline" className={cn("w-full justify-start gap-2 border-border/80 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30", className)} onClick={() => void signOutAndRedirect(authConfigured)}>
+    <Button
+      variant={dark ? "ghost" : "outline"}
+      size="icon"
+      title="Cerrar sesión"
+      aria-label="Cerrar sesión"
+      className={cn(
+        "shrink-0",
+        dark ? "text-white/50 hover:bg-white/10 hover:text-white" : "hover:bg-destructive/10 hover:text-destructive",
+        className,
+      )}
+      onClick={() => void signOutAndRedirect(authConfigured)}
+    >
       <LogOut className="h-4 w-4" />
-      <span>Cerrar sesión</span>
     </Button>
   );
 }
@@ -129,23 +146,23 @@ export function AdminShell({ active, navItems, staffProfile, authConfigured }: A
         </div>
       </header>
 
-      <aside className="hidden md:fixed md:inset-y-0 md:flex md:w-64 md:flex-col md:border-r md:bg-card">
-        <div className="flex h-full flex-col px-4 py-5">
-          <div className="mb-6 flex items-center gap-2.5 px-1">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground font-black text-base shadow-xs">
-              F
+      <aside className="admin-sidebar hidden md:fixed md:inset-y-0 md:flex md:w-64 md:flex-col">
+        <div className="flex h-full flex-col px-3 py-5">
+          <a href="/admin" aria-label="Panel administrativo" className="mb-7 flex items-center gap-3 px-2">
+            <img src="/favicon.svg" alt="" className="h-8 w-8 rounded-md" />
+            <div className="leading-tight">
+              <p className="text-[15px] font-bold tracking-tight text-white">FARECOH</p>
+              <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-white/45">Boletería</p>
             </div>
-            <div>
-              <a href="/admin" aria-label="Panel administrativo">
-                <p className="text-base font-bold tracking-tight text-foreground">FARECOH</p>
-              </a>
-              <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Panel Operativo</p>
-            </div>
-          </div>
+          </a>
 
-          {staffProfile && <ProfileCard staffProfile={staffProfile} />}
-          <NavLinks items={navItems} active={active} />
-          <LogoutButton authConfigured={authConfigured} className="mt-4" />
+          <p className="mb-1 px-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-white/35">Operación</p>
+          <NavLinks items={navItems} active={active} dark />
+
+          <div className="mt-4 flex items-center gap-1 border-t border-white/10 pt-4">
+            <div className="min-w-0 flex-1">{staffProfile && <ProfileCard staffProfile={staffProfile} dark />}</div>
+            <LogoutButton authConfigured={authConfigured} dark />
+          </div>
         </div>
       </aside>
 
@@ -154,10 +171,13 @@ export function AdminShell({ active, navItems, staffProfile, authConfigured }: A
           <SheetHeader className="mb-4 text-left">
             <SheetTitle className="text-base font-bold">FARECOH Admin</SheetTitle>
           </SheetHeader>
-          {staffProfile && <ProfileCard staffProfile={staffProfile} />}
+          {staffProfile && <div className="mb-4"><ProfileCard staffProfile={staffProfile} /></div>}
           <NavLinks items={navItems} active={active} onNavigate={() => setMobileOpen(false)} />
           <Separator className="my-4" />
-          <LogoutButton authConfigured={authConfigured} />
+          <Button variant="outline" className="w-full justify-start gap-2" onClick={() => void signOutAndRedirect(authConfigured)}>
+            <LogOut className="h-4 w-4" />
+            Cerrar sesión
+          </Button>
         </SheetContent>
       </Sheet>
     </>
