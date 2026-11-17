@@ -37,6 +37,13 @@ try {
       );
       console.log(result.rowCount ? `Administrador inicial creado: ${adminEmail}` : `Administrador ${adminEmail} ya existía; sin cambios.`);
     }
+    const { rows: staff } = await client.query<{ total: number }>("SELECT count(*)::int AS total FROM public.users");
+    if (!staff[0].total) {
+      console.warn(
+        "AVISO: no hay ningún usuario en la base. Define ADMIN_EMAIL y ADMIN_PASSWORD (mínimo 10 caracteres) " +
+          "en las variables del servicio y vuelve a desplegar, o ejecuta pnpm db:create-admin.",
+      );
+    }
     await client.query("COMMIT");
     console.log("Datos iniciales aplicados.");
   } catch (error) {
